@@ -1,0 +1,29 @@
+/// Configuração de ambiente.
+///
+/// Valores entram por `--dart-define` para não versionarmos endpoint de
+/// produção no repositório:
+///
+/// ```
+/// flutter run --dart-define=PRAATICO_API_BASE_URL=https://...
+/// ```
+///
+/// TODO: apontar para a API Python no Cloud Run quando ela subir. O valor
+/// padrão abaixo é placeholder de desenvolvimento local.
+abstract final class AppConfig {
+  static const baseUrl = String.fromEnvironment(
+    'PRAATICO_API_BASE_URL',
+    defaultValue: 'http://localhost:8080',
+  );
+
+  /// Tempo para abrir a conexão.
+  static const timeoutConexao = Duration(seconds: 15);
+
+  /// Tempo para receber a resposta. Generoso porque a análise acústica roda no
+  /// servidor (parselmouth/Praat) e não é instantânea.
+  static const timeoutRecebimento = Duration(seconds: 60);
+
+  /// Tempo para enviar. Generoso porque o corpo é um WAV PCM sem compressão,
+  /// possivelmente em rede de consultório.
+  /// TODO: medir com arquivo real antes de fixar esse número.
+  static const timeoutEnvio = Duration(minutes: 5);
+}

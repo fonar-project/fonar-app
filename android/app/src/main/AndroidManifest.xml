@@ -1,4 +1,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Captura de voz do paciente. Permissao perigosa: alem desta declaracao,
+         precisa ser solicitada em tempo de execucao antes de gravar. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+
+    <!-- Envio do audio e consulta a API de analise no Cloud Run.
+         O Flutter injeta INTERNET apenas nos manifests de debug e profile, entao
+         sem esta linha o build de RELEASE fica sem rede e falha so em producao. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Sem microfone nao existe produto. Marcar como obrigatorio faz a loja
+         filtrar aparelhos incompativeis antes da instalacao. -->
+    <uses-feature android:name="android.hardware.microphone" android:required="true"/>
+
     <application
         android:label="praatico_app"
         android:name="${applicationName}"

@@ -5,6 +5,22 @@
       <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2</dpiAwareness>
     </windowsSettings>
   </application>
+  <!-- PERMISSAO DE MICROFONE NO WINDOWS: nao ha nada a declarar aqui.
+
+       Este e o manifest de um executavel Win32 desempacotado, que e o que
+       `flutter build windows` gera. Ele carrega DPI e compatibilidade de SO;
+       nao existe equivalente ao <uses-permission> do Android. O acesso ao
+       microfone e decidido em tempo de execucao pelo proprio Windows, em
+       Configuracoes > Privacidade e seguranca > Microfone.
+
+       A declaracao formal (<DeviceCapability Name="microphone" />) so existe
+       em pacote MSIX, e empacotamento e decisao de release ainda em aberto.
+
+       ATENCAO ao modo de falha: com o acesso bloqueado, a gravacao costuma
+       NAO dar erro — ela grava um WAV valido, com a duracao certa e amplitude
+       zero. Ver o TODO completo em
+       lib/core/permissions/microphone_permission.dart. -->
+
   <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
     <application>
       <!-- Windows 10 and Windows 11 -->
