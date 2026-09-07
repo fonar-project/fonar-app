@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/analise/presentation/pages/analise_resultado_page.dart';
+import '../../features/health_check/presentation/pages/health_check_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/captura/presentation/pages/captura_page.dart';
 import '../../features/consentimento/presentation/pages/consentimento_page.dart';
@@ -79,6 +80,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: AppRoutes.historicoNome,
         path: AppRoutes.historicoCaminho,
         builder: (context, state) => const HistoricoPage(),
+      ),
+      GoRoute(
+        name: AppRoutes.healthCheckNome,
+        path: AppRoutes.healthCheckCaminho,
+        builder: (context, state) => const HealthCheckPage(),
       ),
     ],
 

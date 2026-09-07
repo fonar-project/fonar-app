@@ -20,6 +20,19 @@ abstract final class AppStrings {
   static const analiseResultadoTitulo = 'Resultado da análise';
   static const historicoTitulo = 'Histórico';
 
+  // ---------------------------------------------------- health check / teste --
+  static const healthCheckTitulo = 'Teste de conexão';
+  static const healthCheckVerificando = 'Verificando conexão com o servidor…';
+  static const healthCheckOnline = 'Servidor disponível';
+  static const healthCheckOffline = 'Servidor indisponível';
+  static const healthCheckDescricaoOnline =
+      'A API está respondendo normalmente.';
+  static const healthCheckDescricaoOffline =
+      'Não foi possível alcançar o servidor. Verifique a rede e tente novamente.';
+  static const healthCheckTempo = 'Tempo de resposta:';
+  static const healthCheckVersaoApi = 'Versão da API:';
+  static const healthCheckTentarNovamente = 'Verificar novamente';
+
   // ----------------------------------------------------------- placeholder --
   /// TODO: remover junto com [TelaPlaceholder] quando as telas reais existirem.
   static const telaEmConstrucao = 'Tela ainda não implementada.';

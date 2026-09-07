@@ -35,4 +35,8 @@ abstract final class AppRoutes {
   // /historico
   static const historicoNome = 'historico';
   static const historicoCaminho = '/historico';
+
+  // /health-check
+  static const healthCheckNome = 'healthCheck';
+  static const healthCheckCaminho = '/health-check';
 }
