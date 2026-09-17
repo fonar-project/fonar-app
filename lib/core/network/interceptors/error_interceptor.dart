@@ -23,9 +23,7 @@ class ErrorInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    handler.next(
-      err.copyWith(error: _mapear(err)),
-    );
+    handler.next(err.copyWith(error: _mapear(err)));
   }
 
   AppException _mapear(DioException err) {
@@ -33,16 +31,15 @@ class ErrorInterceptor extends Interceptor {
       DioExceptionType.connectionTimeout ||
       DioExceptionType.sendTimeout ||
       DioExceptionType.receiveTimeout ||
-      DioExceptionType.transformTimeout =>
-        TempoEsgotado(causa: err),
+      DioExceptionType.transformTimeout => TempoEsgotado(causa: err),
       DioExceptionType.connectionError ||
-      DioExceptionType.badCertificate =>
-        FalhaDeConexao(causa: err),
+      DioExceptionType.badCertificate => FalhaDeConexao(causa: err),
       DioExceptionType.cancel => EnvioCancelado(causa: err),
       DioExceptionType.badResponse => _mapearStatus(err),
-      DioExceptionType.unknown => err.error is AppException
-          ? err.error! as AppException
-          : FalhaDesconhecida(causa: err),
+      DioExceptionType.unknown =>
+        err.error is AppException
+            ? err.error! as AppException
+            : FalhaDesconhecida(causa: err),
     };
   }
 

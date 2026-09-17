@@ -30,7 +30,6 @@ final routerProvider = Provider<GoRouter>((ref) {
     // redirect, não um aviso na tela de captura: se o consentimento não estiver
     // registrado, redirecionar para /pacientes/:pacienteId/consentimento.
     // Áudio de voz vinculado a paciente é dado pessoal sensível.
-
     routes: [
       GoRoute(
         name: AppRoutes.loginNome,

@@ -19,7 +19,8 @@ sealed class AppException implements Exception {
   final Object? causa;
 
   @override
-  String toString() => '$runtimeType: $mensagem${causa == null ? '' : ' ($causa)'}';
+  String toString() =>
+      '$runtimeType: $mensagem${causa == null ? '' : ' ($causa)'}';
 }
 
 /// Sem rede, DNS falhou, servidor inalcançável.
@@ -50,7 +51,7 @@ final class NaoEncontrado extends AppException {
 /// 400 e 422 — dados recusados pela API.
 final class FalhaDeValidacao extends AppException {
   const FalhaDeValidacao({this.camposComErro = const {}, super.causa})
-      : super(AppStrings.erroValidacao);
+    : super(AppStrings.erroValidacao);
 
   /// Campo -> motivo, quando a API detalha. Usado para marcar o formulário.
   /// TODO: preencher quando o contrato de erro da API estiver definido.
@@ -60,7 +61,7 @@ final class FalhaDeValidacao extends AppException {
 /// 5xx.
 final class FalhaNoServidor extends AppException {
   const FalhaNoServidor({this.statusCode, super.causa})
-      : super(AppStrings.erroServidor);
+    : super(AppStrings.erroServidor);
 
   final int? statusCode;
 }

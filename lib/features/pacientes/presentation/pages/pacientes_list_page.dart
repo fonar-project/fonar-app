@@ -9,7 +9,7 @@ class PacientesListPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => const TelaPlaceholder(
-        titulo: AppStrings.pacientesTitulo,
-        rota: '/pacientes',
-      );
+    titulo: AppStrings.pacientesTitulo,
+    rota: '/pacientes',
+  );
 }

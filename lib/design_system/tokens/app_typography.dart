@@ -9,14 +9,38 @@ import 'package:flutter/material.dart';
 /// entre uma fala e outra do paciente. Nada abaixo de 14.
 abstract final class AppTypography {
   static const textTheme = TextTheme(
-    displaySmall: TextStyle(fontSize: 36, height: 1.2, fontWeight: FontWeight.w400),
-    headlineMedium: TextStyle(fontSize: 28, height: 1.25, fontWeight: FontWeight.w400),
-    headlineSmall: TextStyle(fontSize: 24, height: 1.3, fontWeight: FontWeight.w500),
-    titleLarge: TextStyle(fontSize: 20, height: 1.3, fontWeight: FontWeight.w600),
-    titleMedium: TextStyle(fontSize: 17, height: 1.4, fontWeight: FontWeight.w600),
+    displaySmall: TextStyle(
+      fontSize: 36,
+      height: 1.2,
+      fontWeight: FontWeight.w400,
+    ),
+    headlineMedium: TextStyle(
+      fontSize: 28,
+      height: 1.25,
+      fontWeight: FontWeight.w400,
+    ),
+    headlineSmall: TextStyle(
+      fontSize: 24,
+      height: 1.3,
+      fontWeight: FontWeight.w500,
+    ),
+    titleLarge: TextStyle(
+      fontSize: 20,
+      height: 1.3,
+      fontWeight: FontWeight.w600,
+    ),
+    titleMedium: TextStyle(
+      fontSize: 17,
+      height: 1.4,
+      fontWeight: FontWeight.w600,
+    ),
     bodyLarge: TextStyle(fontSize: 17, height: 1.5),
     bodyMedium: TextStyle(fontSize: 15, height: 1.5),
-    labelLarge: TextStyle(fontSize: 15, height: 1.4, fontWeight: FontWeight.w600),
+    labelLarge: TextStyle(
+      fontSize: 15,
+      height: 1.4,
+      fontWeight: FontWeight.w600,
+    ),
     labelSmall: TextStyle(fontSize: 13, height: 1.4),
   );
 
