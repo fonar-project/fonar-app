@@ -1,0 +1,81 @@
+# Verificação contínua. Só checagem: não compila release e não publica nada.
+#
+# A versão do Flutter é a mesma da máquina de referência documentada no README.
+# Se atualizar o Flutter do projeto, atualize os dois lugares juntos.
+
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# Push novo na mesma referência cancela a execução anterior, que já está
+# obsoleta.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificacao:
+    name: Formato, análise, testes e ícones
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup do Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.2
+          channel: stable
+          cache: true
+
+      - name: Dependências
+        run: flutter pub get
+
+      - name: Formatação
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Análise estática
+        run: flutter analyze --fatal-infos
+
+      - name: Testes
+        run: flutter test
+
+      # Fecha a limitação do `app_icone_test.dart`: aquele teste pega .vec
+      # faltando ou órfão, mas não pega .vec DESATUALIZADO — o arquivo existe,
+      # só não corresponde mais ao desenho do SVG.
+      #
+      # Recompilar é a verificação. Se o .vec estava atualizado, o compilador
+      # reescreve conteúdo idêntico e a árvore fica limpa. Se estava
+      # desatualizado, o byte muda e o git acusa.
+      #
+      # A checagem olha apenas `assets/icons_vec/`, que é a única pasta que o
+      # compilador toca. Assim nenhum arquivo mexido por outro passo (como o
+      # `pubspec.lock`) derruba o CI por engano.
+      - name: Ícones pré-compilados estão atualizados
+        run: |
+          dart run tool/compilar_icones.dart
+
+          if [ -n "$(git status --porcelain -- assets/icons_vec)" ]; then
+            echo "::error title=Ícones .vec desatualizados::Rode 'dart run tool/compilar_icones.dart' localmente e commite o resultado."
+            echo
+            echo "Os binários pré-compilados em assets/icons_vec/ não correspondem"
+            echo "aos SVG de assets/icons/. Algum ícone foi adicionado, removido ou"
+            echo "redesenhado sem recompilar."
+            echo
+            echo "Para corrigir, na raiz do projeto:"
+            echo
+            echo "    dart run tool/compilar_icones.dart"
+            echo "    git add assets/icons_vec"
+            echo "    git commit -m 'chore: recompila icones'"
+            echo
+            echo "Arquivos fora de sincronia:"
+            git status --short -- assets/icons_vec
+            echo
+            git diff --stat -- assets/icons_vec
+            exit 1
+          fi
+
+          echo "Os .vec correspondem aos SVG."

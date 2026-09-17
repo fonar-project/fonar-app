@@ -73,8 +73,16 @@ Os 19 ícones atuais já estão limpos.
 
 `test/design_system/app_icone_test.dart` falha se qualquer passo faltar: ícone
 do enum sem arquivo, arquivo sem entrada no enum (**arquivo órfão também é
-erro**), ou `.vec` faltando/sobrando. O teste não detecta `.vec`
-**desatualizado** — alterou o desenho de um SVG, rode o compilador.
+erro**), ou `.vec` faltando/sobrando.
+
+O que o teste **não** pega é `.vec` desatualizado: o arquivo existe, tem o nome
+certo, e mesmo assim não corresponde mais ao desenho do SVG. O teste compara
+nomes, não conteúdo. Quem pega isso é o CI
+([`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)): ele roda o
+compilador e falha se algum `.vec` mudar — recompilar arquivo já atualizado
+reescreve bytes idênticos, então árvore suja significa ícone fora de sincronia.
+Se o CI acusar, rode `dart run tool/compilar_icones.dart` e commite o
+resultado.
 
 Lembrete: **esta pasta é espelhada com a landing page.** Adicionar, remover ou
 redesenhar ícone aqui exige a mesma alteração no outro repositório.
