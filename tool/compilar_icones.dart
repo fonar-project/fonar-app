@@ -14,8 +14,10 @@
 // compila. O teste `test/design_system/app_icone_test.dart` falha se algum
 // `.vec` estiver faltando ou sobrando, o que evita esquecer de rodar isto.
 //
-// Limitação conhecida: o teste detecta arquivo faltando ou órfão, não `.vec`
-// DESATUALIZADO. Alterou o desenho de um SVG? Rode este comando.
+// O teste compara nomes, então não enxerga `.vec` DESATUALIZADO — o que existe
+// mas não corresponde mais ao SVG. Quem enxerga é o CI
+// (`.github/workflows/ci.yml`): ele roda este comando e falha se algum `.vec`
+// mudar, porque recompilar arquivo em dia reescreve bytes idênticos.
 
 import 'dart:io';
 

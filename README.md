@@ -138,11 +138,46 @@ mesma história.
 ### Verificar antes de commitar
 
 ```bash
+dart format .                # o CI reprova código fora do formato padrão
 flutter analyze              # precisa terminar com "No issues found!"
 flutter test                 # roda a suíte
 flutter test test/widget_test.dart                            # um arquivo
 flutter test --plain-name "app sobe e abre na rota inicial"   # um teste
 ```
+
+Mexeu em ícone — adicionou, removeu ou redesenhou um SVG? Rode também
+`dart run tool/compilar_icones.dart` e commite o que sair dele. O motivo está
+logo abaixo.
+
+### Integração contínua
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda a cada push e a
+cada pull request, em `ubuntu-latest`, com o mesmo Flutter 3.47.2 da tabela de
+pré-requisitos. **Só verifica:** não compila release e não publica nada.
+
+| Passo | Comando |
+|---|---|
+| Dependências | `flutter pub get` |
+| Formatação | `dart format --output=none --set-exit-if-changed .` |
+| Análise | `flutter analyze --fatal-infos` |
+| Testes | `flutter test` |
+| Ícones pré-compilados | `dart run tool/compilar_icones.dart`, e a árvore precisa ficar limpa |
+
+O último passo existe para cobrir o buraco que o
+`test/design_system/app_icone_test.dart` não cobre. Aquele teste compara nomes
+de arquivo, então enxerga `.vec` faltando e `.vec` órfão — mas não enxerga
+`.vec` **desatualizado**, aquele que existe, tem o nome certo e mesmo assim não
+corresponde mais ao desenho do SVG.
+
+O CI resolve recompilando. Se os binários estavam em dia, o compilador
+reescreve bytes idênticos e o `git status` continua limpo. Se algum estava
+velho, o arquivo muda e o CI acusa. Quando isso acontece, a correção é rodar
+`dart run tool/compilar_icones.dart` na sua máquina e commitar o resultado — a
+própria mensagem de erro do CI diz isso.
+
+Ao subir a versão do Flutter, mude nos dois lugares: na tabela de
+pré-requisitos e no `flutter-version` do workflow. Se divergirem, o CI passa a
+validar um Flutter que ninguém usa.
 
 ### Apontar para a API
 
