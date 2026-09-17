@@ -30,10 +30,10 @@ abstract final class Breakpoints {
   static const mediaAte = 1024.0;
 
   static LarguraDeTela de(double largura) => switch (largura) {
-        < compactaAte => LarguraDeTela.compacta,
-        < mediaAte => LarguraDeTela.media,
-        _ => LarguraDeTela.expandida,
-      };
+    < compactaAte => LarguraDeTela.compacta,
+    < mediaAte => LarguraDeTela.media,
+    _ => LarguraDeTela.expandida,
+  };
 }
 
 extension LarguraDeTelaContext on BuildContext {

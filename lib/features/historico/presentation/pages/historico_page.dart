@@ -9,7 +9,7 @@ class HistoricoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => const TelaPlaceholder(
-        titulo: AppStrings.historicoTitulo,
-        rota: '/historico',
-      );
+    titulo: AppStrings.historicoTitulo,
+    rota: '/historico',
+  );
 }

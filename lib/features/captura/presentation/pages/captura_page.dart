@@ -18,7 +18,7 @@ class CapturaPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => TelaPlaceholder(
-        titulo: AppStrings.capturaTitulo,
-        rota: '/pacientes/$pacienteId/captura',
-      );
+    titulo: AppStrings.capturaTitulo,
+    rota: '/pacientes/$pacienteId/captura',
+  );
 }

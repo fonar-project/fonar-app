@@ -8,8 +8,6 @@ class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 
   @override
-  Widget build(BuildContext context) => const TelaPlaceholder(
-        titulo: AppStrings.loginTitulo,
-        rota: '/login',
-      );
+  Widget build(BuildContext context) =>
+      const TelaPlaceholder(titulo: AppStrings.loginTitulo, rota: '/login');
 }

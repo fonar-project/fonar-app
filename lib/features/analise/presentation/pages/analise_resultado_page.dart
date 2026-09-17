@@ -20,7 +20,7 @@ class AnaliseResultadoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => TelaPlaceholder(
-        titulo: AppStrings.analiseResultadoTitulo,
-        rota: '/pacientes/$pacienteId/analise/$analiseId',
-      );
+    titulo: AppStrings.analiseResultadoTitulo,
+    rota: '/pacientes/$pacienteId/analise/$analiseId',
+  );
 }

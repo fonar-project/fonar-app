@@ -14,7 +14,7 @@ class ConsentimentoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => TelaPlaceholder(
-        titulo: AppStrings.consentimentoTitulo,
-        rota: '/pacientes/$pacienteId/consentimento',
-      );
+    titulo: AppStrings.consentimentoTitulo,
+    rota: '/pacientes/$pacienteId/consentimento',
+  );
 }
