@@ -43,6 +43,64 @@ abstract final class AppStrings {
   static const capturaTitulo = 'Gravação';
   static const analiseResultadoTitulo = 'Resultado da análise';
   static const historicoTitulo = 'Histórico';
+  static const novaAvaliacaoTitulo = 'Nova avaliação';
+  static const filaTitulo = 'Fila de sincronização';
+  static const contaTitulo = 'Conta';
+
+  // ---------------------------------------------------------- navegação --
+  // O rótulo curto é o da barra inferior do celular, onde cabem quatro abas
+  // de texto sem quebrar linha.
+  static const navPacientes = 'Pacientes';
+  static const navNovaAvaliacao = 'Nova avaliação';
+  static const navNovaAvaliacaoCurto = 'Nova';
+  static const navFila = 'Fila de sincronização';
+  static const navFilaCurto = 'Fila';
+  static const navConta = 'Conta';
+
+  // ------------------------------------------------------------ pacientes --
+  static const pacientesBuscaDica = 'Buscar por nome ou queixa';
+  static String pacientesQuantidade(int n) =>
+      n == 1 ? '1 paciente' : '$n pacientes';
+  static const pacientesColunaPaciente = 'Paciente · queixa';
+  static const pacientesColunaUltimaSessao = 'Última sessão';
+  static const pacientesColunaTendencia = 'Tendência AVQI';
+  static String pacientesUltimaSessao(String data) => 'última sessão $data';
+  static const pacientesNenhumaSessao = 'nenhuma sessão';
+  static const pacientesNotaTendencia =
+      'Tendência = comparação do AVQI nas duas últimas sessões. Apoio à '
+      'decisão; não é diagnóstico.';
+  static const pacientesVaziaTitulo = 'Nenhum paciente ainda';
+  static const pacientesVaziaTexto =
+      'Cadastre o primeiro paciente para iniciar uma avaliação. Os dados ficam '
+      'salvos neste aparelho e sincronizam quando houver conexão.';
+  static const pacientesCadastrar = 'Cadastrar paciente';
+  static String pacientesSemResultado(String termo) =>
+      'Nenhum resultado para “$termo”';
+  static const pacientesSemResultadoDica =
+      'Procure por parte do nome ou da queixa — ex.: “rouquidão”.';
+  static const pacientesLimparBusca = 'Limpar busca';
+  static const pacientesErroCarregar =
+      'Não foi possível abrir a lista de pacientes deste aparelho.';
+  static const tentarNovamente = 'Tentar novamente';
+
+  // ----------------------------------------------------- tendência AVQI --
+  // TODO(clínico): "melhorando" e "piorando" vêm do protótipo e aguardam
+  // revisão — é leitura da evolução, e o limiar do que conta como mudança
+  // ainda não foi definido.
+  static const tendenciaMelhorando = 'melhorando';
+  static const tendenciaEstavel = 'estável';
+  static const tendenciaPiorando = 'piorando';
+  static const tendenciaSemComparacao = 'sem comparação';
+
+  // --------------------------------------------------------------- datas --
+  static const _meses = [
+    'jan', 'fev', 'mar', 'abr', 'mai', 'jun', //
+    'jul', 'ago', 'set', 'out', 'nov', 'dez',
+  ];
+
+  /// "02 jul 2026". Dia com dois dígitos para as datas alinharem em coluna.
+  static String data(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')} ${_meses[d.month - 1]} ${d.year}';
 
   // --------------------------------------------------------------- login --
   static const loginSubtitulo = 'Avaliação vocal clínica';

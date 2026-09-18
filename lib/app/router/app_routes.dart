@@ -16,6 +16,11 @@ abstract final class AppRoutes {
   static const pacientesNome = 'pacientes';
   static const pacientesCaminho = '/pacientes';
 
+  // /pacientes/novo — declarada ANTES de :pacienteId, senão "novo" seria lido
+  // como id de paciente.
+  static const novaAvaliacaoNome = 'novaAvaliacao';
+  static const novaAvaliacaoCaminho = 'novo';
+
   // /pacientes/:pacienteId
   static const pacienteDetalheNome = 'pacienteDetalhe';
   static const pacienteDetalheCaminho = ':$paramPacienteId';
@@ -31,6 +36,14 @@ abstract final class AppRoutes {
   // /pacientes/:pacienteId/analise/:analiseId
   static const analiseResultadoNome = 'analiseResultado';
   static const analiseResultadoCaminho = 'analise/:$paramAnaliseId';
+
+  // /fila
+  static const filaNome = 'fila';
+  static const filaCaminho = '/fila';
+
+  // /conta
+  static const contaNome = 'conta';
+  static const contaCaminho = '/conta';
 
   // /historico
   static const historicoNome = 'historico';
