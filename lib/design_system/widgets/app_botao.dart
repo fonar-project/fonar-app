@@ -102,6 +102,13 @@ class AppBotao extends StatelessWidget {
   /// ocupa a linha inteira.
   final bool ocupaLargura;
 
+  /// Altura do botão principal. Maior que o alvo mínimo de toque: é a ação que
+  /// o profissional procura com o canto do olho.
+  static const alturaPrimario = 52.0;
+
+  /// Altura do secundário — o alvo mínimo de toque, nunca menos.
+  static const alturaSecundario = AppSpacing.alvoDeToqueMinimo;
+
   bool get _desabilitado => aoTocar == null;
 
   @override
@@ -143,7 +150,7 @@ class AppBotao extends StatelessWidget {
   Widget _construirPrimario(BuildContext context) {
     return FilledButton(
       onPressed: aoTocar,
-      style: _estiloBase().copyWith(
+      style: _estiloBase(alturaPrimario).copyWith(
         backgroundColor: WidgetStateProperty.resolveWith((estados) {
           if (estados.contains(WidgetState.disabled)) {
             return AppColors.lavandaClaro;
@@ -159,11 +166,11 @@ class AppBotao extends StatelessWidget {
               ? AppColors.secundarioSobreLavanda
               : AppColors.creme,
         ),
-        // Anel de foco de 3 px por fora do botão. Sem isso, navegar por teclado
-        // no desktop vira adivinhação.
+        // Anel de foco de 3 px na cor de foco do projeto. Sem isso, navegar por
+        // teclado no desktop vira adivinhação.
         side: WidgetStateProperty.resolveWith(
           (estados) => estados.contains(WidgetState.focused)
-              ? const BorderSide(color: AppColors.roxoAnel, width: 3)
+              ? const BorderSide(color: AppColors.foco, width: 3)
               : BorderSide.none,
         ),
       ),
@@ -174,7 +181,7 @@ class AppBotao extends StatelessWidget {
   Widget _construirSecundario(BuildContext context) {
     return OutlinedButton(
       onPressed: aoTocar,
-      style: _estiloBase().copyWith(
+      style: _estiloBase(alturaSecundario).copyWith(
         backgroundColor: WidgetStateProperty.resolveWith((estados) {
           if (estados.contains(WidgetState.pressed) ||
               estados.contains(WidgetState.hovered)) {
@@ -192,7 +199,7 @@ class AppBotao extends StatelessWidget {
             return const BorderSide(color: AppColors.lavandaClaro);
           }
           if (estados.contains(WidgetState.focused)) {
-            return const BorderSide(color: AppColors.roxoProfundo, width: 3);
+            return const BorderSide(color: AppColors.foco, width: 3);
           }
           return const BorderSide(color: AppColors.roxoProfundo, width: 1.5);
         }),
@@ -201,15 +208,13 @@ class AppBotao extends StatelessWidget {
     );
   }
 
-  ButtonStyle _estiloBase() => ButtonStyle(
-    minimumSize: const WidgetStatePropertyAll(
-      Size(0, AppSpacing.alvoDeToqueMinimo),
-    ),
+  ButtonStyle _estiloBase(double altura) => ButtonStyle(
+    minimumSize: WidgetStatePropertyAll(Size(0, altura)),
     padding: const WidgetStatePropertyAll(
       EdgeInsets.symmetric(horizontal: AppSpacing.lg + AppSpacing.xxs),
     ),
     shape: const WidgetStatePropertyAll(
-      RoundedRectangleBorder(borderRadius: AppRadius.bordaMedia),
+      RoundedRectangleBorder(borderRadius: AppRadius.bordaPequena),
     ),
     textStyle: WidgetStatePropertyAll(AppTypography.textTheme.labelLarge),
     animationDuration: AppMovimento.rapida,

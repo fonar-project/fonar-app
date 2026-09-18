@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:praatico_app/design_system/theme/app_theme.dart';
+import 'package:praatico_app/design_system/tokens/app_colors.dart';
 import 'package:praatico_app/design_system/widgets/app_botao.dart';
 import 'package:praatico_app/design_system/widgets/app_campo_texto.dart';
+import 'package:praatico_app/design_system/widgets/app_icone.dart';
 import 'package:praatico_app/design_system/widgets/app_indicador_conexao.dart';
 import 'package:praatico_app/design_system/widgets/app_status_medida.dart';
 import 'package:praatico_app/l10n/app_strings.dart';
@@ -147,6 +149,32 @@ void main() {
 
       await tester.pumpWidget(_tela(const AppIndicadorConexao(online: false)));
       expect(find.text(AppStrings.conexaoOffline), findsOneWidget);
+    });
+
+    testWidgets('nunca usa cor de status de medida', (tester) async {
+      // Verde, amarelo e vermelho são exclusivos de status de medida e
+      // saturação de áudio. Um "online" verde ao lado de uma medida "dentro da
+      // faixa" verde diria que as duas coisas são da mesma natureza.
+      final reservadas = {AppColors.sucesso, AppColors.atencao, AppColors.erro};
+
+      for (final online in [true, false]) {
+        for (final escuro in [true, false]) {
+          await tester.pumpWidget(
+            _tela(
+              AppIndicadorConexao(online: online, sobreFundoEscuro: escuro),
+            ),
+          );
+          final cores = [
+            ...tester
+                .widgetList<AppIcone>(find.byType(AppIcone))
+                .map((i) => i.cor),
+            ...tester
+                .widgetList<Text>(find.byType(Text))
+                .map((t) => t.style?.color),
+          ];
+          expect(cores.where(reservadas.contains), isEmpty);
+        }
+      }
     });
   });
 }

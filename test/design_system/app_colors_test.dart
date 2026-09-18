@@ -85,6 +85,14 @@ void main() {
       },
     );
 
+    test('anel de foco se destaca do fundo', () {
+      // 3:1 é o mínimo WCAG para indicador de interface (critério 1.4.11).
+      expect(
+        contraste(AppColors.foco, AppColors.creme),
+        greaterThanOrEqualTo(3.0),
+      );
+    });
+
     test('cores de status passam em AA sobre o fundo principal', () {
       for (final cor in [
         AppColors.sucesso,

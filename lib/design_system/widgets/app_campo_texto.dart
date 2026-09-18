@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../tokens/app_colors.dart';
-import '../tokens/app_radius.dart';
 import '../tokens/app_spacing.dart';
 import 'app_icone.dart';
 
@@ -65,11 +64,6 @@ class AppCampoTexto extends StatelessWidget {
 
   bool get _temErro => erro != null && erro!.isNotEmpty;
 
-  static const _bordaDeErro = OutlineInputBorder(
-    borderRadius: AppRadius.bordaMedia,
-    borderSide: BorderSide(color: AppColors.erro, width: 2),
-  );
-
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
@@ -83,7 +77,7 @@ class AppCampoTexto extends StatelessWidget {
       children: [
         Text(
           rotulo,
-          style: tema.textTheme.labelMedium?.copyWith(color: corDoRotulo),
+          style: tema.textTheme.labelSmall?.copyWith(color: corDoRotulo),
         ),
         const SizedBox(height: AppSpacing.xxs + 2),
         TextField(
@@ -103,16 +97,15 @@ class AppCampoTexto extends StatelessWidget {
             hintStyle: tema.textTheme.bodyMedium?.copyWith(
               color: AppColors.secundarioSobreCreme,
             ),
-            fillColor: habilitado
-                ? AppColors.branco
-                : AppColors.lavandaClaro.withValues(alpha: 0.35),
+            filled: !habilitado,
+            fillColor: AppColors.lavandaClaro.withValues(alpha: 0.35),
             // A mensagem de erro é desenhada abaixo deste widget, com ícone —
             // não pelo `errorText` do Material, que é só texto vermelho. Aqui
-            // fica apenas a borda, e ela é sobrescrita à mão em vez de deixar
-            // o campo entrar no estado de erro do Material: assim o espaço da
-            // mensagem não é reservado duas vezes.
-            enabledBorder: _temErro ? _bordaDeErro : null,
-            focusedBorder: _temErro ? _bordaDeErro : null,
+            // fica apenas a borda. O foco continua azul mesmo com erro: ele diz
+            // ONDE o teclado está, e o erro já está dito em texto logo abaixo.
+            enabledBorder: _temErro
+                ? Theme.of(context).inputDecorationTheme.errorBorder
+                : null,
           ),
         ),
         if (_temErro)
@@ -156,8 +149,10 @@ class _Mensagem extends StatelessWidget {
           Expanded(
             child: Text(
               texto,
-              style: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(color: cor),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: cor,
+                fontWeight: ehErro ? FontWeight.w600 : null,
+              ),
             ),
           ),
         ],

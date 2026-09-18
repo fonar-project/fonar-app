@@ -28,6 +28,16 @@ abstract final class AppTheme {
   /// contraste não verificado.
   static ThemeData get escuro => claro;
 
+  static const _bordaCampo = OutlineInputBorder(
+    borderRadius: AppRadius.bordaPequena,
+    borderSide: BorderSide(color: AppColors.cinzaChumbo, width: 1.5),
+  );
+
+  static const _bordaErro = OutlineInputBorder(
+    borderRadius: AppRadius.bordaPequena,
+    borderSide: BorderSide(color: AppColors.erro, width: 1.5),
+  );
+
   static const _esquemaClaro = ColorScheme(
     brightness: Brightness.light,
 
@@ -92,36 +102,29 @@ abstract final class AppTheme {
         space: 1,
       ),
 
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: esquema.surfaceContainerLowest,
-        border: const OutlineInputBorder(
-          borderRadius: AppRadius.bordaMedia,
-          borderSide: BorderSide(color: AppColors.lavandaClaro),
+      // Campo com borda chumbo de 1,5 px, não lavanda: sobre o creme, a
+      // lavanda some e o campo vira texto solto na tela. O foco troca a borda
+      // pela cor de foco do projeto, como em todo controle interativo.
+      inputDecorationTheme: const InputDecorationTheme(
+        filled: false,
+        border: _bordaCampo,
+        enabledBorder: _bordaCampo,
+        disabledBorder: OutlineInputBorder(
+          borderRadius: AppRadius.bordaPequena,
+          borderSide: BorderSide(color: AppColors.lavandaClaro, width: 1.5),
         ),
-        enabledBorder: const OutlineInputBorder(
-          borderRadius: AppRadius.bordaMedia,
-          borderSide: BorderSide(color: AppColors.lavandaClaro),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: AppRadius.bordaPequena,
+          borderSide: BorderSide(color: AppColors.foco, width: 3),
         ),
-        focusedBorder: const OutlineInputBorder(
-          borderRadius: AppRadius.bordaMedia,
-          borderSide: BorderSide(color: AppColors.roxoProfundo, width: 2),
+        errorBorder: _bordaErro,
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: AppRadius.bordaPequena,
+          borderSide: BorderSide(color: AppColors.foco, width: 3),
         ),
-        errorBorder: const OutlineInputBorder(
-          borderRadius: AppRadius.bordaMedia,
-          borderSide: BorderSide(color: AppColors.erro, width: 2),
-        ),
-        focusedErrorBorder: const OutlineInputBorder(
-          borderRadius: AppRadius.bordaMedia,
-          borderSide: BorderSide(color: AppColors.erro, width: 2),
-        ),
-        disabledBorder: const OutlineInputBorder(
-          borderRadius: AppRadius.bordaMedia,
-          borderSide: BorderSide(color: AppColors.lavandaClaro),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.md - 2,
+          vertical: AppSpacing.sm + 1,
         ),
       ),
 

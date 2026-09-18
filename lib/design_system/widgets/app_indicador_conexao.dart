@@ -13,8 +13,14 @@ import 'app_icone.dart';
 /// sair hoje ou entrar na fila. Descobrir isso depois de gravar é perder a
 /// amostra e o tempo do paciente.
 ///
-/// Ícone e texto sempre juntos — um ponto colorido no canto não comunica
-/// estado de conexão para quem não distingue verde de cinza.
+/// ## Sem verde, de propósito
+///
+/// Verde, amarelo e vermelho são exclusivos de status de medida e saturação de
+/// áudio. Conexão não é nenhum dos dois — um "online" verde ao lado de uma
+/// medida "dentro da faixa" verde diria que as duas coisas são da mesma
+/// natureza. O estado se distingue por FORMA: ponto cheio contra anel vazado,
+/// borda fina contra borda grossa, texto regular contra negrito. Sem conexão é
+/// o estado que exige atenção, então é ele que pesa mais.
 class AppIndicadorConexao extends StatelessWidget {
   const AppIndicadorConexao({
     required this.online,
@@ -24,29 +30,33 @@ class AppIndicadorConexao extends StatelessWidget {
 
   final bool online;
 
-  /// No cabeçalho roxo o indicador inverte: creme sobre roxo. A cor de status
-  /// perde contraste ali, então quem diferencia é o ícone mais o texto.
+  /// No cabeçalho roxo do mobile o indicador vira creme sobre roxo.
   final bool sobreFundoEscuro;
 
   @override
   Widget build(BuildContext context) {
-    final cor = sobreFundoEscuro
+    final corBase = sobreFundoEscuro ? AppColors.creme : AppColors.cinzaChumbo;
+    final corDoPonto = sobreFundoEscuro
         ? AppColors.creme
-        : (online ? AppColors.sucesso : AppColors.secundarioSobreCreme);
+        : (online ? AppColors.roxoProfundo : AppColors.cinzaChumbo);
 
-    final texto = online ? AppStrings.conexaoOnline : AppStrings.conexaoOffline;
+    final borda = online
+        ? BorderSide(
+            color: sobreFundoEscuro
+                ? AppColors.creme.withValues(alpha: 0.4)
+                : AppColors.lavandaClaro,
+          )
+        : BorderSide(color: corBase, width: 1.5);
 
     return MergeSemantics(
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.xs,
-          vertical: AppSpacing.xxs,
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xxs + 1,
         ),
         decoration: BoxDecoration(
-          color: sobreFundoEscuro
-              ? AppColors.creme.withValues(alpha: 0.12)
-              : cor.withValues(alpha: 0.10),
-          borderRadius: AppRadius.bordaPequena,
+          border: Border.fromBorderSide(borda),
+          borderRadius: AppRadius.bordaPilula,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -55,14 +65,16 @@ class AppIndicadorConexao extends StatelessWidget {
               nome: online
                   ? NomeIcone.estadoOnline
                   : NomeIcone.estadoSemConexao,
-              cor: cor,
+              cor: corDoPonto,
               tamanho: 16,
             ),
-            const SizedBox(width: AppSpacing.xxs + 2),
+            const SizedBox(width: AppSpacing.xxs),
             Text(
-              texto,
-              style: Theme.of(context).textTheme.labelSmall
-                  ?.copyWith(color: cor),
+              online ? AppStrings.conexaoOnline : AppStrings.conexaoOffline,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: corBase,
+                fontWeight: online ? FontWeight.w600 : FontWeight.w700,
+              ),
             ),
           ],
         ),

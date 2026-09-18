@@ -38,9 +38,6 @@ abstract final class AppColors {
   /// Fundo de ícone, hover de botão secundário. Roxo a 7%.
   static const roxoVeu = Color(0x1240085E);
 
-  /// Anel de foco do botão primário. Roxo a 30%.
-  static const roxoAnel = Color(0x4D40085E);
-
   /// Superfície neutra de card sobre o creme.
   static const branco = Color(0xFFFFFFFF);
 
@@ -63,8 +60,12 @@ abstract final class AppColors {
   static const atencao = Color(0xFF8A5A00);
   static const erro = Color(0xFFB3261E);
 
-  /// Indicador de foco de teclado. Precisa ser visível nos dois temas —
-  /// navegação por teclado é requisito no Windows.
+  /// Indicador de foco de teclado, em TODO controle interativo. Navegação por
+  /// teclado é requisito no Windows.
+  ///
+  /// É azul, fora da paleta, de propósito: foco precisa se destacar de tudo o
+  /// que a tela já pinta de roxo. A landing page usa um anel roxo translúcido;
+  /// no aplicativo, com botão roxo sobre cabeçalho roxo, esse anel sumiria.
   static const foco = Color(0xFF0B57D0);
 
   /// Semente do Material 3. O restante do esquema é derivado dela, mas os
