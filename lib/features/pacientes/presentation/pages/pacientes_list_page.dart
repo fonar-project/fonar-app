@@ -233,7 +233,13 @@ class _LayoutCompacto extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
+                  // Wrap, não Row: com o texto do sistema ampliado, marca e
+                  // indicador não cabem lado a lado e o indicador desce.
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: AppSpacing.md,
+                    runSpacing: AppSpacing.xs,
                     children: [
                       Semantics(
                         header: true,
@@ -248,7 +254,6 @@ class _LayoutCompacto extends ConsumerWidget {
                               ),
                         ),
                       ),
-                      const Spacer(),
                       AppIndicadorConexao(
                         online: ref.watch(conexaoOnlineProvider),
                       ),

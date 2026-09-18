@@ -225,6 +225,20 @@ void main() {
     });
   });
 
+  group('texto ampliado pelo sistema', () {
+    for (final (nome, pacientes) in [
+      ('lista', null),
+      ('lista vazia', () async => <Paciente>[]),
+    ]) {
+      testWidgets('celular com $nome em 200% não estoura', (tester) async {
+        tester.platformDispatcher.textScaleFactorTestValue = 2;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        await _abrir(tester, pacientes: pacientes);
+        expect(tester.takeException(), isNull);
+      });
+    }
+  });
+
   group('navegação principal', () {
     for (final (nome, tamanho, rotulo) in [
       ('celular', _celular, AppStrings.navFilaCurto),
