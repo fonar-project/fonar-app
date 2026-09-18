@@ -278,14 +278,20 @@ class _ItemInferior extends StatelessWidget {
             ),
           ),
         ),
-        child: Text(
-          destino.rotuloCurto,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: ativo
-                ? AppColors.roxoProfundo
-                : AppColors.secundarioSobreLavanda,
-            fontWeight: ativo ? FontWeight.w800 : FontWeight.w600,
+        // FittedBox reduz o rótulo só quando ele não cabe na aba. Com o texto
+        // do sistema em 200%, "Pacientes" quebrava no meio da palavra
+        // ("Pacien/tes"), que é pior que letra um pouco menor.
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            destino.rotuloCurto,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: ativo
+                  ? AppColors.roxoProfundo
+                  : AppColors.secundarioSobreLavanda,
+              fontWeight: ativo ? FontWeight.w800 : FontWeight.w600,
+            ),
           ),
         ),
       ),
