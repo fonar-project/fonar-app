@@ -36,7 +36,9 @@ enum StatusMedida {
   semReferencia(
     rotulo: AppStrings.statusSemReferencia,
     icone: NomeIcone.semReferencia,
-    cor: AppColors.secundarioSobreCreme,
+    // O tom escuro, não o "sobre creme": o selo pinta o próprio fundo com a
+    // cor a 10%, e sobre essa mistura o tom claro cai para 4,41:1.
+    cor: AppColors.secundarioSobreLavanda,
   );
 
   const StatusMedida({

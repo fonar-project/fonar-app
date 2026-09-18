@@ -40,7 +40,8 @@ class AppBotao extends StatelessWidget {
     this.ocupaLargura = false,
     super.key,
   }) : assert(
-         aoTocar != null || motivoDesabilitado != null,
+         aoTocar != null ||
+             (motivoDesabilitado != null && motivoDesabilitado != ''),
          'Botão desabilitado precisa de motivoDesabilitado: o usuário tem de '
          'saber por que não pode agir. Cor apagada não é explicação.',
        );
@@ -120,12 +121,16 @@ class AppBotao extends StatelessWidget {
         ? SizedBox(width: double.infinity, child: botao)
         : botao;
 
-    if (!_desabilitado) return comLargura;
+    // Sem motivo, só em build de produção: o assert do construtor pega isso em
+    // desenvolvimento. Em produção os asserts somem, e aí é melhor mostrar o
+    // botão apagado sem explicação do que derrubar a tela inteira.
+    final motivo = motivoDesabilitado?.trim() ?? '';
+    if (!_desabilitado || motivo.isEmpty) return comLargura;
 
     // O motivo é anunciado junto do rótulo, para o leitor de tela não ler
     // "botão desabilitado" e parar aí.
     return Semantics(
-      hint: motivoDesabilitado,
+      hint: motivo,
       child: Column(
         crossAxisAlignment: ocupaLargura
             ? CrossAxisAlignment.stretch
@@ -136,7 +141,7 @@ class AppBotao extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           ExcludeSemantics(
             child: Text(
-              motivoDesabilitado!,
+              motivo,
               style: Theme.of(context).textTheme.bodySmall
                   // O token "sobre lavanda" e não o "sobre creme": o motivo
                   // aparece também dentro de aviso lavanda, onde o tom mais

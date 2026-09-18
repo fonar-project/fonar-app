@@ -41,6 +41,18 @@ void main() {
       );
     });
 
+    test('recusa motivo vazio', () {
+      String motivo() => '';
+      expect(
+        () => AppBotao.primario(
+          rotulo: 'Baixar',
+          aoTocar: null,
+          motivoDesabilitado: motivo(),
+        ),
+        throwsAssertionError,
+      );
+    });
+
     testWidgets('desabilitado mostra o motivo em texto', (tester) async {
       await tester.pumpWidget(
         _tela(
@@ -108,6 +120,19 @@ void main() {
         _tela(const AppCampoTexto(rotulo: 'Nome completo')),
       );
       expect(find.text('Nome completo'), findsOneWidget);
+    });
+
+    testWidgets('leitor de tela anuncia o campo pelo rótulo', (tester) async {
+      // O rótulo é um Text separado, em cima do campo. Sem fundir os dois na
+      // árvore de acessibilidade, o campo era anunciado sem nome nenhum.
+      final semantica = tester.ensureSemantics();
+      await tester.pumpWidget(_tela(const AppCampoTexto(rotulo: 'E-mail')));
+
+      expect(
+        tester.getSemantics(find.byType(EditableText)),
+        isSemantics(label: 'E-mail', isTextField: true),
+      );
+      semantica.dispose();
     });
 
     testWidgets('erro aparece como mensagem de texto', (tester) async {
