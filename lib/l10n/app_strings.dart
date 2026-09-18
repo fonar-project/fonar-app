@@ -66,15 +66,15 @@ abstract final class AppStrings {
   static const loginOfflineComCacheTitulo =
       'Sem conexão — dados locais disponíveis';
   static String loginOfflineComCacheTexto(int pacientes) =>
-      'Este aparelho tem o cache de $pacientes '
-      '${pacientes == 1 ? 'paciente' : 'pacientes'}. Dá para gravar e revisar; '
-      'o envio para análise aguarda a conexão voltar.';
+      'Este aparelho tem $pacientes '
+      '${pacientes == 1 ? 'paciente salvo' : 'pacientes salvos'}. Dá para '
+      'gravar e revisar; o envio para análise aguarda a conexão voltar.';
   static const loginEntrarOffline = 'Entrar em modo offline';
 
   static const loginOfflineSemCacheTitulo = 'Sem conexão e sem dados locais';
   static const loginOfflineSemCacheTexto =
-      'Este aparelho ainda não tem cache. Conecte-se ao menos uma vez para '
-      'baixar seus pacientes e habilitar o modo offline.';
+      'Este aparelho ainda não tem pacientes salvos. Conecte-se ao menos uma '
+      'vez para baixar seus pacientes e habilitar o modo offline.';
   static const loginOfflineIndisponivel = 'Modo offline indisponível';
 
   /// Rodapé de toda tela de entrada. O sistema é apoio à decisão e nenhum

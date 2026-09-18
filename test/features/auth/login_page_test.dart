@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -156,6 +157,116 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text(_telaDePacientes), findsOneWidget);
     });
+  });
+
+  group('durante a tentativa', () {
+    testWidgets('campos não aceitam edição enquanto espera a resposta', (
+      tester,
+    ) async {
+      // Enviou A, editou para B durante a espera: a resposta de A apareceria
+      // junto dos valores B.
+      final espera = Completer<void>();
+      await _abrir(
+        tester,
+        repositorio: _RepositorioFalso(
+          espera: espera,
+          erro: const CredencialInvalida(),
+        ),
+      );
+      await _preencher(tester);
+      await tester.tap(find.byType(FilledButton));
+      await tester.pump();
+
+      for (final campo in tester.widgetList<TextField>(
+        find.byType(TextField),
+      )) {
+        expect(campo.readOnly, isTrue);
+      }
+
+      espera.complete();
+      await tester.pumpAndSettle();
+      // Resposta chegou: dá para corrigir a senha.
+      expect(
+        tester.widget<TextField>(find.byType(TextField).at(1)).readOnly,
+        isFalse,
+      );
+    });
+  });
+
+  group('teclado', () {
+    // Botão: o Focus é ancestral do rótulo. Campo de texto: o nó de foco é do
+    // próprio EditableText.
+    bool focado(WidgetTester tester, Finder alvo) =>
+        Focus.of(tester.element(alvo)).hasPrimaryFocus;
+    bool campoFocado(WidgetTester tester, int indice) => tester
+        .widget<EditableText>(find.byType(EditableText).at(indice))
+        .focusNode
+        .hasPrimaryFocus;
+
+    testWidgets('Tab percorre e-mail, senha, entrar, esqueci a senha', (
+      tester,
+    ) async {
+      await _abrir(tester, tamanho: _desktop);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      expect(campoFocado(tester, 0), isTrue, reason: 'e-mail');
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      expect(campoFocado(tester, 1), isTrue, reason: 'senha');
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      expect(
+        // No desktop "Entrar" também é o título da tela.
+        focado(
+          tester,
+          find.descendant(
+            of: find.byType(FilledButton),
+            matching: find.text(AppStrings.loginBotaoEntrar),
+          ),
+        ),
+        isTrue,
+        reason: 'entrar',
+      );
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      expect(
+        focado(tester, find.text(AppStrings.loginEsqueciSenha)),
+        isTrue,
+        reason: 'esqueci a senha',
+      );
+    });
+
+    testWidgets('"Esqueci a senha" desenha anel de foco visível', (
+      tester,
+    ) async {
+      await _abrir(tester, tamanho: _desktop);
+      final estilo = tester.widget<TextButton>(find.byType(TextButton)).style!;
+      final lado = estilo.side!.resolve({WidgetState.focused})!;
+      expect(lado.width, 3);
+      expect(lado.style, BorderStyle.solid);
+    });
+  });
+
+  group('texto ampliado pelo sistema', () {
+    // Fonte em 200% é configuração comum entre profissionais mais velhos, e
+    // o teste falha se qualquer coisa estourar a largura do celular.
+    for (final (nome, online, cache) in [
+      ('online', true, 0),
+      ('offline com pacientes', false, 5),
+      ('offline sem pacientes', false, 0),
+    ]) {
+      testWidgets('celular $nome em 200% não estoura', (tester) async {
+        tester.platformDispatcher.textScaleFactorTestValue = 2;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        await _abrir(tester, online: online, pacientesEmCache: cache);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+      });
+    }
   });
 
   group('sem conexão', () {
