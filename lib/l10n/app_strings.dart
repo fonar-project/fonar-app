@@ -44,6 +44,45 @@ abstract final class AppStrings {
   static const analiseResultadoTitulo = 'Resultado da análise';
   static const historicoTitulo = 'Histórico';
 
+  // --------------------------------------------------------------- login --
+  static const loginSubtitulo = 'Avaliação vocal clínica';
+  static const loginDescricao =
+      'Gravação guiada, medidas acústicas e evolução do paciente — como apoio à '
+      'decisão do profissional. O FONAR não emite diagnóstico.';
+  static const loginCampoEmail = 'E-mail';
+  static const loginCampoSenha = 'Senha';
+  static const loginInformeEmail = 'Informe o e-mail.';
+  static const loginInformeSenha = 'Informe a senha.';
+  static const loginBotaoEntrar = 'Entrar';
+  static const loginBotaoEntrando = 'Entrando…';
+  static const loginEntrarExigeConexao =
+      'Entrar com e-mail e senha exige conexão.';
+  static const loginEsqueciSenha = 'Esqueci a senha';
+
+  /// TODO(auth): remover quando a recuperação de senha do Firebase existir.
+  static const loginRecuperacaoIndisponivel =
+      'Recuperação de senha ainda não disponível nesta versão (placeholder).';
+
+  static const loginOfflineComCacheTitulo =
+      'Sem conexão — dados locais disponíveis';
+  static String loginOfflineComCacheTexto(int pacientes) =>
+      'Este aparelho tem o cache de $pacientes '
+      '${pacientes == 1 ? 'paciente' : 'pacientes'}. Dá para gravar e revisar; '
+      'o envio para análise aguarda a conexão voltar.';
+  static const loginEntrarOffline = 'Entrar em modo offline';
+
+  static const loginOfflineSemCacheTitulo = 'Sem conexão e sem dados locais';
+  static const loginOfflineSemCacheTexto =
+      'Este aparelho ainda não tem cache. Conecte-se ao menos uma vez para '
+      'baixar seus pacientes e habilitar o modo offline.';
+  static const loginOfflineIndisponivel = 'Modo offline indisponível';
+
+  /// Rodapé de toda tela de entrada. O sistema é apoio à decisão e nenhum
+  /// texto pode sugerir o contrário — este diz isso antes do primeiro uso.
+  static const avisoApoioDecisao =
+      'Ferramenta de apoio à decisão — não substitui a avaliação do '
+      'profissional.';
+
   // ----------------------------------------------------------- placeholder --
   /// TODO: remover junto com [TelaPlaceholder] quando as telas reais existirem.
   static const telaEmConstrucao = 'Tela ainda não implementada.';
@@ -57,6 +96,8 @@ abstract final class AppStrings {
       'O servidor demorou para responder. Tente novamente.';
   static const erroNaoAutorizado =
       'Sua sessão expirou. Entre novamente para continuar.';
+  static const erroCredencialInvalida =
+      'E-mail ou senha incorretos. Confira e tente novamente.';
   static const erroProibido = 'Você não tem acesso a este recurso.';
   static const erroNaoEncontrado = 'Não encontramos o que você procurava.';
   static const erroValidacao = 'Confira os dados informados e tente novamente.';
