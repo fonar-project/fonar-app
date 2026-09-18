@@ -104,6 +104,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             controlador: _email,
             erro: estado.erroEmail,
             habilitado: online,
+            // Enquanto a tentativa está no ar, o que está na tela é o que foi
+            // enviado. Editar agora faria a resposta da tentativa A aparecer
+            // junto dos valores B.
+            somenteLeitura: estado.carregando,
             tipoDeTeclado: TextInputType.emailAddress,
             acaoDeEntrada: TextInputAction.next,
             aoEnviar: (_) => _focoSenha.requestFocus(),
@@ -117,6 +121,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             foco: _focoSenha,
             erro: estado.erroSenha,
             habilitado: online,
+            // Enquanto a tentativa está no ar, o que está na tela é o que foi
+            // enviado. Editar agora faria a resposta da tentativa A aparecer
+            // junto dos valores B.
+            somenteLeitura: estado.carregando,
             ocultarTexto: true,
             acaoDeEntrada: TextInputAction.done,
             aoEnviar: (_) => _entrar(),
@@ -143,13 +151,27 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             Center(
               child: TextButton(
                 onPressed: _esqueciSenha,
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.roxoProfundo,
-                  minimumSize: const Size(0, AppSpacing.alvoDeToqueMinimo),
-                  textStyle: textos.labelSmall?.copyWith(
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
+                style:
+                    TextButton.styleFrom(
+                      foregroundColor: AppColors.roxoProfundo,
+                      minimumSize: const Size(0, AppSpacing.alvoDeToqueMinimo),
+                      textStyle: textos.labelSmall?.copyWith(
+                        decoration: TextDecoration.underline,
+                      ),
+                    ).copyWith(
+                      // O foco padrão do TextButton é um véu de 7%: some para quem
+                      // navega por teclado. Mesmo anel dos outros controles.
+                      side: WidgetStateProperty.resolveWith(
+                        (estados) => estados.contains(WidgetState.focused)
+                            ? const BorderSide(color: AppColors.foco, width: 3)
+                            : BorderSide.none,
+                      ),
+                      shape: const WidgetStatePropertyAll(
+                        RoundedRectangleBorder(
+                          borderRadius: AppRadius.bordaPequena,
+                        ),
+                      ),
+                    ),
                 child: const Text(AppStrings.loginEsqueciSenha),
               ),
             ),
@@ -313,23 +335,28 @@ class _LayoutCompacto extends StatelessWidget {
                 AppSpacing.lg,
                 AppSpacing.lg + 2,
               ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // Wrap, não Row: com o texto do sistema ampliado, marca e
+              // indicador não cabem lado a lado em 390 px, e o indicador desce
+              // para a linha de baixo em vez de espremer o subtítulo.
+              child: Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.start,
+                spacing: AppSpacing.md,
+                runSpacing: AppSpacing.sm,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const _Marca(tamanho: 30),
-                        const SizedBox(height: 2),
-                        Text(
-                          AppStrings.loginSubtitulo,
-                          style: textos.bodySmall?.copyWith(
-                            color: AppColors.creme.withValues(alpha: 0.85),
-                          ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const _Marca(tamanho: 30),
+                      const SizedBox(height: 2),
+                      Text(
+                        AppStrings.loginSubtitulo,
+                        style: textos.bodySmall?.copyWith(
+                          color: AppColors.creme.withValues(alpha: 0.85),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                   AppIndicadorConexao(online: online, sobreFundoEscuro: true),
                 ],
@@ -348,21 +375,19 @@ class _LayoutCompacto extends StatelessWidget {
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 440),
-                child: formulario,
+                // O aviso vai no fim da rolagem, não fixo embaixo: fixo, ele e
+                // o cabeçalho comiam a altura toda com o texto ampliado, e o
+                // formulário ficava sem espaço nenhum.
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    formulario,
+                    const SizedBox(height: AppSpacing.xl),
+                    const SafeArea(top: false, child: _AvisoApoioDecisao()),
+                  ],
+                ),
               ),
             ),
-          ),
-        ),
-        const SafeArea(
-          top: false,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              AppSpacing.lg - 4,
-              0,
-              AppSpacing.lg - 4,
-              AppSpacing.md + 2,
-            ),
-            child: _AvisoApoioDecisao(),
           ),
         ),
       ],
