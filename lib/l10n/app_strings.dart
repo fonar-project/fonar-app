@@ -9,7 +9,31 @@
 /// "resultado da análise"; evite "normal", "alterado", "patológico".
 abstract final class AppStrings {
   // ---------------------------------------------------------------- geral --
-  static const appTitle = 'Praatico';
+  /// Nome exibido ao usuário. O repositório, o pacote e o projeto Firebase
+  /// ainda dizem "praatico" — é legado e o rename está pendente. O que aparece
+  /// na tela já é FONAR.
+  static const appTitle = 'FONAR';
+
+  // ------------------------------------------------------------- conexão --
+  static const conexaoOnline = 'Online';
+  static const conexaoOffline = 'Sem conexão';
+
+  // ---------------------------------------------------- status de medida --
+  // O vocabulário descreve a MEDIDA comparada à faixa de referência, nunca o
+  // paciente. "Alterado" e "patológico" são leitura clínica, e o sistema não
+  // faz leitura clínica — ver as restrições de produto no CLAUDE.md.
+  static const statusDentroDaFaixa = 'Dentro da faixa';
+  static const statusLimitrofe = 'No limite da faixa';
+  static const statusForaDaFaixa = 'Fora da faixa';
+
+  /// Não existe faixa validada para este perfil de paciente e equipamento.
+  /// A medida aparece; a classificação, não.
+  static const statusSemReferencia = 'Sem faixa de referência';
+
+  /// Explicação de apoio para [statusSemReferencia], em tooltip ou nota.
+  static const semReferenciaExplicacao =
+      'Não há faixa de referência validada para este perfil. A medida é '
+      'exibida sem classificação.';
 
   // ----------------------------------------------------------------- telas --
   static const loginTitulo = 'Entrar';
