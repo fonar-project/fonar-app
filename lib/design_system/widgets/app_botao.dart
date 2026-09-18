@@ -4,7 +4,6 @@ import '../tokens/app_colors.dart';
 import '../tokens/app_movimento.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_spacing.dart';
-import '../tokens/app_typography.dart';
 import 'app_icone.dart';
 
 /// Peso visual do botão dentro da tela.
@@ -139,7 +138,10 @@ class AppBotao extends StatelessWidget {
             child: Text(
               motivoDesabilitado!,
               style: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(color: AppColors.secundarioSobreCreme),
+                  // O token "sobre lavanda" e não o "sobre creme": o motivo
+                  // aparece também dentro de aviso lavanda, onde o tom mais
+                  // claro cai para 4,48:1 e reprova. O escuro passa nos dois.
+                  ?.copyWith(color: AppColors.secundarioSobreLavanda),
             ),
           ),
         ],
@@ -150,7 +152,7 @@ class AppBotao extends StatelessWidget {
   Widget _construirPrimario(BuildContext context) {
     return FilledButton(
       onPressed: aoTocar,
-      style: _estiloBase(alturaPrimario).copyWith(
+      style: _estiloBase(context, alturaPrimario).copyWith(
         backgroundColor: WidgetStateProperty.resolveWith((estados) {
           if (estados.contains(WidgetState.disabled)) {
             return AppColors.lavandaClaro;
@@ -181,7 +183,7 @@ class AppBotao extends StatelessWidget {
   Widget _construirSecundario(BuildContext context) {
     return OutlinedButton(
       onPressed: aoTocar,
-      style: _estiloBase(alturaSecundario).copyWith(
+      style: _estiloBase(context, alturaSecundario).copyWith(
         backgroundColor: WidgetStateProperty.resolveWith((estados) {
           if (estados.contains(WidgetState.pressed) ||
               estados.contains(WidgetState.hovered)) {
@@ -208,7 +210,7 @@ class AppBotao extends StatelessWidget {
     );
   }
 
-  ButtonStyle _estiloBase(double altura) => ButtonStyle(
+  ButtonStyle _estiloBase(BuildContext context, double altura) => ButtonStyle(
     minimumSize: WidgetStatePropertyAll(Size(0, altura)),
     padding: const WidgetStatePropertyAll(
       EdgeInsets.symmetric(horizontal: AppSpacing.lg + AppSpacing.xxs),
@@ -216,7 +218,9 @@ class AppBotao extends StatelessWidget {
     shape: const WidgetStatePropertyAll(
       RoundedRectangleBorder(borderRadius: AppRadius.bordaPequena),
     ),
-    textStyle: WidgetStatePropertyAll(AppTypography.textTheme.labelLarge),
+    // Do tema, não de `AppTypography.textTheme` direto: a família Urbanist é
+    // aplicada pelo ThemeData, e o estilo cru sai na fonte do sistema.
+    textStyle: WidgetStatePropertyAll(Theme.of(context).textTheme.labelLarge),
     animationDuration: AppMovimento.rapida,
     elevation: const WidgetStatePropertyAll(0),
     // A mudança de cor já está em `backgroundColor`; a tinta por cima do

@@ -41,6 +41,13 @@ abstract final class AppColors {
   /// Superfície neutra de card sobre o creme.
   static const branco = Color(0xFFFFFFFF);
 
+  /// Superfície suave de aviso e de campo desabilitado. Lavanda a 35%.
+  ///
+  /// Translúcida: a cor final depende do que está atrás. Sobre o creme ela
+  /// resulta em `#F2EAE7`, e é nesse fundo que o contraste de texto precisa
+  /// ser conferido — ver `app_colors_test.dart`.
+  static const lavandaSuave = Color(0x59DBD2E0);
+
   // ------------------------------------------------ texto secundário --
 
   /// Texto secundário SOBRE CREME. Contraste 5,00:1.

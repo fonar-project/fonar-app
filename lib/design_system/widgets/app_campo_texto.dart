@@ -32,6 +32,7 @@ class AppCampoTexto extends StatelessWidget {
     this.aoEnviar,
     this.foco,
     this.autoCorrecao = true,
+    this.autopreenchimento,
     super.key,
   });
 
@@ -62,6 +63,11 @@ class AppCampoTexto extends StatelessWidget {
   /// automática do teclado troca palavra que o usuário digitou de propósito.
   final bool autoCorrecao;
 
+  /// Dicas para o gerenciador de senhas e o autopreenchimento do sistema, ex.:
+  /// `[AutofillHints.email]`. No desktop do consultório é o que evita digitar
+  /// a senha inteira toda manhã.
+  final Iterable<String>? autopreenchimento;
+
   bool get _temErro => erro != null && erro!.isNotEmpty;
 
   @override
@@ -87,6 +93,7 @@ class AppCampoTexto extends StatelessWidget {
           obscureText: ocultarTexto,
           autocorrect: autoCorrecao,
           enableSuggestions: autoCorrecao,
+          autofillHints: autopreenchimento,
           keyboardType: tipoDeTeclado,
           textInputAction: acaoDeEntrada,
           onChanged: aoMudar,
@@ -98,7 +105,7 @@ class AppCampoTexto extends StatelessWidget {
               color: AppColors.secundarioSobreCreme,
             ),
             filled: !habilitado,
-            fillColor: AppColors.lavandaClaro.withValues(alpha: 0.35),
+            fillColor: AppColors.lavandaSuave,
             // A mensagem de erro é desenhada abaixo deste widget, com ícone —
             // não pelo `errorText` do Material, que é só texto vermelho. Aqui
             // fica apenas a borda. O foco continua azul mesmo com erro: ele diz

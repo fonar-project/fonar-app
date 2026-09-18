@@ -85,6 +85,23 @@ void main() {
       },
     );
 
+    test('texto secundário escuro passa dentro de aviso lavanda', () {
+      // A superfície é translúcida; o que o olho vê é a mistura com o creme.
+      final fundoDoAviso = Color.alphaBlend(
+        AppColors.lavandaSuave,
+        AppColors.creme,
+      );
+      expect(
+        contraste(AppColors.secundarioSobreLavanda, fundoDoAviso),
+        greaterThanOrEqualTo(4.5),
+      );
+      expect(
+        contraste(AppColors.secundarioSobreCreme, fundoDoAviso),
+        lessThan(4.5),
+        reason: 'o token claro reprova aqui — use o escuro dentro de aviso',
+      );
+    });
+
     test('anel de foco se destaca do fundo', () {
       // 3:1 é o mínimo WCAG para indicador de interface (critério 1.4.11).
       expect(
