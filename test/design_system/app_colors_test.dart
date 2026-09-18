@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:praatico_app/design_system/tokens/app_colors.dart';
+import 'package:praatico_app/design_system/widgets/app_status_medida.dart';
 
 /// Razão de contraste WCAG 2.1 entre duas cores opacas.
 ///
@@ -100,6 +101,23 @@ void main() {
         lessThan(4.5),
         reason: 'o token claro reprova aqui — use o escuro dentro de aviso',
       );
+    });
+
+    test('selo de status passa sobre o próprio fundo tingido', () {
+      // O selo pinta o fundo com a cor do status a 10%. O contraste que conta
+      // é o do texto sobre essa mistura, não sobre o creme puro — foi assim
+      // que o "sem faixa de referência" escapou com 4,41:1.
+      for (final status in StatusMedida.values) {
+        final fundo = Color.alphaBlend(
+          status.cor.withValues(alpha: 0.10),
+          AppColors.creme,
+        );
+        expect(
+          contraste(status.cor, fundo),
+          greaterThanOrEqualTo(4.5),
+          reason: status.name,
+        );
+      }
     });
 
     test('anel de foco se destaca do fundo', () {

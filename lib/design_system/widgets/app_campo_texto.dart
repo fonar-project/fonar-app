@@ -81,38 +81,51 @@ class AppCampoTexto extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          rotulo,
-          style: tema.textTheme.labelSmall?.copyWith(color: corDoRotulo),
-        ),
-        const SizedBox(height: AppSpacing.xxs + 2),
-        TextField(
-          controller: controlador,
-          focusNode: foco,
-          enabled: habilitado,
-          obscureText: ocultarTexto,
-          autocorrect: autoCorrecao,
-          enableSuggestions: autoCorrecao,
-          autofillHints: autopreenchimento,
-          keyboardType: tipoDeTeclado,
-          textInputAction: acaoDeEntrada,
-          onChanged: aoMudar,
-          onSubmitted: aoEnviar,
-          style: tema.textTheme.bodyMedium,
-          decoration: InputDecoration(
-            hintText: dica,
-            hintStyle: tema.textTheme.bodyMedium?.copyWith(
-              color: AppColors.secundarioSobreCreme,
-            ),
-            filled: !habilitado,
-            fillColor: AppColors.lavandaSuave,
-            // A mensagem de erro é desenhada abaixo deste widget, com ícone —
-            // não pelo `errorText` do Material, que é só texto vermelho. Aqui
-            // fica apenas a borda. O foco continua azul mesmo com erro: ele diz
-            // ONDE o teclado está, e o erro já está dito em texto logo abaixo.
-            enabledBorder: _temErro
-                ? Theme.of(context).inputDecorationTheme.errorBorder
-                : null,
+        // MergeSemantics funde o rótulo visual e o campo num nó só: sem
+        // isso, o leitor de tela chega no campo e anuncia "caixa de edição",
+        // sem nome. O rótulo em cima é só visual; quem o liga à entrada é
+        // esta fusão.
+        MergeSemantics(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                rotulo,
+                style: tema.textTheme.labelSmall?.copyWith(color: corDoRotulo),
+              ),
+              const SizedBox(height: AppSpacing.xxs + 2),
+              TextField(
+                controller: controlador,
+                focusNode: foco,
+                enabled: habilitado,
+                obscureText: ocultarTexto,
+                autocorrect: autoCorrecao,
+                enableSuggestions: autoCorrecao,
+                autofillHints: autopreenchimento,
+                keyboardType: tipoDeTeclado,
+                textInputAction: acaoDeEntrada,
+                onChanged: aoMudar,
+                onSubmitted: aoEnviar,
+                style: tema.textTheme.bodyMedium,
+                decoration: InputDecoration(
+                  hintText: dica,
+                  hintStyle: tema.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.secundarioSobreCreme,
+                  ),
+                  filled: !habilitado,
+                  fillColor: AppColors.lavandaSuave,
+                  // A mensagem de erro é desenhada abaixo, com ícone — não
+                  // pelo `errorText` do Material, que é só texto vermelho.
+                  // Aqui fica apenas a borda. O foco continua azul mesmo com
+                  // erro: ele diz ONDE o teclado está, e o erro já está dito
+                  // em texto logo abaixo.
+                  enabledBorder: _temErro
+                      ? Theme.of(context).inputDecorationTheme.errorBorder
+                      : null,
+                ),
+              ),
+            ],
           ),
         ),
         if (_temErro)
