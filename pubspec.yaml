@@ -76,6 +76,28 @@ flutter:
   assets:
     - assets/icons_vec/
 
+  # Urbanist — família única do FONAR, licença OFL (ver assets/fonts/OFL.txt).
+  #
+  # Embutida no aplicativo, não baixada em runtime. Gravação funciona offline
+  # em consultório sem sinal; fonte que depende de rede vira texto sem estilo
+  # exatamente na hora em que o profissional está com o paciente ao lado.
+  #
+  # Só quatro pesos, e é de propósito: 400 corpo, 600 rótulo, 700 título,
+  # 800 medida acústica. Cada peso extra são ~73 KB no bundle para uma
+  # distinção que o olho não faz a 1 m de distância. Itálico não entra —
+  # não há uso previsto e ênfase no FONAR é por peso.
+  fonts:
+    - family: Urbanist
+      fonts:
+        - asset: assets/fonts/Urbanist-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Urbanist-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Urbanist-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Urbanist-ExtraBold.ttf
+          weight: 800
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

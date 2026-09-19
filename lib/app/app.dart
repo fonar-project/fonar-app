@@ -15,10 +15,14 @@ class PraaticoApp extends ConsumerWidget {
       title: AppStrings.appTitle,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.claro,
-      darkTheme: AppTheme.escuro,
-      // TODO: permitir que o usuário force claro/escuro. Consultório costuma
-      // ter luz forte; a escolha do sistema nem sempre serve.
-      themeMode: ThemeMode.system,
+      // A identidade do FONAR só define paleta clara. Enquanto não houver
+      // variante escura desenhada e com contraste verificado, o aplicativo
+      // ignora a preferência do sistema de propósito — ver [AppTheme.escuro].
+      //
+      // TODO: desenhar o tema escuro e, junto dele, permitir que o usuário
+      // force claro/escuro. Consultório costuma ter luz forte; a escolha do
+      // sistema nem sempre serve.
+      themeMode: ThemeMode.light,
       routerConfig: ref.watch(routerProvider),
     );
   }
