@@ -38,6 +38,16 @@ final class NaoAutorizado extends AppException {
   const NaoAutorizado({super.causa}) : super(AppStrings.erroNaoAutorizado);
 }
 
+/// E-mail ou senha recusados no login.
+///
+/// Separado de [NaoAutorizado] porque a mensagem é outra: "sua sessão expirou"
+/// para quem acabou de digitar a senha errada manda o usuário procurar o
+/// problema no lugar errado.
+final class CredencialInvalida extends AppException {
+  const CredencialInvalida({super.causa})
+    : super(AppStrings.erroCredencialInvalida);
+}
+
 /// 403 — autenticado, mas sem acesso ao recurso.
 final class Proibido extends AppException {
   const Proibido({super.causa}) : super(AppStrings.erroProibido);

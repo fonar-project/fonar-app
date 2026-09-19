@@ -69,11 +69,16 @@ class AppIndicadorConexao extends StatelessWidget {
               tamanho: 16,
             ),
             const SizedBox(width: AppSpacing.xxs),
-            Text(
-              online ? AppStrings.conexaoOnline : AppStrings.conexaoOffline,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: corBase,
-                fontWeight: online ? FontWeight.w600 : FontWeight.w700,
+            // Flexible: com o texto do sistema em 200%, "Sem conexão" não cabe
+            // numa linha ao lado do ícone em 390 px, e quebrar é melhor que
+            // cortar o estado da rede.
+            Flexible(
+              child: Text(
+                online ? AppStrings.conexaoOnline : AppStrings.conexaoOffline,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: corBase,
+                  fontWeight: online ? FontWeight.w600 : FontWeight.w700,
+                ),
               ),
             ),
           ],

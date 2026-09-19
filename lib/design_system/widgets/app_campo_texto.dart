@@ -25,6 +25,7 @@ class AppCampoTexto extends StatelessWidget {
     this.erro,
     this.apoio,
     this.habilitado = true,
+    this.somenteLeitura = false,
     this.ocultarTexto = false,
     this.tipoDeTeclado,
     this.acaoDeEntrada,
@@ -52,6 +53,11 @@ class AppCampoTexto extends StatelessWidget {
   final String? apoio;
 
   final bool habilitado;
+
+  /// Mantém o foco e o visual normal, mas não aceita edição. Para esperas
+  /// curtas, como o envio de um formulário: desabilitar faria o campo piscar
+  /// em lavanda e perder o foco de teclado a cada tentativa.
+  final bool somenteLeitura;
   final bool ocultarTexto;
   final TextInputType? tipoDeTeclado;
   final TextInputAction? acaoDeEntrada;
@@ -99,6 +105,7 @@ class AppCampoTexto extends StatelessWidget {
                 controller: controlador,
                 focusNode: foco,
                 enabled: habilitado,
+                readOnly: somenteLeitura,
                 obscureText: ocultarTexto,
                 autocorrect: autoCorrecao,
                 enableSuggestions: autoCorrecao,
