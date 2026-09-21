@@ -40,6 +40,20 @@ dependencies:
   flutter_svg: ^2.3.0
   vector_graphics: ^1.2.3
 
+  # Estado da interface de rede, para o indicador de conexão e para o login.
+  #
+  # Escolhido por cobrir as DUAS plataformas do projeto com o mesmo código:
+  # o pubspec do pacote declara `android` e `windows` entre os plugins, junto
+  # de iOS, Linux, macOS e web. Foi o critério de escolha — as alternativas
+  # comuns (internet_connection_checker e afins) ou não declaram Windows ou
+  # dependem de requisição HTTP de sondagem, que gasta dados do celular do
+  # profissional sem responder nada que a fila de sincronização já não saiba.
+  #
+  # LIMITE, documentado também em `lib/core/network/conexao.dart`: ele informa
+  # QUE INTERFACE existe, não que ela alcança a internet. Wi-Fi de consultório
+  # atrás de portal cativo aparece como conectado e não chega à API.
+  connectivity_plus: ^7.3.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

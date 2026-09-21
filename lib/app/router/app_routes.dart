@@ -21,6 +21,12 @@ abstract final class AppRoutes {
   static const novaAvaliacaoNome = 'novaAvaliacao';
   static const novaAvaliacaoCaminho = 'novo';
 
+  /// O mesmo caminho visto de fora da rota pai. Por ser aninhada, a declaração
+  /// acima é RELATIVA ('novo'); quem precisa exibir ou comparar a URL inteira
+  /// usa esta, em vez de repetir '/pacientes/novo' como literal.
+  static const novaAvaliacaoCaminhoCompleto =
+      '$pacientesCaminho/$novaAvaliacaoCaminho';
+
   // /pacientes/:pacienteId
   static const pacienteDetalheNome = 'pacienteDetalhe';
   static const pacienteDetalheCaminho = ':$paramPacienteId';

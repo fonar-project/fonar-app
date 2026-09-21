@@ -4,17 +4,17 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/network/conexao.dart';
+import '../../../../core/offline/pacientes_em_cache.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_colors.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_campo_texto.dart';
-import '../../../../design_system/widgets/app_fundo.dart';
+import '../../../../design_system/widgets/app_estado.dart';
 import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_indicador_conexao.dart';
 import '../../../../l10n/app_strings.dart';
-import '../../../pacientes/data/pacientes_em_cache.dart';
 import '../login_controlador.dart';
 
 /// Tela 00 — entrada do profissional.
@@ -186,16 +186,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 /// O que dá para fazer sem conexão, conforme haja pacientes no aparelho.
 Widget _avisoOffline(int pacientesEmCache) {
   if (pacientesEmCache > 0) {
-    return _AvisoOffline(
+    return AppEstado.faixa(
       titulo: AppStrings.loginOfflineComCacheTitulo,
       texto: AppStrings.loginOfflineComCacheTexto(pacientesEmCache),
       acao: const _BotaoEntrarOffline(),
     );
   }
-  // A explicação vai como motivo do botão desabilitado, não como parágrafo
-  // solto: assim ela fica presa ao controle que explica, e o leitor de tela a
+  // A explicação vai como motivo do botão desabilitado, não como `texto` do
+  // estado: assim ela fica presa ao controle que explica, e o leitor de tela a
   // anuncia junto dele.
-  return const _AvisoOffline(
+  return const AppEstado.faixa(
     titulo: AppStrings.loginOfflineSemCacheTitulo,
     acao: AppBotao.primario(
       rotulo: AppStrings.loginOfflineIndisponivel,
@@ -427,55 +427,6 @@ class _AvisoApoioDecisao extends StatelessWidget {
       textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.bodySmall
           ?.copyWith(color: AppColors.secundarioSobreCreme),
-    );
-  }
-}
-
-/// O que dá para fazer sem conexão.
-class _AvisoOffline extends StatelessWidget {
-  const _AvisoOffline({required this.titulo, required this.acao, this.texto});
-
-  final String titulo;
-  final String? texto;
-  final Widget acao;
-
-  @override
-  Widget build(BuildContext context) {
-    final textos = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md + 2,
-        vertical: AppSpacing.md,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.lavandaSuave,
-        border: Border.all(color: AppColors.lavandaClaro),
-        borderRadius: AppRadius.bordaMedia,
-      ),
-      // Quem pinta a superfície declara o fundo: a ação aqui dentro é um botão
-      // do design system, e desabilitado ele precisa do tom de texto
-      // secundário da lavanda, não o do creme.
-      child: AppFundo(
-        fundo: FundoDeTexto.lavanda,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(titulo, style: textos.titleMedium),
-            if (texto case final texto?) ...[
-              const SizedBox(height: AppSpacing.xxs),
-              Text(
-                texto,
-                style: textos.bodySmall?.copyWith(
-                  color: AppColors.secundarioSobreLavanda,
-                ),
-              ),
-            ],
-            const SizedBox(height: AppSpacing.sm),
-            acao,
-          ],
-        ),
-      ),
     );
   }
 }

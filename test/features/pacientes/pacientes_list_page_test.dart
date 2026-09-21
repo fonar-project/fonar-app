@@ -173,15 +173,39 @@ void main() {
     testWidgets('tendência não usa cor de status de medida', (tester) async {
       // Verde e vermelho são reservados a status de normalidade de medida e
       // saturação de áudio. O protótipo pinta a tendência com eles; aqui não.
+      //
+      // O chip é uma pílula: ele pinta ÍCONE, TEXTO, BORDA e — se algum dia
+      // ganhar preenchimento — o fundo. Olhar só o ícone e o texto deixava a
+      // borda livre para voltar a ser verde ou vermelha sem quebrar teste
+      // nenhum, e a borda é o traço mais visível dessa pílula.
       final reservadas = {AppColors.sucesso, AppColors.atencao, AppColors.erro};
       await _abrir(tester, tamanho: _desktop);
 
-      final cores = [
+      // Container com decoração constrói um DecoratedBox: um finder só cobre
+      // as duas formas de pintar caixa que a tela usa.
+      final cores = <Color?>[
         ...tester.widgetList<AppIcone>(find.byType(AppIcone)).map((i) => i.cor),
         ...tester
             .widgetList<Text>(find.byType(Text))
             .map((t) => t.style?.color),
       ];
+      for (final caixa in tester.widgetList<DecoratedBox>(
+        find.byType(DecoratedBox),
+      )) {
+        if (caixa.decoration case final BoxDecoration decoracao) {
+          cores.add(decoracao.color);
+          if (decoracao.border case final Border borda) {
+            cores.addAll([
+              borda.top.color,
+              borda.right.color,
+              borda.bottom.color,
+              borda.left.color,
+            ]);
+          }
+        }
+      }
+
+      expect(find.byType(DecoratedBox), findsWidgets, reason: 'há o que olhar');
       expect(cores.where(reservadas.contains), isEmpty);
     });
 
@@ -203,6 +227,28 @@ void main() {
   });
 
   group('busca', () {
+    testWidgets('o leitor de tela anuncia o campo pelo nome', (tester) async {
+      // O campo não tem rótulo visível: a dica faz esse papel na tela e SOME
+      // quando se digita. Sem rótulo declarado, o campo passava a ser
+      // anunciado como uma caixa de edição sem nome assim que tinha texto.
+      final semantica = tester.ensureSemantics();
+      await _abrir(tester);
+
+      expect(
+        tester.getSemantics(find.byType(EditableText)),
+        isSemantics(label: AppStrings.pacientesBuscaDica, isTextField: true),
+        reason: 'campo vazio: o nome vem do rótulo, não da dica duplicada',
+      );
+
+      await _buscar(tester, 'rouquidao');
+      expect(
+        tester.getSemantics(find.byType(EditableText)),
+        isSemantics(label: AppStrings.pacientesBuscaDica, isTextField: true),
+        reason: 'com texto digitado o campo continua tendo nome',
+      );
+      semantica.dispose();
+    });
+
     testWidgets('filtra por queixa, sem acento', (tester) async {
       await _abrir(tester);
       await _buscar(tester, 'rouquidao');

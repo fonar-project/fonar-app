@@ -52,8 +52,8 @@ const _semAcento = {
   'ç': 'c', 'ñ': 'n',
 };
 
-// ponytail: tabela fixa do português, não Unicode completo. Nome estrangeiro
-// com diacrítico de fora da tabela só casa digitado com o acento.
+// Tabela fixa do português, não Unicode completo. Nome estrangeiro com
+// diacrítico de fora da tabela só casa digitado com o acento.
 String _normalizar(String texto) => texto
     .toLowerCase()
     .split('')

@@ -11,53 +11,32 @@ import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/tokens/app_typography.dart';
 import '../../../../design_system/widgets/app_botao.dart';
+import '../../../../design_system/widgets/app_estado.dart';
 import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_indicador_conexao.dart';
 import '../../../../design_system/widgets/app_toque.dart';
 import '../../../../l10n/app_strings.dart';
-import '../../data/repositorio_pacientes_placeholder.dart';
 import '../../../historico/domain/evolucao_da_medida.dart';
+import '../../data/repositorio_pacientes_placeholder.dart';
 import '../../domain/paciente.dart';
+import '../busca_pacientes_controlador.dart';
 
 /// Tela 01 — lista de pacientes, ponto de partida de toda avaliação.
 ///
 /// Expandida: tabela com busca e contagem no topo. Compacta: cards, busca no
 /// cabeçalho e "Nova avaliação" fixo acima das abas, ao alcance do polegar.
-class PacientesListPage extends ConsumerStatefulWidget {
+///
+/// A página observa só a LISTA. O termo da busca fica no
+/// `BuscaPacientesControlador`, e quem o observa são apenas as duas partes que
+/// dependem dele — o conteúdo e a contagem. Antes o termo morava no `State` e
+/// cada tecla reconstruía a página inteira, inclusive a barra de navegação e o
+/// próprio campo de busca.
+class PacientesListPage extends ConsumerWidget {
   const PacientesListPage({super.key});
 
   @override
-  ConsumerState<PacientesListPage> createState() => _PacientesListPageState();
-}
-
-class _PacientesListPageState extends ConsumerState<PacientesListPage> {
-  final _busca = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _busca.addListener(() => setState(() {}));
-  }
-
-  @override
-  void dispose() {
-    _busca.dispose();
-    super.dispose();
-  }
-
-  void _novaAvaliacao() => context.goNamed(AppRoutes.novaAvaliacaoNome);
-
-  void _abrir(Paciente paciente) => context.goNamed(
-    AppRoutes.pacienteDetalheNome,
-    pathParameters: {AppRoutes.paramPacienteId: paciente.id},
-  );
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final pacientes = ref.watch(pacientesProvider);
-    final filtrados = pacientes.whenData(
-      (todos) => todos.where((p) => p.correspondeA(_busca.text)).toList(),
-    );
 
     return AppEstrutura(
       destino: DestinoPrincipal.pacientes,
@@ -65,40 +44,22 @@ class _PacientesListPageState extends ConsumerState<PacientesListPage> {
         builder: (context, restricoes) {
           final expandida =
               Breakpoints.de(restricoes.maxWidth) == LarguraDeTela.expandida;
-          final conteudo = pacientes.when(
-            loading: () => const Center(
-              child: CircularProgressIndicator(color: AppColors.roxoProfundo),
-            ),
-            error: (_, _) => _EstadoCentral(
-              titulo: AppStrings.pacientesErroCarregar,
-              acao: AppBotao.secundario(
-                rotulo: AppStrings.tentarNovamente,
-                aoTocar: () => ref.invalidate(pacientesProvider),
-              ),
-            ),
-            data: (todos) => _lista(
-              todos: todos,
-              filtrados: filtrados.value!,
-              expandida: expandida,
-            ),
-          );
 
           // Lista vazia já tem o próprio "Cadastrar paciente" no centro. O
           // botão fixo levaria ao mesmo lugar: seriam dois primários iguais na
           // tela, e o AppBotao pede no máximo um.
           final aoNovaAvaliacao = pacientes.value?.isEmpty ?? false
               ? null
-              : _novaAvaliacao;
+              : () => _novaAvaliacao(context);
+
+          final conteudo = _Conteudo(expandida: expandida);
 
           return expandida
               ? _LayoutExpandido(
-                  busca: _busca,
-                  quantidade: filtrados.value?.length,
                   aoNovaAvaliacao: aoNovaAvaliacao,
                   conteudo: conteudo,
                 )
               : _LayoutCompacto(
-                  busca: _busca,
                   aoNovaAvaliacao: aoNovaAvaliacao,
                   conteudo: conteudo,
                 );
@@ -106,36 +67,71 @@ class _PacientesListPageState extends ConsumerState<PacientesListPage> {
       ),
     );
   }
+}
 
-  Widget _lista({
-    required List<Paciente> todos,
-    required List<Paciente> filtrados,
-    required bool expandida,
-  }) {
-    if (todos.isEmpty) {
-      return _EstadoCentral(
-        titulo: AppStrings.pacientesVaziaTitulo,
-        texto: AppStrings.pacientesVaziaTexto,
-        acao: AppBotao.primario(
-          rotulo: AppStrings.pacientesCadastrar,
-          icone: NomeIcone.adicionar,
-          aoTocar: _novaAvaliacao,
-        ),
-      );
-    }
-    if (filtrados.isEmpty) {
-      return _EstadoCentral(
-        titulo: AppStrings.pacientesSemResultado(_busca.text.trim()),
-        texto: AppStrings.pacientesSemResultadoDica,
-        acao: AppBotao.secundario(
-          rotulo: AppStrings.pacientesLimparBusca,
-          aoTocar: _busca.clear,
-        ),
-      );
-    }
-    return expandida
-        ? _Tabela(pacientes: filtrados, aoAbrir: _abrir)
-        : _Cards(pacientes: filtrados, aoAbrir: _abrir);
+void _novaAvaliacao(BuildContext context) =>
+    context.goNamed(AppRoutes.novaAvaliacaoNome);
+
+void _abrir(BuildContext context, Paciente paciente) => context.goNamed(
+  AppRoutes.pacienteDetalheNome,
+  pathParameters: {AppRoutes.paramPacienteId: paciente.id},
+);
+
+/// A área que muda quando se digita: tabela, cards ou estado sem conteúdo.
+class _Conteudo extends ConsumerWidget {
+  const _Conteudo({required this.expandida});
+
+  final bool expandida;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ref
+        .watch(pacientesFiltradosProvider)
+        .when(
+          loading: () => const Center(
+            child: CircularProgressIndicator(color: AppColors.roxoProfundo),
+          ),
+          error: (_, _) => AppEstado.central(
+            titulo: AppStrings.pacientesErroCarregar,
+            acao: AppBotao.secundario(
+              rotulo: AppStrings.tentarNovamente,
+              aoTocar: () => ref.invalidate(pacientesProvider),
+            ),
+          ),
+          data: (encontrados) {
+            if (encontrados.isNotEmpty) {
+              return expandida
+                  ? _Tabela(pacientes: encontrados)
+                  : _Cards(pacientes: encontrados);
+            }
+            // Nada na tela, e duas causas bem diferentes: o aparelho não tem
+            // paciente nenhum, ou tem e a busca não achou.
+            final semNenhum =
+                ref.watch(pacientesProvider).value?.isEmpty ?? false;
+            if (semNenhum) {
+              return AppEstado.central(
+                titulo: AppStrings.pacientesVaziaTitulo,
+                texto: AppStrings.pacientesVaziaTexto,
+                acao: AppBotao.primario(
+                  rotulo: AppStrings.pacientesCadastrar,
+                  icone: NomeIcone.adicionar,
+                  aoTocar: () => _novaAvaliacao(context),
+                ),
+              );
+            }
+            return AppEstado.central(
+              titulo: AppStrings.pacientesSemResultado(
+                ref.watch(buscaPacientesProvider).trim(),
+              ),
+              texto: AppStrings.pacientesSemResultadoDica,
+              acao: AppBotao.secundario(
+                rotulo: AppStrings.pacientesLimparBusca,
+                aoTocar: () =>
+                    ref.read(buscaPacientesProvider.notifier).limpar(),
+              ),
+            );
+          },
+        );
   }
 }
 
@@ -143,16 +139,9 @@ class _PacientesListPageState extends ConsumerState<PacientesListPage> {
 
 class _LayoutExpandido extends StatelessWidget {
   const _LayoutExpandido({
-    required this.busca,
-    required this.quantidade,
     required this.aoNovaAvaliacao,
     required this.conteudo,
   });
-
-  final TextEditingController busca;
-
-  /// Nula enquanto a lista carrega.
-  final int? quantidade;
 
   /// Nulo esconde o botão.
   final VoidCallback? aoNovaAvaliacao;
@@ -193,19 +182,9 @@ class _LayoutExpandido extends StatelessWidget {
                   // menor que isso.
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 420),
-                    child: _CampoBusca(controlador: busca),
+                    child: const _CampoBusca(),
                   ),
-                  if (quantidade case final n?)
-                    // Anunciado quando muda: é a resposta da busca para quem
-                    // não enxerga a tabela encolher.
-                    Semantics(
-                      liveRegion: true,
-                      child: Text(
-                        AppStrings.pacientesQuantidade(n),
-                        style: Theme.of(context).textTheme.bodySmall
-                            ?.copyWith(color: AppColors.secundarioSobreCreme),
-                      ),
-                    ),
+                  const _Contagem(),
                 ],
               ),
               if (aoNovaAvaliacao case final aoTocar?)
@@ -225,12 +204,9 @@ class _LayoutExpandido extends StatelessWidget {
 
 class _LayoutCompacto extends ConsumerWidget {
   const _LayoutCompacto({
-    required this.busca,
     required this.aoNovaAvaliacao,
     required this.conteudo,
   });
-
-  final TextEditingController busca;
 
   /// Nulo esconde a barra do botão.
   final VoidCallback? aoNovaAvaliacao;
@@ -284,7 +260,7 @@ class _LayoutCompacto extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  _CampoBusca(controlador: busca),
+                  const _CampoBusca(),
                 ],
               ),
             ),
@@ -312,25 +288,95 @@ class _LayoutCompacto extends ConsumerWidget {
   }
 }
 
-class _CampoBusca extends StatelessWidget {
-  const _CampoBusca({required this.controlador});
+/// Contagem do resultado da busca. Sozinha num widget porque é uma das duas
+/// coisas que mudam a cada tecla — a outra é o [_Conteudo].
+class _Contagem extends ConsumerWidget {
+  const _Contagem();
 
-  final TextEditingController controlador;
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final quantidade = ref.watch(pacientesFiltradosProvider).value?.length;
+    // Nada enquanto a lista carrega: "0 pacientes" durante o carregamento
+    // seria uma afirmação falsa.
+    if (quantidade == null) return const SizedBox.shrink();
+
+    // Anunciada quando muda: é a resposta da busca para quem não enxerga a
+    // tabela encolher.
+    return Semantics(
+      liveRegion: true,
+      child: Text(
+        AppStrings.pacientesQuantidade(quantidade),
+        style: Theme.of(context).textTheme.bodySmall
+            ?.copyWith(color: AppColors.secundarioSobreCreme),
+      ),
+    );
+  }
+}
+
+class _CampoBusca extends ConsumerStatefulWidget {
+  const _CampoBusca();
+
+  @override
+  ConsumerState<_CampoBusca> createState() => _CampoBuscaState();
+}
+
+class _CampoBuscaState extends ConsumerState<_CampoBusca> {
+  /// O texto fica no controlador do campo e o termo no controlador de estado.
+  /// São a mesma informação em dois lugares porque o `TextField` exige o
+  /// primeiro; a sincronia vai num sentido só, daqui para lá, com uma exceção
+  /// tratada no `build`.
+  late final _texto = TextEditingController(
+    text: ref.read(buscaPacientesProvider),
+  );
+
+  @override
+  void dispose() {
+    _texto.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Campo de busca não leva rótulo visível acima, ao contrário do
-    // AppCampoTexto: a dica dentro do campo é lida pelo leitor de tela, e um
-    // "Buscar" em cima de uma caixa de busca só ocupa altura no celular.
-    return TextField(
-      controller: controlador,
-      textInputAction: TextInputAction.search,
-      autocorrect: false,
-      style: Theme.of(context).textTheme.bodyMedium,
-      decoration: InputDecoration(
-        hintText: AppStrings.pacientesBuscaDica,
-        hintStyle: Theme.of(context).textTheme.bodyMedium
-            ?.copyWith(color: AppColors.secundarioSobreCreme),
+    // `listen`, não `watch`: o campo é a ORIGEM do termo e não precisa se
+    // reconstruir a cada tecla. O que precisa chegar até aqui é a limpeza
+    // vinda de fora — o botão "Limpar busca" do estado sem resultado.
+    ref.listen(buscaPacientesProvider, (_, termo) {
+      if (termo != _texto.text) _texto.text = termo;
+    });
+
+    final estiloDoTexto = Theme.of(context).textTheme.bodyMedium;
+
+    // Mesmo padrão do AppCampoTexto: rótulo e campo fundidos num nó só, para o
+    // leitor de tela anunciar o campo COM NOME em vez de "caixa de edição".
+    //
+    // A diferença é que aqui o rótulo não aparece na tela — um "Buscar" em
+    // cima de uma caixa de busca só ocuparia altura no celular, e a dica
+    // dentro do campo já faz esse papel visualmente. Só que a dica SOME quando
+    // se digita, e com ela sumia o nome do campo; por isso o rótulo é
+    // declarado em `Semantics` e a dica sai da semântica, senão o leitor
+    // anunciaria o mesmo texto duas vezes enquanto o campo está vazio.
+    return MergeSemantics(
+      child: Semantics(
+        label: AppStrings.pacientesBuscaDica,
+        textField: true,
+        child: TextField(
+          controller: _texto,
+          onChanged: (termo) =>
+              ref.read(buscaPacientesProvider.notifier).digitar(termo),
+          textInputAction: TextInputAction.search,
+          autocorrect: false,
+          style: estiloDoTexto,
+          decoration: InputDecoration(
+            hint: ExcludeSemantics(
+              child: Text(
+                AppStrings.pacientesBuscaDica,
+                style: estiloDoTexto?.copyWith(
+                  color: AppColors.secundarioSobreCreme,
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -339,10 +385,9 @@ class _CampoBusca extends StatelessWidget {
 // --------------------------------------------------------------- listas --
 
 class _Tabela extends StatelessWidget {
-  const _Tabela({required this.pacientes, required this.aoAbrir});
+  const _Tabela({required this.pacientes});
 
   final List<Paciente> pacientes;
-  final ValueChanged<Paciente> aoAbrir;
 
   static const _margem = 34.0;
 
@@ -380,8 +425,7 @@ class _Tabela extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(_margem, 0, _margem, 20),
             children: [
-              for (final p in pacientes)
-                _LinhaTabela(paciente: p, aoAbrir: () => aoAbrir(p)),
+              for (final p in pacientes) _LinhaTabela(paciente: p),
               const _NotaTendencia(),
             ],
           ),
@@ -439,17 +483,16 @@ class _Colunas extends StatelessWidget {
 }
 
 class _LinhaTabela extends StatelessWidget {
-  const _LinhaTabela({required this.paciente, required this.aoAbrir});
+  const _LinhaTabela({required this.paciente});
 
   final Paciente paciente;
-  final VoidCallback aoAbrir;
 
   @override
   Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
 
     return AppToque(
-      aoTocar: aoAbrir,
+      aoTocar: () => _abrir(context, paciente),
       corDoHover: AppColors.lavandaSuave,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
@@ -492,10 +535,9 @@ class _LinhaTabela extends StatelessWidget {
 }
 
 class _Cards extends StatelessWidget {
-  const _Cards({required this.pacientes, required this.aoAbrir});
+  const _Cards({required this.pacientes});
 
   final List<Paciente> pacientes;
-  final ValueChanged<Paciente> aoAbrir;
 
   @override
   Widget build(BuildContext context) {
@@ -508,7 +550,7 @@ class _Cards extends StatelessWidget {
         for (final p in pacientes)
           Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.sm - 2),
-            child: _Card(paciente: p, aoAbrir: () => aoAbrir(p)),
+            child: _Card(paciente: p),
           ),
         const _NotaTendencia(),
       ],
@@ -517,10 +559,9 @@ class _Cards extends StatelessWidget {
 }
 
 class _Card extends StatelessWidget {
-  const _Card({required this.paciente, required this.aoAbrir});
+  const _Card({required this.paciente});
 
   final Paciente paciente;
-  final VoidCallback aoAbrir;
 
   @override
   Widget build(BuildContext context) {
@@ -530,7 +571,7 @@ class _Card extends StatelessWidget {
     );
 
     return AppToque(
-      aoTocar: aoAbrir,
+      aoTocar: () => _abrir(context, paciente),
       raio: AppRadius.bordaMedia,
       child: Container(
         padding: const EdgeInsets.fromLTRB(14, 13, 10, 13),
@@ -646,7 +687,7 @@ class _ChipTendencia extends StatelessWidget {
         : AppColors.secundarioSobreCreme;
 
     return Semantics(
-      label: '${AppStrings.pacientesColunaTendencia}: $texto',
+      label: AppStrings.pacientesTendencia(texto),
       excludeSemantics: true,
       child: Container(
         padding: EdgeInsets.symmetric(
@@ -699,51 +740,6 @@ class _NotaTendencia extends StatelessWidget {
         AppStrings.pacientesNotaTendencia,
         style: Theme.of(context).textTheme.bodySmall
             ?.copyWith(color: AppColors.secundarioSobreCreme),
-      ),
-    );
-  }
-}
-
-/// Lista vazia, busca sem resultado, falha ao carregar.
-class _EstadoCentral extends StatelessWidget {
-  const _EstadoCentral({required this.titulo, required this.acao, this.texto});
-
-  final String titulo;
-  final String? texto;
-  final Widget acao;
-
-  @override
-  Widget build(BuildContext context) {
-    final textos = Theme.of(context).textTheme;
-
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 440),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                titulo,
-                textAlign: TextAlign.center,
-                style: textos.headlineSmall,
-              ),
-              if (texto case final texto?) ...[
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  texto,
-                  textAlign: TextAlign.center,
-                  style: textos.bodyMedium?.copyWith(
-                    color: AppColors.secundarioSobreCreme,
-                  ),
-                ),
-              ],
-              const SizedBox(height: AppSpacing.lg),
-              acao,
-            ],
-          ),
-        ),
       ),
     );
   }

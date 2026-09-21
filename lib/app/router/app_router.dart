@@ -19,6 +19,10 @@ import 'app_routes.dart';
 /// As rotas de paciente são aninhadas de propósito: consentimento, captura e
 /// resultado só existem no contexto de um paciente, e o caminho carrega esse
 /// contexto. Nenhuma delas deve ser alcançável sem `pacienteId`.
+///
+/// O roteador NÃO embrulha tela nenhuma na [AppEstrutura]: quem decide ter
+/// navegação principal é a própria tela. Ver a convenção documentada em
+/// `app_estrutura.dart`.
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: AppRoutes.loginCaminho,
@@ -49,12 +53,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             name: AppRoutes.novaAvaliacaoNome,
             path: AppRoutes.novaAvaliacaoCaminho,
-            builder: (context, state) => const AppEstrutura(
+            builder: (context, state) => const TelaPlaceholder(
+              titulo: AppStrings.novaAvaliacaoTitulo,
+              rota: AppRoutes.novaAvaliacaoCaminhoCompleto,
               destino: DestinoPrincipal.novaAvaliacao,
-              child: TelaPlaceholder(
-                titulo: AppStrings.novaAvaliacaoTitulo,
-                rota: '/pacientes/novo',
-              ),
             ),
           ),
           GoRoute(
@@ -94,24 +96,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         name: AppRoutes.filaNome,
         path: AppRoutes.filaCaminho,
-        builder: (context, state) => const AppEstrutura(
+        builder: (context, state) => const TelaPlaceholder(
+          titulo: AppStrings.filaTitulo,
+          rota: AppRoutes.filaCaminho,
           destino: DestinoPrincipal.fila,
-          child: TelaPlaceholder(
-            titulo: AppStrings.filaTitulo,
-            rota: AppRoutes.filaCaminho,
-          ),
         ),
       ),
       // TODO(US11): conta do profissional.
       GoRoute(
         name: AppRoutes.contaNome,
         path: AppRoutes.contaCaminho,
-        builder: (context, state) => const AppEstrutura(
+        builder: (context, state) => const TelaPlaceholder(
+          titulo: AppStrings.contaTitulo,
+          rota: AppRoutes.contaCaminho,
           destino: DestinoPrincipal.conta,
-          child: TelaPlaceholder(
-            titulo: AppStrings.contaTitulo,
-            rota: AppRoutes.contaCaminho,
-          ),
         ),
       ),
       GoRoute(
