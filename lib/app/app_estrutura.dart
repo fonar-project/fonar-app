@@ -117,65 +117,90 @@ class _BarraLateral extends ConsumerWidget {
       color: AppColors.roxoProfundo,
       child: SafeArea(
         right: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(_margem, _margem, _margem, 18),
-              child: Semantics(
-                header: true,
+        // Rola quando não cabe. Com o texto do sistema em 200% os quatro
+        // destinos mais a marca e o rodapé passam da altura da tela, e a
+        // coluna estourava por baixo — escondendo justamente o profissional
+        // logado e o estado da conexão. O `IntrinsicHeight` com altura mínima
+        // igual à da tela mantém o `Spacer` empurrando o rodapé para baixo
+        // enquanto há espaço sobrando; passando disso, vira rolagem.
+        child: LayoutBuilder(
+          builder: (context, restricoes) => SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: restricoes.maxHeight),
+              child: IntrinsicHeight(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      AppStrings.appTitle,
-                      style: textos.titleLarge?.copyWith(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.1,
-                        color: creme,
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        _margem,
+                        _margem,
+                        _margem,
+                        18,
+                      ),
+                      child: Semantics(
+                        header: true,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              AppStrings.appTitle,
+                              style: textos.titleLarge?.copyWith(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1.1,
+                                color: creme,
+                              ),
+                            ),
+                            Text(
+                              AppStrings.loginSubtitulo,
+                              style: textos.bodySmall?.copyWith(
+                                color: creme.withValues(alpha: 0.75),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    Text(
-                      AppStrings.loginSubtitulo,
-                      style: textos.bodySmall?.copyWith(
-                        color: creme.withValues(alpha: 0.75),
+                    _divisoria,
+                    const SizedBox(height: AppSpacing.sm),
+                    for (final destino in DestinoPrincipal.values)
+                      _ItemLateral(destino: destino, ativo: destino == ativo),
+                    const Spacer(),
+                    _divisoria,
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        _margem,
+                        14,
+                        _margem,
+                        18,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AppIndicadorConexao(
+                            online: ref.watch(conexaoOnlineProvider),
+                            sobreFundoEscuro: true,
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            profissional.nome,
+                            style: textos.labelSmall?.copyWith(color: creme),
+                          ),
+                          Text(
+                            profissional.registro,
+                            style: textos.bodySmall?.copyWith(
+                              color: creme.withValues(alpha: 0.75),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            _divisoria,
-            const SizedBox(height: AppSpacing.sm),
-            for (final destino in DestinoPrincipal.values)
-              _ItemLateral(destino: destino, ativo: destino == ativo),
-            const Spacer(),
-            _divisoria,
-            Padding(
-              padding: const EdgeInsets.fromLTRB(_margem, 14, _margem, 18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppIndicadorConexao(
-                    online: ref.watch(conexaoOnlineProvider),
-                    sobreFundoEscuro: true,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    profissional.nome,
-                    style: textos.labelSmall?.copyWith(color: creme),
-                  ),
-                  Text(
-                    profissional.registro,
-                    style: textos.bodySmall?.copyWith(
-                      color: creme.withValues(alpha: 0.75),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

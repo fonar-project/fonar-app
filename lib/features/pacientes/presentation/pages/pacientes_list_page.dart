@@ -163,27 +163,50 @@ class _LayoutExpandido extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
-          height: 76,
-          padding: const EdgeInsets.symmetric(horizontal: 30),
+          // Altura MÍNIMA, não fixa: com o texto do sistema ampliado o rótulo
+          // do botão quebra linha e a barra precisa crescer junto. Presa em
+          // 76 px ela estourava por baixo a partir de 1,3×.
+          constraints: const BoxConstraints(minHeight: 76),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 30,
+            vertical: AppSpacing.sm,
+          ),
           decoration: const BoxDecoration(
             border: Border(bottom: BorderSide(color: AppColors.lavandaClaro)),
           ),
-          child: Row(
+          // Wrap, não Row com Spacer: em 1024 px de janela o painel já é
+          // estreito, e com a fonte ampliada busca, contagem e botão não cabem
+          // na mesma linha. O botão desce inteiro em vez de ser espremido.
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: AppSpacing.md,
+            runSpacing: AppSpacing.sm,
             children: [
-              SizedBox(width: 420, child: _CampoBusca(controlador: busca)),
-              const SizedBox(width: AppSpacing.md),
-              if (quantidade case final n?)
-                // Anunciado quando muda: é a resposta da busca para quem não
-                // enxerga a tabela encolher.
-                Semantics(
-                  liveRegion: true,
-                  child: Text(
-                    AppStrings.pacientesQuantidade(n),
-                    style: Theme.of(context).textTheme.bodySmall
-                        ?.copyWith(color: AppColors.secundarioSobreCreme),
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: AppSpacing.md,
+                runSpacing: AppSpacing.xs,
+                children: [
+                  // Teto, não largura fixa: o campo encolhe se o painel for
+                  // menor que isso.
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    child: _CampoBusca(controlador: busca),
                   ),
-                ),
-              const Spacer(),
+                  if (quantidade case final n?)
+                    // Anunciado quando muda: é a resposta da busca para quem
+                    // não enxerga a tabela encolher.
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        AppStrings.pacientesQuantidade(n),
+                        style: Theme.of(context).textTheme.bodySmall
+                            ?.copyWith(color: AppColors.secundarioSobreCreme),
+                      ),
+                    ),
+                ],
+              ),
               if (aoNovaAvaliacao case final aoTocar?)
                 AppBotao.primario(
                   rotulo: AppStrings.navNovaAvaliacao,
@@ -383,17 +406,32 @@ class _Colunas extends StatelessWidget {
 
   static const _vao = SizedBox(width: 14);
 
+  /// Proporção das colunas de texto, no lugar de largura fixa em pixel.
+  ///
+  /// Coluna presa em pixel não acompanha o texto do sistema ampliado: o
+  /// conteúdo crescia, a caixa não, e a linha estourava à direita a partir de
+  /// 1,3×. Com flex a repartição segue a mesma leitura do protótipo em 100% e
+  /// continua válida em qualquer escala.
+  static const _flexPaciente = 7;
+  static const _flexSessao = 2;
+  static const _flexTendencia = 3;
+
+  /// A seta continua em pixel de propósito: é um ícone de 22 px que NÃO
+  /// acompanha a escala de texto, então dar flex a ela só tiraria espaço das
+  /// colunas que precisam.
+  static const _larguraDaSeta = 34.0;
+
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: paciente),
+        Expanded(flex: _flexPaciente, child: paciente),
         _vao,
-        SizedBox(width: 190, child: sessao),
+        Expanded(flex: _flexSessao, child: sessao),
         _vao,
-        SizedBox(width: 230, child: tendencia),
+        Expanded(flex: _flexTendencia, child: tendencia),
         _vao,
-        SizedBox(width: 34, child: seta),
+        SizedBox(width: _larguraDaSeta, child: seta),
       ],
     );
   }
@@ -614,11 +652,16 @@ class _ChipTendencia extends StatelessWidget {
               AppIcone(nome: icone, cor: cor, tamanho: 16),
               const SizedBox(width: AppSpacing.xxs + 2),
             ],
-            Text(
-              texto,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: cor,
-                fontWeight: comparavel ? FontWeight.w700 : FontWeight.w600,
+            // Flexible: o ícone tem tamanho fixo, a palavra não. Com o texto
+            // do sistema ampliado "melhorando" passava da largura da coluna e
+            // estourava a linha; agora quebra dentro da pílula.
+            Flexible(
+              child: Text(
+                texto,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: cor,
+                  fontWeight: comparavel ? FontWeight.w700 : FontWeight.w600,
+                ),
               ),
             ),
           ],
