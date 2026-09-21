@@ -67,8 +67,9 @@ abstract final class AppStrings {
   static String pacientesUltimaSessao(String data) => 'última sessão $data';
   static const pacientesNenhumaSessao = 'nenhuma sessão';
   static const pacientesNotaTendencia =
-      'Tendência = comparação do AVQI nas duas últimas sessões. Apoio à '
-      'decisão; não é diagnóstico.';
+      'Tendência = comparação do AVQI nas duas últimas sessões. A seta mostra '
+      'para onde o valor foi — no AVQI, descer é melhorar. Apoio à decisão; '
+      'não é diagnóstico.';
   static const pacientesVaziaTitulo = 'Nenhum paciente ainda';
   static const pacientesVaziaTexto =
       'Cadastre o primeiro paciente para iniciar uma avaliação. Os dados ficam '

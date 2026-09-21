@@ -104,7 +104,9 @@ class _BarraLateral extends ConsumerWidget {
 
   static const _largura = 222.0;
   static const _margem = 22.0;
-  static const _divisoria = Divider(color: Color(0x2EFFF7EB)); // creme a 18%
+  static final _divisoria = Divider(
+    color: AppColors.creme.withValues(alpha: 0.18),
+  );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -314,7 +316,9 @@ class _ItemInferior extends StatelessWidget {
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: ativo
                   ? AppColors.roxoProfundo
-                  : AppColors.secundarioSobreLavanda,
+                  // A barra inferior é creme, não lavanda: o token escuro aqui
+                  // seria o do fundo errado.
+                  : AppColors.secundarioSobreCreme,
               fontWeight: ativo ? FontWeight.w800 : FontWeight.w600,
             ),
           ),

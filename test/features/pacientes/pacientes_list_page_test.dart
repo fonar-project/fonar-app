@@ -6,6 +6,7 @@ import 'package:praatico_app/app/router/app_routes.dart';
 import 'package:praatico_app/design_system/theme/app_theme.dart';
 import 'package:praatico_app/design_system/tokens/app_colors.dart';
 import 'package:praatico_app/design_system/widgets/app_icone.dart';
+import 'package:praatico_app/features/historico/domain/evolucao_da_medida.dart';
 import 'package:praatico_app/features/pacientes/data/repositorio_pacientes_placeholder.dart';
 import 'package:praatico_app/features/pacientes/domain/paciente.dart';
 import 'package:praatico_app/features/pacientes/presentation/pages/pacientes_list_page.dart';
@@ -20,20 +21,20 @@ final _lista = [
     nome: 'Ana de Teste',
     queixa: 'rouquidão',
     ultimaSessao: DateTime(2026, 7, 2),
-    tendencia: TendenciaAvqi.melhorando,
+    direcaoAvqi: DirecaoDaMedida.desceu,
   ),
   Paciente(
     id: 'b',
     nome: 'Bruno de Teste',
     queixa: 'soprosidade',
     ultimaSessao: DateTime(2026, 6, 25),
-    tendencia: TendenciaAvqi.piorando,
+    direcaoAvqi: DirecaoDaMedida.subiu,
   ),
   const Paciente(
     id: 'c',
     nome: 'Clara de Teste',
     queixa: 'fadiga vocal',
-    tendencia: TendenciaAvqi.semComparacao,
+    direcaoAvqi: DirecaoDaMedida.semComparacao,
   ),
 ];
 
@@ -140,6 +141,27 @@ void main() {
         find.text(AppStrings.pacientesColunaTendencia.toUpperCase()),
         findsOneWidget,
       );
+    });
+
+    testWidgets('a seta mostra a direção do AVQI, não a leitura', (
+      tester,
+    ) async {
+      // O defeito que originou `lerEvolucao`: a lista mostrava seta para cima
+      // ao lado de "melhorando" para um AVQI que tinha caído, contradizendo o
+      // número e o gráfico da tela de evolução. No AVQI menor é melhor, então
+      // melhora vem com seta para BAIXO.
+      await _abrir(tester, tamanho: _desktop);
+
+      final setas = tester
+          .widgetList<AppIcone>(find.byType(AppIcone))
+          .map((i) => i.nome)
+          .toSet();
+
+      // Ana caiu (melhorando), Bruno subiu (piorando).
+      expect(find.text(AppStrings.tendenciaMelhorando), findsOneWidget);
+      expect(find.text(AppStrings.tendenciaPiorando), findsOneWidget);
+      expect(setas, contains(NomeIcone.tendenciaDesce));
+      expect(setas, contains(NomeIcone.tendenciaSobe));
     });
 
     testWidgets('paciente sem sessão não recebe tendência', (tester) async {

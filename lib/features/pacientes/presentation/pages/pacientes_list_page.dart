@@ -16,6 +16,7 @@ import '../../../../design_system/widgets/app_indicador_conexao.dart';
 import '../../../../design_system/widgets/app_toque.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../data/repositorio_pacientes_placeholder.dart';
+import '../../../historico/domain/evolucao_da_medida.dart';
 import '../../domain/paciente.dart';
 
 /// Tela 01 — lista de pacientes, ponto de partida de toda avaliação.
@@ -477,7 +478,7 @@ class _LinhaTabela extends StatelessWidget {
           ),
           tendencia: Align(
             alignment: Alignment.centerLeft,
-            child: _ChipTendencia(tendencia: paciente.tendencia),
+            child: _ChipTendencia(direcao: paciente.direcaoAvqi),
           ),
           seta: const AppIcone(
             nome: NomeIcone.avancar,
@@ -578,7 +579,7 @@ class _Card extends StatelessWidget {
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
-                _ChipTendencia(tendencia: paciente.tendencia, compacto: true),
+                _ChipTendencia(direcao: paciente.direcaoAvqi, compacto: true),
               ],
             ),
           ],
@@ -593,36 +594,52 @@ String _data(DateTime? data) =>
 
 // ------------------------------------------------------------ elementos --
 
-/// Tendência do AVQI: seta mais texto, sempre os dois.
+/// Tendência do AVQI: seta mais texto, sempre os dois — e cada um dizendo uma
+/// coisa diferente.
+///
+/// A SETA É A DIREÇÃO DO NÚMERO, nunca a leitura. No AVQI menor é melhor, então
+/// "melhorando" vem com seta para BAIXO — igual à linha do gráfico da tela de
+/// evolução, que também desce. Antes a seta apontava para cima ao lado da
+/// palavra "melhorando" e contradizia tanto o número quanto o gráfico.
+///
+/// Quem diz o que a direção significa é [lerEvolucao], no domínio. A palavra
+/// carrega essa leitura; o ícone não carrega informação nenhuma que o texto
+/// não diga.
 ///
 /// SEM verde e vermelho, divergindo do protótipo: o CLAUDE.md reserva essas
 /// cores para status de normalidade de medida e saturação de áudio, e
-/// tendência não é nenhum dos dois. A diferença entre os estados fica na
-/// direção da seta e na palavra. TODO(clínico): confirmar com a banca/
+/// tendência não é nenhum dos dois. TODO(clínico): confirmar com a banca/
 /// orientação, junto do vocabulário "melhorando/piorando".
 class _ChipTendencia extends StatelessWidget {
-  const _ChipTendencia({required this.tendencia, this.compacto = false});
+  const _ChipTendencia({required this.direcao, this.compacto = false});
 
-  final TendenciaAvqi tendencia;
+  /// Para onde o AVQI foi. A coluna é "Tendência AVQI" — a medida é fixa, e é
+  /// dela que sai o sentido de leitura.
+  final DirecaoDaMedida direcao;
+
   final bool compacto;
 
   @override
   Widget build(BuildContext context) {
-    final (texto, icone) = switch (tendencia) {
-      TendenciaAvqi.melhorando => (
-        AppStrings.tendenciaMelhorando,
-        NomeIcone.tendenciaMelhora,
-      ),
-      TendenciaAvqi.estavel => (
-        AppStrings.tendenciaEstavel,
-        NomeIcone.tendenciaEstavel,
-      ),
-      TendenciaAvqi.piorando => (
-        AppStrings.tendenciaPiorando,
-        NomeIcone.tendenciaPiora,
-      ),
-      TendenciaAvqi.semComparacao => (AppStrings.tendenciaSemComparacao, null),
+    final icone = switch (direcao) {
+      DirecaoDaMedida.subiu => NomeIcone.tendenciaSobe,
+      DirecaoDaMedida.estavel => NomeIcone.tendenciaEstavel,
+      DirecaoDaMedida.desceu => NomeIcone.tendenciaDesce,
+      DirecaoDaMedida.semComparacao => null,
     };
+
+    final texto = switch (lerEvolucao(
+      medida: MedidaAcustica.avqi,
+      direcao: direcao,
+    )) {
+      LeituraDaEvolucao.melhora => AppStrings.tendenciaMelhorando,
+      LeituraDaEvolucao.estavel => AppStrings.tendenciaEstavel,
+      LeituraDaEvolucao.piora => AppStrings.tendenciaPiorando,
+      // No AVQI a única origem de "sem leitura" é a falta de sessão anterior:
+      // a medida tem sentido de melhora definido.
+      LeituraDaEvolucao.semLeitura => AppStrings.tendenciaSemComparacao,
+    };
+
     final comparavel = icone != null;
     final cor = comparavel
         ? AppColors.cinzaChumbo

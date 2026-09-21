@@ -36,10 +36,12 @@ enum NomeIcone {
   reproduzir('reproduzir'),
   pausar('pausar'),
 
-  // Tendência do histórico.
-  tendenciaMelhora('tendencia-melhora'),
+  // Direção do valor entre duas sessões. O nome é a DIREÇÃO, não a leitura:
+  // no AVQI descer é melhorar, no CPPS é piorar. Quem diz o que a direção
+  // significa é `lerEvolucao`, no domínio — nunca o ícone.
+  tendenciaSobe('tendencia-sobe'),
   tendenciaEstavel('tendencia-estavel'),
-  tendenciaPiora('tendencia-piora'),
+  tendenciaDesce('tendencia-desce'),
 
   // Navegação.
   voltar('voltar'),

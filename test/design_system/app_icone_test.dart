@@ -13,6 +13,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:praatico_app/design_system/tokens/app_colors.dart';
 import 'package:praatico_app/design_system/widgets/app_icone.dart';
 
 void main() {
@@ -158,7 +159,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: IconTheme(
-            data: IconThemeData(color: Color(0xFF413C58), size: 32),
+            data: IconThemeData(color: AppColors.cinzaChumbo, size: 32),
             child: Center(child: AppIcone(nome: NomeIcone.gravar)),
           ),
         ),

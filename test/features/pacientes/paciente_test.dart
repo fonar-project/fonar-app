@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:praatico_app/features/historico/domain/evolucao_da_medida.dart';
 import 'package:praatico_app/features/pacientes/domain/paciente.dart';
 
 void main() {
@@ -6,7 +7,7 @@ void main() {
     id: '1',
     nome: 'Conceição Araújo',
     queixa: 'rouquidão persistente',
-    tendencia: TendenciaAvqi.estavel,
+    direcaoAvqi: DirecaoDaMedida.estavel,
   );
 
   group('busca de paciente', () {

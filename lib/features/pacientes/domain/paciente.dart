@@ -1,10 +1,12 @@
+import '../../historico/domain/evolucao_da_medida.dart';
+
 /// Paciente como aparece na lista.
 class Paciente {
   const Paciente({
     required this.id,
     required this.nome,
     required this.queixa,
-    required this.tendencia,
+    required this.direcaoAvqi,
     this.ultimaSessao,
   });
 
@@ -17,7 +19,17 @@ class Paciente {
   /// Nula enquanto o paciente não tiver nenhuma sessão gravada.
   final DateTime? ultimaSessao;
 
-  final TendenciaAvqi tendencia;
+  /// Para onde o AVQI foi entre as duas últimas sessões.
+  ///
+  /// DIREÇÃO, não leitura: o campo diz que o número subiu ou desceu, e nada
+  /// mais. Quem transforma isso em "melhorando" é [lerEvolucao] — no AVQI,
+  /// descer é melhorar.
+  ///
+  /// Chega pronta da camada de dados; a tela não calcula. Qual diferença conta
+  /// como mudança real é pendência clínica aberta: o AVQI varia entre medições
+  /// do mesmo paciente, e chamar de mudança uma diferença dentro dessa
+  /// variação seria enganoso.
+  final DirecaoDaMedida direcaoAvqi;
 
   /// O paciente aparece numa busca por [termo]?
   ///
@@ -29,23 +41,6 @@ class Paciente {
     if (procurado.isEmpty) return true;
     return _normalizar('$nome $queixa').contains(procurado);
   }
-}
-
-/// Comparação do AVQI entre as duas últimas sessões.
-///
-/// A tendência chega pronta da camada de dados; a tela não calcula. Qual
-/// diferença conta como mudança real é pendência clínica aberta: o AVQI varia
-/// entre medições do mesmo paciente, e chamar de "piorando" uma diferença
-/// dentro dessa variação seria enganoso.
-enum TendenciaAvqi {
-  melhorando,
-  estavel,
-  piorando,
-
-  /// Menos de duas sessões: não há o que comparar. Estado de primeira classe,
-  /// pelo mesmo princípio de "sem faixa de referência" — sem base, a tela não
-  /// classifica.
-  semComparacao,
 }
 
 const _semAcento = {

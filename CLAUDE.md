@@ -102,6 +102,12 @@ Paleta:
 Verde, amarelo e vermelho são reservados EXCLUSIVAMENTE para status de
 normalidade de medida e saturação de áudio. Nunca como decoração.
 
+Exceção: o vermelho é permitido em erro de validação de formulário — borda do
+campo, ícone e mensagem. Condição obrigatória: SEMPRE acompanhado de ícone e
+de texto dizendo o que corrigir. Vermelho sozinho, ou só a borda colorida, não
+atende — quem não distingue a cor fica sem saber que há erro. Verde e amarelo
+continuam sem exceção.
+
 Tipografia: Urbanist. Bold para dados e métricas acústicas, Regular para
 corpo. Números de medida em fonte tabular.
 
