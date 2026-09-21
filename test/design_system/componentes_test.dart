@@ -5,6 +5,7 @@ import 'package:praatico_app/design_system/tokens/app_movimento.dart';
 import 'package:praatico_app/design_system/tokens/app_colors.dart';
 import 'package:praatico_app/design_system/widgets/app_botao.dart';
 import 'package:praatico_app/design_system/widgets/app_campo_texto.dart';
+import 'package:praatico_app/design_system/widgets/app_estado.dart';
 import 'package:praatico_app/design_system/widgets/app_fundo.dart';
 import 'package:praatico_app/design_system/widgets/app_icone.dart';
 import 'package:praatico_app/design_system/widgets/app_indicador_conexao.dart';
@@ -296,11 +297,108 @@ void main() {
     });
 
     testWidgets('desenha texto junto do ícone', (tester) async {
+      // "Junto do ícone" é metade do contrato: quem não distingue o verde do
+      // vermelho depende do ícone, e quem usa leitor de tela depende do texto.
+      // Conferir só o texto deixava passar um selo que perdesse o ícone.
       for (final status in StatusMedida.values) {
         await tester.pumpWidget(_tela(AppStatusMedida(status: status)));
+
         expect(find.text(status.rotulo), findsOneWidget);
+        expect(find.byType(AppIcone), findsOneWidget);
+        expect(
+          tester.widget<AppIcone>(find.byType(AppIcone)).nome,
+          status.icone,
+          reason: 'cada status desenha o ícone que é dele',
+        );
       }
     });
+  });
+
+  group('AppEstado', () {
+    // _AvisoOffline (login) e _EstadoCentral (lista de pacientes) resolviam
+    // este mesmo contrato duas vezes, com aparência diferente, porque foram
+    // escritos em paralelo.
+    const acaoDesabilitada = AppBotao.secundario(
+      rotulo: 'Entrar em modo offline',
+      aoTocar: null,
+      motivoDesabilitado: 'Nenhum paciente salvo neste aparelho',
+    );
+
+    for (final (nome, montar) in <(String, AppEstado Function())>[
+      (
+        'faixa',
+        () => const AppEstado.faixa(
+          titulo: 'Sem conexão',
+          texto: 'Dá para gravar; o envio aguarda a conexão voltar.',
+          acao: acaoDesabilitada,
+        ),
+      ),
+      (
+        'central',
+        () => const AppEstado.central(
+          titulo: 'Nenhum paciente ainda',
+          texto: 'Cadastre o primeiro paciente para iniciar uma avaliação.',
+          acao: acaoDesabilitada,
+        ),
+      ),
+    ]) {
+      testWidgets('$nome mostra título, texto e ação', (tester) async {
+        await tester.pumpWidget(_tela(montar()));
+
+        expect(find.text(montar().titulo), findsOneWidget);
+        expect(find.text(montar().texto!), findsOneWidget);
+        expect(find.byType(OutlinedButton), findsOneWidget);
+        // Desabilitado nunca é só cor apagada, nem aqui dentro.
+        expect(
+          find.text('Nenhum paciente salvo neste aparelho'),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('$nome declara o próprio fundo lavanda', (tester) async {
+        // O componente PINTA lavanda. Se não declarar isso, tudo o que estiver
+        // dentro dele escolhe o tom de texto secundário do creme, que sobre
+        // lavanda cai para 3,62:1 e reprova em AA — ver app_colors_test.dart.
+        await tester.pumpWidget(_tela(montar()));
+
+        expect(
+          tester
+              .widget<OutlinedButton>(find.byType(OutlinedButton))
+              .style
+              ?.foregroundColor
+              ?.resolve({WidgetState.disabled}),
+          AppColors.secundarioSobreLavanda,
+        );
+        expect(
+          tester
+              .widget<Text>(find.text('Nenhum paciente salvo neste aparelho'))
+              .style
+              ?.color,
+          AppColors.secundarioSobreLavanda,
+        );
+      });
+
+      testWidgets('$nome dispensa o texto quando o título basta', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          _tela(
+            nome == 'faixa'
+                ? const AppEstado.faixa(
+                    titulo: 'Sem conexão e sem dados locais',
+                    acao: acaoDesabilitada,
+                  )
+                : const AppEstado.central(
+                    titulo: 'Sem conexão e sem dados locais',
+                    acao: acaoDesabilitada,
+                  ),
+          ),
+        );
+
+        expect(find.text('Sem conexão e sem dados locais'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      });
+    }
   });
 
   group('AppCampoTexto', () {

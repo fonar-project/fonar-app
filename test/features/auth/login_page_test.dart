@@ -8,11 +8,12 @@ import 'package:go_router/go_router.dart';
 import 'package:praatico_app/app/router/app_routes.dart';
 import 'package:praatico_app/core/error/app_exception.dart';
 import 'package:praatico_app/core/network/conexao.dart';
+import 'package:praatico_app/core/offline/pacientes_em_cache.dart';
 import 'package:praatico_app/design_system/theme/app_theme.dart';
+import 'package:praatico_app/design_system/tokens/app_colors.dart';
 import 'package:praatico_app/features/auth/data/repositorio_autenticacao_placeholder.dart';
 import 'package:praatico_app/features/auth/domain/repositorio_autenticacao.dart';
 import 'package:praatico_app/features/auth/presentation/pages/login_page.dart';
-import 'package:praatico_app/features/pacientes/data/pacientes_em_cache.dart';
 import 'package:praatico_app/l10n/app_strings.dart';
 
 /// Repositório controlável pelo teste.
@@ -243,11 +244,44 @@ void main() {
     testWidgets('"Esqueci a senha" desenha anel de foco visível', (
       tester,
     ) async {
+      // O teste lê o que foi DESENHADO, não o estilo declarado: o `Material`
+      // do botão recebe a forma já com o lado resolvido para o estado atual.
+      // Conferir só a `WidgetStateProperty` provava que a regra existe, não
+      // que ela é aplicada quando o foco chega — e é o foco que o profissional
+      // precisa enxergar ao navegar por teclado no Windows.
+      BorderSide anelDesenhado() {
+        final material = tester.widget<Material>(
+          find.descendant(
+            of: find.byType(TextButton),
+            matching: find.byType(Material),
+          ),
+        );
+        return (material.shape! as OutlinedBorder).side;
+      }
+
       await _abrir(tester, tamanho: _desktop);
-      final estilo = tester.widget<TextButton>(find.byType(TextButton)).style!;
-      final lado = estilo.side!.resolve({WidgetState.focused})!;
-      expect(lado.width, 3);
-      expect(lado.style, BorderStyle.solid);
+      expect(
+        anelDesenhado(),
+        BorderSide.none,
+        reason: 'sem foco não existe anel',
+      );
+
+      // Quatro Tab: e-mail, senha, entrar, esqueci a senha.
+      for (var i = 0; i < 4; i++) {
+        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+        await tester.pump();
+      }
+      expect(
+        focado(tester, find.text(AppStrings.loginEsqueciSenha)),
+        isTrue,
+        reason: 'o Tab precisa ter chegado ao botão',
+      );
+      await tester.pumpAndSettle();
+
+      final anel = anelDesenhado();
+      expect(anel.color, AppColors.foco);
+      expect(anel.width, 3);
+      expect(anel.style, BorderStyle.solid);
     });
   });
 

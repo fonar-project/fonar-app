@@ -93,6 +93,13 @@ abstract final class AppStrings {
   static const tendenciaPiorando = 'piorando';
   static const tendenciaSemComparacao = 'sem comparação';
 
+  /// Rótulo do chip de tendência para leitor de tela.
+  ///
+  /// O chip mostra seta e palavra; o leitor de tela recebe a coluna junto,
+  /// porque fora da tabela "melhorando" sozinho não diz melhorando O QUÊ.
+  static String pacientesTendencia(String leitura) =>
+      '$pacientesColunaTendencia: $leitura';
+
   // --------------------------------------------------------------- datas --
   static const _meses = [
     'jan', 'fev', 'mar', 'abr', 'mai', 'jun', //

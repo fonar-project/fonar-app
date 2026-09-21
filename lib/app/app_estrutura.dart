@@ -58,10 +58,22 @@ enum DestinoPrincipal {
 /// O cabeçalho do celular é da tela, não daqui — cada tela põe nele o que
 /// precisa (a lista de pacientes, por exemplo, põe a busca).
 ///
-/// Cada tela se embrulha nesta estrutura, em vez de o roteador fazer isso por
-/// `ShellRoute`: gravação, revisão e CAPE-V ocupam a tela inteira, e declarar
-/// quem tem navegação na própria tela é mais fácil de ler que exceções no
-/// roteador.
+/// ## Convenção: CADA TELA SE EMBRULHA, o roteador nunca embrulha
+///
+/// Quem decide ter navegação principal é a tela, no seu próprio `build` — não
+/// o roteador por `ShellRoute` nem por `AppEstrutura` em volta do `builder`.
+/// Vale sem exceção, inclusive para as telas de andaime: a `TelaPlaceholder`
+/// recebe o `destino` e se embrulha sozinha.
+///
+/// O motivo é que a maioria das telas NÃO tem navegação: gravação, revisão e
+/// CAPE-V ocupam a tela inteira, e o login vem antes de haver navegação. Com o
+/// roteador embrulhando, a lista de quem fica de fora vira uma lista de
+/// exceções espalhada pelas rotas, longe da tela que ela descreve. Aqui basta
+/// abrir a tela para saber a resposta.
+///
+/// O roteador estava embrulhando as três telas de andaime enquanto esta
+/// documentação dizia o contrário. As duas convenções funcionam; ter as duas
+/// ao mesmo tempo é que não.
 class AppEstrutura extends StatelessWidget {
   const AppEstrutura({required this.destino, required this.child, super.key});
 

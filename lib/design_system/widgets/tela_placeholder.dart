@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../app/app_estrutura.dart';
 import '../../l10n/app_strings.dart';
 import '../tokens/app_spacing.dart';
 
@@ -9,16 +10,29 @@ import '../tokens/app_spacing.dart';
 /// foi implementada — se ele ainda existir no fim do projeto, algo ficou para
 /// trás.
 class TelaPlaceholder extends StatelessWidget {
-  const TelaPlaceholder({required this.titulo, this.rota, super.key});
+  const TelaPlaceholder({
+    required this.titulo,
+    this.rota,
+    this.destino,
+    super.key,
+  });
 
   final String titulo;
 
   /// Rota que levou até aqui. Só para orientar durante o desenvolvimento.
   final String? rota;
 
+  /// Destino a marcar na navegação principal, quando esta tela for um deles.
+  ///
+  /// Preenchido, a tela se embrulha na [AppEstrutura] — a convenção do
+  /// projeto é que quem decide ter navegação é a tela, nunca o roteador. Nulo
+  /// significa tela sem navegação principal: captura, consentimento e
+  /// resultado ocupam a tela inteira.
+  final DestinoPrincipal? destino;
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final tela = Scaffold(
       appBar: AppBar(title: Text(titulo)),
       body: Center(
         child: Padding(
@@ -40,5 +54,10 @@ class TelaPlaceholder extends StatelessWidget {
         ),
       ),
     );
+
+    if (destino case final destino?) {
+      return AppEstrutura(destino: destino, child: tela);
+    }
+    return tela;
   }
 }
