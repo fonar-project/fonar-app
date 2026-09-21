@@ -45,10 +45,16 @@ Future<void> _abrir(
   WidgetTester tester, {
   Size tamanho = _celular,
   Future<List<Paciente>> Function()? pacientes,
+  double escala = 1,
 }) async {
   tester.view.physicalSize = tamanho;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
+
+  if (escala != 1) {
+    tester.platformDispatcher.textScaleFactorTestValue = escala;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+  }
 
   final roteador = GoRouter(
     initialLocation: AppRoutes.pacientesCaminho,
@@ -231,11 +237,44 @@ void main() {
       ('lista vazia', () async => <Paciente>[]),
     ]) {
       testWidgets('celular com $nome em 200% não estoura', (tester) async {
-        tester.platformDispatcher.textScaleFactorTestValue = 2;
-        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-        await _abrir(tester, pacientes: pacientes);
+        await _abrir(tester, pacientes: pacientes, escala: 2);
         expect(tester.takeException(), isNull);
       });
+    }
+
+    // O desktop tinha a mesma exigência e nenhuma cobertura: a tabela estourava
+    // à direita a partir de 1,3× (coluna presa em pixel, rótulo do chip sem
+    // quebra) e a barra lateral estourava por baixo em 2×. 125% e 150% são
+    // escalas comuns no Windows, não caso extremo.
+    //
+    // `esperaTabela` NÃO é decoração: em 1024 px de janela a tabela nem chega a
+    // aparecer, porque o `LayoutBuilder` mede a área de conteúdo DEPOIS dos
+    // 222 px da barra lateral — 1024 − 222 = 802, que ainda é faixa média, e o
+    // layout cai para cards. Sem essa asserção o caso "desktop estreito"
+    // passaria sem nunca exercitar a tabela. A tabela começa em 1246 px.
+    for (final (largura, esperaTabela) in [
+      (1024.0, false),
+      (1280.0, true),
+      (1440.0, true),
+    ]) {
+      for (final escala in [1.0, 1.3, 1.5, 2.0]) {
+        testWidgets(
+          'janela de ${largura.toInt()}px em ${escala}x não estoura',
+          (tester) async {
+            await _abrir(tester, tamanho: Size(largura, 900), escala: escala);
+
+            expect(
+              find.text(AppStrings.pacientesColunaTendencia.toUpperCase()),
+              esperaTabela ? findsOneWidget : findsNothing,
+              reason: esperaTabela
+                  ? 'esta largura deve exercitar a TABELA'
+                  : 'abaixo de 1246px o conteúdo cai para cards',
+            );
+            expect(find.text('Ana de Teste'), findsOneWidget);
+            expect(tester.takeException(), isNull);
+          },
+        );
+      }
     }
   });
 
