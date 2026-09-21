@@ -60,6 +60,17 @@ abstract final class AppColors {
   /// Texto secundário SOBRE LAVANDA. Contraste 4,86:1.
   static const secundarioSobreLavanda = Color(0xFF5A5472);
 
+  /// O tom de texto secundário correto para [fundo].
+  ///
+  /// Existe para que a escolha entre os dois tokens seja feita a partir do
+  /// fundo que está realmente atrás do texto, e não do fundo que o componente
+  /// tinha quando foi escrito. Campo desabilitado, aviso lavanda e botão
+  /// secundário dentro de um card mudam o fundo sem mudar o widget.
+  static Color secundarioSobre(FundoDeTexto fundo) => switch (fundo) {
+    FundoDeTexto.creme => secundarioSobreCreme,
+    FundoDeTexto.lavanda => secundarioSobreLavanda,
+  };
+
   // ------------------------------------------------------------ estado --
   // Usar SEMPRE junto de ícone ou rótulo. Ver [AppColors] no topo.
 
@@ -81,4 +92,19 @@ abstract final class AppColors {
   /// marca, e deixar um botão escolher por conta própria já rendeu roxo
   /// errado em protótipo antes.
   static const semente = roxoProfundo;
+}
+
+/// Sobre o que um texto está desenhado.
+///
+/// Só duas famílias de fundo claro existem na paleta, e cada uma tem o seu tom
+/// de texto secundário — ver [AppColors.secundarioSobre]. Quem declara o fundo
+/// para os componentes em volta é o `AppFundo`, em
+/// `lib/design_system/widgets/app_fundo.dart`.
+enum FundoDeTexto {
+  /// O fundo padrão do aplicativo.
+  creme,
+
+  /// Lavanda cheia ou `lavandaSuave` sobre o creme: card secundário, faixa de
+  /// aviso, campo desabilitado.
+  lavanda,
 }

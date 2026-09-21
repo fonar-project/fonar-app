@@ -10,6 +10,7 @@ import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_campo_texto.dart';
+import '../../../../design_system/widgets/app_fundo.dart';
 import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_indicador_conexao.dart';
 import '../../../../l10n/app_strings.dart';
@@ -452,22 +453,28 @@ class _AvisoOffline extends StatelessWidget {
         border: Border.all(color: AppColors.lavandaClaro),
         borderRadius: AppRadius.bordaMedia,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(titulo, style: textos.titleMedium),
-          if (texto case final texto?) ...[
-            const SizedBox(height: AppSpacing.xxs),
-            Text(
-              texto,
-              style: textos.bodySmall?.copyWith(
-                color: AppColors.secundarioSobreLavanda,
+      // Quem pinta a superfície declara o fundo: a ação aqui dentro é um botão
+      // do design system, e desabilitado ele precisa do tom de texto
+      // secundário da lavanda, não o do creme.
+      child: AppFundo(
+        fundo: FundoDeTexto.lavanda,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(titulo, style: textos.titleMedium),
+            if (texto case final texto?) ...[
+              const SizedBox(height: AppSpacing.xxs),
+              Text(
+                texto,
+                style: textos.bodySmall?.copyWith(
+                  color: AppColors.secundarioSobreLavanda,
+                ),
               ),
-            ),
+            ],
+            const SizedBox(height: AppSpacing.sm),
+            acao,
           ],
-          const SizedBox(height: AppSpacing.sm),
-          acao,
-        ],
+        ),
       ),
     );
   }

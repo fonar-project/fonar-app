@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../historico/domain/evolucao_da_medida.dart';
 import '../domain/paciente.dart';
 import '../domain/repositorio_pacientes.dart';
 
@@ -28,35 +29,35 @@ class RepositorioPacientesPlaceholder implements RepositorioPacientes {
       nome: 'Paciente A. de Exemplo',
       queixa: 'rouquidão persistente (exemplo)',
       ultimaSessao: DateTime(2026, 7, 23),
-      tendencia: TendenciaAvqi.melhorando,
+      direcaoAvqi: DirecaoDaMedida.desceu,
     ),
     Paciente(
       id: 'exemplo-b',
       nome: 'Paciente B. de Exemplo',
       queixa: 'fadiga vocal ao fim do dia (exemplo)',
       ultimaSessao: DateTime(2026, 7, 18),
-      tendencia: TendenciaAvqi.estavel,
+      direcaoAvqi: DirecaoDaMedida.estavel,
     ),
     Paciente(
       id: 'exemplo-c',
       nome: 'Paciente C. de Exemplo',
       queixa: 'soprosidade (exemplo)',
       ultimaSessao: DateTime(2026, 7, 10),
-      tendencia: TendenciaAvqi.piorando,
+      direcaoAvqi: DirecaoDaMedida.subiu,
     ),
     Paciente(
       id: 'exemplo-d',
       nome: 'Paciente D. de Exemplo',
       queixa: 'pitch instável (exemplo)',
       ultimaSessao: DateTime(2026, 7, 2),
-      tendencia: TendenciaAvqi.melhorando,
+      direcaoAvqi: DirecaoDaMedida.desceu,
     ),
     Paciente(
       id: 'exemplo-e',
       nome: 'Paciente E. de Exemplo',
       queixa: 'tensão ao falar (exemplo)',
       ultimaSessao: DateTime(2026, 6, 25),
-      tendencia: TendenciaAvqi.semComparacao,
+      direcaoAvqi: DirecaoDaMedida.semComparacao,
     ),
   ];
 }

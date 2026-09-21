@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../tokens/app_colors.dart';
 import '../tokens/app_spacing.dart';
+import 'app_fundo.dart';
 import 'app_icone.dart';
 
 /// Campo de texto do design system.
@@ -79,9 +80,17 @@ class AppCampoTexto extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
-    final corDoRotulo = habilitado
-        ? AppColors.cinzaChumbo
-        : AppColors.secundarioSobreCreme;
+
+    // Dois fundos diferentes, e por isso dois tons de texto secundário.
+    //
+    // Fora da caixa — rótulo em cima, apoio embaixo — quem está atrás é a
+    // superfície da tela. DENTRO da caixa, o campo desabilitado se pinta de
+    // `lavandaSuave`, e ali o token "sobre creme" cai para 4,48:1 e reprova
+    // em AA. Ver `app_colors_test.dart`.
+    final fundoDaTela = AppFundo.de(context);
+    final fundoDaCaixa = habilitado ? fundoDaTela : FundoDeTexto.lavanda;
+    final corSecundaria = AppColors.secundarioSobre(fundoDaTela);
+    final corDoRotulo = habilitado ? AppColors.cinzaChumbo : corSecundaria;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,7 +127,7 @@ class AppCampoTexto extends StatelessWidget {
                 decoration: InputDecoration(
                   hintText: dica,
                   hintStyle: tema.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.secundarioSobreCreme,
+                    color: AppColors.secundarioSobre(fundoDaCaixa),
                   ),
                   filled: !habilitado,
                   fillColor: AppColors.lavandaSuave,
@@ -143,7 +152,7 @@ class AppCampoTexto extends StatelessWidget {
             ehErro: true,
           )
         else if (apoio != null)
-          _Mensagem(texto: apoio!, cor: AppColors.secundarioSobreCreme),
+          _Mensagem(texto: apoio!, cor: corSecundaria),
       ],
     );
   }

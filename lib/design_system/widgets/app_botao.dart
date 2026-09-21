@@ -4,6 +4,7 @@ import '../tokens/app_colors.dart';
 import '../tokens/app_movimento.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_spacing.dart';
+import 'app_fundo.dart';
 import 'app_icone.dart';
 
 /// Peso visual do botão dentro da tela.
@@ -142,11 +143,11 @@ class AppBotao extends StatelessWidget {
           ExcludeSemantics(
             child: Text(
               motivo,
+              // O tom vem do fundo declarado em volta: este mesmo motivo
+              // aparece sobre o creme e dentro de faixa de aviso lavanda, e o
+              // token claro cai para 4,48:1 na segunda.
               style: Theme.of(context).textTheme.bodySmall
-                  // O token "sobre lavanda" e não o "sobre creme": o motivo
-                  // aparece também dentro de aviso lavanda, onde o tom mais
-                  // claro cai para 4,48:1 e reprova. O escuro passa nos dois.
-                  ?.copyWith(color: AppColors.secundarioSobreLavanda),
+                  ?.copyWith(color: AppFundo.secundarioDe(context)),
             ),
           ),
         ],
@@ -196,9 +197,12 @@ class AppBotao extends StatelessWidget {
           }
           return Colors.transparent;
         }),
+        // O secundário desabilitado não pinta fundo nenhum — quem aparece
+        // atrás do rótulo é a superfície da tela. Dentro de um aviso lavanda o
+        // token "sobre creme" daria 4,48:1 e reprovaria em AA.
         foregroundColor: WidgetStateProperty.resolveWith(
           (estados) => estados.contains(WidgetState.disabled)
-              ? AppColors.secundarioSobreCreme
+              ? AppFundo.secundarioDe(context)
               : AppColors.roxoProfundo,
         ),
         side: WidgetStateProperty.resolveWith((estados) {
@@ -231,7 +235,9 @@ class AppBotao extends StatelessWidget {
     // Do tema, não de `AppTypography.textTheme` direto: a família Urbanist é
     // aplicada pelo ThemeData, e o estilo cru sai na fonte do sistema.
     textStyle: WidgetStatePropertyAll(Theme.of(context).textTheme.labelLarge),
-    animationDuration: AppMovimento.rapida,
+    // Pela preferência do sistema: com movimento reduzido a cor troca no
+    // mesmo frame do toque, sem os 150 ms de transição.
+    animationDuration: AppMovimento.duracao(context, AppMovimento.rapida),
     elevation: const WidgetStatePropertyAll(0),
     // A mudança de cor já está em `backgroundColor`; a tinta por cima do
     // Material duplicaria o efeito e sujaria o roxo.

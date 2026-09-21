@@ -12,9 +12,9 @@ Não há ilustrações vetoriais no design system: espectrograma e formas de ond
 | `reproduzir.svg` | players de amostra (04, 05, 07) |
 | `pausar.svg` | players de amostra (04, 05, 07) |
 | `sem-referencia.svg` | medida sem faixa de referência (07, 09, 10, 11) |
-| `tendencia-melhora.svg` | chip de tendência AVQI ↗ (01) |
-| `tendencia-estavel.svg` | chip de tendência AVQI → (01) |
-| `tendencia-piora.svg` | chip de tendência AVQI ↘ (01) |
+| `tendencia-sobe.svg` | chip de tendência ↗ — valor subiu (01) |
+| `tendencia-estavel.svg` | chip de tendência → — valor não mudou (01) |
+| `tendencia-desce.svg` | chip de tendência ↘ — valor desceu (01) |
 | `voltar.svg` | cabeçalho mobile ‹ (02, 03, 05, 06, 07, 10, 11) |
 | `avancar.svg` | linhas de lista e CTAs › (01, 02, 05, 06, 07, 09, 10) |
 | `adicionar.svg` | nova avaliação ＋ (01, 02) |
@@ -24,6 +24,13 @@ Não há ilustrações vetoriais no design system: espectrograma e formas de ond
 | `passo-pendente.svg` | passo aguardando na fila (06) |
 | `estado-online.svg` | indicador de conexão ativo (00, 01, 06, 11) |
 | `estado-sem-conexao.svg` | indicador sem conexão (00, 06) |
+
+> **As setas de tendência dizem DIREÇÃO, não leitura.** `tendencia-sobe` é o
+> valor que subiu — e só. Se subir é melhorar ou piorar depende da medida: no
+> AVQI menor é melhor, no CPPS maior é melhor. Quem faz essa leitura é
+> `lerEvolucao`, em `lib/features/historico/domain/evolucao_da_medida.dart`, e
+> quem a comunica é o texto ao lado da seta. Nunca batize um ícone de
+> "melhora": o mesmo desenho serve às duas leituras.
 
 ---
 

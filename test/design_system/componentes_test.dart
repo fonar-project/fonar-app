@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:praatico_app/design_system/theme/app_theme.dart';
+import 'package:praatico_app/design_system/tokens/app_movimento.dart';
 import 'package:praatico_app/design_system/tokens/app_colors.dart';
 import 'package:praatico_app/design_system/widgets/app_botao.dart';
 import 'package:praatico_app/design_system/widgets/app_campo_texto.dart';
+import 'package:praatico_app/design_system/widgets/app_fundo.dart';
 import 'package:praatico_app/design_system/widgets/app_icone.dart';
 import 'package:praatico_app/design_system/widgets/app_indicador_conexao.dart';
 import 'package:praatico_app/design_system/widgets/app_status_medida.dart';
@@ -12,6 +14,29 @@ import 'package:praatico_app/l10n/app_strings.dart';
 Widget _tela(Widget filho) => MaterialApp(
   theme: AppTheme.claro,
   home: Scaffold(body: Center(child: filho)),
+);
+
+/// A mesma tela, com a preferência de movimento reduzido do sistema ligada.
+///
+/// O `MediaQuery` vai DENTRO do `MaterialApp`: o app monta o seu próprio a
+/// partir da view, e um wrapper por fora seria sobrescrito.
+Widget _telaSemMovimento(Widget filho) => MaterialApp(
+  theme: AppTheme.claro,
+  home: Builder(
+    builder: (context) => MediaQuery(
+      data: MediaQuery.of(context).copyWith(disableAnimations: true),
+      child: Scaffold(body: Center(child: filho)),
+    ),
+  ),
+);
+
+/// A mesma tela, declarando que o que está atrás do componente é lavanda —
+/// card secundário, faixa de aviso, campo desabilitado.
+Widget _telaSobreLavanda(Widget filho) => _tela(
+  ColoredBox(
+    color: AppColors.lavandaSuave,
+    child: AppFundo(fundo: FundoDeTexto.lavanda, child: filho),
+  ),
 );
 
 void main() {
@@ -80,6 +105,170 @@ void main() {
       expect(
         tester.getSize(find.byType(FilledButton)).height,
         greaterThanOrEqualTo(48.0),
+      );
+    });
+  });
+
+  group('movimento reduzido', () {
+    // `AppMovimento.duracao` existia e não era chamada em lugar nenhum: o
+    // token sabia respeitar a preferência do sistema e o componente não
+    // perguntava. Estes testes são o que faz a pergunta acontecer.
+    testWidgets('a transição do botão passa a durar zero', (tester) async {
+      await tester.pumpWidget(
+        _telaSemMovimento(AppBotao.primario(rotulo: 'Entrar', aoTocar: () {})),
+      );
+
+      final botao = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(botao.style?.animationDuration, Duration.zero);
+    });
+
+    testWidgets('o botão secundário também', (tester) async {
+      await tester.pumpWidget(
+        _telaSemMovimento(
+          AppBotao.secundario(rotulo: 'Entrar offline', aoTocar: () {}),
+        ),
+      );
+
+      final botao = tester.widget<OutlinedButton>(find.byType(OutlinedButton));
+      expect(botao.style?.animationDuration, Duration.zero);
+    });
+
+    testWidgets('sem a preferência, a transição continua', (tester) async {
+      // O contrapeso: "duração zero em todo lugar" passaria no teste de cima.
+      await tester.pumpWidget(
+        _tela(AppBotao.primario(rotulo: 'Entrar', aoTocar: () {})),
+      );
+
+      final botao = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(botao.style?.animationDuration, AppMovimento.rapida);
+      expect(AppMovimento.rapida, isNot(Duration.zero));
+    });
+  });
+
+  group('texto secundário segue o fundo real', () {
+    // O par de tokens existe porque o tom claro reprova em AA sobre a lavanda
+    // (4,48:1 dentro de aviso — ver app_colors_test.dart). De nada adianta ter
+    // os dois se o componente escolhe sempre o mesmo.
+    Color? corDoRotuloDesabilitado(WidgetTester tester) => tester
+        .widget<OutlinedButton>(find.byType(OutlinedButton))
+        .style
+        ?.foregroundColor
+        ?.resolve({WidgetState.disabled});
+
+    testWidgets('botão secundário desabilitado sobre creme', (tester) async {
+      await tester.pumpWidget(
+        _tela(
+          const AppBotao.secundario(
+            rotulo: 'Entrar offline',
+            aoTocar: null,
+            motivoDesabilitado: 'Nenhum paciente salvo neste aparelho',
+          ),
+        ),
+      );
+
+      expect(corDoRotuloDesabilitado(tester), AppColors.secundarioSobreCreme);
+    });
+
+    testWidgets('botão secundário desabilitado sobre lavanda', (tester) async {
+      // O caso real: a ação do aviso offline do login, dentro de uma faixa
+      // lavanda.
+      await tester.pumpWidget(
+        _telaSobreLavanda(
+          const AppBotao.secundario(
+            rotulo: 'Entrar offline',
+            aoTocar: null,
+            motivoDesabilitado: 'Nenhum paciente salvo neste aparelho',
+          ),
+        ),
+      );
+
+      expect(corDoRotuloDesabilitado(tester), AppColors.secundarioSobreLavanda);
+    });
+
+    testWidgets('o motivo do botão acompanha o fundo', (tester) async {
+      for (final (montar, esperado) in [
+        (_tela, AppColors.secundarioSobreCreme),
+        (_telaSobreLavanda, AppColors.secundarioSobreLavanda),
+      ]) {
+        await tester.pumpWidget(
+          montar(
+            const AppBotao.primario(
+              rotulo: 'Gravar',
+              aoTocar: null,
+              motivoDesabilitado: 'Registre o consentimento para gravar',
+            ),
+          ),
+        );
+
+        final motivo = tester.widget<Text>(
+          find.text('Registre o consentimento para gravar'),
+        );
+        expect(motivo.style?.color, esperado);
+      }
+    });
+
+    testWidgets('a dica do campo desabilitado usa o tom da lavanda', (
+      tester,
+    ) async {
+      // O campo desabilitado se pinta de `lavandaSuave`: o fundo muda dentro
+      // do próprio componente, sem ninguém declarar nada em volta.
+      await tester.pumpWidget(
+        _tela(
+          const AppCampoTexto(
+            rotulo: 'E-mail',
+            dica: 'nome@dominio.com.br',
+            habilitado: false,
+          ),
+        ),
+      );
+
+      final campo = tester.widget<TextField>(find.byType(TextField));
+      expect(
+        campo.decoration?.hintStyle?.color,
+        AppColors.secundarioSobreLavanda,
+      );
+    });
+
+    testWidgets('habilitado sobre creme, a dica usa o tom do creme', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _tela(
+          const AppCampoTexto(rotulo: 'E-mail', dica: 'nome@dominio.com.br'),
+        ),
+      );
+
+      final campo = tester.widget<TextField>(find.byType(TextField));
+      expect(
+        campo.decoration?.hintStyle?.color,
+        AppColors.secundarioSobreCreme,
+      );
+    });
+
+    testWidgets('habilitado dentro de card lavanda, a dica acompanha', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _telaSobreLavanda(
+          const AppCampoTexto(
+            rotulo: 'E-mail',
+            dica: 'nome@dominio.com.br',
+            apoio: 'Usamos para enviar o laudo',
+          ),
+        ),
+      );
+
+      final campo = tester.widget<TextField>(find.byType(TextField));
+      expect(
+        campo.decoration?.hintStyle?.color,
+        AppColors.secundarioSobreLavanda,
+      );
+      expect(
+        tester
+            .widget<Text>(find.text('Usamos para enviar o laudo'))
+            .style
+            ?.color,
+        AppColors.secundarioSobreLavanda,
       );
     });
   });
