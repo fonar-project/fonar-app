@@ -217,8 +217,13 @@ class AppBotao extends StatelessWidget {
 
   ButtonStyle _estiloBase(BuildContext context, double altura) => ButtonStyle(
     minimumSize: WidgetStatePropertyAll(Size(0, altura)),
+    // Respiro vertical só aparece quando o rótulo quebra linha (texto do
+    // sistema ampliado): no tamanho normal a altura mínima já sobra.
     padding: const WidgetStatePropertyAll(
-      EdgeInsets.symmetric(horizontal: AppSpacing.lg + AppSpacing.xxs),
+      EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg + AppSpacing.xxs,
+        vertical: AppSpacing.sm,
+      ),
     ),
     shape: const WidgetStatePropertyAll(
       RoundedRectangleBorder(borderRadius: AppRadius.bordaPequena),
@@ -234,13 +239,16 @@ class AppBotao extends StatelessWidget {
   );
 
   Widget _conteudo() {
-    if (icone == null) return Text(rotulo);
+    // Centralizado: se o rótulo quebrar linha, a segunda linha não pode
+    // grudar na esquerda de um botão centralizado.
+    final texto = Text(rotulo, textAlign: TextAlign.center);
+    if (icone == null) return texto;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         AppIcone(nome: icone!, tamanho: 20),
         const SizedBox(width: AppSpacing.xs),
-        Flexible(child: Text(rotulo)),
+        Flexible(child: texto),
       ],
     );
   }

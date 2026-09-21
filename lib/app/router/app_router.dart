@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../design_system/widgets/tela_placeholder.dart';
 import '../../features/analise/presentation/pages/analise_resultado_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/captura/presentation/pages/captura_page.dart';
@@ -9,6 +10,8 @@ import '../../features/consentimento/presentation/pages/consentimento_page.dart'
 import '../../features/historico/presentation/pages/historico_page.dart';
 import '../../features/pacientes/presentation/pages/paciente_detalhe_page.dart';
 import '../../features/pacientes/presentation/pages/pacientes_list_page.dart';
+import '../../l10n/app_strings.dart';
+import '../app_estrutura.dart';
 import 'app_routes.dart';
 
 /// Roteador do app.
@@ -41,6 +44,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.pacientesCaminho,
         builder: (context, state) => const PacientesListPage(),
         routes: [
+          // Antes de :pacienteId — ver AppRoutes.novaAvaliacaoCaminho.
+          // TODO(US02): perfil de paciente novo, da tela 02.
+          GoRoute(
+            name: AppRoutes.novaAvaliacaoNome,
+            path: AppRoutes.novaAvaliacaoCaminho,
+            builder: (context, state) => const AppEstrutura(
+              destino: DestinoPrincipal.novaAvaliacao,
+              child: TelaPlaceholder(
+                titulo: AppStrings.novaAvaliacaoTitulo,
+                rota: '/pacientes/novo',
+              ),
+            ),
+          ),
           GoRoute(
             name: AppRoutes.pacienteDetalheNome,
             path: AppRoutes.pacienteDetalheCaminho,
@@ -73,6 +89,30 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+      // TODO(US06): fila de sincronização.
+      GoRoute(
+        name: AppRoutes.filaNome,
+        path: AppRoutes.filaCaminho,
+        builder: (context, state) => const AppEstrutura(
+          destino: DestinoPrincipal.fila,
+          child: TelaPlaceholder(
+            titulo: AppStrings.filaTitulo,
+            rota: AppRoutes.filaCaminho,
+          ),
+        ),
+      ),
+      // TODO(US11): conta do profissional.
+      GoRoute(
+        name: AppRoutes.contaNome,
+        path: AppRoutes.contaCaminho,
+        builder: (context, state) => const AppEstrutura(
+          destino: DestinoPrincipal.conta,
+          child: TelaPlaceholder(
+            titulo: AppStrings.contaTitulo,
+            rota: AppRoutes.contaCaminho,
+          ),
+        ),
       ),
       GoRoute(
         name: AppRoutes.historicoNome,
