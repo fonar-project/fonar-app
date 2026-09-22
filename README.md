@@ -1,4 +1,4 @@
-# Praatico — aplicativo
+# FONAR — aplicativo
 
 > [!WARNING]
 > **Só existe o esqueleto.** Nenhuma funcionalidade foi implementada. As telas
@@ -8,7 +8,7 @@
 > permissões de plataforma. Se você veio procurar a implementação de alguma
 > coisa, ela ainda não está aqui.
 
-Aplicativo do Praatico, plataforma de avaliação vocal clínica para
+Aplicativo do FONAR, plataforma de avaliação vocal clínica para
 fonoaudiólogos. O uso previsto é durante a consulta, com o paciente presente.
 
 TCC de Engenharia de Software, PUC-Campinas.
@@ -113,8 +113,8 @@ Confirme com `flutter doctor`: a linha de Visual Studio precisa estar com `[√]
 ## Setup
 
 ```bash
-git clone <url-do-repositorio>
-cd praatico-app
+git clone https://github.com/fonar-project/fonar-app.git
+cd fonar-app
 flutter pub get
 ```
 
@@ -186,7 +186,7 @@ repositório. O padrão é `http://localhost:8080` (ver
 `lib/core/config/app_config.dart`):
 
 ```bash
-flutter run -d windows --dart-define=PRAATICO_API_BASE_URL=https://...
+flutter run -d windows --dart-define=FONAR_API_BASE_URL=https://...
 ```
 
 ---
@@ -235,7 +235,7 @@ ignorar. O que precisa estar verde é Flutter, Android toolchain e Visual Studio
 
 ```
 lib/
-├── main.dart              ProviderScope na raiz + PraaticoApp
+├── main.dart              ProviderScope na raiz + FonarApp
 ├── app/
 │   ├── app.dart           MaterialApp.router, tema, sem lógica
 │   └── router/            rotas do go_router e constantes de caminho

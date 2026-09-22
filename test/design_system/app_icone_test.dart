@@ -13,8 +13,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:praatico_app/design_system/tokens/app_colors.dart';
-import 'package:praatico_app/design_system/widgets/app_icone.dart';
+import 'package:fonar_app/design_system/tokens/app_colors.dart';
+import 'package:fonar_app/design_system/widgets/app_icone.dart';
 
 void main() {
   final pastaOrigem = Directory(NomeIcone.pastaOrigem);

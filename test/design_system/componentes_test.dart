@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:praatico_app/design_system/theme/app_theme.dart';
-import 'package:praatico_app/design_system/tokens/app_movimento.dart';
-import 'package:praatico_app/design_system/tokens/app_colors.dart';
-import 'package:praatico_app/design_system/widgets/app_botao.dart';
-import 'package:praatico_app/design_system/widgets/app_campo_texto.dart';
-import 'package:praatico_app/design_system/widgets/app_estado.dart';
-import 'package:praatico_app/design_system/widgets/app_fundo.dart';
-import 'package:praatico_app/design_system/widgets/app_icone.dart';
-import 'package:praatico_app/design_system/widgets/app_indicador_conexao.dart';
-import 'package:praatico_app/design_system/widgets/app_status_medida.dart';
-import 'package:praatico_app/l10n/app_strings.dart';
+import 'package:fonar_app/design_system/theme/app_theme.dart';
+import 'package:fonar_app/design_system/tokens/app_movimento.dart';
+import 'package:fonar_app/design_system/tokens/app_colors.dart';
+import 'package:fonar_app/design_system/widgets/app_botao.dart';
+import 'package:fonar_app/design_system/widgets/app_campo_texto.dart';
+import 'package:fonar_app/design_system/widgets/app_estado.dart';
+import 'package:fonar_app/design_system/widgets/app_fundo.dart';
+import 'package:fonar_app/design_system/widgets/app_icone.dart';
+import 'package:fonar_app/design_system/widgets/app_indicador_conexao.dart';
+import 'package:fonar_app/design_system/widgets/app_status_medida.dart';
+import 'package:fonar_app/l10n/app_strings.dart';
 
 Widget _tela(Widget filho) => MaterialApp(
   theme: AppTheme.claro,

@@ -2,8 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:praatico_app/design_system/tokens/app_colors.dart';
-import 'package:praatico_app/design_system/widgets/app_status_medida.dart';
+import 'package:fonar_app/design_system/tokens/app_colors.dart';
+import 'package:fonar_app/design_system/widgets/app_status_medida.dart';
 
 /// Razão de contraste WCAG 2.1 entre duas cores opacas.
 ///

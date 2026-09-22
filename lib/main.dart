@@ -5,5 +5,5 @@ import 'app/app.dart';
 
 void main() {
   // ProviderScope na raiz: é ele que hospeda o estado de todos os providers.
-  runApp(const ProviderScope(child: PraaticoApp()));
+  runApp(const ProviderScope(child: FonarApp()));
 }

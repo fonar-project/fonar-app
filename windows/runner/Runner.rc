@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "br.puccampinas.praatico" "\0"
-            VALUE "FileDescription", "praatico_app" "\0"
+            VALUE "CompanyName", "FONAR" "\0"
+            VALUE "FileDescription", "FONAR" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "praatico_app" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 br.puccampinas.praatico. All rights reserved." "\0"
-            VALUE "OriginalFilename", "praatico_app.exe" "\0"
-            VALUE "ProductName", "praatico_app" "\0"
+            VALUE "InternalName", "FONAR" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 FONAR. All rights reserved." "\0"
+            VALUE "OriginalFilename", "fonar_app.exe" "\0"
+            VALUE "ProductName", "FONAR" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
