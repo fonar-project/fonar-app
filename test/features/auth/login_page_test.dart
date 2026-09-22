@@ -5,16 +5,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:praatico_app/app/router/app_routes.dart';
-import 'package:praatico_app/core/error/app_exception.dart';
-import 'package:praatico_app/core/network/conexao.dart';
-import 'package:praatico_app/core/offline/pacientes_em_cache.dart';
-import 'package:praatico_app/design_system/theme/app_theme.dart';
-import 'package:praatico_app/design_system/tokens/app_colors.dart';
-import 'package:praatico_app/features/auth/data/repositorio_autenticacao_placeholder.dart';
-import 'package:praatico_app/features/auth/domain/repositorio_autenticacao.dart';
-import 'package:praatico_app/features/auth/presentation/pages/login_page.dart';
-import 'package:praatico_app/l10n/app_strings.dart';
+import 'package:fonar_app/app/router/app_routes.dart';
+import 'package:fonar_app/core/error/app_exception.dart';
+import 'package:fonar_app/core/network/conexao.dart';
+import 'package:fonar_app/core/offline/pacientes_em_cache.dart';
+import 'package:fonar_app/design_system/theme/app_theme.dart';
+import 'package:fonar_app/design_system/tokens/app_colors.dart';
+import 'package:fonar_app/features/auth/data/repositorio_autenticacao_placeholder.dart';
+import 'package:fonar_app/features/auth/domain/repositorio_autenticacao.dart';
+import 'package:fonar_app/features/auth/presentation/pages/login_page.dart';
+import 'package:fonar_app/l10n/app_strings.dart';
 
 /// Repositório controlável pelo teste.
 class _RepositorioFalso implements RepositorioAutenticacao {

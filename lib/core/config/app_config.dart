@@ -4,14 +4,14 @@
 /// produção no repositório:
 ///
 /// ```
-/// flutter run --dart-define=PRAATICO_API_BASE_URL=https://...
+/// flutter run --dart-define=FONAR_API_BASE_URL=https://...
 /// ```
 ///
 /// TODO: apontar para a API Python no Cloud Run quando ela subir. O valor
 /// padrão abaixo é placeholder de desenvolvimento local.
 abstract final class AppConfig {
   static const baseUrl = String.fromEnvironment(
-    'PRAATICO_API_BASE_URL',
+    'FONAR_API_BASE_URL',
     defaultValue: 'http://localhost:8080',
   );
 

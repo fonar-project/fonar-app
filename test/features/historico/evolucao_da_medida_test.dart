@@ -3,7 +3,7 @@
 // consegue dizer as duas coisas.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:praatico_app/features/historico/domain/evolucao_da_medida.dart';
+import 'package:fonar_app/features/historico/domain/evolucao_da_medida.dart';
 
 void main() {
   group('lerEvolucao', () {

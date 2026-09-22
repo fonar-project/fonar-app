@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:praatico_app/app/app_estrutura.dart';
-import 'package:praatico_app/app/router/app_router.dart';
-import 'package:praatico_app/app/router/app_routes.dart';
-import 'package:praatico_app/design_system/theme/app_theme.dart';
-import 'package:praatico_app/design_system/widgets/tela_placeholder.dart';
-import 'package:praatico_app/l10n/app_strings.dart';
+import 'package:fonar_app/app/app_estrutura.dart';
+import 'package:fonar_app/app/router/app_router.dart';
+import 'package:fonar_app/app/router/app_routes.dart';
+import 'package:fonar_app/design_system/theme/app_theme.dart';
+import 'package:fonar_app/design_system/widgets/tela_placeholder.dart';
+import 'package:fonar_app/l10n/app_strings.dart';
 
 const _desktop = Size(1440, 900);
 

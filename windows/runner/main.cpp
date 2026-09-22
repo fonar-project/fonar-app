@@ -27,9 +27,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   FlutterWindow window(project);
   Win32Window::Point origin(10, 10);
   Win32Window::Size size(1280, 720);
-  // Texto da barra de título, o que o usuário lê. O nome exibido é FONAR; o
-  // projeto, o executável e os identificadores ainda dizem "praatico" e isso
-  // é legado que sai no rename completo, não aqui.
+  // Texto da barra de título, o que o usuário lê.
   if (!window.Create(L"FONAR", origin, size)) {
     return EXIT_FAILURE;
   }

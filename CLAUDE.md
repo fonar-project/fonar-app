@@ -1,8 +1,13 @@
 # FONAR — Aplicativo
 
-> O projeto se chama **FONAR**. Repositório, organização, projeto Firebase e
-> identificadores ainda usam o nome antigo "praatico" — é legado, o rename
-> está pendente. Nunca nomeie nada novo como "praatico".
+> Identificadores do projeto: organização GitHub `fonar-project`, repositório
+> `fonar-app`, projeto Firebase `fonar-763db`. Pacote Dart `fonar_app`,
+> `applicationId` e `namespace` Android `br.com.fonar`, binário Windows
+> `fonar_app`.
+>
+> "Praat" e "parselmouth" são o software de análise fonética e seu binding
+> Python — nome de terceiro, aparece legitimamente no código e na documentação.
+> Não confundir com o nome do projeto.
 
 ## Contexto
 Aplicativo de avaliação vocal clínica usado por fonoaudiólogos durante a

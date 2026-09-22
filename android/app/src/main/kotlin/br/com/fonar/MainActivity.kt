@@ -1,4 +1,4 @@
-package br.puccampinas.praatico.praatico_app
+package br.com.fonar
 
 import io.flutter.embedding.android.FlutterActivity
 

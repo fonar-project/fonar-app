@@ -6,8 +6,8 @@ import '../l10n/app_strings.dart';
 import 'router/app_router.dart';
 
 /// Raiz do aplicativo.
-class PraaticoApp extends ConsumerWidget {
-  const PraaticoApp({super.key});
+class FonarApp extends ConsumerWidget {
+  const FonarApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

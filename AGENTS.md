@@ -85,8 +85,9 @@ Estas não são preferência, são decisão fechada. Não proponha alternativa:
   WCAG AA, e nada crítico comunicado só por cor.
 - Branch: `nome/USxx-featureImplementada`. Commit em Conventional Commits em
   português referenciando a User Story: `feat(US04): adiciona medidor de nivel`.
-- O projeto se chama FONAR. "praatico" no repositório e no Firebase é legado.
-  Nunca nomeie nada novo de praatico.
+- O projeto se chama FONAR: org `fonar-project`, repositório `fonar-app`,
+  Firebase `fonar-763db`, pacote Dart `fonar_app`, Android `br.com.fonar`.
+  "Praat" e "parselmouth" são software de terceiro e ficam como estão.
 
 ## Sobre o usuário final
 

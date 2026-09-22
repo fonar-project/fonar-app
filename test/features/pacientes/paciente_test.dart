@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:praatico_app/features/historico/domain/evolucao_da_medida.dart';
-import 'package:praatico_app/features/pacientes/domain/paciente.dart';
+import 'package:fonar_app/features/historico/domain/evolucao_da_medida.dart';
+import 'package:fonar_app/features/pacientes/domain/paciente.dart';
 
 void main() {
   const paciente = Paciente(

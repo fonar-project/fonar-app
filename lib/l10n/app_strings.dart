@@ -9,9 +9,7 @@
 /// "resultado da análise"; evite "normal", "alterado", "patológico".
 abstract final class AppStrings {
   // ---------------------------------------------------------------- geral --
-  /// Nome exibido ao usuário. O repositório, o pacote e o projeto Firebase
-  /// ainda dizem "praatico" — é legado e o rename está pendente. O que aparece
-  /// na tela já é FONAR.
+  /// Nome exibido ao usuário.
   static const appTitle = 'FONAR';
 
   // ------------------------------------------------------------- conexão --
