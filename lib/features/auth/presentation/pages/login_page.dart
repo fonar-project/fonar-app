@@ -243,32 +243,41 @@ class _LayoutExpandido extends StatelessWidget {
         Container(
           width: _larguraDoPainel,
           color: AppColors.roxoProfundo,
-          padding: const EdgeInsets.all(_margemDoPainel),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const _Marca(tamanho: 44),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                AppStrings.loginSubtitulo,
-                style: textos.bodyLarge?.copyWith(
-                  fontSize: 19,
-                  color: cremeSuave,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg + 2),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 360),
-                child: Text(
-                  AppStrings.loginDescricao,
-                  style: textos.bodyMedium?.copyWith(
-                    height: 1.6,
-                    color: cremeSuave,
+          // Rola quando não couber: com o texto do sistema em 200%, marca,
+          // subtítulo e descrição passam da altura de uma janela de 900 px.
+          // Alinhado à esquerda, como antes — `Center` o centralizaria na
+          // horizontal também.
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(_margemDoPainel),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const _Marca(tamanho: 44),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    AppStrings.loginSubtitulo,
+                    style: textos.bodyLarge?.copyWith(
+                      fontSize: 19,
+                      color: cremeSuave,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: AppSpacing.lg + 2),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 360),
+                    child: Text(
+                      AppStrings.loginDescricao,
+                      style: textos.bodyMedium?.copyWith(
+                        height: 1.6,
+                        color: cremeSuave,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
         Expanded(
