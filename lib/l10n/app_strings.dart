@@ -302,6 +302,10 @@ abstract final class AppStrings {
 
   // --------------------------------------------------- gravação das tarefas --
   static const tarefasTitulo = 'Tarefas';
+  static const capturaRetomadaTitulo = 'Sessão de hoje retomada';
+  static String capturaRetomadaTexto(String hora, int gravadas, int total) =>
+      'Começada às $hora. Já gravadas: $gravadas de $total tarefas — '
+      'continuam valendo. Regravar uma tarefa substitui a gravação dela.';
 
   // TODO(clínico): instruções PROVISÓRIAS, escritas para o fluxo funcionar.
   // As tarefas, a ordem e o texto dito ao paciente são do protocolo clínico e

@@ -41,6 +41,10 @@ abstract interface class ArquivosDeAmostra {
 abstract interface class RepositorioAmostras {
   Future<List<Amostra>> daSessao(String sessaoId);
 
+  /// As gravações da sessão mais recente de [pacienteId] — a da gravação
+  /// mais nova —, enviada ou não. Vazio se ele nunca gravou.
+  Future<List<Amostra>> ultimaSessao(String pacienteId);
+
   /// Guarda [amostra] no lugar da anterior da mesma tarefa NA MESMA SESSÃO,
   /// se houver — regravar substitui, não acumula. Sessões anteriores do
   /// paciente não são tocadas.

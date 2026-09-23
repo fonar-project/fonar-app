@@ -29,6 +29,17 @@ class RepositorioAmostrasLocal implements RepositorioAmostras {
   }
 
   @override
+  Future<List<Amostra>> ultimaSessao(String pacienteId) async {
+    final maisNova =
+        await (_banco.select(_banco.amostras)
+              ..where((a) => a.pacienteId.equals(pacienteId))
+              ..orderBy([(a) => OrderingTerm.desc(a.gravadaEm)])
+              ..limit(1))
+            .getSingleOrNull();
+    return maisNova == null ? const [] : daSessao(maisNova.sessaoId);
+  }
+
+  @override
   Future<void> guardar(Amostra amostra) => _banco.transaction(() async {
     await (_banco.delete(_banco.amostras)..where(
           (a) =>

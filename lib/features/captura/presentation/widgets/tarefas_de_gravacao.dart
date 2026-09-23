@@ -45,6 +45,20 @@ class TarefasDeGravacao extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
+        // Voltou para uma sessão de hoje: diz que é a mesma, para ninguém
+        // achar que perdeu o que gravou — nem regravar à toa.
+        if (estado.retomadaDe case final inicio?) ...[
+          AppSituacao(
+            icone: NomeIcone.informacao,
+            titulo: AppStrings.capturaRetomadaTitulo,
+            texto: AppStrings.capturaRetomadaTexto(
+              AppStrings.hora(inicio),
+              estado.amostras.length,
+              TarefaDeGravacao.values.length,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
         for (final tarefa in TarefaDeGravacao.values) ...[
           _CartaoDaTarefa(
             tarefa: tarefa,

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/banco/novo_id.dart';
+import '../../../core/relogio.dart';
+import '../../fila/data/repositorio_fila_local.dart';
 import '../../fila/presentation/fila_controlador.dart';
 import '../../reproducao/presentation/reproducao_controlador.dart';
 import '../data/configuracao_de_captura.dart';
@@ -12,6 +14,7 @@ import '../domain/afericao_de_ruido.dart';
 import '../domain/amostra.dart';
 import '../domain/cabecalho_wav.dart';
 import '../domain/gravador.dart';
+import '../domain/retomada.dart';
 import '../domain/verificacao_da_amostra.dart';
 
 /// Por que a gravação não começou ou não terminou.
@@ -38,9 +41,20 @@ class EstadoDaGravacao {
     this.decorrido = Duration.zero,
     this.falha,
     this.enviando = false,
+    this.retomando = false,
+    this.retomadaDe,
   });
 
   final String sessaoId;
+
+  /// Procurando, ao abrir, uma sessão de hoje para continuar. Rápido — é uma
+  /// consulta ao banco. Tocar em gravar nesse meio-tempo espera a busca
+  /// terminar: começar antes mandaria a gravação para a sessão errada.
+  final bool retomando;
+
+  /// Quando a sessão retomada começou: a primeira gravação dela. `null` numa
+  /// sessão nova.
+  final DateTime? retomadaDe;
 
   /// Pondo a sessão na fila de envio. Curto — a fila só registra —, mas é o
   /// que impede o segundo toque de criar um segundo envio.
@@ -80,16 +94,19 @@ class EstadoDaGravacao {
 
 /// Grava as tarefas de UMA sessão de UM paciente.
 ///
-/// Cada vez que a tela abre é uma sessão nova. TODO(equipe): retomar a sessão
-/// em andamento em vez de abrir outra — as gravações dela já ficam no banco
-/// local (`RepositorioAmostras.daSessao`), mas sair da tela no meio ainda
-/// deixa a sessão para trás.
+/// Ao abrir, continua a sessão de hoje que ficou pela metade — a tela fechou,
+/// o app foi fechado, o profissional foi atender outra coisa —, com as
+/// tarefas já gravadas valendo. Sem uma, começa outra. A regra de quando
+/// retomar está em [sessaoARetomar].
 class GravacaoControlador extends Notifier<EstadoDaGravacao> {
   GravacaoControlador(this.pacienteId);
 
   final String pacienteId;
 
   late Gravador _gravador;
+
+  /// A busca da sessão para retomar, começada ao abrir.
+  Future<void>? _retomada;
   final _leituras = <double>[];
   StreamSubscription<double>? _inscricao;
   String? _caminho;
@@ -100,14 +117,78 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
     // dois — ao sair da tela — para e apaga uma gravação pela metade.
     _gravador = ref.watch(gravadorProvider);
     ref.onDispose(() => unawaited(_inscricao?.cancel()));
+    // Depois de o estado existir: procura a sessão de hoje para continuar.
+    _retomada = Future.microtask(_retomar);
     return EstadoDaGravacao(
       // Também forma a chave de idempotência do envio (`envio-<sessão>`): não
       // pode repetir entre aparelhos.
       sessaoId: novoId(),
+      retomando: true,
     );
   }
 
+  /// Continua a sessão de hoje, se houver uma — ver [sessaoARetomar].
+  ///
+  /// Qualquer falha aqui só custa começar uma sessão nova: as gravações da
+  /// outra continuam no banco e no disco.
+  Future<void> _retomar() async {
+    if (!ref.mounted) return;
+    final nova = state.sessaoId;
+    Map<TarefaDeGravacao, Amostra>? retomadas;
+    try {
+      final agora = ref.read(relogioProvider)();
+      final arquivos = ref.read(arquivosDeAmostraProvider);
+      final ultima = await ref
+          .read(repositorioAmostrasProvider)
+          .ultimaSessao(pacienteId);
+      if (!ref.mounted) return;
+      // Nunca gravou: nada a conferir na fila.
+      final naFila = ultima.isEmpty
+          ? const <String>{}
+          : {
+              for (final i in await ref.read(repositorioFilaProvider).listar())
+                i.sessaoId,
+            };
+      if (!ref.mounted) return;
+
+      final candidatas = sessaoARetomar(
+        ultimaSessao: ultima,
+        sessoesNaFila: naFila,
+        agora: agora,
+      );
+      if (candidatas != null) {
+        retomadas = {};
+        for (final MapEntry(key: tarefa, value: amostra)
+            in candidatas.entries) {
+          // O registro sem o arquivo não serve: a tarefa volta a "por
+          // gravar", em vez de mandar para a análise um arquivo que sumiu.
+          if (await arquivos.ler(amostra.caminho) != null) {
+            retomadas[tarefa] = amostra;
+          }
+          if (!ref.mounted) return;
+        }
+      }
+    } catch (_) {
+      retomadas = null;
+    }
+    if (!ref.mounted) return;
+
+    state = retomadas == null || retomadas.isEmpty
+        ? EstadoDaGravacao(sessaoId: nova)
+        : EstadoDaGravacao(
+            sessaoId: retomadas.values.first.sessaoId,
+            amostras: retomadas,
+            retomadaDe: retomadas.values
+                .map((a) => a.gravadaEm)
+                .reduce((a, b) => a.isBefore(b) ? a : b),
+          );
+  }
+
   Future<void> iniciar(TarefaDeGravacao tarefa) async {
+    if (state.retomando) {
+      await _retomada;
+      if (!ref.mounted) return;
+    }
     if (state.ocupado) return;
     // O som do alto-falante entraria no microfone: nada toca enquanto grava.
     if (ref.exists(reproducaoControladorProvider)) {
@@ -116,6 +197,7 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
     }
     state = EstadoDaGravacao(
       sessaoId: state.sessaoId,
+      retomadaDe: state.retomadaDe,
       amostras: state.amostras,
       rejeitadas: state.rejeitadas,
       gravando: tarefa,
@@ -150,6 +232,7 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
           if (!ref.mounted) return;
           state = EstadoDaGravacao(
             sessaoId: state.sessaoId,
+            retomadaDe: state.retomadaDe,
             amostras: state.amostras,
             rejeitadas: state.rejeitadas,
             gravando: tarefa,
@@ -207,6 +290,7 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
 
     state = EstadoDaGravacao(
       sessaoId: state.sessaoId,
+      retomadaDe: state.retomadaDe,
       amostras: state.amostras,
       rejeitadas: state.rejeitadas,
       conferindo: tarefa,
@@ -232,6 +316,7 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
         if (!ref.mounted) return;
         state = EstadoDaGravacao(
           sessaoId: state.sessaoId,
+          retomadaDe: state.retomadaDe,
           amostras: state.amostras,
           rejeitadas: {...state.rejeitadas, tarefa: problemas},
         );
@@ -244,7 +329,7 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
         sessaoId: state.sessaoId,
         tarefa: tarefa,
         caminho: caminho,
-        gravadaEm: DateTime.now(),
+        gravadaEm: ref.read(relogioProvider)(),
         duracao: cabecalho!.duracao,
         taxaDeAmostragem: cabecalho.taxaDeAmostragem,
         canais: cabecalho.canais,
@@ -260,6 +345,7 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
       if (!ref.mounted) return;
       state = EstadoDaGravacao(
         sessaoId: state.sessaoId,
+        retomadaDe: state.retomadaDe,
         amostras: {...state.amostras, tarefa: amostra},
         rejeitadas: {...state.rejeitadas}..remove(tarefa),
       );
@@ -278,6 +364,7 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
     final anterior = state;
     state = EstadoDaGravacao(
       sessaoId: anterior.sessaoId,
+      retomadaDe: anterior.retomadaDe,
       amostras: anterior.amostras,
       rejeitadas: anterior.rejeitadas,
       enviando: true,
@@ -304,6 +391,7 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
     if (!ref.mounted) return;
     state = EstadoDaGravacao(
       sessaoId: state.sessaoId,
+      retomadaDe: state.retomadaDe,
       amostras: state.amostras,
       rejeitadas: state.rejeitadas,
       falha: (tarefa: tarefa, motivo: motivo),

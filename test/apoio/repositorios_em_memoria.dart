@@ -108,6 +108,16 @@ class RepositorioAmostrasPlaceholder implements RepositorioAmostras {
   ];
 
   @override
+  Future<List<Amostra>> ultimaSessao(String pacienteId) async {
+    final doPaciente = [
+      for (final a in _amostras)
+        if (a.pacienteId == pacienteId) a,
+    ]..sort((a, b) => b.gravadaEm.compareTo(a.gravadaEm));
+    if (doPaciente.isEmpty) return const [];
+    return daSessao(doPaciente.first.sessaoId);
+  }
+
+  @override
   Future<void> guardar(Amostra amostra) async {
     _amostras
       ..removeWhere(

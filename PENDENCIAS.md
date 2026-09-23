@@ -1,6 +1,6 @@
 # Pendências abertas
 
-O que ficou em aberto das US02 a US15, reunido num lugar só e organizado por
+O que ficou em aberto das US02 a US16, reunido num lugar só e organizado por
 **quem precisa resolver**. Cada item aponta onde está no código — lá há um
 `TODO` com o mesmo assunto, e é lá que a correção acontece.
 
@@ -33,6 +33,7 @@ commit.
 |---|---|---|
 | **Texto do termo de consentimento** — provisório, marcado na tela. Ao trocar, mudar também a versão do termo. | 03 | `l10n/app_strings.dart`, `consentimento/data/repositorio_consentimento_placeholder.dart` |
 | Quando o responsável legal é obrigatório, e se o registro precisa de mais dados dele. | 03 | `consentimento/domain/consentimento.dart` |
+| **Sessão de outro dia que ficou pela metade** não é retomada, e as gravações dela ficam no aparelho sem uso (banco e disco). Apagar sozinho depois de um tempo? Quanto? | 16 | `captura/domain/retomada.dart` |
 | **Depois da retirada do consentimento**: gravações, análises e laudos anteriores continuam no aparelho — apagar? Os envios que estavam na fila param e só sobem se o profissional pedir depois de um consentimento novo — o consentimento novo cobre gravação anterior? O laudo de sessão anterior também fica bloqueado (a conferência exige consentimento em vigor) — é o certo? | 15 | `consentimento/domain/consentimento.dart` (`RetiradaDeConsentimento`) |
 | WAV gravados e o banco local ficam sem criptografia na área privada do app: precisa cifrar em repouso? Para o banco há caminho pronto — o mesmo pacote `sqlite3` tem versão com cifra (SQLCipher / SQLite3MultipleCiphers), escolhida na configuração do build. | 05, 14 | `captura/data/gravador_record.dart`, `core/banco/banco_local.dart` |
 | **PDF do laudo na pasta temporária**: para compartilhar, o `printing` grava o arquivo na TEMP (no Windows, fica lá depois de aberto). Apagar depois, ou salvar só onde o profissional escolher? | 10 | `laudo/data/saida_do_laudo.dart` |
@@ -54,11 +55,11 @@ commit.
 
 | Pendência | US | Onde |
 |---|---|---|
-| **Numeração das US03 a US10 foi deduzida** das telas do protótipo e do índice de ícones — conferir com o backlog. A US11 (conta) veio do `TODO(US11)` que a equipe deixou no roteador; as US12 (perfil do paciente), US13 (ouvir as gravações), US14 (dados salvos no aparelho) e US15 (retirar o consentimento) foram escolhidas pelo Felipe. | 03–10 | — |
+| **Numeração das US03 a US10 foi deduzida** das telas do protótipo e do índice de ícones — conferir com o backlog. A US11 (conta) veio do `TODO(US11)` que a equipe deixou no roteador; as US12 (perfil do paciente), US13 (ouvir as gravações), US14 (dados salvos no aparelho), US15 (retirar o consentimento) e US16 (retomar a sessão de gravação) foram escolhidas pelo Felipe. | 03–10 | — |
 | **Pacientes, consentimentos (e retiradas) e CAPE-V só no aparelho**: estão no banco local, mas ainda não sobem para o Firebase. | 14, 15 | `TODO(backend)` nos repositórios `*_local.dart` |
 | **Pacientes e consentimentos de exemplo** aparecem por cima do banco (não são gravados nele). Saem quando a API de análise responder de verdade — os resultados de exemplo são amarrados aos ids deles. | 14 | `pacientes/data/pacientes_de_exemplo.dart`, `consentimento/data/consentimentos_de_exemplo.dart` |
 | "Última sessão" e tendência do AVQI do paciente cadastrado: hoje sempre "sem sessão" e "sem comparação" — dependem do contrato do resultado. | 14 | `pacientes/data/repositorio_pacientes_local.dart` |
-| Retomar a sessão de gravação em andamento ao voltar para a tela. As gravações dela já ficam no banco local; falta a tela voltar para ela em vez de abrir outra. | 05, 14 | `captura/presentation/gravacao_controlador.dart` |
+| Retomar a sessão: só se retoma a do **mesmo dia** (decisão de implementação — a voz muda de um dia para o outro, e a análise combina as tarefas). É isso que define uma consulta? | 16 | `captura/domain/retomada.dart` |
 | Cadastro: queixa obrigatória e "salvar leva ao consentimento" foram decisões sem o protótipo. Faltam aviso de paciente duplicado e aviso ao sair com o formulário preenchido. | 02 | `pacientes/presentation/pages/novo_paciente_page.dart` |
 | Espectrograma em modo paisagem, tela cheia, no celular. | 07 | `analise/presentation/pages/analise_resultado_page.dart` |
 | "Sessão expirada" na fila deve levar ao login (depende do Firebase Auth). | 06 | `fila/presentation/pages/fila_page.dart` |
