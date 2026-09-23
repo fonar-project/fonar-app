@@ -324,11 +324,54 @@ abstract final class AppStrings {
       'suporte antes de usar este aparelho em consulta.';
 
   static const capturaEnviar = 'Enviar para análise';
+  static const capturaEnviando = 'Pondo na fila…';
   static const capturaEnviarFaltaTarefa = 'Grave todas as tarefas para enviar.';
+  static const capturaEnviarApoio =
+      'Funciona sem conexão: a gravação fica na fila e sobe quando a rede '
+      'voltar.';
 
-  /// TODO(US06): remover quando o envio pela fila existir.
-  static const capturaEnvioIndisponivel =
-      'O envio para análise ainda não foi implementado (placeholder).';
+  // ---------------------------------------------- fila de sincronização --
+  static const filaVaziaTitulo = 'Nada na fila';
+  static const filaVaziaTexto =
+      'Gravações mandadas para análise aparecem aqui até chegarem ao '
+      'servidor.';
+  static const filaIrParaPacientes = 'Ir para pacientes';
+  static String filaResumo(int pendentes) => pendentes == 0
+      ? 'Tudo enviado'
+      : pendentes == 1
+      ? '1 envio pendente'
+      : '$pendentes envios pendentes';
+  static const filaSemConexaoTitulo = 'Envios parados até a rede voltar';
+  static const filaSemConexaoTexto =
+      'Os envios seguem sozinhos quando a rede voltar. As gravações estão '
+      'guardadas neste aparelho.';
+  static String filaGravacoes(int n, String data) =>
+      '${n == 1 ? '1 gravação' : '$n gravações'} · $data';
+
+  static const filaNaFila = 'Na fila';
+  static const filaNaFilaTexto = 'Sobe assim que chegar a vez.';
+  static const filaAguardandoConexao = 'Aguardando conexão';
+  static const filaAguardandoConexaoTexto =
+      'Sobe sozinho quando a rede voltar.';
+  static const filaEnviando = 'Enviando…';
+  static const filaEnviandoTexto =
+      'Pode continuar usando o app; o envio segue em segundo plano.';
+  static const filaFalhou = 'O envio falhou';
+  static String filaFalhouTexto(String motivo, String hora) =>
+      '$motivo Nova tentativa automática às $hora.';
+  static const filaSessaoExpirada = 'Sessão expirada';
+  static const filaSessaoExpiradaTexto =
+      'Entre novamente para o envio continuar. A gravação continua guardada.';
+  static const filaRecusado = 'A análise recusou o envio';
+  static String filaRecusadoTexto(String motivo) =>
+      '$motivo A gravação continua guardada neste aparelho. Se tentar de novo '
+      'não resolver, avise o suporte.';
+  static const filaEnviado = 'Enviado';
+  static const filaEnviadoTexto = 'A análise foi recebida pelo servidor.';
+  static const filaTentarAgora = 'Tentar agora';
+  static const filaTentarDeNovo = 'Tentar de novo';
+  static const filaTentarExigeConexao = 'Disponível quando houver conexão.';
+  static const filaVerResultado = 'Ver resultado';
 
   /// "4,2 s". Decimal com vírgula, como se escreve em português.
   static String segundos(Duration d) =>

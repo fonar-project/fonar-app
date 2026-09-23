@@ -5,15 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/app_estrutura.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/formatacao/mascara_de_data.dart';
-import '../../../../core/network/conexao.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_colors.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
+import '../../../../design_system/widgets/app_cabecalho_de_secao.dart';
 import '../../../../design_system/widgets/app_campo_texto.dart';
 import '../../../../design_system/widgets/app_escolha_unica.dart';
 import '../../../../design_system/widgets/app_icone.dart';
-import '../../../../design_system/widgets/app_indicador_conexao.dart';
 import '../../../../design_system/widgets/app_mensagem_de_campo.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../domain/novo_paciente.dart';
@@ -214,11 +213,9 @@ class _NovoPacientePageState extends ConsumerState<NovoPacientePage> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _Cabecalho(
-                compacta: compacta,
-                // Na largura expandida a conexão já aparece no rodapé da
-                // barra lateral; nas outras não há barra lateral.
-                comIndicador: largura != LarguraDeTela.expandida,
+              AppCabecalhoDeSecao(
+                titulo: AppStrings.cadastroTitulo,
+                largura: largura,
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -239,68 +236,6 @@ class _NovoPacientePageState extends ConsumerState<NovoPacientePage> {
             ],
           );
         },
-      ),
-    );
-  }
-}
-
-class _Cabecalho extends ConsumerWidget {
-  const _Cabecalho({required this.compacta, required this.comIndicador});
-
-  final bool compacta;
-
-  /// Dois indicadores de conexão na mesma tela fazem procurar a diferença
-  /// entre eles.
-  final bool comIndicador;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final textos = Theme.of(context).textTheme;
-    final titulo = Semantics(
-      header: true,
-      child: Text(
-        AppStrings.cadastroTitulo,
-        style: compacta ? textos.titleLarge : textos.headlineSmall,
-      ),
-    );
-
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.lavandaClaro)),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Container(
-          // Altura MÍNIMA, a mesma da barra da lista: com o texto ampliado o
-          // título quebra linha e a barra cresce junto.
-          constraints: BoxConstraints(minHeight: compacta ? 0 : 76),
-          padding: EdgeInsets.symmetric(
-            horizontal: compacta ? AppSpacing.md : 30,
-            vertical: AppSpacing.sm,
-          ),
-          alignment: Alignment.centerLeft,
-          child: comIndicador
-              // Wrap, não Row: com o texto do sistema ampliado, título e
-              // indicador não cabem lado a lado em 390 px e o indicador desce.
-              // A largura toda é para o `spaceBetween` levar o indicador à
-              // direita.
-              ? SizedBox(
-                  width: double.infinity,
-                  child: Wrap(
-                    alignment: WrapAlignment.spaceBetween,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: AppSpacing.md,
-                    runSpacing: AppSpacing.xs,
-                    children: [
-                      titulo,
-                      AppIndicadorConexao(
-                        online: ref.watch(conexaoOnlineProvider),
-                      ),
-                    ],
-                  ),
-                )
-              : titulo,
-        ),
       ),
     );
   }

@@ -8,6 +8,7 @@ import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/captura/presentation/pages/captura_page.dart';
 import '../../features/consentimento/data/repositorio_consentimento_placeholder.dart';
 import '../../features/consentimento/presentation/pages/consentimento_page.dart';
+import '../../features/fila/presentation/pages/fila_page.dart';
 import '../../features/historico/presentation/pages/historico_page.dart';
 import '../../features/pacientes/presentation/pages/novo_paciente_page.dart';
 import '../../features/pacientes/presentation/pages/paciente_detalhe_page.dart';
@@ -84,15 +85,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      // TODO(US06): fila de sincronização.
       GoRoute(
         name: AppRoutes.filaNome,
         path: AppRoutes.filaCaminho,
-        builder: (context, state) => const TelaPlaceholder(
-          titulo: AppStrings.filaTitulo,
-          rota: AppRoutes.filaCaminho,
-          destino: DestinoPrincipal.fila,
-        ),
+        builder: (context, state) => const FilaPage(),
       ),
       // TODO(US11): conta do profissional.
       GoRoute(

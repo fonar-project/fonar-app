@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/app_routes.dart';
 import '../../../../design_system/tokens/app_colors.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
@@ -8,6 +10,7 @@ import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../../pacientes/data/repositorio_pacientes_placeholder.dart';
 import '../../domain/amostra.dart';
 import '../../domain/verificacao_da_amostra.dart';
 import '../gravacao_controlador.dart';
@@ -58,16 +61,35 @@ class TarefasDeGravacao extends ConsumerWidget {
           variante: estado.completa
               ? VarianteBotao.primario
               : VarianteBotao.secundario,
-          rotulo: AppStrings.capturaEnviar,
+          rotulo: estado.enviando
+              ? AppStrings.capturaEnviando
+              : AppStrings.capturaEnviar,
           icone: NomeIcone.avancar,
-          aoTocar: null,
-          motivoDesabilitado: estado.completa
-              ? AppStrings.capturaEnvioIndisponivel
-              : AppStrings.capturaEnviarFaltaTarefa,
+          aoTocar: estado.completa && !estado.ocupado
+              ? () => _enviar(context, ref)
+              : null,
+          motivoDesabilitado: AppStrings.capturaEnviarFaltaTarefa,
           ocupaLargura: true,
         ),
+        if (estado.completa) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            AppStrings.capturaEnviarApoio,
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: AppColors.secundarioSobreCreme),
+          ),
+        ],
       ],
     );
+  }
+
+  Future<void> _enviar(BuildContext context, WidgetRef ref) async {
+    final nome = ref.read(pacienteProvider(pacienteId)).value?.nome ?? '';
+    final pos = await ref
+        .read(gravacaoControladorProvider(pacienteId).notifier)
+        .enviarParaAnalise(nomeDoPaciente: nome);
+    // Na fila, o trabalho desta tela acabou: quem acompanha é a fila.
+    if (pos && context.mounted) context.goNamed(AppRoutes.filaNome);
   }
 }
 

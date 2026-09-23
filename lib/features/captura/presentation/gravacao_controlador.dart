@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../fila/presentation/fila_controlador.dart';
 import '../data/configuracao_de_captura.dart';
 import '../data/gravador_record.dart';
 import '../data/repositorio_amostras_placeholder.dart';
@@ -25,9 +26,14 @@ class EstadoDaGravacao {
     this.nivel,
     this.decorrido = Duration.zero,
     this.falha,
+    this.enviando = false,
   });
 
   final String sessaoId;
+
+  /// Pondo a sessão na fila de envio. Curto — a fila só registra —, mas é o
+  /// que impede o segundo toque de criar um segundo envio.
+  final bool enviando;
 
   /// A amostra guardada de cada tarefa: a mais recente que passou na
   /// conferência. Pode ter ressalvas (saturação), nunca problema que invalide.
@@ -54,7 +60,7 @@ class EstadoDaGravacao {
   /// A última tentativa que falhou, e em qual tarefa.
   final ({TarefaDeGravacao tarefa, FalhaDaGravacao motivo})? falha;
 
-  bool get ocupado => gravando != null || conferindo != null;
+  bool get ocupado => gravando != null || conferindo != null || enviando;
 
   /// Todas as tarefas do protocolo gravadas, e todas válidas.
   bool get completa =>
@@ -199,6 +205,37 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
     } catch (_) {
       await arquivos.apagar(caminho).catchError((_) {});
       _falhar(tarefa, FalhaDaGravacao.naoFinalizou);
+    }
+  }
+
+  /// Põe a sessão na fila de envio para a análise. Devolve `true` se pôs.
+  ///
+  /// Só com todas as tarefas gravadas e válidas. Funciona sem conexão: a fila
+  /// guarda e envia quando der.
+  Future<bool> enviarParaAnalise({required String nomeDoPaciente}) async {
+    if (!state.completa || state.ocupado) return false;
+    final anterior = state;
+    state = EstadoDaGravacao(
+      sessaoId: anterior.sessaoId,
+      amostras: anterior.amostras,
+      rejeitadas: anterior.rejeitadas,
+      enviando: true,
+    );
+    try {
+      await ref
+          .read(filaControladorProvider.notifier)
+          .enfileirar(
+            pacienteId: pacienteId,
+            nomeDoPaciente: nomeDoPaciente,
+            sessaoId: anterior.sessaoId,
+            amostras: [
+              for (final t in TarefaDeGravacao.values) anterior.amostras[t]!,
+            ],
+          );
+      return true;
+    } catch (_) {
+      if (ref.mounted) state = anterior;
+      return false;
     }
   }
 

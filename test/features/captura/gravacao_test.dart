@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:fonar_app/app/router/app_routes.dart';
 import 'package:fonar_app/core/network/conexao.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/design_system/widgets/app_botao.dart';
@@ -14,6 +17,10 @@ import 'package:fonar_app/features/captura/domain/amostra.dart';
 import 'package:fonar_app/features/captura/domain/fonte_de_nivel.dart';
 import 'package:fonar_app/features/captura/domain/gravador.dart';
 import 'package:fonar_app/features/captura/presentation/pages/captura_page.dart';
+import 'package:fonar_app/features/fila/data/envio_de_analise_api.dart';
+import 'package:fonar_app/features/fila/data/repositorio_fila_em_memoria.dart';
+import 'package:fonar_app/features/fila/domain/item_da_fila.dart';
+import 'package:fonar_app/features/fila/domain/repositorio_fila.dart';
 import 'package:fonar_app/features/historico/domain/evolucao_da_medida.dart';
 import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_placeholder.dart';
 import 'package:fonar_app/features/pacientes/domain/paciente.dart';
@@ -104,12 +111,20 @@ class _Repositorio implements RepositorioAmostras {
   Future<void> guardar(Amostra amostra) async => guardadas.add(amostra);
 }
 
+/// Envio que nunca responde: o item fica em "enviando", e o teste olha só
+/// o que a tela de gravação fez.
+class _EnvioQueSegura implements EnvioDeAnalise {
+  @override
+  Future<String> enviar(ItemDaFila item) => Completer<String>().future;
+}
+
 class _Cenario {
-  _Cenario(this.disco, this.gravador, this.repositorio);
+  _Cenario(this.disco, this.gravador, this.repositorio, this.fila);
 
   final _Arquivos disco;
   final _Gravador gravador;
   final _Repositorio repositorio;
+  final RepositorioFilaEmMemoria fila;
 }
 
 Future<_Cenario> _abrir(
@@ -123,6 +138,7 @@ Future<_Cenario> _abrir(
   final disco = _Arquivos();
   final gravador = _Gravador(disco);
   final repositorio = _Repositorio();
+  final fila = RepositorioFilaEmMemoria();
 
   await tester.pumpWidget(
     ProviderScope(
@@ -132,6 +148,8 @@ Future<_Cenario> _abrir(
         arquivosDeAmostraProvider.overrideWithValue(disco),
         repositorioAmostrasProvider.overrideWithValue(repositorio),
         conexaoOnlineProvider.overrideWithValue(true),
+        repositorioFilaProvider.overrideWithValue(fila),
+        envioDeAnaliseProvider.overrideWithValue(_EnvioQueSegura()),
         pacientesProvider.overrideWith(
           (ref) async => const [
             Paciente(
@@ -143,9 +161,22 @@ Future<_Cenario> _abrir(
           ],
         ),
       ],
-      child: MaterialApp(
+      child: MaterialApp.router(
         theme: AppTheme.claro,
-        home: const CapturaPage(pacienteId: 'p1'),
+        routerConfig: GoRouter(
+          initialLocation: '/captura',
+          routes: [
+            GoRoute(
+              path: '/captura',
+              builder: (_, _) => const CapturaPage(pacienteId: 'p1'),
+            ),
+            GoRoute(
+              name: AppRoutes.filaNome,
+              path: AppRoutes.filaCaminho,
+              builder: (_, _) => const Scaffold(body: Text('tela da fila')),
+            ),
+          ],
+        ),
       ),
     ),
   );
@@ -160,7 +191,7 @@ Future<_Cenario> _abrir(
     AfericaoDeRuido.duracao + const Duration(milliseconds: 200),
   );
   await tester.pumpAndSettle();
-  return _Cenario(disco, gravador, repositorio);
+  return _Cenario(disco, gravador, repositorio, fila);
 }
 
 /// Toca em [alvo]. Durante a gravação o medidor redesenha a cada leitura e
@@ -347,18 +378,31 @@ void main() {
     expect(c.disco.conteudo, hasLength(1));
   });
 
-  testWidgets('todas gravadas: o envio vira o próximo passo', (tester) async {
-    await _abrir(tester);
+  testWidgets('todas gravadas: enviar põe a sessão na fila e abre a fila', (
+    tester,
+  ) async {
+    final c = await _abrir(tester);
     expect(find.text(AppStrings.capturaEnviarFaltaTarefa), findsOneWidget);
+    expect(_botao(tester, AppStrings.capturaEnviar).aoTocar, isNull);
 
     await _gravar(tester);
     await _gravar(tester);
 
-    expect(find.text(AppStrings.capturaEnvioIndisponivel), findsOneWidget);
     expect(
       _botao(tester, AppStrings.capturaEnviar).variante,
       VarianteBotao.primario,
     );
+    expect(find.text(AppStrings.capturaEnviarApoio), findsOneWidget);
+
+    await _tocar(tester, find.text(AppStrings.capturaEnviar));
+    await tester.pumpAndSettle();
+
+    expect(find.text('tela da fila'), findsOneWidget);
+    final itens = await c.fila.listar();
+    expect(itens, hasLength(1));
+    expect(itens.single.pacienteId, 'p1');
+    expect(itens.single.nomeDoPaciente, 'Ana de Teste');
+    expect(itens.single.amostras.map((a) => a.tarefa), TarefaDeGravacao.values);
   });
 
   testWidgets('não estoura com o texto do sistema em 200%', (tester) async {
