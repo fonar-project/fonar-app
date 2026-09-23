@@ -1,0 +1,219 @@
+import 'dart:async';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../data/configuracao_de_captura.dart';
+import '../data/gravador_record.dart';
+import '../data/repositorio_amostras_placeholder.dart';
+import '../domain/afericao_de_ruido.dart';
+import '../domain/amostra.dart';
+import '../domain/cabecalho_wav.dart';
+import '../domain/gravador.dart';
+import '../domain/verificacao_da_amostra.dart';
+
+/// Por que a gravação não começou ou não terminou.
+enum FalhaDaGravacao { semPermissao, naoIniciou, naoFinalizou }
+
+/// Estado das gravações de uma sessão.
+class EstadoDaGravacao {
+  const EstadoDaGravacao({
+    required this.sessaoId,
+    this.amostras = const {},
+    this.rejeitadas = const {},
+    this.gravando,
+    this.conferindo,
+    this.nivel,
+    this.decorrido = Duration.zero,
+    this.falha,
+  });
+
+  final String sessaoId;
+
+  /// A amostra guardada de cada tarefa: a mais recente que passou na
+  /// conferência. Pode ter ressalvas (saturação), nunca problema que invalide.
+  final Map<TarefaDeGravacao, Amostra> amostras;
+
+  /// A última tentativa descartada de cada tarefa, com o porquê.
+  ///
+  /// Gravação inválida NÃO substitui a amostra boa anterior: a coleta não se
+  /// repete, e um microfone que emudeceu na regravação não pode apagar a
+  /// gravação que tinha dado certo.
+  final Map<TarefaDeGravacao, List<ProblemaNaAmostra>> rejeitadas;
+
+  /// A tarefa sendo gravada agora, se houver. Uma de cada vez: há um
+  /// microfone só.
+  final TarefaDeGravacao? gravando;
+
+  /// A tarefa cujo arquivo está sendo conferido, logo depois de parar.
+  final TarefaDeGravacao? conferindo;
+
+  /// Última leitura do medidor durante a gravação.
+  final double? nivel;
+  final Duration decorrido;
+
+  /// A última tentativa que falhou, e em qual tarefa.
+  final ({TarefaDeGravacao tarefa, FalhaDaGravacao motivo})? falha;
+
+  bool get ocupado => gravando != null || conferindo != null;
+
+  /// Todas as tarefas do protocolo gravadas, e todas válidas.
+  bool get completa =>
+      TarefaDeGravacao.values.every((t) => amostras[t]?.valida ?? false);
+}
+
+/// Grava as tarefas de UMA sessão de UM paciente.
+///
+/// Cada vez que a tela abre é uma sessão nova. TODO(US06): quando existir o
+/// banco local, retomar a sessão em andamento em vez de abrir outra.
+class GravacaoControlador extends Notifier<EstadoDaGravacao> {
+  GravacaoControlador(this.pacienteId);
+
+  final String pacienteId;
+
+  late Gravador _gravador;
+  final _leituras = <double>[];
+  StreamSubscription<double>? _inscricao;
+  String? _caminho;
+
+  @override
+  EstadoDaGravacao build() {
+    // `watch`: o gravador vive enquanto o controlador viver, e o descarte dos
+    // dois — ao sair da tela — para e apaga uma gravação pela metade.
+    _gravador = ref.watch(gravadorProvider);
+    ref.onDispose(() => unawaited(_inscricao?.cancel()));
+    return EstadoDaGravacao(
+      sessaoId: 'sessao-${DateTime.now().microsecondsSinceEpoch}',
+    );
+  }
+
+  Future<void> iniciar(TarefaDeGravacao tarefa) async {
+    if (state.ocupado) return;
+    state = EstadoDaGravacao(
+      sessaoId: state.sessaoId,
+      amostras: state.amostras,
+      rejeitadas: state.rejeitadas,
+      gravando: tarefa,
+    );
+
+    try {
+      if (!await _gravador.pedirPermissao()) {
+        _falhar(tarefa, FalhaDaGravacao.semPermissao);
+        return;
+      }
+      final caminho = await ref
+          .read(arquivosDeAmostraProvider)
+          .novoCaminho(pacienteId, tarefa);
+      _caminho = caminho;
+      _leituras.clear();
+      final niveis = await _gravador.iniciar(
+        caminho,
+        AfericaoDeRuido.intervalo,
+      );
+      _inscricao = niveis.listen((nivel) {
+        _leituras.add(nivel);
+        if (!ref.mounted) return;
+        state = EstadoDaGravacao(
+          sessaoId: state.sessaoId,
+          amostras: state.amostras,
+          rejeitadas: state.rejeitadas,
+          gravando: tarefa,
+          nivel: nivel,
+          decorrido: AfericaoDeRuido.intervalo * _leituras.length,
+        );
+      });
+    } catch (_) {
+      await _gravador.descartar();
+      _falhar(tarefa, FalhaDaGravacao.naoIniciou);
+    }
+  }
+
+  Future<void> parar() async {
+    final tarefa = state.gravando;
+    final caminho = _caminho;
+    if (tarefa == null || caminho == null) return;
+
+    // Não esperar o cancelamento — ver o mesmo cuidado na aferição.
+    unawaited(_inscricao?.cancel());
+    _inscricao = null;
+    _caminho = null;
+    final leituras = List<double>.of(_leituras);
+
+    state = EstadoDaGravacao(
+      sessaoId: state.sessaoId,
+      amostras: state.amostras,
+      rejeitadas: state.rejeitadas,
+      conferindo: tarefa,
+    );
+
+    final arquivos = ref.read(arquivosDeAmostraProvider);
+    try {
+      await _gravador.parar();
+      final lido = await arquivos.ler(caminho);
+      if (!ref.mounted) return;
+
+      final cabecalho = lido == null ? null : lerCabecalhoWav(lido.inicio);
+      final problemas = VerificacaoDaAmostra.verificar(
+        cabecalho: cabecalho,
+        tamanhoDoArquivo: lido?.tamanho ?? 0,
+        leituras: leituras,
+        taxaPedida: ConfiguracaoDeCaptura.taxaDeAmostragem,
+        canaisPedidos: ConfiguracaoDeCaptura.canais,
+      );
+      if (problemas.any((p) => p.invalida)) {
+        // Descartada: o arquivo sai, a amostra anterior (se houver) fica.
+        await arquivos.apagar(caminho);
+        if (!ref.mounted) return;
+        state = EstadoDaGravacao(
+          sessaoId: state.sessaoId,
+          amostras: state.amostras,
+          rejeitadas: {...state.rejeitadas, tarefa: problemas},
+        );
+        return;
+      }
+
+      final amostra = Amostra(
+        id: 'amostra-${DateTime.now().microsecondsSinceEpoch}',
+        pacienteId: pacienteId,
+        sessaoId: state.sessaoId,
+        tarefa: tarefa,
+        caminho: caminho,
+        gravadaEm: DateTime.now(),
+        duracao: cabecalho!.duracao,
+        taxaDeAmostragem: cabecalho.taxaDeAmostragem,
+        canais: cabecalho.canais,
+        problemas: problemas,
+      );
+
+      await ref.read(repositorioAmostrasProvider).guardar(amostra);
+      // A anterior da mesma tarefa foi substituída no registro; o arquivo
+      // dela não tem mais quem o referencie.
+      final anterior = state.amostras[tarefa];
+      if (anterior != null) await arquivos.apagar(anterior.caminho);
+
+      if (!ref.mounted) return;
+      state = EstadoDaGravacao(
+        sessaoId: state.sessaoId,
+        amostras: {...state.amostras, tarefa: amostra},
+        rejeitadas: {...state.rejeitadas}..remove(tarefa),
+      );
+    } catch (_) {
+      await arquivos.apagar(caminho).catchError((_) {});
+      _falhar(tarefa, FalhaDaGravacao.naoFinalizou);
+    }
+  }
+
+  void _falhar(TarefaDeGravacao tarefa, FalhaDaGravacao motivo) {
+    if (!ref.mounted) return;
+    state = EstadoDaGravacao(
+      sessaoId: state.sessaoId,
+      amostras: state.amostras,
+      rejeitadas: state.rejeitadas,
+      falha: (tarefa: tarefa, motivo: motivo),
+    );
+  }
+}
+
+final gravacaoControladorProvider = NotifierProvider.autoDispose
+    .family<GravacaoControlador, EstadoDaGravacao, String>(
+      GravacaoControlador.new,
+    );

@@ -211,6 +211,8 @@ abstract final class AppStrings {
   static const afericaoMedir = 'Medir ruído ambiente';
   static const afericaoMedirDeNovo = 'Medir de novo';
   static const afericaoMedindo = 'Medindo… mantenha silêncio.';
+  static const afericaoEsperaGravacao =
+      'Termine a gravação em andamento para medir de novo.';
 
   static const afericaoSemPermissao = 'Sem permissão de microfone';
   static const afericaoSemPermissaoTexto =
@@ -256,9 +258,81 @@ abstract final class AppStrings {
   static const capturaBloqueadaSemAfericao =
       'Meça o ruído ambiente antes de gravar.';
 
-  /// TODO(US05): remover quando a gravação das tarefas existir.
-  static const capturaGravacaoIndisponivel =
-      'A gravação das tarefas ainda não foi implementada (placeholder).';
+  // --------------------------------------------------- gravação das tarefas --
+  static const tarefasTitulo = 'Tarefas';
+
+  // TODO(clínico): instruções PROVISÓRIAS, escritas para o fluxo funcionar.
+  // As tarefas, a ordem e o texto dito ao paciente são do protocolo clínico e
+  // precisam de revisão da orientação.
+  static const tarefaVogalTitulo = 'Vogal sustentada /a/';
+  static const tarefaVogalInstrucao =
+      'Peça ao paciente para sustentar a vogal /a/, em altura e intensidade '
+      'confortáveis, pelo tempo que conseguir. (instrução provisória)';
+  static const tarefaFalaTitulo = 'Fala encadeada';
+  static const tarefaFalaInstrucao =
+      'Peça ao paciente para falar de forma encadeada, conforme o protocolo '
+      'da clínica. (instrução provisória)';
+
+  static const tarefaGravar = 'Gravar';
+  static const tarefaGravarDeNovo = 'Gravar de novo';
+  static const tarefaParar = 'Parar';
+  static String tarefaGravando(String duracao) => 'Gravando… $duracao';
+  static const tarefaConferindo = 'Conferindo o arquivo gravado…';
+  static const tarefaOutraEmAndamento =
+      'Termine a gravação em andamento para gravar esta.';
+
+  static String tarefaGravada(String duracao) => 'Gravada — $duracao';
+  static const tarefaGravadaTexto = 'Arquivo conferido: WAV PCM, sem ressalva.';
+  static String tarefaGravadaComRessalva(String duracao) =>
+      'Gravada com ressalva — $duracao';
+  static const tarefaDescartada = 'Última gravação descartada';
+  static const tarefaDescartadaMantida =
+      'A gravação anterior desta tarefa continua guardada.';
+
+  static const tarefaFalhaTitulo = 'A gravação não aconteceu';
+  static const tarefaFalhaPermissao =
+      'Sem permissão de microfone. Permita o uso do microfone pelo FONAR nas '
+      'configurações do aparelho e tente de novo.';
+  static const tarefaFalhaIniciar =
+      'Não foi possível começar a gravar. Confira se outro aplicativo está '
+      'usando o microfone e tente de novo.';
+  static const tarefaFalhaFinalizar =
+      'A gravação não pôde ser finalizada e foi descartada. Grave de novo.';
+
+  // O que a conferência encontrou. Diz o que fazer, não só o que houve.
+  static const problemaArquivoIlegivel =
+      'O arquivo gravado não pôde ser lido. Grave de novo.';
+  static const problemaNaoEPcm =
+      'O aparelho gravou em formato comprimido, e não em WAV PCM. Avise o '
+      'suporte antes de usar este aparelho em consulta.';
+  static const problemaBitsDiferentes =
+      'O aparelho gravou com resolução diferente de 16 bits. Avise o suporte '
+      'antes de usar este aparelho em consulta.';
+  static const problemaIncompleto =
+      'A gravação foi interrompida e o arquivo ficou incompleto. Grave de '
+      'novo.';
+  static const problemaCurtaDemais =
+      'A gravação ficou com menos de 1 segundo. Grave de novo.';
+  static const problemaSemSinal =
+      'O microfone não captou som durante a gravação. Confira o acesso ao '
+      'microfone, meça o ruído de novo e grave outra vez.';
+  static const problemaSaturou =
+      'Houve saturação: a voz passou do máximo do microfone. Se possível, '
+      'afaste um pouco o microfone e grave de novo.';
+  static const problemaFormatoAjustado =
+      'O aparelho gravou com taxa ou canais diferentes dos pedidos. Avise o '
+      'suporte antes de usar este aparelho em consulta.';
+
+  static const capturaEnviar = 'Enviar para análise';
+  static const capturaEnviarFaltaTarefa = 'Grave todas as tarefas para enviar.';
+
+  /// TODO(US06): remover quando o envio pela fila existir.
+  static const capturaEnvioIndisponivel =
+      'O envio para análise ainda não foi implementado (placeholder).';
+
+  /// "4,2 s". Decimal com vírgula, como se escreve em português.
+  static String segundos(Duration d) =>
+      '${(d.inMilliseconds / 1000).toStringAsFixed(1).replaceAll('.', ',')} s';
 
   // ----------------------------------------------------- tendência AVQI --
   // TODO(clínico): "melhorando" e "piorando" vêm do protótipo e aguardam

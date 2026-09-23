@@ -172,8 +172,9 @@ void main() {
     expect(find.byType(MedidorDeNivel), findsNothing);
     expect(fonte.aberturas, 1);
     expect(fonte.fechamentos, greaterThanOrEqualTo(1));
-    // A gravação das tarefas ainda não existe — e diz isso.
-    expect(_motivo(AppStrings.capturaGravacaoIndisponivel), findsOneWidget);
+    // Liberada, a gravação dá lugar às tarefas.
+    expect(find.text(AppStrings.tarefasTitulo), findsOneWidget);
+    expect(find.text(AppStrings.capturaIniciarGravacao), findsNothing);
   });
 
   testWidgets('microfone mudo bloqueia a gravação e diz o que fazer', (

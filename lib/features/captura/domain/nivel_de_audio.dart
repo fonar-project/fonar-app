@@ -67,3 +67,33 @@ double fracaoDoMedidor(double dbfs) {
   const minimo = LimitesDeNivel.minimoDoMedidor;
   return ((dbfs - minimo) / (0 - minimo)).clamp(0.0, 1.0);
 }
+
+/// Leituras válidas mínimas para afirmar que há sinal.
+const leiturasValidasMinimas = 10;
+
+/// Variação mínima, em dB, entre a maior e a menor leitura válida.
+///
+/// Som de verdade oscila — ruído de sala, voz, até o chiado do circuito.
+/// Leitura parada no mesmo valor é o microfone entregando um número fixo. O
+/// caso concreto: plataforma sem suporte a amplitude devolve sempre zero, que
+/// sem esta regra seria lido como "saturando" — e aprovado como sinal.
+const variacaoMinima = 0.5;
+
+/// As leituras mostram um microfone que NÃO capta som?
+///
+/// Vale para a aferição e para a gravação. Na dúvida, responde que sim:
+/// deixar passar um microfone mudo custa uma consulta; barrar um microfone bom
+/// custa repetir a medida.
+///
+/// Silêncio digital em PARTE das leituras é normal no começo da captura,
+/// antes do primeiro trecho chegar — por isso se exige um mínimo de leituras
+/// válidas, e não que todas sejam válidas.
+bool microfoneMudo(List<double> leituras) {
+  final validas = [
+    for (final l in leituras)
+      if (zonaDe(l) != ZonaDeNivel.semSinal) l,
+  ];
+  if (validas.length < leiturasValidasMinimas) return true;
+  validas.sort();
+  return validas.last - validas.first < variacaoMinima;
+}

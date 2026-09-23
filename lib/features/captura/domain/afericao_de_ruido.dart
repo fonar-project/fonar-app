@@ -36,9 +36,6 @@ abstract final class AfericaoDeRuido {
   /// De quanto em quanto tempo o nível é lido.
   static const intervalo = Duration(milliseconds: 100);
 
-  /// Menos leituras que isto e a aferição não prova nada.
-  static const leiturasMinimas = 10;
-
   /// Ruído ambiente típico acima disto é [ConclusaoDaAfericao.ruidoAlto].
   ///
   /// TODO(calibração): valor de partida, NÃO validado. O quanto de ruído a
@@ -47,43 +44,19 @@ abstract final class AfericaoDeRuido {
   /// clínica, e deve virar configuração, não constante.
   static const limiteDeRuido = -50.0;
 
-  /// Variação mínima, em dB, entre a maior e a menor leitura.
-  ///
-  /// Ruído de verdade oscila. Leitura parada no mesmo valor por segundos
-  /// seguidos é o microfone entregando um número fixo, não uma sala. O caso
-  /// concreto: plataforma sem suporte a amplitude devolve sempre zero, que
-  /// sem esta regra seria lido como "saturando" — e aprovado como "sinal
-  /// presente".
-  static const variacaoMinima = 0.5;
-
-  /// Conclui a partir das leituras colhidas durante [duracao].
-  ///
-  /// Na dúvida, conclui [ConclusaoDaAfericao.microfoneMudo]: deixar gravar
-  /// com o microfone mudo custa uma consulta; bloquear um microfone bom custa
-  /// uma segunda aferição.
+  /// Conclui a partir das leituras colhidas durante [duracao]. A regra do
+  /// microfone mudo é a de [microfoneMudo], a mesma da gravação.
   static ResultadoDaAfericao concluir(List<double> leituras) {
+    if (microfoneMudo(leituras)) {
+      return const ResultadoDaAfericao(
+        conclusao: ConclusaoDaAfericao.microfoneMudo,
+      );
+    }
+
     final validas = [
       for (final l in leituras)
         if (zonaDe(l) != ZonaDeNivel.semSinal) l,
-    ];
-
-    // Silêncio digital em parte das leituras, com o resto válido, acontece
-    // no começo da captura, antes de o primeiro trecho chegar. Por isso a
-    // exigência é de leituras VÁLIDAS suficientes, não de todas válidas.
-    if (validas.length < leiturasMinimas) {
-      return const ResultadoDaAfericao(
-        conclusao: ConclusaoDaAfericao.microfoneMudo,
-      );
-    }
-
-    validas.sort();
-    final variacao = validas.last - validas.first;
-    if (variacao < variacaoMinima) {
-      return const ResultadoDaAfericao(
-        conclusao: ConclusaoDaAfericao.microfoneMudo,
-      );
-    }
-
+    ]..sort();
     final mediana = validas[validas.length ~/ 2];
     return ResultadoDaAfericao(
       conclusao: mediana > limiteDeRuido

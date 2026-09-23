@@ -66,6 +66,14 @@ dependencies:
   # exceção permitida. Toda medida acústica continua no servidor.
   record: ^7.1.1
 
+  # Onde guardar os WAV gravados. O `record` exige um caminho de arquivo, e a
+  # pasta certa é a área PRIVADA do aplicativo, que o Dart puro não sabe
+  # encontrar: `getApplicationSupportDirectory` devolve essa pasta no Android
+  # e no Windows. A pasta temporária do sistema não serve — o sistema pode
+  # limpá-la antes de a gravação subir para a análise, e é dado clínico que
+  # não se repete. Pacote oficial do time do Flutter.
+  path_provider: ^2.1.6
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

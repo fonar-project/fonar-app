@@ -17,7 +17,9 @@ import '../../data/configuracao_de_captura.dart';
 import '../../domain/afericao_de_ruido.dart';
 import '../../domain/fonte_de_nivel.dart';
 import '../afericao_controlador.dart';
+import '../gravacao_controlador.dart';
 import '../widgets/medidor_de_nivel.dart';
+import '../widgets/tarefas_de_gravacao.dart';
 
 /// Tela 04 — gravação. Nesta etapa: a aferição de ruído ambiente, com o
 /// medidor de nível ao vivo, que vem antes de qualquer gravação.
@@ -85,7 +87,7 @@ class CapturaPage extends ConsumerWidget {
                             ),
                             const SizedBox(height: AppSpacing.lg),
                           ],
-                          const _Afericao(),
+                          _Afericao(pacienteId: pacienteId),
                         ],
                       ),
                     ),
@@ -101,11 +103,18 @@ class CapturaPage extends ConsumerWidget {
 }
 
 class _Afericao extends ConsumerWidget {
-  const _Afericao();
+  const _Afericao({required this.pacienteId});
+
+  final String pacienteId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final estado = ref.watch(afericaoControladorProvider);
+    // Aferição e gravação disputam o mesmo microfone: com uma gravação em
+    // andamento, medir de novo fica desabilitado.
+    final gravando = ref.watch(
+      gravacaoControladorProvider(pacienteId).select((g) => g.ocupado),
+    );
     final textos = Theme.of(context).textTheme;
     void medir() => ref.read(afericaoControladorProvider.notifier).medir();
 
@@ -161,13 +170,17 @@ class _Afericao extends ConsumerWidget {
           const SizedBox(height: AppSpacing.md),
           _Acao(
             rotulo: AppStrings.afericaoMedirDeNovo,
-            aoTocar: medir,
+            aoTocar: gravando ? null : medir,
+            motivoDesabilitado: AppStrings.afericaoEsperaGravacao,
             secundaria: true,
           ),
         ],
       },
       const SizedBox(height: AppSpacing.xl),
-      _BotaoGravar(estado: estado),
+      if (estado case AfericaoConcluida(liberaGravacao: true))
+        TarefasDeGravacao(pacienteId: pacienteId)
+      else
+        _BotaoGravar(estado: estado),
     ];
 
     return Column(
@@ -248,11 +261,13 @@ class _Acao extends StatelessWidget {
   const _Acao({
     required this.rotulo,
     required this.aoTocar,
+    this.motivoDesabilitado,
     this.secundaria = false,
   });
 
   final String rotulo;
-  final VoidCallback aoTocar;
+  final VoidCallback? aoTocar;
+  final String? motivoDesabilitado;
   final bool secundaria;
 
   @override
@@ -264,11 +279,13 @@ class _Acao extends StatelessWidget {
             ? AppBotao.secundario(
                 rotulo: rotulo,
                 aoTocar: aoTocar,
+                motivoDesabilitado: motivoDesabilitado,
                 ocupaLargura: ocupaLargura,
               )
             : AppBotao.primario(
                 rotulo: rotulo,
                 aoTocar: aoTocar,
+                motivoDesabilitado: motivoDesabilitado,
                 ocupaLargura: ocupaLargura,
               );
         return ocupaLargura
@@ -279,11 +296,8 @@ class _Acao extends StatelessWidget {
   }
 }
 
-/// "Iniciar gravação", sempre à vista e sempre dizendo por que não pode.
-///
-/// Hoje nunca habilita: a gravação das tarefas é a próxima etapa. Mas o
-/// bloqueio do microfone mudo já vale e já aparece — é a regra que esta tela
-/// existe para cumprir.
+/// "Iniciar gravação" desabilitado, dizendo por que, enquanto a aferição não
+/// liberar. Liberada, dá lugar às tarefas.
 class _BotaoGravar extends StatelessWidget {
   const _BotaoGravar({required this.estado});
 
@@ -292,9 +306,7 @@ class _BotaoGravar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final motivo = switch (estado) {
-      AfericaoConcluida(liberaGravacao: false) =>
-        AppStrings.capturaBloqueadaMicrofone,
-      AfericaoConcluida() => AppStrings.capturaGravacaoIndisponivel,
+      AfericaoConcluida() => AppStrings.capturaBloqueadaMicrofone,
       _ => AppStrings.capturaBloqueadaSemAfericao,
     };
 
