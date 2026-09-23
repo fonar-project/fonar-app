@@ -4,13 +4,15 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fonar_app/features/captura/data/gravador_record.dart';
-import 'package:fonar_app/features/captura/data/repositorio_amostras_placeholder.dart';
+import 'package:fonar_app/features/captura/data/repositorio_amostras_local.dart';
 import 'package:fonar_app/features/captura/domain/amostra.dart';
 import 'package:fonar_app/features/captura/domain/gravador.dart';
 import 'package:fonar_app/features/captura/presentation/gravacao_controlador.dart';
 import 'package:fonar_app/features/reproducao/data/reprodutor_just_audio.dart';
 import 'package:fonar_app/features/reproducao/domain/reprodutor.dart';
 import 'package:fonar_app/features/reproducao/presentation/reproducao_controlador.dart';
+
+import '../../apoio/repositorios_em_memoria.dart';
 
 // Achados da revisão de 23/09: a gravação podia começar depois de a tela
 // fechar, e erro ou fim do fluxo de nível não encerravam a gravação.

@@ -71,7 +71,7 @@ Future<void> _abrir(
     ProviderScope(
       overrides: [
         conexaoOnlineProvider.overrideWithValue(online),
-        pacientesEmCacheProvider.overrideWithValue(pacientesEmCache),
+        pacientesEmCacheProvider.overrideWith((ref) => pacientesEmCache),
         repositorioAutenticacaoProvider.overrideWithValue(
           repositorio ?? _RepositorioFalso(),
         ),

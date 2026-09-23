@@ -12,7 +12,7 @@ import 'package:fonar_app/features/captura/presentation/afericao_controlador.dar
 import 'package:fonar_app/features/captura/presentation/pages/captura_page.dart';
 import 'package:fonar_app/features/captura/presentation/widgets/medidor_de_nivel.dart';
 import 'package:fonar_app/features/historico/domain/evolucao_da_medida.dart';
-import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_placeholder.dart';
+import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_local.dart';
 import 'package:fonar_app/features/pacientes/domain/paciente.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 

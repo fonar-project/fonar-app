@@ -18,13 +18,13 @@ import '../../../../l10n/app_strings.dart';
 import '../../../analise/data/repositorio_analises_placeholder.dart';
 import '../../../analise/domain/resultado_da_analise.dart';
 import '../../../analise/presentation/apresentacao_da_medida.dart';
-import '../../../consentimento/data/repositorio_consentimento_placeholder.dart';
+import '../../../consentimento/data/repositorio_consentimento_local.dart';
 import '../../../consentimento/domain/consentimento.dart';
 import '../../../fila/presentation/fila_controlador.dart';
 import '../../../historico/domain/evolucao_da_medida.dart';
-import '../../../laudo/data/repositorio_laudos_em_memoria.dart';
+import '../../../laudo/data/repositorio_laudos_local.dart';
 import '../../../laudo/domain/laudo.dart';
-import '../../data/repositorio_pacientes_placeholder.dart';
+import '../../data/repositorio_pacientes_local.dart';
 import '../../domain/novo_paciente.dart';
 import '../../domain/paciente.dart';
 

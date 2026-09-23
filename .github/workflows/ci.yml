@@ -43,6 +43,30 @@ jobs:
       - name: Testes
         run: flutter test
 
+      # O código do banco local (`banco_local.g.dart`) é gerado das tabelas e
+      # commitado. Gerar de novo é a verificação, como a dos ícones abaixo:
+      # tabela mudada sem gerar de novo muda o arquivo, e o git acusa.
+      - name: Código gerado do banco está atualizado
+        run: |
+          dart run build_runner build --delete-conflicting-outputs
+          dart format lib/core/banco
+
+          if [ -n "$(git status --porcelain -- lib/core/banco)" ]; then
+            echo "::error title=Código do banco desatualizado::Rode 'dart run build_runner build' localmente e commite o resultado."
+            echo
+            echo "As tabelas em lib/core/banco/tabelas.dart não correspondem ao"
+            echo "código gerado em lib/core/banco/banco_local.g.dart."
+            echo
+            echo "Para corrigir, na raiz do projeto:"
+            echo
+            echo "    dart run build_runner build"
+            echo "    dart format lib/core/banco"
+            echo "    git add lib/core/banco"
+            echo
+            git status --short -- lib/core/banco
+            exit 1
+          fi
+
       # Fecha a limitação do `app_icone_test.dart`: aquele teste pega .vec
       # faltando ou órfão, mas não pega .vec DESATUALIZADO — o arquivo existe,
       # só não corresponde mais ao desenho do SVG.

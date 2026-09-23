@@ -12,7 +12,7 @@ import '../../../../design_system/widgets/app_cabecalho_de_tarefa.dart';
 import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../l10n/app_strings.dart';
-import '../../../pacientes/data/repositorio_pacientes_placeholder.dart';
+import '../../../pacientes/data/repositorio_pacientes_local.dart';
 import '../../data/configuracao_de_captura.dart';
 import '../../domain/afericao_de_ruido.dart';
 import '../../domain/fonte_de_nivel.dart';

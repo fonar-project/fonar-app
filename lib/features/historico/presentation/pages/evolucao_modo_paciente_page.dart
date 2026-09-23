@@ -16,7 +16,7 @@ import '../../../analise/data/catalogo_de_referencias_vazio.dart';
 import '../../../analise/data/repositorio_analises_placeholder.dart';
 import '../../../analise/domain/resultado_da_analise.dart';
 import '../../../analise/presentation/apresentacao_da_medida.dart';
-import '../../../pacientes/data/repositorio_pacientes_placeholder.dart';
+import '../../../pacientes/data/repositorio_pacientes_local.dart';
 import '../../domain/serie_da_medida.dart';
 import '../leituras_da_sessao.dart';
 import '../medida_da_evolucao.dart';

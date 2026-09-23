@@ -21,10 +21,12 @@ import 'package:fonar_app/features/conta/data/repositorio_da_conta_placeholder.d
 import 'package:fonar_app/features/conta/domain/dados_do_profissional.dart';
 import 'package:fonar_app/features/conta/presentation/conta_controlador.dart';
 import 'package:fonar_app/features/conta/presentation/pages/conta_page.dart';
-import 'package:fonar_app/features/fila/data/repositorio_fila_em_memoria.dart';
+import 'package:fonar_app/features/fila/data/repositorio_fila_local.dart';
 import 'package:fonar_app/features/fila/domain/item_da_fila.dart';
 import 'package:fonar_app/features/fila/presentation/pages/fila_page.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
+
+import '../../apoio/repositorios_em_memoria.dart';
 
 class _Conta implements RepositorioDaConta {
   _Conta({this.falha = false});

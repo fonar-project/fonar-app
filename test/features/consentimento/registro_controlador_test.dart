@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fonar_app/features/consentimento/data/repositorio_consentimento_placeholder.dart';
+import 'package:fonar_app/features/consentimento/data/repositorio_consentimento_local.dart';
 import 'package:fonar_app/features/consentimento/domain/consentimento.dart';
 import 'package:fonar_app/features/consentimento/domain/repositorio_consentimento.dart';
 import 'package:fonar_app/features/consentimento/presentation/registro_consentimento_controlador.dart';

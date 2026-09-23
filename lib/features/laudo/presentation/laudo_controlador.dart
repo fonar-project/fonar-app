@@ -7,7 +7,7 @@ import 'package:printing/printing.dart';
 import '../../../core/relogio.dart';
 import '../../analise/domain/resultado_da_analise.dart';
 import '../../../design_system/tokens/app_colors.dart';
-import '../data/repositorio_laudos_em_memoria.dart';
+import '../data/repositorio_laudos_local.dart';
 import '../domain/conteudo_do_laudo.dart';
 import '../domain/laudo.dart';
 import 'pdf_do_laudo.dart';

@@ -4,7 +4,8 @@ import 'package:fonar_app/features/analise/domain/resultado_da_analise.dart';
 import 'package:fonar_app/features/historico/data/limiares_de_mudanca_indefinidos.dart';
 import 'package:fonar_app/features/historico/domain/evolucao_da_medida.dart';
 import 'package:fonar_app/features/historico/domain/serie_da_medida.dart';
-import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_placeholder.dart';
+
+import '../../apoio/repositorios_em_memoria.dart';
 
 ResultadoDaAnalise _sessao(
   String id,

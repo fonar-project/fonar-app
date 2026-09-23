@@ -17,7 +17,7 @@ import '../../../../design_system/widgets/app_indicador_conexao.dart';
 import '../../../../design_system/widgets/app_toque.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../../historico/domain/evolucao_da_medida.dart';
-import '../../data/repositorio_pacientes_placeholder.dart';
+import '../../data/repositorio_pacientes_local.dart';
 import '../../domain/paciente.dart';
 import '../busca_pacientes_controlador.dart';
 

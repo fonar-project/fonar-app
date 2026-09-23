@@ -7,7 +7,7 @@ import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/design_system/tokens/app_colors.dart';
 import 'package:fonar_app/design_system/widgets/app_icone.dart';
 import 'package:fonar_app/features/historico/domain/evolucao_da_medida.dart';
-import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_placeholder.dart';
+import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_local.dart';
 import 'package:fonar_app/features/pacientes/domain/paciente.dart';
 import 'package:fonar_app/features/pacientes/presentation/pages/pacientes_list_page.dart';
 import 'package:fonar_app/l10n/app_strings.dart';

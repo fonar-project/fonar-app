@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fonar_app/features/consentimento/data/repositorio_consentimento_placeholder.dart';
+import 'package:fonar_app/features/consentimento/data/repositorio_consentimento_local.dart';
 import 'package:fonar_app/features/consentimento/domain/consentimento.dart';
+
+import '../../apoio/repositorios_em_memoria.dart';
 
 PedidoDeConsentimento _pedido(ResultadoDoConsentimento r) {
   expect(r, isA<ConsentimentoValido>());

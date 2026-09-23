@@ -13,22 +13,24 @@ import 'package:fonar_app/features/analise/data/repositorio_analises_placeholder
 import 'package:fonar_app/features/analise/domain/resultado_da_analise.dart';
 import 'package:fonar_app/features/analise/presentation/pages/analise_resultado_page.dart';
 import 'package:fonar_app/features/captura/domain/amostra.dart';
-import 'package:fonar_app/features/consentimento/data/repositorio_consentimento_placeholder.dart';
+import 'package:fonar_app/features/consentimento/data/repositorio_consentimento_local.dart';
 import 'package:fonar_app/features/consentimento/domain/consentimento.dart';
 import 'package:fonar_app/features/consentimento/domain/repositorio_consentimento.dart';
 import 'package:fonar_app/features/consentimento/presentation/pages/consentimento_page.dart';
-import 'package:fonar_app/features/fila/data/repositorio_fila_em_memoria.dart';
+import 'package:fonar_app/features/fila/data/repositorio_fila_local.dart';
 import 'package:fonar_app/features/fila/domain/item_da_fila.dart';
 import 'package:fonar_app/features/fila/presentation/pages/fila_page.dart';
 import 'package:fonar_app/features/historico/domain/evolucao_da_medida.dart';
 import 'package:fonar_app/features/historico/presentation/pages/evolucao_page.dart';
-import 'package:fonar_app/features/laudo/data/repositorio_laudos_em_memoria.dart';
+import 'package:fonar_app/features/laudo/data/repositorio_laudos_local.dart';
 import 'package:fonar_app/features/laudo/domain/laudo.dart';
-import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_placeholder.dart';
+import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_local.dart';
 import 'package:fonar_app/features/pacientes/domain/novo_paciente.dart';
 import 'package:fonar_app/features/pacientes/domain/paciente.dart';
 import 'package:fonar_app/features/pacientes/presentation/pages/paciente_detalhe_page.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
+
+import '../../apoio/repositorios_em_memoria.dart';
 
 class _Consentimentos implements RepositorioConsentimento {
   _Consentimentos({required this.tem});

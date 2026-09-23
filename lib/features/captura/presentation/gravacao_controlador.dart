@@ -2,11 +2,12 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/banco/novo_id.dart';
 import '../../fila/presentation/fila_controlador.dart';
 import '../../reproducao/presentation/reproducao_controlador.dart';
 import '../data/configuracao_de_captura.dart';
 import '../data/gravador_record.dart';
-import '../data/repositorio_amostras_placeholder.dart';
+import '../data/repositorio_amostras_local.dart';
 import '../domain/afericao_de_ruido.dart';
 import '../domain/amostra.dart';
 import '../domain/cabecalho_wav.dart';
@@ -79,10 +80,10 @@ class EstadoDaGravacao {
 
 /// Grava as tarefas de UMA sessão de UM paciente.
 ///
-/// Cada vez que a tela abre é uma sessão nova. TODO(drift): quando existir o
-/// banco local, retomar a sessão em andamento em vez de abrir outra — hoje,
-/// sair da tela no meio perde o registro das tarefas já gravadas (os WAV
-/// ficam no disco, órfãos).
+/// Cada vez que a tela abre é uma sessão nova. TODO(equipe): retomar a sessão
+/// em andamento em vez de abrir outra — as gravações dela já ficam no banco
+/// local (`RepositorioAmostras.daSessao`), mas sair da tela no meio ainda
+/// deixa a sessão para trás.
 class GravacaoControlador extends Notifier<EstadoDaGravacao> {
   GravacaoControlador(this.pacienteId);
 
@@ -100,7 +101,9 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
     _gravador = ref.watch(gravadorProvider);
     ref.onDispose(() => unawaited(_inscricao?.cancel()));
     return EstadoDaGravacao(
-      sessaoId: 'sessao-${DateTime.now().microsecondsSinceEpoch}',
+      // Também forma a chave de idempotência do envio (`envio-<sessão>`): não
+      // pode repetir entre aparelhos.
+      sessaoId: novoId(),
     );
   }
 
@@ -236,7 +239,7 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
       }
 
       final amostra = Amostra(
-        id: 'amostra-${DateTime.now().microsecondsSinceEpoch}',
+        id: novoId(),
         pacienteId: pacienteId,
         sessaoId: state.sessaoId,
         tarefa: tarefa,

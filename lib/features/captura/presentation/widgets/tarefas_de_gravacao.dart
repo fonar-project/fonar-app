@@ -10,7 +10,7 @@ import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../l10n/app_strings.dart';
-import '../../../pacientes/data/repositorio_pacientes_placeholder.dart';
+import '../../../pacientes/data/repositorio_pacientes_local.dart';
 import '../../../reproducao/presentation/widgets/player_de_amostra.dart';
 import '../../domain/amostra.dart';
 import '../../domain/verificacao_da_amostra.dart';

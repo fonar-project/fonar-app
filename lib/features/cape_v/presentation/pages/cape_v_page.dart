@@ -18,7 +18,7 @@ import '../../../../l10n/app_strings.dart';
 import '../../../analise/data/repositorio_analises_placeholder.dart';
 import '../../../analise/domain/resultado_da_analise.dart';
 import '../../../analise/presentation/aviso_de_outro_paciente.dart';
-import '../../../pacientes/data/repositorio_pacientes_placeholder.dart';
+import '../../../pacientes/data/repositorio_pacientes_local.dart';
 import '../../domain/avaliacao_cape_v.dart';
 import '../apresentacao_cape_v.dart';
 import '../cape_v_controlador.dart';

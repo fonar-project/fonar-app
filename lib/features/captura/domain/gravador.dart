@@ -36,8 +36,8 @@ abstract interface class ArquivosDeAmostra {
 
 /// Onde as amostras conferidas ficam registradas.
 ///
-/// TODO(US06): a implementação real grava no banco local (Drift) e põe a
-/// amostra na fila de sincronização.
+/// Ficam no banco local; é o envio da sessão, pela fila, que as leva para a
+/// análise.
 abstract interface class RepositorioAmostras {
   Future<List<Amostra>> daSessao(String sessaoId);
 

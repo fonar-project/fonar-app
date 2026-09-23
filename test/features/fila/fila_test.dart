@@ -9,10 +9,12 @@ import 'package:fonar_app/core/network/conexao.dart';
 import 'package:fonar_app/core/relogio.dart';
 import 'package:fonar_app/features/captura/domain/amostra.dart';
 import 'package:fonar_app/features/fila/data/envio_de_analise_api.dart';
-import 'package:fonar_app/features/fila/data/repositorio_fila_em_memoria.dart';
+import 'package:fonar_app/features/fila/data/repositorio_fila_local.dart';
 import 'package:fonar_app/features/fila/domain/item_da_fila.dart';
 import 'package:fonar_app/features/fila/domain/repositorio_fila.dart';
 import 'package:fonar_app/features/fila/presentation/fila_controlador.dart';
+
+import '../../apoio/repositorios_em_memoria.dart';
 
 /// Rede ligável e desligável pelo teste.
 class _Rede extends Notifier<bool> {

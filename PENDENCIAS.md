@@ -1,6 +1,6 @@
 # Pendências abertas
 
-O que ficou em aberto das US02 a US13, reunido num lugar só e organizado por
+O que ficou em aberto das US02 a US14, reunido num lugar só e organizado por
 **quem precisa resolver**. Cada item aponta onde está no código — lá há um
 `TODO` com o mesmo assunto, e é lá que a correção acontece.
 
@@ -33,9 +33,9 @@ commit.
 |---|---|---|
 | **Texto do termo de consentimento** — provisório, marcado na tela. Ao trocar, mudar também a versão do termo. | 03 | `l10n/app_strings.dart`, `consentimento/data/repositorio_consentimento_placeholder.dart` |
 | Quando o responsável legal é obrigatório, e se o registro precisa de mais dados dele. | 03 | `consentimento/domain/consentimento.dart` |
-| WAV gravados ficam sem criptografia na área privada do app: precisa cifrar em repouso? | 05 | `captura/data/gravador_record.dart` |
+| WAV gravados e o banco local ficam sem criptografia na área privada do app: precisa cifrar em repouso? Para o banco há caminho pronto — o mesmo pacote `sqlite3` tem versão com cifra (SQLCipher / SQLite3MultipleCiphers), escolhida na configuração do build. | 05, 14 | `captura/data/gravador_record.dart`, `core/banco/banco_local.dart` |
 | **PDF do laudo na pasta temporária**: para compartilhar, o `printing` grava o arquivo na TEMP (no Windows, fica lá depois de aberto). Apagar depois, ou salvar só onde o profissional escolher? | 10 | `laudo/data/saida_do_laudo.dart` |
-| **O que fica no aparelho depois de sair da conta** — hoje pacientes, gravações, laudos e fila continuam, e a fila só sobe quando alguém entrar de novo. | 11 | `l10n/app_strings.dart` (`contaSairTexto`) |
+| **O que fica no aparelho depois de sair da conta** — pacientes, gravações, laudos e fila continuam, agora também depois de fechar o app (banco local), e a fila só sobe quando alguém entrar de novo. | 11, 14 | `l10n/app_strings.dart` (`contaSairTexto`) |
 | Gerar o laudo de novo substitui o anterior. Laudo já entregue precisa ficar guardado como foi (versões)? Assinatura digital? | 10 | `laudo/domain/laudo.dart` |
 
 ## API de análise (backend)
@@ -53,9 +53,11 @@ commit.
 
 | Pendência | US | Onde |
 |---|---|---|
-| **Numeração das US03 a US10 foi deduzida** das telas do protótipo e do índice de ícones — conferir com o backlog. A US11 (conta) veio do `TODO(US11)` que a equipe deixou no roteador; a US12 (perfil do paciente) foi escolhida pelo Felipe. | 03–10 | — |
-| **Drift**: pacientes, consentimentos, gravações, fila, CAPE-V e laudos estão em memória e somem ao fechar o app. Decisão registrada: entra numa US própria, trocando só os repositórios. | 06 | todos os `TODO(drift)` |
-| Retomar a sessão de gravação em andamento ao voltar para a tela (hoje abre outra, e as gravações da anterior ficam órfãs no disco). | 05 | `captura/presentation/gravacao_controlador.dart` |
+| **Numeração das US03 a US10 foi deduzida** das telas do protótipo e do índice de ícones — conferir com o backlog. A US11 (conta) veio do `TODO(US11)` que a equipe deixou no roteador; as US12 (perfil do paciente), US13 (ouvir as gravações) e US14 (dados salvos no aparelho) foram escolhidas pelo Felipe. | 03–10 | — |
+| **Pacientes, consentimentos e CAPE-V só no aparelho**: estão no banco local, mas ainda não sobem para o Firebase. | 14 | `TODO(backend)` nos repositórios `*_local.dart` |
+| **Pacientes e consentimentos de exemplo** aparecem por cima do banco (não são gravados nele). Saem quando a API de análise responder de verdade — os resultados de exemplo são amarrados aos ids deles. | 14 | `pacientes/data/pacientes_de_exemplo.dart`, `consentimento/data/consentimentos_de_exemplo.dart` |
+| "Última sessão" e tendência do AVQI do paciente cadastrado: hoje sempre "sem sessão" e "sem comparação" — dependem do contrato do resultado. | 14 | `pacientes/data/repositorio_pacientes_local.dart` |
+| Retomar a sessão de gravação em andamento ao voltar para a tela. As gravações dela já ficam no banco local; falta a tela voltar para ela em vez de abrir outra. | 05, 14 | `captura/presentation/gravacao_controlador.dart` |
 | Retirada do consentimento: o termo promete, o app ainda não tem. | 03 | `consentimento/domain/consentimento.dart` |
 | Cadastro: queixa obrigatória e "salvar leva ao consentimento" foram decisões sem o protótipo. Faltam aviso de paciente duplicado e aviso ao sair com o formulário preenchido. | 02 | `pacientes/presentation/pages/novo_paciente_page.dart` |
 | Espectrograma em modo paisagem, tela cheia, no celular. | 07 | `analise/presentation/pages/analise_resultado_page.dart` |
@@ -79,6 +81,8 @@ rede simulados.
 | Se o `setOnConfigChanged` avisa quando o aparelho troca a taxa. | 04 | `captura/data/fonte_de_nivel_record.dart` |
 | Fila: desligar a rede, mandar uma gravação, religar — ela sobe sozinha? | 06 | `fila/presentation/fila_controlador.dart` |
 | Sair da conta com um envio no ar: o upload é mesmo interrompido (CancelToken do Dio) e o item volta para a fila? | 11 | `fila/data/envio_de_analise_api.dart` |
+| **Banco local no Android e no Windows**: cadastrar, fechar o app de verdade e abrir de novo — o paciente, o consentimento e a fila continuam lá? O arquivo fica na área privada (`getApplicationSupportDirectory`), e não em "Documentos". | 14 | `core/banco/banco_local.dart` |
+| O build baixa o SQLite pronto (conferido por SHA-256) na primeira compilação de cada plataforma: precisa de rede nessa hora. | 14 | `pubspec.yaml` (`drift_flutter`) |
 | Ouvir as gravações no Android e no Windows — no Windows, o `just_audio_windows` precisa compilar e tocar o WAV da área privada. | 13 | `reproducao/data/reprodutor_just_audio.dart` |
 | Laudo: "abrir ou compartilhar" e "imprimir ou salvar" no Android e no Windows, e a pré-visualização A4 no Windows (o `printing` baixa o pdfium no build). | 10 | `laudo/data/saida_do_laudo.dart`, `laudo/presentation/laudo_controlador.dart` |
 

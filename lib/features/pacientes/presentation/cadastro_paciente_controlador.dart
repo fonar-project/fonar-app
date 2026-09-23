@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/error/app_exception.dart';
 import '../../../l10n/app_strings.dart';
-import '../data/repositorio_pacientes_placeholder.dart';
+import '../data/repositorio_pacientes_local.dart';
 import '../domain/novo_paciente.dart';
 import '../domain/paciente.dart';
 

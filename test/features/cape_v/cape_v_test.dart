@@ -11,15 +11,17 @@ import 'package:fonar_app/features/analise/domain/resultado_da_analise.dart';
 import 'package:fonar_app/core/network/conexao.dart';
 import 'package:fonar_app/core/relogio.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
-import 'package:fonar_app/features/cape_v/data/repositorio_cape_v_em_memoria.dart';
+import 'package:fonar_app/features/cape_v/data/repositorio_cape_v_local.dart';
 import 'package:fonar_app/features/cape_v/domain/avaliacao_cape_v.dart';
 import 'package:fonar_app/features/cape_v/presentation/apresentacao_cape_v.dart';
 import 'package:fonar_app/features/cape_v/presentation/cape_v_controlador.dart';
 import 'package:fonar_app/features/cape_v/presentation/pages/cape_v_page.dart';
 import 'package:fonar_app/features/historico/domain/evolucao_da_medida.dart';
-import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_placeholder.dart';
+import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_local.dart';
 import 'package:fonar_app/features/pacientes/domain/paciente.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
+
+import '../../apoio/repositorios_em_memoria.dart';
 
 Map<ParametroCapeV, NotaCapeV> _todasSemDesvio() => {
   for (final p in ParametroCapeV.values) p: const NotaCapeV(valor: 0),

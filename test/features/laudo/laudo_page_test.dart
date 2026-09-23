@@ -13,24 +13,26 @@ import 'package:fonar_app/core/relogio.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/features/analise/data/repositorio_analises_placeholder.dart';
 import 'package:fonar_app/features/analise/domain/resultado_da_analise.dart';
-import 'package:fonar_app/features/cape_v/data/repositorio_cape_v_em_memoria.dart';
+import 'package:fonar_app/features/cape_v/data/repositorio_cape_v_local.dart';
 import 'package:fonar_app/features/cape_v/domain/avaliacao_cape_v.dart';
 import 'package:fonar_app/features/cape_v/presentation/pages/cape_v_page.dart';
 import 'package:fonar_app/features/captura/domain/amostra.dart';
-import 'package:fonar_app/features/consentimento/data/repositorio_consentimento_placeholder.dart';
+import 'package:fonar_app/features/consentimento/data/repositorio_consentimento_local.dart';
 import 'package:fonar_app/features/consentimento/domain/consentimento.dart';
 import 'package:fonar_app/features/consentimento/domain/repositorio_consentimento.dart';
 import 'package:fonar_app/features/consentimento/presentation/pages/consentimento_page.dart';
 import 'package:fonar_app/features/historico/domain/evolucao_da_medida.dart';
-import 'package:fonar_app/features/laudo/data/repositorio_laudos_em_memoria.dart';
+import 'package:fonar_app/features/laudo/data/repositorio_laudos_local.dart';
 import 'package:fonar_app/features/laudo/data/saida_do_laudo.dart';
 import 'package:fonar_app/features/laudo/domain/conteudo_do_laudo.dart';
 import 'package:fonar_app/features/laudo/domain/laudo.dart';
 import 'package:fonar_app/features/laudo/presentation/laudo_controlador.dart';
 import 'package:fonar_app/features/laudo/presentation/pages/laudo_page.dart';
-import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_placeholder.dart';
+import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_local.dart';
 import 'package:fonar_app/features/pacientes/domain/paciente.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
+
+import '../../apoio/repositorios_em_memoria.dart';
 
 class _Analises implements RepositorioAnalises {
   _Analises({this.falha = false, this.dono = 'p1'});

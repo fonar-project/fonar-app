@@ -110,7 +110,8 @@ ProblemaNaNota? _problema(ParametroCapeV parametro, NotaCapeV? nota) {
 
 /// Onde as avaliações ficam.
 ///
-/// TODO(drift): banco local e fila de sincronização, como o resto.
+/// Ficam no banco local. TODO(backend): subir pela fila de sincronização
+/// quando o Firebase entrar.
 abstract interface class RepositorioCapeV {
   /// A avaliação desta análise, ou `null` se ainda não houver.
   Future<AvaliacaoCapeV?> daAnalise(String analiseId);

@@ -18,9 +18,9 @@ import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_mensagem_de_campo.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../l10n/app_strings.dart';
-import '../../../pacientes/data/repositorio_pacientes_placeholder.dart';
+import '../../../pacientes/data/repositorio_pacientes_local.dart';
 import '../../../pacientes/domain/paciente.dart';
-import '../../data/repositorio_consentimento_placeholder.dart';
+import '../../data/repositorio_consentimento_local.dart';
 import '../../domain/consentimento.dart';
 import '../registro_consentimento_controlador.dart';
 

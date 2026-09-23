@@ -6,7 +6,7 @@ import '../../features/analise/presentation/pages/analise_resultado_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/cape_v/presentation/pages/cape_v_page.dart';
 import '../../features/captura/presentation/pages/captura_page.dart';
-import '../../features/consentimento/data/repositorio_consentimento_placeholder.dart';
+import '../../features/consentimento/data/repositorio_consentimento_local.dart';
 import '../../features/conta/presentation/pages/conta_page.dart';
 import '../../features/consentimento/presentation/pages/consentimento_page.dart';
 import '../../features/fila/presentation/pages/fila_page.dart';

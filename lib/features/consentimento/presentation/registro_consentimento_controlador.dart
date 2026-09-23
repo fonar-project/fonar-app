@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/error/app_exception.dart';
 import '../../../l10n/app_strings.dart';
-import '../data/repositorio_consentimento_placeholder.dart';
+import '../data/repositorio_consentimento_local.dart';
 import '../domain/consentimento.dart';
 
 /// Os campos do formulário, para dizer qual deles o profissional mexeu.

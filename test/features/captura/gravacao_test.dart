@@ -12,22 +12,24 @@ import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/design_system/widgets/app_botao.dart';
 import 'package:fonar_app/features/captura/data/fonte_de_nivel_record.dart';
 import 'package:fonar_app/features/captura/data/gravador_record.dart';
-import 'package:fonar_app/features/captura/data/repositorio_amostras_placeholder.dart';
+import 'package:fonar_app/features/captura/data/repositorio_amostras_local.dart';
 import 'package:fonar_app/features/captura/domain/afericao_de_ruido.dart';
 import 'package:fonar_app/features/captura/domain/amostra.dart';
 import 'package:fonar_app/features/captura/domain/fonte_de_nivel.dart';
 import 'package:fonar_app/features/captura/domain/gravador.dart';
 import 'package:fonar_app/features/captura/presentation/pages/captura_page.dart';
 import 'package:fonar_app/features/fila/data/envio_de_analise_api.dart';
-import 'package:fonar_app/features/fila/data/repositorio_fila_em_memoria.dart';
+import 'package:fonar_app/features/fila/data/repositorio_fila_local.dart';
 import 'package:fonar_app/features/fila/domain/item_da_fila.dart';
 import 'package:fonar_app/features/fila/domain/repositorio_fila.dart';
 import 'package:fonar_app/features/historico/domain/evolucao_da_medida.dart';
-import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_placeholder.dart';
+import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_local.dart';
 import 'package:fonar_app/features/pacientes/domain/paciente.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 
 import 'wav_de_teste.dart';
+
+import '../../apoio/repositorios_em_memoria.dart';
 
 /// Sala silenciosa: a aferição sempre libera.
 class _SalaQuieta implements FonteDeNivel {

@@ -5,7 +5,7 @@ import '../../../core/relogio.dart';
 import '../../../l10n/app_strings.dart';
 import '../../analise/data/repositorio_analises_placeholder.dart';
 import '../../analise/domain/resultado_da_analise.dart';
-import '../data/repositorio_cape_v_em_memoria.dart';
+import '../data/repositorio_cape_v_local.dart';
 import '../domain/avaliacao_cape_v.dart';
 
 /// O formulário da CAPE-V de uma análise.

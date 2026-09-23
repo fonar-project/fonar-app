@@ -10,8 +10,10 @@ import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/features/captura/presentation/pages/captura_page.dart';
 import 'package:fonar_app/features/consentimento/domain/consentimento.dart';
 import 'package:fonar_app/features/consentimento/domain/repositorio_consentimento.dart';
-import 'package:fonar_app/features/consentimento/data/repositorio_consentimento_placeholder.dart';
+import 'package:fonar_app/features/consentimento/data/repositorio_consentimento_local.dart';
 import 'package:fonar_app/features/consentimento/presentation/pages/consentimento_page.dart';
+
+import '../apoio/banco_em_memoria.dart';
 
 /// Consentimento de um paciente só, controlável pelo teste.
 class _Repositorio implements RepositorioConsentimento {
@@ -54,6 +56,7 @@ Future<GoRouter> _irParaGravacao(
     overrides: [
       repositorioConsentimentoProvider.overrideWithValue(repositorio),
       conexaoOnlineProvider.overrideWithValue(true),
+      bancoDeTeste(),
     ],
   );
   addTearDown(container.dispose);

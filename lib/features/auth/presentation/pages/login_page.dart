@@ -76,7 +76,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   Widget _formulario({required bool online, required bool comTitulo}) {
     final estado = ref.watch(loginControladorProvider);
-    final pacientesEmCache = ref.watch(pacientesEmCacheProvider);
+    // Enquanto o banco não respondeu, conta como nenhum: entrar offline só
+    // fica disponível quando se sabe que há com quem trabalhar.
+    final pacientesEmCache = ref.watch(pacientesEmCacheProvider).value ?? 0;
     final textos = Theme.of(context).textTheme;
 
     return AutofillGroup(

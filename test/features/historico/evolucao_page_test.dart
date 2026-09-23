@@ -19,7 +19,7 @@ import 'package:fonar_app/features/historico/domain/evolucao_da_medida.dart';
 import 'package:fonar_app/features/historico/domain/serie_da_medida.dart';
 import 'package:fonar_app/features/historico/presentation/pages/evolucao_modo_paciente_page.dart';
 import 'package:fonar_app/features/historico/presentation/pages/evolucao_page.dart';
-import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_placeholder.dart';
+import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_local.dart';
 import 'package:fonar_app/features/pacientes/domain/novo_paciente.dart';
 import 'package:fonar_app/features/pacientes/domain/paciente.dart';
 import 'package:fonar_app/l10n/app_strings.dart';

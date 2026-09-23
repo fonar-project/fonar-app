@@ -4,10 +4,8 @@ import 'item_da_fila.dart';
 
 /// Onde a fila fica guardada.
 ///
-/// TODO(drift): a implementação real grava no banco local, para a fila
-/// sobreviver ao app fechado e ao aparelho reiniciado. Hoje é placeholder em
-/// memória — decisão registrada: a fila veio antes, o Drift entra numa US
-/// própria trocando só esta implementação.
+/// No banco local, para a fila sobreviver ao app fechado e ao aparelho
+/// reiniciado.
 abstract interface class RepositorioFila {
   /// Do mais antigo para o mais novo: a ordem em que devem subir.
   Future<List<ItemDaFila>> listar();

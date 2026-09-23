@@ -8,7 +8,7 @@ import '../../../core/relogio.dart';
 import '../../auth/data/sessao.dart';
 import '../../captura/domain/amostra.dart';
 import '../data/envio_de_analise_api.dart';
-import '../data/repositorio_fila_em_memoria.dart';
+import '../data/repositorio_fila_local.dart';
 import '../domain/item_da_fila.dart';
 import '../domain/repositorio_fila.dart';
 

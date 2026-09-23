@@ -10,11 +10,13 @@ import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/design_system/widgets/app_botao.dart';
 import 'package:fonar_app/features/captura/domain/amostra.dart';
 import 'package:fonar_app/features/fila/data/envio_de_analise_api.dart';
-import 'package:fonar_app/features/fila/data/repositorio_fila_em_memoria.dart';
+import 'package:fonar_app/features/fila/data/repositorio_fila_local.dart';
 import 'package:fonar_app/features/fila/domain/item_da_fila.dart';
 import 'package:fonar_app/features/fila/domain/repositorio_fila.dart';
 import 'package:fonar_app/features/fila/presentation/pages/fila_page.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
+
+import '../../apoio/repositorios_em_memoria.dart';
 
 final _agora = DateTime(2026, 9, 23, 10);
 

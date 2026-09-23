@@ -22,7 +22,7 @@ import '../../../analise/data/repositorio_analises_placeholder.dart';
 import '../../../analise/domain/leitura_do_resultado.dart';
 import '../../../analise/domain/resultado_da_analise.dart';
 import '../../../analise/presentation/apresentacao_da_medida.dart';
-import '../../../pacientes/data/repositorio_pacientes_placeholder.dart';
+import '../../../pacientes/data/repositorio_pacientes_local.dart';
 import '../../../pacientes/domain/paciente.dart';
 import '../../data/limiares_de_mudanca_indefinidos.dart';
 import '../../domain/evolucao_da_medida.dart';
