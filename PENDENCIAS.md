@@ -61,6 +61,7 @@ commit.
 | Tela 02 do protótipo parece ser o **perfil do paciente** (com a situação do consentimento), ainda placeholder. Hoje a evolução só é alcançada pelo resultado de uma análise; o perfil deve levar a ela também. | 02, 09 | `pacientes/presentation/pages/paciente_detalhe_page.dart` |
 | Espectrograma em modo paisagem, tela cheia, no celular. | 07 | `analise/presentation/pages/analise_resultado_page.dart` |
 | "Sessão expirada" na fila deve levar ao login (depende do Firebase Auth). | 06 | `fila/presentation/pages/fila_page.dart` |
+| **Cada envio da fila levar o id de quem gravou** (uid do Firebase) e só subir na sessão dessa pessoa. Hoje sair pausa a fila e entrar de novo a retoma, mas o placeholder não distingue quem entrou. | 11 | `auth/data/sessao.dart` |
 | Espectrograma no laudo: depende do contrato do resultado com a imagem. | 10 | `laudo/presentation/pdf_do_laudo.dart` |
 | README e a seção "Estado atual" do CLAUDE.md ainda dizem que só existe o esqueleto. | — | `README.md`, `CLAUDE.md` |
 
@@ -77,6 +78,7 @@ rede simulados.
 | O WAV gravado sai PCM 16 bits, 44,1 kHz, mono — e a conferência aceita. | 05 | `captura/data/gravador_record.dart` |
 | Se o `setOnConfigChanged` avisa quando o aparelho troca a taxa. | 04 | `captura/data/fonte_de_nivel_record.dart` |
 | Fila: desligar a rede, mandar uma gravação, religar — ela sobe sozinha? | 06 | `fila/presentation/fila_controlador.dart` |
+| Sair da conta com um envio no ar: o upload é mesmo interrompido (CancelToken do Dio) e o item volta para a fila? | 11 | `fila/data/envio_de_analise_api.dart` |
 | Laudo: "abrir ou compartilhar" e "imprimir ou salvar" no Android e no Windows, e a pré-visualização A4 no Windows (o `printing` baixa o pdfium no build). | 10 | `laudo/data/saida_do_laudo.dart`, `laudo/presentation/laudo_controlador.dart` |
 
 ## Já existiam antes da US02

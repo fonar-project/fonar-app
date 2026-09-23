@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/error/app_exception.dart';
 import '../../../l10n/app_strings.dart';
 import '../../auth/data/profissional_atual.dart';
+import '../../auth/data/sessao.dart';
 import '../data/repositorio_da_conta_placeholder.dart';
 import '../domain/dados_do_profissional.dart';
 
@@ -57,11 +58,16 @@ class ContaControlador extends Notifier<EstadoDaConta> {
         return false;
       case DadosValidos(:final profissional):
         state = const EstadoDaConta(salvando: true);
+        // O container, e não o `ref`, depois da espera: com a tela fechada
+        // no meio, o `ref` já foi descartado — e o dado salvo precisa chegar
+        // à sessão mesmo assim (revisão de 23/09).
+        final container = ref.container;
         try {
           await ref.read(repositorioDaContaProvider).salvar(profissional);
-          if (!ref.mounted) return false;
-          ref.read(profissionalAtualProvider.notifier).definir(profissional);
-          state = const EstadoDaConta(salvo: true);
+          container
+              .read(profissionalAtualProvider.notifier)
+              .definir(profissional);
+          if (ref.mounted) state = const EstadoDaConta(salvo: true);
           return true;
         } on AppException catch (e) {
           if (ref.mounted) state = EstadoDaConta(erroGeral: e.mensagem);
@@ -76,14 +82,16 @@ class ContaControlador extends Notifier<EstadoDaConta> {
   }
 
   /// Encerra a sessão. Devolve `true` se saiu; a navegação fica com a tela.
+  ///
+  /// A fila pausa ANTES de o token sair: um envio no meio é interrompido, e
+  /// nada mais sobe até alguém entrar de novo (revisão de 23/09).
   Future<bool> sair() async {
     if (state.salvando || state.saindo) return false;
     state = const EstadoDaConta(saindo: true);
+    final container = ref.container;
+    container.read(sessaoAbertaProvider.notifier).encerrar();
     try {
       await ref.read(repositorioDaContaProvider).sair();
-      // Quem entrar depois não herda o profissional desta sessão.
-      ref.invalidate(profissionalAtualProvider);
-      return true;
     } on AppException catch (e) {
       if (ref.mounted) state = EstadoDaConta(erroGeral: e.mensagem);
       return false;
@@ -93,6 +101,9 @@ class ContaControlador extends Notifier<EstadoDaConta> {
       }
       return false;
     }
+    // Quem entrar depois não herda o profissional desta sessão.
+    container.invalidate(profissionalAtualProvider);
+    return true;
   }
 }
 

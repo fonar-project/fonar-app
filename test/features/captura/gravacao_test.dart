@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fonar_app/features/auth/data/sessao.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fonar_app/app/router/app_routes.dart';
 import 'package:fonar_app/core/network/conexao.dart';
@@ -115,7 +116,8 @@ class _Repositorio implements RepositorioAmostras {
 /// o que a tela de gravação fez.
 class _EnvioQueSegura implements EnvioDeAnalise {
   @override
-  Future<String> enviar(ItemDaFila item) => Completer<String>().future;
+  Future<String> enviar(ItemDaFila item, {Cancelamento? cancelamento}) =>
+      Completer<String>().future;
 }
 
 class _Cenario {
@@ -150,6 +152,8 @@ Future<_Cenario> _abrir(
         conexaoOnlineProvider.overrideWithValue(true),
         repositorioFilaProvider.overrideWithValue(fila),
         envioDeAnaliseProvider.overrideWithValue(_EnvioQueSegura()),
+        // Profissional com a sessão aberta: sem ela a fila não envia.
+        sessaoAbertaProvider.overrideWith(() => Sessao(true)),
         pacientesProvider.overrideWith(
           (ref) async => const [
             Paciente(

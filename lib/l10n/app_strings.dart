@@ -715,15 +715,16 @@ abstract final class AppStrings {
   static const contaSairPergunta = 'Sair da conta neste aparelho?';
 
   // TODO(jurídico): o que fica no aparelho depois de sair — hoje pacientes,
-  // gravações e fila continuam guardados, e a fila só sobe quando alguém
-  // entrar de novo.
+  // gravações e fila continuam guardados.
+  // TODO(auth): "quando você entrar de novo" só é verdade de fato quando cada
+  // envio levar o id de quem gravou; ver `Sessao`.
   static const contaSairTexto =
       'Pacientes, gravações e laudos continuam guardados neste aparelho.';
   static String contaSairComFila(int n) => n == 1
-      ? 'Há 1 envio na fila. Ele fica neste aparelho e só sobe quando alguém '
-            'entrar de novo.'
-      : 'Há $n envios na fila. Eles ficam neste aparelho e só sobem quando '
-            'alguém entrar de novo.';
+      ? 'Há 1 envio na fila. Ele pausa, fica neste aparelho e volta a subir '
+            'quando você entrar de novo.'
+      : 'Há $n envios na fila. Eles pausam, ficam neste aparelho e voltam a '
+            'subir quando você entrar de novo.';
   static const contaConfirmarSair = 'Sair';
   static const contaCancelar = 'Cancelar';
   static const contaSaindo = 'Saindo…';

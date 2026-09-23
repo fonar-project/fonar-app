@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,11 +13,13 @@ import 'package:fonar_app/core/error/app_exception.dart';
 import 'package:fonar_app/core/network/conexao.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/features/auth/data/profissional_atual.dart';
+import 'package:fonar_app/features/auth/data/sessao.dart';
 import 'package:fonar_app/features/auth/domain/profissional.dart';
 import 'package:fonar_app/features/auth/presentation/pages/login_page.dart';
 import 'package:fonar_app/features/captura/domain/amostra.dart';
 import 'package:fonar_app/features/conta/data/repositorio_da_conta_placeholder.dart';
 import 'package:fonar_app/features/conta/domain/dados_do_profissional.dart';
+import 'package:fonar_app/features/conta/presentation/conta_controlador.dart';
 import 'package:fonar_app/features/conta/presentation/pages/conta_page.dart';
 import 'package:fonar_app/features/fila/data/repositorio_fila_em_memoria.dart';
 import 'package:fonar_app/features/fila/domain/item_da_fila.dart';
@@ -282,6 +286,7 @@ void main() {
         tester,
       ) async {
         final (_, conta, container) = await _abrir(tester);
+        container.read(sessaoAbertaProvider.notifier).abrir();
         container
             .read(profissionalAtualProvider.notifier)
             .definir(const Profissional(nome: 'Da sessão', registro: 'X'));
@@ -292,6 +297,8 @@ void main() {
 
         expect(conta.saiu, isTrue);
         expect(find.byType(LoginPage), findsOneWidget);
+        // A fila pausa junto (revisão de 23/09).
+        expect(container.read(sessaoAbertaProvider), isFalse);
         expect(
           container.read(profissionalAtualProvider).nome,
           isNot('Da sessão'),
@@ -316,4 +323,38 @@ void main() {
       }
     });
   });
+
+  test('sair com a tela já fechada: sem erro, e a sessão encerra', () async {
+    // Achado da revisão de 23/09: o `ref` descartado fazia `sair` devolver
+    // falso com o token já limpo.
+    final conta = _ContaLenta();
+    final container = ProviderContainer(
+      overrides: [repositorioDaContaProvider.overrideWithValue(conta)],
+    );
+    addTearDown(container.dispose);
+    container.read(sessaoAbertaProvider.notifier).abrir();
+    container
+        .read(profissionalAtualProvider.notifier)
+        .definir(const Profissional(nome: 'Da sessão', registro: 'X'));
+
+    final tela = container.listen(contaControladorProvider, (_, _) {});
+    final saindo = container.read(contaControladorProvider.notifier).sair();
+    expect(container.read(sessaoAbertaProvider), isFalse);
+    tela.close();
+    await container.pump();
+
+    conta.espera.complete();
+    await expectLater(saindo, completion(isTrue));
+    expect(container.read(profissionalAtualProvider).nome, isNot('Da sessão'));
+  });
+}
+
+class _ContaLenta implements RepositorioDaConta {
+  final espera = Completer<void>();
+
+  @override
+  Future<void> salvar(Profissional profissional) async {}
+
+  @override
+  Future<void> sair() => espera.future;
 }

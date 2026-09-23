@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fonar_app/features/auth/data/sessao.dart';
 import 'package:fonar_app/core/error/app_exception.dart';
 import 'package:fonar_app/core/network/conexao.dart';
 import 'package:fonar_app/core/relogio.dart';
@@ -26,13 +28,21 @@ class _Rede extends Notifier<bool> {
 class _Envio implements EnvioDeAnalise {
   final comportamentos = <Future<String> Function()>[];
   final recebidos = <String>[];
+  Cancelamento? _cancelamento;
 
   void falharCom(AppException falha) =>
       comportamentos.add(() => Future.error(falha));
 
+  /// O próximo envio fica no ar até ser cancelado.
+  void segurarAteCancelar() => comportamentos.add(() async {
+    await _cancelamento!.quandoPedido;
+    throw const EnvioCancelado();
+  });
+
   @override
-  Future<String> enviar(ItemDaFila item) {
+  Future<String> enviar(ItemDaFila item, {Cancelamento? cancelamento}) {
     recebidos.add(item.id);
+    _cancelamento = cancelamento;
     if (comportamentos.isEmpty) {
       return Future.value('analise-${recebidos.length}');
     }
@@ -91,6 +101,8 @@ Future<_Fila> _montar(WidgetTester tester, {bool online = true}) async {
   final container = ProviderContainer(
     overrides: [
       envioDeAnaliseProvider.overrideWithValue(envio),
+      // Profissional com a sessão aberta: sem ela a fila não envia.
+      sessaoAbertaProvider.overrideWith(() => Sessao(true)),
       repositorioFilaProvider.overrideWithValue(RepositorioFilaEmMemoria()),
       conexaoOnlineProvider.overrideWith((ref) => ref.watch(rede)),
       relogioProvider.overrideWithValue(() => fila.agora),
@@ -324,6 +336,36 @@ void main() {
       expect(fila.envio.recebidos, hasLength(2));
     });
 
+    _testarFila('sair da conta interrompe o envio e pausa a fila', (
+      tester,
+      fila,
+    ) async {
+      // Achado da revisão de 23/09: sair limpava o token e a fila seguia.
+      final sessao = fila.container.read(sessaoAbertaProvider.notifier);
+      fila.envio.segurarAteCancelar();
+      await fila.enfileirar();
+      await _assentar(tester);
+      expect(fila.item.situacao, SituacaoDoEnvio.enviando);
+
+      sessao.encerrar();
+      await _assentar(tester);
+      // Volta para a fila como estava: sem contar tentativa, sem espera.
+      expect(fila.item.situacao, SituacaoDoEnvio.naFila);
+      expect(fila.item.tentativas, 0);
+
+      // Sem sessão, nada sobe — nem com o tempo, nem com a rede voltando.
+      await _passar(tester, fila, const Duration(hours: 1));
+      fila.ligarRede(false);
+      fila.ligarRede(true);
+      await _assentar(tester);
+      expect(fila.envio.recebidos, hasLength(1));
+
+      sessao.abrir();
+      await _assentar(tester);
+      expect(fila.envio.recebidos, hasLength(2));
+      expect(fila.item.situacao, SituacaoDoEnvio.enviado);
+    });
+
     _testarFila('um envio por vez, do mais antigo para o mais novo', (
       tester,
       fila,
@@ -403,6 +445,7 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         conexaoOnlineProvider.overrideWithValue(false),
+        sessaoAbertaProvider.overrideWith(() => Sessao(true)),
         repositorioFilaProvider.overrideWithValue(repositorio),
         relogioProvider.overrideWithValue(() {
           leiturasDoRelogio++;
@@ -416,5 +459,23 @@ void main() {
 
     await Future<void>.delayed(const Duration(milliseconds: 80));
     expect(leiturasDoRelogio, lessThan(5));
+  });
+
+  test('envio com cancelamento já pedido não chega à rede', () async {
+    final cancelamento = Cancelamento()..pedir();
+    await expectLater(
+      EnvioDeAnaliseApi(Dio()).enviar(
+        ItemDaFila(
+          id: 'envio-s',
+          pacienteId: 'p1',
+          nomeDoPaciente: 'Ana de Teste',
+          sessaoId: 's',
+          amostras: [_amostra],
+          criadoEm: DateTime(2026, 9, 23),
+        ),
+        cancelamento: cancelamento,
+      ),
+      throwsA(isA<EnvioCancelado>()),
+    );
   });
 }

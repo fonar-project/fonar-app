@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fonar_app/features/auth/data/sessao.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fonar_app/app/router/app_routes.dart';
 import 'package:fonar_app/core/network/conexao.dart';
@@ -20,7 +21,7 @@ final _agora = DateTime(2026, 9, 23, 10);
 class _EnvioQueDaCerto implements EnvioDeAnalise {
   final recebidos = <String>[];
   @override
-  Future<String> enviar(ItemDaFila item) async {
+  Future<String> enviar(ItemDaFila item, {Cancelamento? cancelamento}) async {
     recebidos.add(item.id);
     return 'analise-nova';
   }
@@ -91,6 +92,8 @@ Future<_EnvioQueDaCerto> _abrir(
       overrides: [
         repositorioFilaProvider.overrideWithValue(repositorio),
         envioDeAnaliseProvider.overrideWithValue(envio),
+        // Profissional com a sessão aberta: sem ela a fila não envia.
+        sessaoAbertaProvider.overrideWith(() => Sessao(true)),
         conexaoOnlineProvider.overrideWithValue(online),
         relogioProvider.overrideWithValue(() => _agora),
       ],

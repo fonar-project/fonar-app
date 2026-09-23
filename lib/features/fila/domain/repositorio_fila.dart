@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'item_da_fila.dart';
 
 /// Onde a fila fica guardada.
@@ -20,8 +22,24 @@ abstract interface class RepositorioFila {
 abstract interface class EnvioDeAnalise {
   /// Envia as amostras de [item] e devolve o id da análise criada.
   ///
-  /// Lança só `AppException`. Precisa ser idempotente pelo `item.id`: a
-  /// mesma sessão enviada duas vezes (a resposta da primeira se perdeu) tem
-  /// de resultar numa análise só.
-  Future<String> enviar(ItemDaFila item);
+  /// Lança só `AppException` — `EnvioCancelado` quando [cancelamento] é
+  /// pedido no meio. Precisa ser idempotente pelo `item.id`: a mesma sessão
+  /// enviada duas vezes (a resposta da primeira se perdeu) tem de resultar
+  /// numa análise só.
+  Future<String> enviar(ItemDaFila item, {Cancelamento? cancelamento});
+}
+
+/// Pedido para interromper um envio em andamento — ao sair da conta, por
+/// exemplo. Quem envia decide como interromper; a fila só pede.
+class Cancelamento {
+  final _pedido = Completer<void>();
+
+  bool get pedido => _pedido.isCompleted;
+
+  /// Completa quando o cancelamento é pedido.
+  Future<void> get quandoPedido => _pedido.future;
+
+  void pedir() {
+    if (!_pedido.isCompleted) _pedido.complete();
+  }
 }

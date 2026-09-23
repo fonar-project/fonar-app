@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -32,8 +34,13 @@ class EnvioDeAnaliseApi implements EnvioDeAnalise {
   final Dio _dio;
 
   @override
-  Future<String> enviar(ItemDaFila item) async {
+  Future<String> enviar(ItemDaFila item, {Cancelamento? cancelamento}) async {
+    // O Dio interrompe pelo CancelToken; o ErrorInterceptor traduz a
+    // interrupção em `EnvioCancelado`.
+    final interromper = CancelToken();
+    unawaited(cancelamento?.quandoPedido.then((_) => interromper.cancel()));
     try {
+      if (cancelamento?.pedido ?? false) throw const EnvioCancelado();
       final corpo = FormData.fromMap({
         'paciente_id': item.pacienteId,
         'sessao_id': item.sessaoId,
@@ -48,6 +55,7 @@ class EnvioDeAnaliseApi implements EnvioDeAnalise {
         '/analises',
         data: corpo,
         options: Options(headers: {'Idempotency-Key': item.id}),
+        cancelToken: interromper,
       );
       final id = resposta.data?['id'];
       if (id is! String || id.isEmpty) {

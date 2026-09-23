@@ -209,13 +209,16 @@ Widget _avisoOffline(int pacientesEmCache) {
 // TODO(auth): modo offline precisa de uma sessão anterior guardada no
 // aparelho, e o roteador precisa saber que a sessão é offline. Hoje só navega —
 // não há redirect de autenticação para contornar.
-class _BotaoEntrarOffline extends StatelessWidget {
+class _BotaoEntrarOffline extends ConsumerWidget {
   const _BotaoEntrarOffline();
 
   @override
-  Widget build(BuildContext context) => AppBotao.secundario(
+  Widget build(BuildContext context, WidgetRef ref) => AppBotao.secundario(
     rotulo: AppStrings.loginEntrarOffline,
-    aoTocar: () => context.goNamed(AppRoutes.pacientesNome),
+    aoTocar: () {
+      ref.read(loginControladorProvider.notifier).entrarOffline();
+      context.goNamed(AppRoutes.pacientesNome);
+    },
     ocupaLargura: true,
   );
 }

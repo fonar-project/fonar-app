@@ -5,10 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/error/app_exception.dart';
 import '../../../core/network/conexao.dart';
 import '../../../core/relogio.dart';
+import '../../auth/data/sessao.dart';
 import '../../captura/domain/amostra.dart';
 import '../data/envio_de_analise_api.dart';
 import '../data/repositorio_fila_em_memoria.dart';
 import '../domain/item_da_fila.dart';
+import '../domain/repositorio_fila.dart';
 
 /// A fila de sincronização, viva enquanto o app estiver aberto.
 ///
@@ -22,11 +24,20 @@ import '../domain/item_da_fila.dart';
 ///   pesa, e dois ao mesmo tempo em rede de consultório só atrasam os dois;
 /// - sem conexão, nada é tentado; quando a conexão volta, tudo o que esperava
 ///   por ela é tentado na hora, sem esperar o fim da espera;
+/// - sem sessão aberta, também nada: sair da conta pausa a fila e interrompe
+///   o envio em curso, e entrar de novo a retoma (ver `Sessao`);
 /// - falha passageira espera cada vez mais (ver [PoliticaDeReenvio]); sessão
 ///   expirada e envio recusado não se repetem sozinhos.
 class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
   Timer? _proxima;
   var _processando = false;
+
+  /// O cancelamento do envio que está no ar, se houver.
+  Cancelamento? _emCurso;
+
+  /// Há rede e há quem esteja com a sessão aberta.
+  bool get _podeEnviar =>
+      ref.read(conexaoOnlineProvider) && ref.read(sessaoAbertaProvider);
 
   DateTime _agora() => ref.read(relogioProvider)();
 
@@ -35,6 +46,16 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
     ref.onDispose(() => _proxima?.cancel());
     ref.listen(conexaoOnlineProvider, (antes, online) {
       if (online && antes != true) unawaited(_aoVoltarConexao());
+    });
+    ref.listen(sessaoAbertaProvider, (antes, aberta) {
+      if (aberta && antes != true) {
+        unawaited(_aoVoltarConexao());
+      } else if (!aberta) {
+        // Saiu da conta: nenhum relógio armado, e o que está subindo para.
+        _proxima?.cancel();
+        _proxima = null;
+        _emCurso?.pedir();
+      }
     });
 
     final itens = await ref.read(repositorioFilaProvider).listar();
@@ -96,7 +117,7 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
     _processando = true;
     try {
       await _carregada();
-      while (ref.mounted && ref.read(conexaoOnlineProvider)) {
+      while (ref.mounted && _podeEnviar) {
         final agora = _agora();
         final proximo = _itens.where((i) => i.prontoEm(agora)).firstOrNull;
         if (proximo == null) break;
@@ -116,8 +137,12 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
     // Toda espera pode terminar com a fila descartada (app fechando).
     if (!ref.mounted) return;
 
+    final cancelamento = Cancelamento();
+    _emCurso = cancelamento;
     try {
-      final analiseId = await ref.read(envioDeAnaliseProvider).enviar(item);
+      final analiseId = await ref
+          .read(envioDeAnaliseProvider)
+          .enviar(item, cancelamento: cancelamento);
       if (!ref.mounted) return;
       await _salvar(
         item.copiar(
@@ -135,6 +160,17 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
       final falha = erro is AppException
           ? erro
           : FalhaDesconhecida(causa: erro);
+      // Interrompido porque o profissional saiu: não foi falha do envio.
+      // Volta para a fila como estava, sem contar tentativa nem esperar.
+      if (falha is EnvioCancelado && cancelamento.pedido) {
+        await _salvar(
+          item.copiar(
+            situacao: SituacaoDoEnvio.naFila,
+            proximaTentativa: () => null,
+          ),
+        );
+        return;
+      }
       final situacao = PoliticaDeReenvio.depoisDe(falha);
       await _salvar(
         item.copiar(
@@ -147,10 +183,13 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
               : null,
         ),
       );
+    } finally {
+      if (identical(_emCurso, cancelamento)) _emCurso = null;
     }
   }
 
-  /// A conexão voltou: o que esperava por ela não precisa mais esperar.
+  /// A conexão voltou, ou a sessão abriu: o que esperava não precisa mais
+  /// esperar.
   ///
   /// TODO(verificar em aparelho): testado só num ProviderContainer sem a
   /// árvore de widgets, onde o Riverpod não propaga a mudança de rede
@@ -185,7 +224,7 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
   void _agendar() {
     _proxima?.cancel();
     _proxima = null;
-    if (!ref.read(conexaoOnlineProvider)) return;
+    if (!_podeEnviar) return;
     final agendadas = [
       for (final i in _itens)
         if (i.situacao == SituacaoDoEnvio.aguardandoNovaTentativa &&
