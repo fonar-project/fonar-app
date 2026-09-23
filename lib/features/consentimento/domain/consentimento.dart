@@ -7,6 +7,11 @@
 /// TODO(jurídico): confirmar com orientação jurídica quando o responsável é
 /// obrigatório e se o registro precisa de mais dados dele (documento,
 /// parentesco).
+///
+/// TODO(equipe): o termo diz que o consentimento pode ser retirado a qualquer
+/// momento, e o aplicativo ainda não tem como registrar a retirada. Ela
+/// precisa existir antes de o termo ir para produção — e, retirado o
+/// consentimento, o bloqueio do roteador volta a valer sozinho.
 enum QuemAutoriza { paciente, responsavelLegal }
 
 /// Consentimento registrado para um paciente.

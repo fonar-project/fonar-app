@@ -192,6 +192,9 @@ class _CartaoDoEnvio extends ConsumerWidget {
       ),
     };
 
+    // TODO(auth): com o Firebase Auth, "sessão expirada" deve levar ao login
+    // e a fila deve retomar sozinha depois de entrar. Hoje só oferece tentar
+    // de novo, que falha igual enquanto a sessão não for renovada.
     final Widget? acao = switch (item.situacao) {
       SituacaoDoEnvio.aguardandoNovaTentativa ||
       SituacaoDoEnvio.aguardandoLogin ||

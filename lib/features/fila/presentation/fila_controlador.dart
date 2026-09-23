@@ -151,6 +151,11 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
   }
 
   /// A conexão voltou: o que esperava por ela não precisa mais esperar.
+  ///
+  /// TODO(verificar em aparelho): testado só num ProviderContainer sem a
+  /// árvore de widgets, onde o Riverpod não propaga a mudança de rede
+  /// sozinho. Conferir no Android e no Windows: desligar a rede, mandar uma
+  /// gravação, religar e ver se ela sobe sem tocar em nada.
   Future<void> _aoVoltarConexao() async {
     if (!ref.mounted) return;
     await _carregada();

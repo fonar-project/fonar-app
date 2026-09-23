@@ -69,8 +69,10 @@ class EstadoDaGravacao {
 
 /// Grava as tarefas de UMA sessão de UM paciente.
 ///
-/// Cada vez que a tela abre é uma sessão nova. TODO(US06): quando existir o
-/// banco local, retomar a sessão em andamento em vez de abrir outra.
+/// Cada vez que a tela abre é uma sessão nova. TODO(drift): quando existir o
+/// banco local, retomar a sessão em andamento em vez de abrir outra — hoje,
+/// sair da tela no meio perde o registro das tarefas já gravadas (os WAV
+/// ficam no disco, órfãos).
 class GravacaoControlador extends Notifier<EstadoDaGravacao> {
   GravacaoControlador(this.pacienteId);
 

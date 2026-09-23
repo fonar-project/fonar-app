@@ -31,6 +31,12 @@ import '../cadastro_paciente_controlador.dart';
 /// Uma coluna em qualquer largura, com teto de largura no desktop. Formulário
 /// em duas colunas obriga o olho a zigue-zaguear, e com o paciente ao lado o
 /// profissional preenche de cima para baixo sem procurar o próximo campo.
+///
+/// TODO(equipe): decisões tomadas sem o protótipo da tela 02, a confirmar:
+/// - queixa principal obrigatória (a lista de pacientes sempre a mostra);
+/// - salvar segue direto para o consentimento, e não para o perfil.
+/// Faltam também: aviso de paciente possivelmente duplicado (mesmo nome e
+/// data de nascimento) e aviso ao sair com o formulário preenchido.
 class NovoPacientePage extends ConsumerStatefulWidget {
   const NovoPacientePage({super.key});
 
