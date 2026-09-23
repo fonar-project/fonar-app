@@ -20,6 +20,7 @@ import '../../../../l10n/app_strings.dart';
 import '../../../analise/data/catalogo_de_referencias_vazio.dart';
 import '../../../analise/data/repositorio_analises_placeholder.dart';
 import '../../../analise/domain/resultado_da_analise.dart';
+import '../../../analise/presentation/aviso_de_outro_paciente.dart';
 import '../../../auth/data/profissional_atual.dart';
 import '../../../cape_v/data/repositorio_cape_v_em_memoria.dart';
 import '../../../cape_v/domain/avaliacao_cape_v.dart';
@@ -67,14 +68,21 @@ class LaudoPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final analise = ref.watch(analiseProvider(analiseId));
+    // A análise pela conferência de paciente — ver `daPaciente` — e o
+    // cadastro como dado OBRIGATÓRIO: sem ele o laudo sairia sem
+    // identificação (achados da revisão de 23/09).
+    final analise = ref.watch(
+      analiseDoPacienteProvider((pacienteId: pacienteId, analiseId: analiseId)),
+    );
+    final paciente = ref.watch(pacienteProvider(pacienteId));
     final laudo = ref.watch(laudoControladorProvider(analiseId));
     final capeV = ref.watch(capeVDaAnaliseProvider(analiseId));
     final consentimento = ref.watch(consentimentoProvider(pacienteId));
-    final paciente = ref.watch(pacienteProvider(pacienteId)).value;
+    final cargas = [analise, paciente, laudo, capeV, consentimento];
 
     void tentarDeNovo() {
       ref.invalidate(analiseProvider(analiseId));
+      ref.invalidate(pacientesProvider);
       ref.invalidate(laudoControladorProvider(analiseId));
       ref.invalidate(capeVDaAnaliseProvider(analiseId));
       ref.invalidate(consentimentoProvider(pacienteId));
@@ -86,7 +94,9 @@ class LaudoPage extends ConsumerWidget {
           final largura = Breakpoints.de(restricoes.maxWidth);
 
           final Widget conteudo;
-          if ([analise, laudo, capeV, consentimento].any((a) => a.hasError)) {
+          if (analise.error is AnaliseDeOutroPaciente) {
+            conteudo = AvisoDeOutroPaciente(aoVoltar: () => _voltar(context));
+          } else if (cargas.any((a) => a.hasError)) {
             conteudo = AppEstado.central(
               titulo: AppStrings.laudoErroCarregar,
               acao: AppBotao.secundario(
@@ -94,19 +104,29 @@ class LaudoPage extends ConsumerWidget {
                 aoTocar: tentarDeNovo,
               ),
             );
-          } else if (analise.hasValue &&
-              laudo.hasValue &&
-              capeV.hasValue &&
-              consentimento.hasValue) {
-            conteudo = _Laudo(
-              pacienteId: pacienteId,
-              resultado: analise.requireValue,
-              estado: laudo.requireValue,
-              capeV: capeV.value,
-              temConsentimento: consentimento.value != null,
-              paciente: paciente,
-              largura: largura,
-            );
+          } else if (cargas.every((a) => a.hasValue)) {
+            if (paciente.requireValue case final cadastro?) {
+              conteudo = _Laudo(
+                pacienteId: pacienteId,
+                resultado: analise.requireValue,
+                estado: laudo.requireValue,
+                capeV: capeV.value,
+                temConsentimento: consentimento.value != null,
+                paciente: cadastro,
+                largura: largura,
+              );
+            } else {
+              // Carregou, e o paciente não está neste aparelho: diferente de
+              // "ainda carregando" e de "falhou ao carregar".
+              conteudo = AppEstado.central(
+                titulo: AppStrings.laudoSemPaciente,
+                texto: AppStrings.laudoSemPacienteTexto,
+                acao: AppBotao.secundario(
+                  rotulo: AppStrings.voltar,
+                  aoTocar: () => _voltar(context),
+                ),
+              );
+            }
           } else {
             conteudo = const Center(
               child: CircularProgressIndicator(color: AppColors.roxoProfundo),
@@ -146,7 +166,7 @@ class _Laudo extends ConsumerStatefulWidget {
   final EstadoDoLaudo estado;
   final AvaliacaoCapeV? capeV;
   final bool temConsentimento;
-  final Paciente? paciente;
+  final Paciente paciente;
   final LarguraDeTela largura;
 
   @override
@@ -251,7 +271,7 @@ class _LaudoState extends ConsumerState<_Laudo> {
       laudo?.geradoEm,
       widget.capeV?.registradaEm,
       widget.resultado.id,
-      widget.paciente?.nome,
+      widget.paciente.nome,
     );
     if (chave != _chaveDaPrevia || _gerarPrevia == null) {
       _chaveDaPrevia = chave;

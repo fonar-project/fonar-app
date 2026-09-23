@@ -33,15 +33,18 @@ import 'package:fonar_app/features/pacientes/domain/paciente.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 
 class _Analises implements RepositorioAnalises {
-  _Analises({this.falha = false});
+  _Analises({this.falha = false, this.dono = 'p1'});
   final bool falha;
+
+  /// O paciente a quem a análise pertence.
+  final String dono;
 
   @override
   Future<ResultadoDaAnalise> buscar(String analiseId) async {
     if (falha) throw const FalhaDeConexao();
     return ResultadoDaAnalise(
       id: analiseId,
-      pacienteId: 'p1',
+      pacienteId: dono,
       situacao: SituacaoDaAnalise.concluida,
       realizadaEm: DateTime(2026, 7, 2, 9, 30),
       medidas: const [
@@ -137,6 +140,8 @@ Future<_Montagem> _abrir(
   AvaliacaoCapeV? capeV,
   Laudo? laudoExistente,
   bool falhaAoCarregar = false,
+  String donoDaAnalise = 'p1',
+  bool semCadastro = false,
   _Saida? saida,
   _Gerador? gerador,
   Size tamanho = const Size(390, 2000),
@@ -164,14 +169,16 @@ Future<_Montagem> _abrir(
       conexaoOnlineProvider.overrideWithValue(true),
       relogioProvider.overrideWithValue(() => DateTime(2026, 7, 2, 11, 5)),
       repositorioAnalisesProvider.overrideWithValue(
-        _Analises(falha: falhaAoCarregar),
+        _Analises(falha: falhaAoCarregar, dono: donoDaAnalise),
       ),
       repositorioConsentimentoProvider.overrideWithValue(
         _Consentimentos(tem: consentimento),
       ),
       repositorioCapeVProvider.overrideWithValue(capes),
       repositorioLaudosProvider.overrideWithValue(laudos),
-      pacientesProvider.overrideWith((ref) async => [_paciente]),
+      pacientesProvider.overrideWith(
+        (ref) async => semCadastro ? const <Paciente>[] : [_paciente],
+      ),
       saidaDoLaudoProvider.overrideWithValue(s),
       geradorDePdfProvider.overrideWithValue(g.call),
       previaDoPdfProvider.overrideWithValue((gerar) {
@@ -356,6 +363,28 @@ void main() {
     await _tocar(tester, find.text(AppStrings.laudoCompartilhar));
 
     expect(find.text(AppStrings.laudoErroSaida), findsOneWidget);
+  });
+
+  group('identidade do paciente', () {
+    // Achados da revisão de 23/09: o botão Gerar ficava habilitado com o
+    // cadastro ausente (laudo sem nome) e com a análise de outro paciente.
+    testWidgets('sem cadastro: não há laudo a gerar', (tester) async {
+      await _abrir(tester, capeV: _capeV, semCadastro: true);
+
+      expect(find.text(AppStrings.laudoSemPaciente), findsOneWidget);
+      expect(find.text(AppStrings.laudoGerar), findsNothing);
+      expect(find.byType(TextField), findsNothing);
+    });
+
+    testWidgets('análise de outro paciente: nada do laudo aparece', (
+      tester,
+    ) async {
+      await _abrir(tester, capeV: _capeV, donoDaAnalise: 'outro-paciente');
+
+      expect(find.text(AppStrings.resultadoDeOutroPaciente), findsOneWidget);
+      expect(find.text(AppStrings.laudoGerar), findsNothing);
+      expect(find.byType(TextField), findsNothing);
+    });
   });
 
   testWidgets('falha ao carregar deixa tentar de novo', (tester) async {

@@ -574,6 +574,10 @@ abstract final class AppStrings {
   static const laudoErroCarregar =
       'Não foi possível abrir o laudo desta análise.';
 
+  static const laudoSemPaciente = 'Paciente não encontrado neste aparelho';
+  static const laudoSemPacienteTexto =
+      'Sem o cadastro do paciente, o laudo sairia sem identificação. Volte e '
+      'abra a análise a partir do paciente.';
   static const laudoConferenciaTitulo = 'Antes de gerar';
   static const laudoConferenciaOk = 'Resolvido';
   static const laudoConferenciaPendente = 'Pendente — impede gerar';

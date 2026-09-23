@@ -155,6 +155,42 @@ void main() {
       );
     });
 
+    test('análise de outro paciente não vira laudo', () {
+      // Achado da revisão de 23/09: o laudo juntava o cadastro de um paciente
+      // com as medidas de outro.
+      expect(
+        () => montarConteudo(
+          resultado: _resultado(),
+          paciente: Paciente(
+            id: 'outro-paciente',
+            nome: 'Outra Pessoa',
+            queixa: 'x',
+            direcaoAvqi: DirecaoDaMedida.semComparacao,
+          ),
+          capeV: null,
+          conclusao: 'x',
+          profissional: _profissional,
+          catalogo: const CatalogoDeReferenciasVazio(),
+          geradoEm: null,
+        ),
+        throwsA(isA<AnaliseDeOutroPaciente>()),
+      );
+    });
+
+    test('o laudo leva o nome do cadastro', () {
+      final c = montarConteudo(
+        resultado: _resultado(),
+        paciente: _paciente,
+        capeV: null,
+        conclusao: 'x',
+        profissional: _profissional,
+        catalogo: const CatalogoDeReferenciasVazio(),
+        geradoEm: null,
+      );
+      expect(c.pacienteId, 'p1');
+      expect(c.nomeDoPaciente, 'Ana de Teste');
+    });
+
     test('dado de exemplo marca o documento inteiro', () {
       final c = montarConteudo(
         resultado: _resultado(exemplo: true),
@@ -178,7 +214,15 @@ void main() {
       bool exemplo = false,
     }) => montarConteudo(
       resultado: _resultado(amostraRuim: true, exemplo: exemplo),
-      paciente: paciente,
+      // Sem sexo nem nascimento: o cadastro mínimo.
+      paciente:
+          paciente ??
+          const Paciente(
+            id: 'p1',
+            nome: 'Ana de Teste',
+            queixa: 'rouquidão',
+            direcaoAvqi: DirecaoDaMedida.semComparacao,
+          ),
       capeV: capeV,
       conclusao: conclusao,
       profissional: _profissional,

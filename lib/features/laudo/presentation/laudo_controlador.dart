@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:printing/printing.dart';
 
 import '../../../core/relogio.dart';
+import '../../analise/domain/resultado_da_analise.dart';
 import '../../../design_system/tokens/app_colors.dart';
 import '../data/repositorio_laudos_em_memoria.dart';
 import '../domain/conteudo_do_laudo.dart';
@@ -49,8 +50,18 @@ class LaudoControlador extends AsyncNotifier<EstadoDoLaudo> {
     if (atual == null || atual.gerando) return null;
     state = AsyncData(EstadoDoLaudo(laudo: atual.laudo, gerando: true));
     try {
+      // Lidos antes das esperas: com a tela fechada no meio da geração, o
+      // `ref` deste controlador já foi descartado (revisão de 23/09).
+      final repositorio = ref.read(repositorioLaudosProvider);
+      final gerador = ref.read(geradorDePdfProvider);
       final geradoEm = ref.read(relogioProvider)();
-      final pdf = await ref.read(geradorDePdfProvider)(montar(geradoEm));
+      final conteudo = montar(geradoEm);
+      // A conferência vale aqui também, e não só no botão da tela: laudo de
+      // um paciente não sai com o conteúdo de outro.
+      if (conteudo.pacienteId != pacienteId) {
+        throw const AnaliseDeOutroPaciente();
+      }
+      final pdf = await gerador(conteudo);
       final laudo = Laudo(
         analiseId: analiseId,
         pacienteId: pacienteId,
@@ -58,7 +69,7 @@ class LaudoControlador extends AsyncNotifier<EstadoDoLaudo> {
         geradoEm: geradoEm,
         pdf: pdf,
       );
-      await ref.read(repositorioLaudosProvider).registrar(laudo);
+      await repositorio.registrar(laudo);
       if (ref.mounted) state = AsyncData(EstadoDoLaudo(laudo: laudo));
       return laudo;
     } catch (_) {
