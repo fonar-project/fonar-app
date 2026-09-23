@@ -131,6 +131,9 @@ flutter:
   # `test/design_system/app_icone_test.dart` falha se algum desses passos faltar.
   assets:
     - assets/icons_vec/
+    # O texto da licença da Urbanist vai junto da fonte, como a OFL pede. É
+    # lido por `lib/app/licencas.dart` e aparece em "Licenças de software".
+    - assets/fonts/OFL.txt
 
   # Urbanist — família única do FONAR, licença OFL (ver assets/fonts/OFL.txt).
   #

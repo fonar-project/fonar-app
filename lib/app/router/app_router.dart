@@ -2,12 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../design_system/widgets/tela_placeholder.dart';
 import '../../features/analise/presentation/pages/analise_resultado_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/cape_v/presentation/pages/cape_v_page.dart';
 import '../../features/captura/presentation/pages/captura_page.dart';
 import '../../features/consentimento/data/repositorio_consentimento_placeholder.dart';
+import '../../features/conta/presentation/pages/conta_page.dart';
 import '../../features/consentimento/presentation/pages/consentimento_page.dart';
 import '../../features/fila/presentation/pages/fila_page.dart';
 import '../../features/historico/presentation/pages/evolucao_modo_paciente_page.dart';
@@ -17,7 +17,6 @@ import '../../features/laudo/presentation/pages/laudo_page.dart';
 import '../../features/pacientes/presentation/pages/novo_paciente_page.dart';
 import '../../features/pacientes/presentation/pages/paciente_detalhe_page.dart';
 import '../../features/pacientes/presentation/pages/pacientes_list_page.dart';
-import '../../l10n/app_strings.dart';
 import '../app_estrutura.dart';
 import 'app_routes.dart';
 
@@ -133,15 +132,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.filaCaminho,
         builder: (context, state) => const FilaPage(),
       ),
-      // TODO(US11): conta do profissional.
       GoRoute(
         name: AppRoutes.contaNome,
         path: AppRoutes.contaCaminho,
-        builder: (context, state) => const TelaPlaceholder(
-          titulo: AppStrings.contaTitulo,
-          rota: AppRoutes.contaCaminho,
-          destino: DestinoPrincipal.conta,
-        ),
+        builder: (context, state) => const ContaPage(),
       ),
       GoRoute(
         name: AppRoutes.historicoNome,

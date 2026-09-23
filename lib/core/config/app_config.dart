@@ -15,6 +15,14 @@ abstract final class AppConfig {
     defaultValue: 'http://localhost:8080',
   );
 
+  /// Versão exibida na tela de conta. Entra no build de distribuição por
+  /// `--dart-define=FONAR_VERSAO=...`; sem ela, a tela diz que é versão de
+  /// desenvolvimento — e não um número que ninguém conferiu.
+  static const versao = String.fromEnvironment(
+    'FONAR_VERSAO',
+    defaultValue: 'desenvolvimento',
+  );
+
   /// Tempo para abrir a conexão.
   static const timeoutConexao = Duration(seconds: 15);
 

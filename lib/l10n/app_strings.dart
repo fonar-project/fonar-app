@@ -659,6 +659,58 @@ abstract final class AppStrings {
       'laudo-fonar-${d.year}-${d.month.toString().padLeft(2, '0')}-'
       '${d.day.toString().padLeft(2, '0')}.pdf';
 
+  // --------------------------------------------------------------- conta --
+  static const contaSeusDados = 'Seus dados';
+  static const contaSeusDadosApoio =
+      'Nome e registro vão impressos na assinatura dos laudos.';
+  static const contaCampoNome = 'Nome, como assina';
+  static const contaCampoRegistro = 'Registro no conselho';
+  static const contaRegistroDica = 'ex.: CRFa 2-12345';
+  static const contaCampoEmail = 'E-mail da conta';
+  static const contaInformeNome = 'Informe o nome como deve sair no laudo.';
+  static const contaInformeRegistro =
+      'Informe o registro no conselho — ele vai no laudo.';
+  static const contaSalvar = 'Salvar alterações';
+  static const contaSalvando = 'Salvando…';
+  static const contaNadaMudou = 'Nenhuma alteração para salvar.';
+  static const contaSalvo = 'Dados salvos.';
+
+  static const contaNesteAparelho = 'Neste aparelho';
+  static String contaEnviosPendentes(int n) => switch (n) {
+    0 => 'Nenhum envio aguardando na fila.',
+    1 => '1 envio aguardando na fila.',
+    _ => '$n envios aguardando na fila.',
+  };
+  static const contaVerFila = 'Ver fila';
+
+  static const contaSobre = 'Sobre o FONAR';
+  static const contaSobreTexto =
+      'Ferramenta de apoio à decisão para avaliação vocal. O FONAR não emite '
+      'diagnóstico: medidas, escalas e laudos são lidos e assinados pelo '
+      'profissional.';
+  static const contaSobrePraat =
+      'As medidas acústicas são calculadas no servidor com o motor do Praat, '
+      'por meio do parselmouth. Nenhuma análise acontece neste aparelho.';
+  static String contaVersao(String versao) => 'Versão: $versao';
+  static const contaLicencas = 'Licenças de software';
+
+  static const contaSair = 'Sair da conta';
+  static const contaSairPergunta = 'Sair da conta neste aparelho?';
+
+  // TODO(jurídico): o que fica no aparelho depois de sair — hoje pacientes,
+  // gravações e fila continuam guardados, e a fila só sobe quando alguém
+  // entrar de novo.
+  static const contaSairTexto =
+      'Pacientes, gravações e laudos continuam guardados neste aparelho.';
+  static String contaSairComFila(int n) => n == 1
+      ? 'Há 1 envio na fila. Ele fica neste aparelho e só sobe quando alguém '
+            'entrar de novo.'
+      : 'Há $n envios na fila. Eles ficam neste aparelho e só sobem quando '
+            'alguém entrar de novo.';
+  static const contaConfirmarSair = 'Sair';
+  static const contaCancelar = 'Cancelar';
+  static const contaSaindo = 'Saindo…';
+
   // ----------------------------------------------------- tendência AVQI --
   // TODO(clínico): "melhorando" e "piorando" vêm do protótipo e aguardam
   // revisão — é leitura da evolução, e o limiar do que conta como mudança
