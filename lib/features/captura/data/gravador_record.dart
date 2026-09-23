@@ -13,8 +13,9 @@ import 'configuracao_de_captura.dart';
 final gravadorProvider = Provider.autoDispose<Gravador>((ref) {
   final gravador = GravadorRecord();
   // Sair no meio de uma gravação não pode deixar o microfone aberto nem um
-  // arquivo pela metade para trás.
-  ref.onDispose(gravador.descartar);
+  // arquivo pela metade para trás — nem deixar o gravador ser reaberto por
+  // uma inicialização que termine depois.
+  ref.onDispose(gravador.encerrar);
   return gravador;
 });
 
@@ -34,18 +35,28 @@ class GravadorRecord implements Gravador {
   AudioRecorder? _gravador;
   String? _caminho;
 
+  /// Depois de [encerrar], nada reabre o microfone por aqui.
+  var _encerrado = false;
+
+  AudioRecorder get _aberto {
+    if (_encerrado) throw StateError('Gravador encerrado.');
+    return _gravador ??= AudioRecorder();
+  }
+
   @override
-  Future<bool> pedirPermissao() =>
-      (_gravador ??= AudioRecorder()).hasPermission();
+  Future<bool> pedirPermissao() => _aberto.hasPermission();
 
   @override
   Future<Stream<double>> iniciar(String caminho, Duration intervalo) async {
-    final gravador = _gravador ??= AudioRecorder();
+    final gravador = _aberto;
     _caminho = caminho;
     await gravador.start(
       ConfiguracaoDeCaptura.para(ConfiguracaoDeCaptura.formatoDaGravacao),
       path: caminho,
     );
+    // Encerrado durante o `start`: o `encerrar` já cancelou e liberou este
+    // gravador; o que abriu não pode ser devolvido como se valesse.
+    if (_encerrado) throw StateError('Gravador encerrado.');
     return gravador.onAmplitudeChanged(intervalo).map((a) => a.current);
   }
 
@@ -53,6 +64,13 @@ class GravadorRecord implements Gravador {
   Future<void> parar() async {
     _caminho = null;
     await _gravador?.stop();
+  }
+
+  /// Descarta e não deixa mais abrir. É o fim da vida deste gravador — o
+  /// provider chama ao sair da tela.
+  Future<void> encerrar() {
+    _encerrado = true;
+    return descartar();
   }
 
   @override

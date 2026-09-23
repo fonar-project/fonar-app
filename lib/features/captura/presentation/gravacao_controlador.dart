@@ -13,7 +13,16 @@ import '../domain/gravador.dart';
 import '../domain/verificacao_da_amostra.dart';
 
 /// Por que a gravação não começou ou não terminou.
-enum FalhaDaGravacao { semPermissao, naoIniciou, naoFinalizou }
+enum FalhaDaGravacao {
+  semPermissao,
+  naoIniciou,
+  naoFinalizou,
+
+  /// O fluxo de nível deu erro ou acabou sozinho no meio da gravação — o
+  /// microfone parou de responder. A gravação é descartada: ter leituras
+  /// boas antes da queda não faz dela uma amostra confiável.
+  interrompida,
+}
 
 /// Estado das gravações de uma sessão.
 class EstadoDaGravacao {
@@ -101,35 +110,76 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
       gravando: tarefa,
     );
 
+    // Cada espera abaixo pode terminar com a tela já fechada. Sem conferir,
+    // o microfone abriria sem ninguém olhando — achado da revisão de 23/09.
+    final arquivos = ref.read(arquivosDeAmostraProvider);
+    String? caminho;
     try {
       if (!await _gravador.pedirPermissao()) {
         _falhar(tarefa, FalhaDaGravacao.semPermissao);
         return;
       }
-      final caminho = await ref
-          .read(arquivosDeAmostraProvider)
-          .novoCaminho(pacienteId, tarefa);
+      if (!ref.mounted) return;
+      caminho = await arquivos.novoCaminho(pacienteId, tarefa);
+      if (!ref.mounted) return;
       _caminho = caminho;
       _leituras.clear();
       final niveis = await _gravador.iniciar(
         caminho,
         AfericaoDeRuido.intervalo,
       );
-      _inscricao = niveis.listen((nivel) {
-        _leituras.add(nivel);
-        if (!ref.mounted) return;
-        state = EstadoDaGravacao(
-          sessaoId: state.sessaoId,
-          amostras: state.amostras,
-          rejeitadas: state.rejeitadas,
-          gravando: tarefa,
-          nivel: nivel,
-          decorrido: AfericaoDeRuido.intervalo * _leituras.length,
-        );
-      });
+      if (!ref.mounted) {
+        // Abriu depois de a tela fechar: fecha de novo e não deixa arquivo.
+        await _descartar(arquivos, caminho);
+        return;
+      }
+      _inscricao = niveis.listen(
+        (nivel) {
+          _leituras.add(nivel);
+          if (!ref.mounted) return;
+          state = EstadoDaGravacao(
+            sessaoId: state.sessaoId,
+            amostras: state.amostras,
+            rejeitadas: state.rejeitadas,
+            gravando: tarefa,
+            nivel: nivel,
+            decorrido: AfericaoDeRuido.intervalo * _leituras.length,
+          );
+        },
+        // Sem estes dois, um erro do plugin escaparia para a zona, e um fluxo
+        // que acabasse sozinho deixaria a tela em "gravando" para sempre.
+        onError: (Object _) => unawaited(_interromper(tarefa)),
+        onDone: () => unawaited(_interromper(tarefa)),
+      );
     } catch (_) {
-      await _gravador.descartar();
+      _caminho = null;
+      await _descartar(arquivos, caminho);
       _falhar(tarefa, FalhaDaGravacao.naoIniciou);
+    }
+  }
+
+  /// O microfone parou de responder no meio da gravação.
+  Future<void> _interromper(TarefaDeGravacao tarefa) async {
+    // Parar de propósito cancela a inscrição antes; aqui só chega a queda.
+    if (!ref.mounted || state.gravando != tarefa) return;
+    final caminho = _caminho;
+    unawaited(_inscricao?.cancel());
+    _inscricao = null;
+    _caminho = null;
+    await _descartar(ref.read(arquivosDeAmostraProvider), caminho);
+    _falhar(tarefa, FalhaDaGravacao.interrompida);
+  }
+
+  /// Para o gravador e apaga o arquivo começado, sem deixar falha de limpeza
+  /// esconder o motivo de verdade.
+  Future<void> _descartar(ArquivosDeAmostra arquivos, String? caminho) async {
+    try {
+      await _gravador.descartar();
+    } catch (_) {}
+    if (caminho != null) {
+      try {
+        await arquivos.apagar(caminho);
+      } catch (_) {}
     }
   }
 
