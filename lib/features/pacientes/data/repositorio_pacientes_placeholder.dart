@@ -96,6 +96,8 @@ class RepositorioPacientesPlaceholder implements RepositorioPacientes {
       nome: novo.nome,
       queixa: novo.queixa,
       direcaoAvqi: DirecaoDaMedida.semComparacao,
+      sexo: novo.sexo,
+      dataDeNascimento: novo.dataDeNascimento,
     );
     _cadastrados.add(paciente);
     return paciente;

@@ -1,4 +1,5 @@
 import '../../historico/domain/evolucao_da_medida.dart';
+import 'novo_paciente.dart';
 
 /// Paciente como aparece na lista.
 class Paciente {
@@ -8,6 +9,8 @@ class Paciente {
     required this.queixa,
     required this.direcaoAvqi,
     this.ultimaSessao,
+    this.sexo,
+    this.dataDeNascimento,
   });
 
   final String id;
@@ -18,6 +21,12 @@ class Paciente {
 
   /// Nula enquanto o paciente não tiver nenhuma sessão gravada.
   final DateTime? ultimaSessao;
+
+  /// Para escolher a faixa de referência — e só para isso. Nulo quando o
+  /// cadastro não tem (os pacientes de exemplo, por exemplo): aí as medidas
+  /// aparecem sem classificação.
+  final SexoDeReferencia? sexo;
+  final DateTime? dataDeNascimento;
 
   /// Para onde o AVQI foi entre as duas últimas sessões.
   ///

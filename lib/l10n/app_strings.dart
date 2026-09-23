@@ -377,6 +377,69 @@ abstract final class AppStrings {
   static String segundos(Duration d) =>
       '${(d.inMilliseconds / 1000).toStringAsFixed(1).replaceAll('.', ',')} s';
 
+  // ------------------------------------------------ resultado da análise --
+  static const resultadoExemploTitulo = 'Dados de exemplo';
+  static const resultadoExemploTexto =
+      'Valores fictícios, para desenvolvimento. Não correspondem a nenhum '
+      'paciente.';
+  static String resultadoGravadoEm(String data, String hora) =>
+      'Gravado em $data, às $hora';
+  static const resultadoQualidadeTitulo = 'Qualidade das amostras';
+  static String resultadoAmostraAdequada(String tarefa) =>
+      '$tarefa: adequada para análise';
+  static String resultadoAmostraComProblema(String tarefa) =>
+      '$tarefa: amostra com problema';
+  static const resultadoAmostraSemMotivo = 'O servidor não detalhou o motivo.';
+  static const resultadoMedidasTitulo = 'Medidas acústicas';
+  static const resultadoEspectrogramaTitulo = 'Espectrograma';
+  static const resultadoEspectrogramaIndisponivel =
+      'Imagem ainda não disponível para esta análise.';
+  static const resultadoEspectrogramaErro =
+      'Não foi possível carregar a imagem. Confira a conexão.';
+  static const resultadoEspectrogramaDescricao =
+      'Espectrograma da gravação, gerado pelo servidor.';
+
+  static const resultadoNaoCalculada = 'Não calculada';
+  static const resultadoNaoCalculadaTexto =
+      'O servidor não conseguiu calcular esta medida nesta gravação.';
+  static const resultadoPerfilIncompleto =
+      'O cadastro do paciente não tem sexo ou data de nascimento, e a faixa '
+      'depende dos dois.';
+  static const resultadoSemFaixaValidada =
+      'Não há faixa validada para o perfil deste paciente.';
+  static String resultadoFaixa(String faixa) => 'Faixa: $faixa';
+  static String resultadoProcedencia(String fonte) => 'Fonte: $fonte';
+
+  static const resultadoProcessandoTitulo = 'Análise em processamento';
+  static const resultadoProcessandoTexto =
+      'O servidor ainda está calculando as medidas. Pode levar alguns '
+      'minutos.';
+  static const resultadoAtualizar = 'Atualizar';
+  static const resultadoFalhouTitulo = 'A análise não pôde ser concluída';
+  static const resultadoErroCarregar =
+      'Não foi possível abrir o resultado desta análise.';
+
+  // Nome e unidade de cada medida. O valor chega pronto do servidor; aqui
+  // só se decide como ele aparece.
+  static const medidaAvqi = 'AVQI';
+  static const medidaAvqiDescricao = 'Índice de qualidade vocal acústica';
+  static const medidaCpps = 'CPPS';
+  static const medidaCppsDescricao = 'Pico cepstral proeminente suavizado';
+  static const medidaJitter = 'Jitter';
+  static const medidaJitterDescricao = 'Perturbação da frequência';
+  static const medidaShimmer = 'Shimmer';
+  static const medidaShimmerDescricao = 'Perturbação da amplitude';
+  static const medidaHnr = 'HNR';
+  static const medidaHnrDescricao = 'Proporção harmônico-ruído';
+  static const medidaF0 = 'f0';
+  static const medidaF0Descricao = 'Frequência fundamental';
+
+  /// Número em pt-BR, com vírgula decimal e sinal de menos tipográfico.
+  static String numero(double valor, int casas) {
+    final texto = valor.abs().toStringAsFixed(casas).replaceAll('.', ',');
+    return valor < 0 ? '−$texto' : texto;
+  }
+
   // ----------------------------------------------------- tendência AVQI --
   // TODO(clínico): "melhorando" e "piorando" vêm do protótipo e aguardam
   // revisão — é leitura da evolução, e o limiar do que conta como mudança

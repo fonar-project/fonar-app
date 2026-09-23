@@ -296,6 +296,19 @@ void main() {
       expect(StatusMedida.values, contains(StatusMedida.semReferencia));
     });
 
+    testWidgets('em espaço estreito o rótulo quebra linha, não estoura', (
+      tester,
+    ) async {
+      // O selo mora em cartão de medida, que no desktop divide a largura em
+      // três colunas. Sem isto, "Sem faixa de referência" estourava o cartão.
+      for (final status in StatusMedida.values) {
+        await tester.pumpWidget(
+          _tela(SizedBox(width: 90, child: AppStatusMedida(status: status))),
+        );
+        expect(tester.takeException(), isNull, reason: status.name);
+      }
+    });
+
     testWidgets('desenha texto junto do ícone', (tester) async {
       // "Junto do ícone" é metade do contrato: quem não distingue o verde do
       // vermelho depende do ícone, e quem usa leitor de tela depende do texto.

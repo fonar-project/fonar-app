@@ -16,13 +16,15 @@ class AppSituacao extends StatelessWidget {
   const AppSituacao({
     required this.icone,
     required this.titulo,
-    required this.texto,
+    this.texto,
     super.key,
   });
 
   final NomeIcone icone;
   final String titulo;
-  final String texto;
+
+  /// Opcional: há situações em que o título já diz tudo.
+  final String? texto;
 
   @override
   Widget build(BuildContext context) {
@@ -39,13 +41,15 @@ class AppSituacao extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(titulo, style: textos.titleMedium),
-                const SizedBox(height: AppSpacing.xxs),
-                Text(
-                  texto,
-                  style: textos.bodyMedium?.copyWith(
-                    color: AppColors.secundarioSobreCreme,
+                if (texto case final texto? when texto.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(
+                    texto,
+                    style: textos.bodyMedium?.copyWith(
+                      color: AppColors.secundarioSobreCreme,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
