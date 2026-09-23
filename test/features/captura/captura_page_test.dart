@@ -8,6 +8,7 @@ import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/features/captura/data/fonte_de_nivel_record.dart';
 import 'package:fonar_app/features/captura/domain/afericao_de_ruido.dart';
 import 'package:fonar_app/features/captura/domain/fonte_de_nivel.dart';
+import 'package:fonar_app/features/captura/presentation/afericao_controlador.dart';
 import 'package:fonar_app/features/captura/presentation/pages/captura_page.dart';
 import 'package:fonar_app/features/captura/presentation/widgets/medidor_de_nivel.dart';
 import 'package:fonar_app/features/historico/domain/evolucao_da_medida.dart';
@@ -22,7 +23,11 @@ class _FonteFalsa implements FonteDeNivel {
     this.permitido = true,
     this.falhaAoAbrir = false,
     this.ajuste,
+    this.segurarFechamento,
   });
+
+  /// Segura o `fechar` até o teste soltar — o plugin demorando a liberar.
+  final Completer<void>? segurarFechamento;
 
   final List<double> niveis;
   final bool permitido;
@@ -45,7 +50,10 @@ class _FonteFalsa implements FonteDeNivel {
   }
 
   @override
-  Future<void> fechar() async => fechamentos++;
+  Future<void> fechar() async {
+    fechamentos++;
+    await segurarFechamento?.future;
+  }
 }
 
 const _celular = Size(390, 844);
@@ -325,6 +333,41 @@ void main() {
         findsOneWidget,
       );
       semantica.dispose();
+    });
+  });
+
+  group('microfone da aferição ainda fechando', () {
+    // Achado da revisão de 23/09: o resultado liberava "Medir de novo" (e a
+    // gravação) com o microfone anterior ainda fechando.
+    testWidgets('resultado aparece; medir de novo espera o microfone', (
+      tester,
+    ) async {
+      final fechamento = Completer<void>();
+      final fonte = await _abrir(
+        tester,
+        fonte: _FonteFalsa(segurarFechamento: fechamento),
+      );
+      await _medir(tester);
+
+      expect(find.text(AppStrings.afericaoSemRestricao), findsWidgets);
+      expect(find.text(AppStrings.afericaoLiberandoMicrofone), findsWidgets);
+      await tester.tap(find.text(AppStrings.afericaoMedirDeNovo));
+      await tester.pump();
+      expect(fonte.aberturas, 1);
+
+      // Passou da espera: avisa, e continua travado.
+      await tester.pump(AfericaoControlador.esperaParaLiberar);
+      expect(find.text(AppStrings.afericaoMicrofoneDemorando), findsOneWidget);
+      await tester.tap(find.text(AppStrings.afericaoMedirDeNovo));
+      await tester.pump();
+      expect(fonte.aberturas, 1);
+
+      // Fechou: libera.
+      fechamento.complete();
+      await tester.pumpAndSettle();
+      expect(find.text(AppStrings.afericaoMicrofoneDemorando), findsNothing);
+      await _medir(tester, rotulo: AppStrings.afericaoMedirDeNovo);
+      expect(fonte.aberturas, 2);
     });
   });
 }

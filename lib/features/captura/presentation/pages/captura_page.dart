@@ -143,28 +143,45 @@ class _Afericao extends ConsumerWidget {
           const SizedBox(height: AppSpacing.md),
           _Acao(rotulo: AppStrings.tentarNovamente, aoTocar: medir),
         ],
-        AfericaoFalhou() => [
+        AfericaoFalhou(:final microfoneLiberado, :final demorouParaLiberar) => [
           const AppSituacao(
             icone: NomeIcone.negacao,
             titulo: AppStrings.afericaoFalhou,
             texto: AppStrings.afericaoFalhouTexto,
           ),
-          const SizedBox(height: AppSpacing.md),
-          _Acao(rotulo: AppStrings.tentarNovamente, aoTocar: medir),
-        ],
-        AfericaoConcluida(:final resultado, :final ajuste) => [
-          _Conclusao(resultado: resultado),
-          if (ajuste != null) ...[
+          if (demorouParaLiberar) ...[
             const SizedBox(height: AppSpacing.md),
-            _Ajuste(ajuste: ajuste),
+            const _MicrofoneDemorando(),
           ],
           const SizedBox(height: AppSpacing.md),
           _Acao(
-            rotulo: AppStrings.afericaoMedirDeNovo,
-            aoTocar: medir,
-            secundaria: true,
+            rotulo: AppStrings.tentarNovamente,
+            aoTocar: microfoneLiberado ? medir : null,
           ),
         ],
+        AfericaoConcluida(
+          :final resultado,
+          :final ajuste,
+          :final microfoneLiberado,
+          :final demorouParaLiberar,
+        ) =>
+          [
+            _Conclusao(resultado: resultado),
+            if (ajuste != null) ...[
+              const SizedBox(height: AppSpacing.md),
+              _Ajuste(ajuste: ajuste),
+            ],
+            if (demorouParaLiberar) ...[
+              const SizedBox(height: AppSpacing.md),
+              const _MicrofoneDemorando(),
+            ],
+            const SizedBox(height: AppSpacing.md),
+            _Acao(
+              rotulo: AppStrings.afericaoMedirDeNovo,
+              aoTocar: microfoneLiberado ? medir : null,
+              secundaria: true,
+            ),
+          ],
       },
       const SizedBox(height: AppSpacing.xl),
       _BotaoGravar(estado: estado),
@@ -244,6 +261,18 @@ class _Ajuste extends StatelessWidget {
   );
 }
 
+/// O fechamento do microfone passou do tempo esperado.
+class _MicrofoneDemorando extends StatelessWidget {
+  const _MicrofoneDemorando();
+
+  @override
+  Widget build(BuildContext context) => const AppSituacao(
+    icone: NomeIcone.alerta,
+    titulo: AppStrings.afericaoMicrofoneDemorando,
+    texto: AppStrings.afericaoMicrofoneDemorandoTexto,
+  );
+}
+
 class _Acao extends StatelessWidget {
   const _Acao({
     required this.rotulo,
@@ -252,7 +281,9 @@ class _Acao extends StatelessWidget {
   });
 
   final String rotulo;
-  final VoidCallback aoTocar;
+
+  /// Nulo enquanto o microfone da aferição anterior não foi liberado.
+  final VoidCallback? aoTocar;
   final bool secundaria;
 
   @override
@@ -264,11 +295,13 @@ class _Acao extends StatelessWidget {
             ? AppBotao.secundario(
                 rotulo: rotulo,
                 aoTocar: aoTocar,
+                motivoDesabilitado: AppStrings.afericaoLiberandoMicrofone,
                 ocupaLargura: ocupaLargura,
               )
             : AppBotao.primario(
                 rotulo: rotulo,
                 aoTocar: aoTocar,
+                motivoDesabilitado: AppStrings.afericaoLiberandoMicrofone,
                 ocupaLargura: ocupaLargura,
               );
         return ocupaLargura
@@ -292,6 +325,8 @@ class _BotaoGravar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final motivo = switch (estado) {
+      AfericaoConcluida(microfoneLiberado: false) =>
+        AppStrings.afericaoLiberandoMicrofone,
       AfericaoConcluida(liberaGravacao: false) =>
         AppStrings.capturaBloqueadaMicrofone,
       AfericaoConcluida() => AppStrings.capturaGravacaoIndisponivel,
