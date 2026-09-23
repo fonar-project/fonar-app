@@ -304,6 +304,9 @@ abstract final class AppStrings {
       'usando o microfone e tente de novo.';
   static const tarefaFalhaFinalizar =
       'A gravação não pôde ser finalizada e foi descartada. Grave de novo.';
+  static const tarefaFalhaInterrompida =
+      'O microfone parou de responder no meio da gravação. Ela foi '
+      'descartada — grave de novo.';
 
   // O que a conferência encontrou. Diz o que fazer, não só o que houve.
   static const problemaArquivoIlegivel =

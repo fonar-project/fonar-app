@@ -300,6 +300,7 @@ class _Falha extends StatelessWidget {
       FalhaDaGravacao.semPermissao => AppStrings.tarefaFalhaPermissao,
       FalhaDaGravacao.naoIniciou => AppStrings.tarefaFalhaIniciar,
       FalhaDaGravacao.naoFinalizou => AppStrings.tarefaFalhaFinalizar,
+      FalhaDaGravacao.interrompida => AppStrings.tarefaFalhaInterrompida,
     };
     // Não em vermelho: a cor é reservada a status de medida, saturação de
     // áudio e erro de formulário. O ícone e o título dizem que falhou.
