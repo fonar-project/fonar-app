@@ -861,6 +861,444 @@ class ConsentimentosCompanion extends UpdateCompanion<LinhaDoConsentimento> {
   }
 }
 
+class $RetiradasDeConsentimentoTable extends RetiradasDeConsentimento
+    with TableInfo<$RetiradasDeConsentimentoTable, LinhaDaRetirada> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RetiradasDeConsentimentoTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _pacienteIdMeta = const VerificationMeta(
+    'pacienteId',
+  );
+  @override
+  late final GeneratedColumn<String> pacienteId = GeneratedColumn<String>(
+    'paciente_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _consentimentoIdMeta = const VerificationMeta(
+    'consentimentoId',
+  );
+  @override
+  late final GeneratedColumn<int> consentimentoId = GeneratedColumn<int>(
+    'consentimento_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'UNIQUE REFERENCES consentimentos (id)',
+    ),
+  );
+  static const VerificationMeta _retiradaEmMeta = const VerificationMeta(
+    'retiradaEm',
+  );
+  @override
+  late final GeneratedColumn<DateTime> retiradaEm = GeneratedColumn<DateTime>(
+    'retirada_em',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _quemPediuMeta = const VerificationMeta(
+    'quemPediu',
+  );
+  @override
+  late final GeneratedColumn<String> quemPediu = GeneratedColumn<String>(
+    'quem_pediu',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nomeDoResponsavelMeta = const VerificationMeta(
+    'nomeDoResponsavel',
+  );
+  @override
+  late final GeneratedColumn<String> nomeDoResponsavel =
+      GeneratedColumn<String>(
+        'nome_do_responsavel',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    pacienteId,
+    consentimentoId,
+    retiradaEm,
+    quemPediu,
+    nomeDoResponsavel,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'retiradas_de_consentimento';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LinhaDaRetirada> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('paciente_id')) {
+      context.handle(
+        _pacienteIdMeta,
+        pacienteId.isAcceptableOrUnknown(data['paciente_id']!, _pacienteIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_pacienteIdMeta);
+    }
+    if (data.containsKey('consentimento_id')) {
+      context.handle(
+        _consentimentoIdMeta,
+        consentimentoId.isAcceptableOrUnknown(
+          data['consentimento_id']!,
+          _consentimentoIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('retirada_em')) {
+      context.handle(
+        _retiradaEmMeta,
+        retiradaEm.isAcceptableOrUnknown(data['retirada_em']!, _retiradaEmMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_retiradaEmMeta);
+    }
+    if (data.containsKey('quem_pediu')) {
+      context.handle(
+        _quemPediuMeta,
+        quemPediu.isAcceptableOrUnknown(data['quem_pediu']!, _quemPediuMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_quemPediuMeta);
+    }
+    if (data.containsKey('nome_do_responsavel')) {
+      context.handle(
+        _nomeDoResponsavelMeta,
+        nomeDoResponsavel.isAcceptableOrUnknown(
+          data['nome_do_responsavel']!,
+          _nomeDoResponsavelMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LinhaDaRetirada map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LinhaDaRetirada(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      pacienteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}paciente_id'],
+      )!,
+      consentimentoId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}consentimento_id'],
+      ),
+      retiradaEm: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}retirada_em'],
+      )!,
+      quemPediu: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}quem_pediu'],
+      )!,
+      nomeDoResponsavel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}nome_do_responsavel'],
+      ),
+    );
+  }
+
+  @override
+  $RetiradasDeConsentimentoTable createAlias(String alias) {
+    return $RetiradasDeConsentimentoTable(attachedDatabase, alias);
+  }
+}
+
+class LinhaDaRetirada extends DataClass implements Insertable<LinhaDaRetirada> {
+  final int id;
+  final String pacienteId;
+
+  /// Nulo só na retirada de um consentimento de exemplo, que não está no
+  /// banco. Único: o mesmo consentimento não se retira duas vezes.
+  final int? consentimentoId;
+  final DateTime retiradaEm;
+
+  /// Nome de `QuemAutoriza`: quem pediu a retirada.
+  final String quemPediu;
+  final String? nomeDoResponsavel;
+  const LinhaDaRetirada({
+    required this.id,
+    required this.pacienteId,
+    this.consentimentoId,
+    required this.retiradaEm,
+    required this.quemPediu,
+    this.nomeDoResponsavel,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['paciente_id'] = Variable<String>(pacienteId);
+    if (!nullToAbsent || consentimentoId != null) {
+      map['consentimento_id'] = Variable<int>(consentimentoId);
+    }
+    map['retirada_em'] = Variable<DateTime>(retiradaEm);
+    map['quem_pediu'] = Variable<String>(quemPediu);
+    if (!nullToAbsent || nomeDoResponsavel != null) {
+      map['nome_do_responsavel'] = Variable<String>(nomeDoResponsavel);
+    }
+    return map;
+  }
+
+  RetiradasDeConsentimentoCompanion toCompanion(bool nullToAbsent) {
+    return RetiradasDeConsentimentoCompanion(
+      id: Value(id),
+      pacienteId: Value(pacienteId),
+      consentimentoId: consentimentoId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(consentimentoId),
+      retiradaEm: Value(retiradaEm),
+      quemPediu: Value(quemPediu),
+      nomeDoResponsavel: nomeDoResponsavel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nomeDoResponsavel),
+    );
+  }
+
+  factory LinhaDaRetirada.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LinhaDaRetirada(
+      id: serializer.fromJson<int>(json['id']),
+      pacienteId: serializer.fromJson<String>(json['pacienteId']),
+      consentimentoId: serializer.fromJson<int?>(json['consentimentoId']),
+      retiradaEm: serializer.fromJson<DateTime>(json['retiradaEm']),
+      quemPediu: serializer.fromJson<String>(json['quemPediu']),
+      nomeDoResponsavel: serializer.fromJson<String?>(
+        json['nomeDoResponsavel'],
+      ),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'pacienteId': serializer.toJson<String>(pacienteId),
+      'consentimentoId': serializer.toJson<int?>(consentimentoId),
+      'retiradaEm': serializer.toJson<DateTime>(retiradaEm),
+      'quemPediu': serializer.toJson<String>(quemPediu),
+      'nomeDoResponsavel': serializer.toJson<String?>(nomeDoResponsavel),
+    };
+  }
+
+  LinhaDaRetirada copyWith({
+    int? id,
+    String? pacienteId,
+    Value<int?> consentimentoId = const Value.absent(),
+    DateTime? retiradaEm,
+    String? quemPediu,
+    Value<String?> nomeDoResponsavel = const Value.absent(),
+  }) => LinhaDaRetirada(
+    id: id ?? this.id,
+    pacienteId: pacienteId ?? this.pacienteId,
+    consentimentoId: consentimentoId.present
+        ? consentimentoId.value
+        : this.consentimentoId,
+    retiradaEm: retiradaEm ?? this.retiradaEm,
+    quemPediu: quemPediu ?? this.quemPediu,
+    nomeDoResponsavel: nomeDoResponsavel.present
+        ? nomeDoResponsavel.value
+        : this.nomeDoResponsavel,
+  );
+  LinhaDaRetirada copyWithCompanion(RetiradasDeConsentimentoCompanion data) {
+    return LinhaDaRetirada(
+      id: data.id.present ? data.id.value : this.id,
+      pacienteId: data.pacienteId.present
+          ? data.pacienteId.value
+          : this.pacienteId,
+      consentimentoId: data.consentimentoId.present
+          ? data.consentimentoId.value
+          : this.consentimentoId,
+      retiradaEm: data.retiradaEm.present
+          ? data.retiradaEm.value
+          : this.retiradaEm,
+      quemPediu: data.quemPediu.present ? data.quemPediu.value : this.quemPediu,
+      nomeDoResponsavel: data.nomeDoResponsavel.present
+          ? data.nomeDoResponsavel.value
+          : this.nomeDoResponsavel,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LinhaDaRetirada(')
+          ..write('id: $id, ')
+          ..write('pacienteId: $pacienteId, ')
+          ..write('consentimentoId: $consentimentoId, ')
+          ..write('retiradaEm: $retiradaEm, ')
+          ..write('quemPediu: $quemPediu, ')
+          ..write('nomeDoResponsavel: $nomeDoResponsavel')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    pacienteId,
+    consentimentoId,
+    retiradaEm,
+    quemPediu,
+    nomeDoResponsavel,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LinhaDaRetirada &&
+          other.id == this.id &&
+          other.pacienteId == this.pacienteId &&
+          other.consentimentoId == this.consentimentoId &&
+          other.retiradaEm == this.retiradaEm &&
+          other.quemPediu == this.quemPediu &&
+          other.nomeDoResponsavel == this.nomeDoResponsavel);
+}
+
+class RetiradasDeConsentimentoCompanion
+    extends UpdateCompanion<LinhaDaRetirada> {
+  final Value<int> id;
+  final Value<String> pacienteId;
+  final Value<int?> consentimentoId;
+  final Value<DateTime> retiradaEm;
+  final Value<String> quemPediu;
+  final Value<String?> nomeDoResponsavel;
+  const RetiradasDeConsentimentoCompanion({
+    this.id = const Value.absent(),
+    this.pacienteId = const Value.absent(),
+    this.consentimentoId = const Value.absent(),
+    this.retiradaEm = const Value.absent(),
+    this.quemPediu = const Value.absent(),
+    this.nomeDoResponsavel = const Value.absent(),
+  });
+  RetiradasDeConsentimentoCompanion.insert({
+    this.id = const Value.absent(),
+    required String pacienteId,
+    this.consentimentoId = const Value.absent(),
+    required DateTime retiradaEm,
+    required String quemPediu,
+    this.nomeDoResponsavel = const Value.absent(),
+  }) : pacienteId = Value(pacienteId),
+       retiradaEm = Value(retiradaEm),
+       quemPediu = Value(quemPediu);
+  static Insertable<LinhaDaRetirada> custom({
+    Expression<int>? id,
+    Expression<String>? pacienteId,
+    Expression<int>? consentimentoId,
+    Expression<DateTime>? retiradaEm,
+    Expression<String>? quemPediu,
+    Expression<String>? nomeDoResponsavel,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (pacienteId != null) 'paciente_id': pacienteId,
+      if (consentimentoId != null) 'consentimento_id': consentimentoId,
+      if (retiradaEm != null) 'retirada_em': retiradaEm,
+      if (quemPediu != null) 'quem_pediu': quemPediu,
+      if (nomeDoResponsavel != null) 'nome_do_responsavel': nomeDoResponsavel,
+    });
+  }
+
+  RetiradasDeConsentimentoCompanion copyWith({
+    Value<int>? id,
+    Value<String>? pacienteId,
+    Value<int?>? consentimentoId,
+    Value<DateTime>? retiradaEm,
+    Value<String>? quemPediu,
+    Value<String?>? nomeDoResponsavel,
+  }) {
+    return RetiradasDeConsentimentoCompanion(
+      id: id ?? this.id,
+      pacienteId: pacienteId ?? this.pacienteId,
+      consentimentoId: consentimentoId ?? this.consentimentoId,
+      retiradaEm: retiradaEm ?? this.retiradaEm,
+      quemPediu: quemPediu ?? this.quemPediu,
+      nomeDoResponsavel: nomeDoResponsavel ?? this.nomeDoResponsavel,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (pacienteId.present) {
+      map['paciente_id'] = Variable<String>(pacienteId.value);
+    }
+    if (consentimentoId.present) {
+      map['consentimento_id'] = Variable<int>(consentimentoId.value);
+    }
+    if (retiradaEm.present) {
+      map['retirada_em'] = Variable<DateTime>(retiradaEm.value);
+    }
+    if (quemPediu.present) {
+      map['quem_pediu'] = Variable<String>(quemPediu.value);
+    }
+    if (nomeDoResponsavel.present) {
+      map['nome_do_responsavel'] = Variable<String>(nomeDoResponsavel.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RetiradasDeConsentimentoCompanion(')
+          ..write('id: $id, ')
+          ..write('pacienteId: $pacienteId, ')
+          ..write('consentimentoId: $consentimentoId, ')
+          ..write('retiradaEm: $retiradaEm, ')
+          ..write('quemPediu: $quemPediu, ')
+          ..write('nomeDoResponsavel: $nomeDoResponsavel')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $EnviosTable extends Envios with TableInfo<$EnviosTable, LinhaDoEnvio> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -3527,6 +3965,8 @@ abstract class _$BancoLocal extends GeneratedDatabase {
   $BancoLocalManager get managers => $BancoLocalManager(this);
   late final $PacientesTable pacientes = $PacientesTable(this);
   late final $ConsentimentosTable consentimentos = $ConsentimentosTable(this);
+  late final $RetiradasDeConsentimentoTable retiradasDeConsentimento =
+      $RetiradasDeConsentimentoTable(this);
   late final $EnviosTable envios = $EnviosTable(this);
   late final $AmostrasTable amostras = $AmostrasTable(this);
   late final $AmostrasDoEnvioTable amostrasDoEnvio = $AmostrasDoEnvioTable(
@@ -3544,6 +3984,7 @@ abstract class _$BancoLocal extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     pacientes,
     consentimentos,
+    retiradasDeConsentimento,
     envios,
     amostras,
     amostrasDoEnvio,
@@ -3822,6 +4263,46 @@ typedef $$ConsentimentosTableUpdateCompanionBuilder =
       Value<String?> nomeDoResponsavel,
     });
 
+final class $$ConsentimentosTableReferences
+    extends
+        BaseReferences<
+          _$BancoLocal,
+          $ConsentimentosTable,
+          LinhaDoConsentimento
+        > {
+  $$ConsentimentosTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static MultiTypedResultKey<
+    $RetiradasDeConsentimentoTable,
+    List<LinhaDaRetirada>
+  >
+  _retiradasDeConsentimentoRefsTable(_$BancoLocal db) =>
+      MultiTypedResultKey.fromTable(
+        db.retiradasDeConsentimento,
+        aliasName:
+            'consentimentos__id__retiradas_de_consentimento__consentimento_id',
+      );
+
+  $$RetiradasDeConsentimentoTableProcessedTableManager
+  get retiradasDeConsentimentoRefs {
+    final manager = $$RetiradasDeConsentimentoTableTableManager(
+      $_db,
+      $_db.retiradasDeConsentimento,
+    ).filter((f) => f.consentimentoId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _retiradasDeConsentimentoRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
 class $$ConsentimentosTableFilterComposer
     extends Composer<_$BancoLocal, $ConsentimentosTable> {
   $$ConsentimentosTableFilterComposer({
@@ -3860,6 +4341,33 @@ class $$ConsentimentosTableFilterComposer
     column: $table.nomeDoResponsavel,
     builder: (column) => ColumnFilters(column),
   );
+
+  Expression<bool> retiradasDeConsentimentoRefs(
+    Expression<bool> Function($$RetiradasDeConsentimentoTableFilterComposer f)
+    f,
+  ) {
+    final $$RetiradasDeConsentimentoTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.retiradasDeConsentimento,
+          getReferencedColumn: (t) => t.consentimentoId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$RetiradasDeConsentimentoTableFilterComposer(
+                $db: $db,
+                $table: $db.retiradasDeConsentimento,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$ConsentimentosTableOrderingComposer
@@ -3938,6 +4446,33 @@ class $$ConsentimentosTableAnnotationComposer
     column: $table.nomeDoResponsavel,
     builder: (column) => column,
   );
+
+  Expression<T> retiradasDeConsentimentoRefs<T extends Object>(
+    Expression<T> Function($$RetiradasDeConsentimentoTableAnnotationComposer a)
+    f,
+  ) {
+    final $$RetiradasDeConsentimentoTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.retiradasDeConsentimento,
+          getReferencedColumn: (t) => t.consentimentoId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$RetiradasDeConsentimentoTableAnnotationComposer(
+                $db: $db,
+                $table: $db.retiradasDeConsentimento,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$ConsentimentosTableTableManager
@@ -3951,16 +4486,9 @@ class $$ConsentimentosTableTableManager
           $$ConsentimentosTableAnnotationComposer,
           $$ConsentimentosTableCreateCompanionBuilder,
           $$ConsentimentosTableUpdateCompanionBuilder,
-          (
-            LinhaDoConsentimento,
-            BaseReferences<
-              _$BancoLocal,
-              $ConsentimentosTable,
-              LinhaDoConsentimento
-            >,
-          ),
+          (LinhaDoConsentimento, $$ConsentimentosTableReferences),
           LinhaDoConsentimento,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool retiradasDeConsentimentoRefs})
         > {
   $$ConsentimentosTableTableManager(_$BancoLocal db, $ConsentimentosTable table)
     : super(
@@ -4011,15 +4539,44 @@ class $$ConsentimentosTableTableManager
                   e.readTable<$ConsentimentosTable, LinhaDoConsentimento>(
                     table,
                   ),
-                  BaseReferences<
-                    _$BancoLocal,
-                    $ConsentimentosTable,
-                    LinhaDoConsentimento
-                  >(db, table, e),
+                  $$ConsentimentosTableReferences(db, table, e),
                 ),
               )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({retiradasDeConsentimentoRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (retiradasDeConsentimentoRefs) db.retiradasDeConsentimento,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (retiradasDeConsentimentoRefs)
+                    await $_getPrefetchedData<
+                      LinhaDoConsentimento,
+                      $ConsentimentosTable,
+                      LinhaDaRetirada
+                    >(
+                      currentTable: table,
+                      referencedTable: $$ConsentimentosTableReferences
+                          ._retiradasDeConsentimentoRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$ConsentimentosTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).retiradasDeConsentimentoRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where(
+                            (e) => e.consentimentoId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
         ),
       );
 }
@@ -4034,16 +4591,369 @@ typedef $$ConsentimentosTableProcessedTableManager =
       $$ConsentimentosTableAnnotationComposer,
       $$ConsentimentosTableCreateCompanionBuilder,
       $$ConsentimentosTableUpdateCompanionBuilder,
-      (
-        LinhaDoConsentimento,
+      (LinhaDoConsentimento, $$ConsentimentosTableReferences),
+      LinhaDoConsentimento,
+      PrefetchHooks Function({bool retiradasDeConsentimentoRefs})
+    >;
+typedef $$RetiradasDeConsentimentoTableCreateCompanionBuilder =
+    RetiradasDeConsentimentoCompanion Function({
+      Value<int> id,
+      required String pacienteId,
+      Value<int?> consentimentoId,
+      required DateTime retiradaEm,
+      required String quemPediu,
+      Value<String?> nomeDoResponsavel,
+    });
+typedef $$RetiradasDeConsentimentoTableUpdateCompanionBuilder =
+    RetiradasDeConsentimentoCompanion Function({
+      Value<int> id,
+      Value<String> pacienteId,
+      Value<int?> consentimentoId,
+      Value<DateTime> retiradaEm,
+      Value<String> quemPediu,
+      Value<String?> nomeDoResponsavel,
+    });
+
+final class $$RetiradasDeConsentimentoTableReferences
+    extends
         BaseReferences<
           _$BancoLocal,
-          $ConsentimentosTable,
-          LinhaDoConsentimento
-        >,
-      ),
-      LinhaDoConsentimento,
-      PrefetchHooks Function()
+          $RetiradasDeConsentimentoTable,
+          LinhaDaRetirada
+        > {
+  $$RetiradasDeConsentimentoTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ConsentimentosTable _consentimentoIdTable(_$BancoLocal db) =>
+      db.consentimentos.createAlias(
+        'retiradas_de_consentimento__consentimento_id__consentimentos__id',
+      );
+
+  $$ConsentimentosTableProcessedTableManager? get consentimentoId {
+    final $_column = $_itemColumn<int>('consentimento_id');
+    if ($_column == null) return null;
+    final manager = $$ConsentimentosTableTableManager(
+      $_db,
+      $_db.consentimentos,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_consentimentoIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$RetiradasDeConsentimentoTableFilterComposer
+    extends Composer<_$BancoLocal, $RetiradasDeConsentimentoTable> {
+  $$RetiradasDeConsentimentoTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pacienteId => $composableBuilder(
+    column: $table.pacienteId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get retiradaEm => $composableBuilder(
+    column: $table.retiradaEm,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get quemPediu => $composableBuilder(
+    column: $table.quemPediu,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nomeDoResponsavel => $composableBuilder(
+    column: $table.nomeDoResponsavel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ConsentimentosTableFilterComposer get consentimentoId {
+    final $$ConsentimentosTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.consentimentoId,
+      referencedTable: $db.consentimentos,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ConsentimentosTableFilterComposer(
+            $db: $db,
+            $table: $db.consentimentos,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RetiradasDeConsentimentoTableOrderingComposer
+    extends Composer<_$BancoLocal, $RetiradasDeConsentimentoTable> {
+  $$RetiradasDeConsentimentoTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pacienteId => $composableBuilder(
+    column: $table.pacienteId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get retiradaEm => $composableBuilder(
+    column: $table.retiradaEm,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get quemPediu => $composableBuilder(
+    column: $table.quemPediu,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nomeDoResponsavel => $composableBuilder(
+    column: $table.nomeDoResponsavel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ConsentimentosTableOrderingComposer get consentimentoId {
+    final $$ConsentimentosTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.consentimentoId,
+      referencedTable: $db.consentimentos,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ConsentimentosTableOrderingComposer(
+            $db: $db,
+            $table: $db.consentimentos,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RetiradasDeConsentimentoTableAnnotationComposer
+    extends Composer<_$BancoLocal, $RetiradasDeConsentimentoTable> {
+  $$RetiradasDeConsentimentoTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get pacienteId => $composableBuilder(
+    column: $table.pacienteId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get retiradaEm => $composableBuilder(
+    column: $table.retiradaEm,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get quemPediu =>
+      $composableBuilder(column: $table.quemPediu, builder: (column) => column);
+
+  GeneratedColumn<String> get nomeDoResponsavel => $composableBuilder(
+    column: $table.nomeDoResponsavel,
+    builder: (column) => column,
+  );
+
+  $$ConsentimentosTableAnnotationComposer get consentimentoId {
+    final $$ConsentimentosTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.consentimentoId,
+      referencedTable: $db.consentimentos,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ConsentimentosTableAnnotationComposer(
+            $db: $db,
+            $table: $db.consentimentos,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RetiradasDeConsentimentoTableTableManager
+    extends
+        RootTableManager<
+          _$BancoLocal,
+          $RetiradasDeConsentimentoTable,
+          LinhaDaRetirada,
+          $$RetiradasDeConsentimentoTableFilterComposer,
+          $$RetiradasDeConsentimentoTableOrderingComposer,
+          $$RetiradasDeConsentimentoTableAnnotationComposer,
+          $$RetiradasDeConsentimentoTableCreateCompanionBuilder,
+          $$RetiradasDeConsentimentoTableUpdateCompanionBuilder,
+          (LinhaDaRetirada, $$RetiradasDeConsentimentoTableReferences),
+          LinhaDaRetirada,
+          PrefetchHooks Function({bool consentimentoId})
+        > {
+  $$RetiradasDeConsentimentoTableTableManager(
+    _$BancoLocal db,
+    $RetiradasDeConsentimentoTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RetiradasDeConsentimentoTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$RetiradasDeConsentimentoTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$RetiradasDeConsentimentoTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> pacienteId = const Value.absent(),
+                Value<int?> consentimentoId = const Value.absent(),
+                Value<DateTime> retiradaEm = const Value.absent(),
+                Value<String> quemPediu = const Value.absent(),
+                Value<String?> nomeDoResponsavel = const Value.absent(),
+              }) => RetiradasDeConsentimentoCompanion(
+                id: id,
+                pacienteId: pacienteId,
+                consentimentoId: consentimentoId,
+                retiradaEm: retiradaEm,
+                quemPediu: quemPediu,
+                nomeDoResponsavel: nomeDoResponsavel,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String pacienteId,
+                Value<int?> consentimentoId = const Value.absent(),
+                required DateTime retiradaEm,
+                required String quemPediu,
+                Value<String?> nomeDoResponsavel = const Value.absent(),
+              }) => RetiradasDeConsentimentoCompanion.insert(
+                id: id,
+                pacienteId: pacienteId,
+                consentimentoId: consentimentoId,
+                retiradaEm: retiradaEm,
+                quemPediu: quemPediu,
+                nomeDoResponsavel: nomeDoResponsavel,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$RetiradasDeConsentimentoTable, LinhaDaRetirada>(
+                    table,
+                  ),
+                  $$RetiradasDeConsentimentoTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({consentimentoId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (consentimentoId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.consentimentoId,
+                        referencedTable:
+                            $$RetiradasDeConsentimentoTableReferences
+                                ._consentimentoIdTable(db),
+                        referencedColumn:
+                            $$RetiradasDeConsentimentoTableReferences
+                                ._consentimentoIdTable(db)
+                                .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$RetiradasDeConsentimentoTableProcessedTableManager =
+    ProcessedTableManager<
+      _$BancoLocal,
+      $RetiradasDeConsentimentoTable,
+      LinhaDaRetirada,
+      $$RetiradasDeConsentimentoTableFilterComposer,
+      $$RetiradasDeConsentimentoTableOrderingComposer,
+      $$RetiradasDeConsentimentoTableAnnotationComposer,
+      $$RetiradasDeConsentimentoTableCreateCompanionBuilder,
+      $$RetiradasDeConsentimentoTableUpdateCompanionBuilder,
+      (LinhaDaRetirada, $$RetiradasDeConsentimentoTableReferences),
+      LinhaDaRetirada,
+      PrefetchHooks Function({bool consentimentoId})
     >;
 typedef $$EnviosTableCreateCompanionBuilder = EnviosCompanion Function({
   Value<int> posicao,
@@ -6073,6 +6983,11 @@ class $BancoLocalManager {
       $$PacientesTableTableManager(_db, _db.pacientes);
   $$ConsentimentosTableTableManager get consentimentos =>
       $$ConsentimentosTableTableManager(_db, _db.consentimentos);
+  $$RetiradasDeConsentimentoTableTableManager get retiradasDeConsentimento =>
+      $$RetiradasDeConsentimentoTableTableManager(
+        _db,
+        _db.retiradasDeConsentimento,
+      );
   $$EnviosTableTableManager get envios =>
       $$EnviosTableTableManager(_db, _db.envios);
   $$AmostrasTableTableManager get amostras =>

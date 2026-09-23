@@ -5,6 +5,7 @@
 // coisa. O banco de verdade tem os próprios testes em
 // `test/core/banco_local_test.dart`.
 
+import 'package:fonar_app/core/error/app_exception.dart';
 import 'package:fonar_app/features/cape_v/domain/avaliacao_cape_v.dart';
 import 'package:fonar_app/features/captura/domain/amostra.dart';
 import 'package:fonar_app/features/captura/domain/gravador.dart';
@@ -53,10 +54,15 @@ class RepositorioConsentimentoPlaceholder implements RepositorioConsentimento {
   RepositorioConsentimentoPlaceholder();
 
   final _registros = <String, Consentimento>{...consentimentosDeExemplo};
+  final _retiradas = <String, RetiradaDeConsentimento>{};
 
   @override
   Future<Consentimento?> buscar(String pacienteId) async =>
-      _registros[pacienteId];
+      _retiradas.containsKey(pacienteId) ? null : _registros[pacienteId];
+
+  @override
+  Future<RetiradaDeConsentimento?> retiradaEmVigor(String pacienteId) async =>
+      _retiradas[pacienteId];
 
   @override
   Future<Consentimento> registrar(
@@ -71,7 +77,22 @@ class RepositorioConsentimentoPlaceholder implements RepositorioConsentimento {
       nomeDoResponsavel: pedido.nomeDoResponsavel,
     );
     _registros[pacienteId] = consentimento;
+    _retiradas.remove(pacienteId);
     return consentimento;
+  }
+
+  @override
+  Future<RetiradaDeConsentimento> retirar(
+    String pacienteId,
+    PedidoDeRetirada pedido,
+  ) async {
+    if (await buscar(pacienteId) == null) throw const FalhaDeValidacao();
+    return _retiradas[pacienteId] = RetiradaDeConsentimento(
+      pacienteId: pacienteId,
+      retiradaEm: DateTime.now(),
+      quemPediu: pedido.quemPediu,
+      nomeDoResponsavel: pedido.nomeDoResponsavel,
+    );
   }
 }
 

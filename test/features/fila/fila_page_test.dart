@@ -9,6 +9,7 @@ import 'package:fonar_app/core/relogio.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/design_system/widgets/app_botao.dart';
 import 'package:fonar_app/features/captura/domain/amostra.dart';
+import 'package:fonar_app/features/consentimento/data/repositorio_consentimento_local.dart';
 import 'package:fonar_app/features/fila/data/envio_de_analise_api.dart';
 import 'package:fonar_app/features/fila/data/repositorio_fila_local.dart';
 import 'package:fonar_app/features/fila/domain/item_da_fila.dart';
@@ -93,6 +94,9 @@ Future<_EnvioQueDaCerto> _abrir(
     ProviderScope(
       overrides: [
         repositorioFilaProvider.overrideWithValue(repositorio),
+        repositorioConsentimentoProvider.overrideWithValue(
+          RepositorioConsentimentoPlaceholder(),
+        ),
         envioDeAnaliseProvider.overrideWithValue(envio),
         // Profissional com a sessão aberta: sem ela a fila não envia.
         sessaoAbertaProvider.overrideWith(() => Sessao(true)),
@@ -265,6 +269,25 @@ void main() {
 
     expect(envio.recebidos, ['envio-s3']);
     expect(find.text(AppStrings.filaEnviado), findsOneWidget);
+  });
+
+  testWidgets('parado por consentimento retirado diz por quê', (tester) async {
+    await _abrir(
+      tester,
+      itens: [
+        _item(
+          's5',
+          'Paciente Cinco de Teste',
+          SituacaoDoEnvio.semConsentimento,
+        ),
+      ],
+    );
+
+    expect(find.text(AppStrings.filaSemConsentimento), findsOneWidget);
+    expect(find.text(AppStrings.filaSemConsentimentoTexto), findsOneWidget);
+    // Continua pendente: conta no resumo.
+    expect(find.text(AppStrings.filaResumo(1)), findsOneWidget);
+    expect(find.text(AppStrings.filaTentarDeNovo), findsOneWidget);
   });
 
   testWidgets('enviado leva ao resultado da análise', (tester) async {

@@ -79,6 +79,14 @@ class _Consentimentos implements RepositorioConsentimento {
   @override
   Future<Consentimento> registrar(String id, PedidoDeConsentimento p) =>
       throw UnimplementedError();
+
+  @override
+  Future<RetiradaDeConsentimento?> retiradaEmVigor(String pacienteId) async =>
+      null;
+
+  @override
+  Future<RetiradaDeConsentimento> retirar(String id, PedidoDeRetirada p) =>
+      throw UnimplementedError();
 }
 
 class _Saida implements SaidaDoLaudo {

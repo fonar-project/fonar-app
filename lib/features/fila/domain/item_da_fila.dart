@@ -18,6 +18,11 @@ enum SituacaoDoEnvio {
   /// de alguém olhar.
   recusado,
 
+  /// O consentimento do paciente foi retirado. A gravação não sobe — nem
+  /// sozinha, nem depois: só se o profissional pedir, e só com um
+  /// consentimento novo em vigor.
+  semConsentimento,
+
   /// Chegou. A análise foi aceita pelo servidor.
   enviado,
 }

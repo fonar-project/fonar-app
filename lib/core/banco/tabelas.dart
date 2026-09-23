@@ -41,6 +41,29 @@ class Consentimentos extends Table {
   TextColumn get nomeDoResponsavel => text().nullable()();
 }
 
+/// A retirada de um consentimento. Também só acumula: o consentimento
+/// retirado continua na tabela dele, e as duas linhas juntas contam o que
+/// aconteceu.
+///
+/// Aponta para o consentimento que retira, e não compara horários: um
+/// consentimento novo, registrado depois, é outra linha, sem retirada — e
+/// volta a valer sem depender do relógio do aparelho.
+@DataClassName('LinhaDaRetirada')
+class RetiradasDeConsentimento extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get pacienteId => text()();
+
+  /// Nulo só na retirada de um consentimento de exemplo, que não está no
+  /// banco. Único: o mesmo consentimento não se retira duas vezes.
+  IntColumn get consentimentoId =>
+      integer().nullable().unique().references(Consentimentos, #id)();
+  DateTimeColumn get retiradaEm => dateTime()();
+
+  /// Nome de `QuemAutoriza`: quem pediu a retirada.
+  TextColumn get quemPediu => text()();
+  TextColumn get nomeDoResponsavel => text().nullable()();
+}
+
 /// Uma sessão de gravação na fila de envio.
 @DataClassName('LinhaDoEnvio')
 class Envios extends Table {

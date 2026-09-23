@@ -187,6 +187,42 @@ abstract final class AppStrings {
       'Marque a concordância para registrar. Sem ela, a gravação continua '
       'bloqueada.';
 
+  // ------------------------------------------- retirada do consentimento --
+  static const retiradaTitulo = 'Retirar consentimento';
+  static const retiradaAcao = 'Retirar consentimento';
+  static const retiradaOQueAcontece = 'O que acontece';
+  static const retiradaEfeitos = [
+    'A gravação deste paciente fica bloqueada até um novo consentimento.',
+    'Gravações dele que ainda estão na fila param e não sobem para a '
+        'análise.',
+    'O consentimento e esta retirada ficam registrados, com data e hora.',
+    'Gravações, análises e laudos já feitos continuam neste aparelho.',
+  ];
+  static const retiradaCampoQuem = 'Quem pede a retirada';
+  static const retiradaQuemApoio =
+      'Quem autorizou pode retirar: o próprio paciente ou o responsável '
+      'legal.';
+  static const retiradaEscolhaQuem =
+      'Escolha quem pede a retirada: o próprio paciente ou o responsável '
+      'legal.';
+  static const retiradaRegistrar = 'Registrar retirada';
+  static const retiradaRegistrando = 'Registrando…';
+  static const retiradaNadaARetirar =
+      'Não há consentimento em vigor para retirar';
+  static const retiradaVoltarAoPaciente = 'Voltar para o paciente';
+
+  static const consentimentoRetirado = 'Consentimento retirado';
+  static String consentimentoRetiradoTexto({
+    required String data,
+    required String hora,
+    required String quem,
+  }) =>
+      'Em $data, às $hora, a pedido $quem. A gravação fica bloqueada até um '
+      'novo consentimento.';
+  static const retiradaPeloPaciente = 'do próprio paciente';
+  static String retiradaPeloResponsavel(String nome) =>
+      'de $nome (responsável legal)';
+
   // -------------------------------------------------- captura / medidor --
   static const medidorRotulo = 'Nível do microfone';
   static const medidorSemSinal = 'Sem sinal';
@@ -381,6 +417,10 @@ abstract final class AppStrings {
   static const filaTentarDeNovo = 'Tentar de novo';
   static const filaTentarExigeConexao = 'Disponível quando houver conexão.';
   static const filaVerResultado = 'Ver resultado';
+  static const filaSemConsentimento = 'Parado: consentimento retirado';
+  static const filaSemConsentimentoTexto =
+      'O consentimento deste paciente foi retirado, e a gravação não sobe. '
+      'Só com um novo consentimento registrado dá para tentar de novo.';
 
   /// "4,2 s". Decimal com vírgula, como se escreve em português.
   static String segundos(Duration d) =>
@@ -598,6 +638,11 @@ abstract final class AppStrings {
   static String perfilNaFila(int n) => n == 1
       ? '1 gravação deste paciente aguarda envio na fila.'
       : '$n gravações deste paciente aguardam envio na fila.';
+  static String perfilParadosNaFila(int n) => n == 1
+      ? '1 gravação deste paciente está parada na fila: o consentimento foi '
+            'retirado.'
+      : '$n gravações deste paciente estão paradas na fila: o consentimento '
+            'foi retirado.';
   static const perfilVerFila = 'Ver fila';
   static const perfilAnaliseProcessando = 'Em análise no servidor';
   static const perfilSemData = 'Sessão sem data';

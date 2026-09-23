@@ -18,6 +18,7 @@ part 'banco_local.g.dart';
   tables: [
     Pacientes,
     Consentimentos,
+    RetiradasDeConsentimento,
     Envios,
     Amostras,
     AmostrasDoEnvio,
@@ -50,11 +51,18 @@ class BancoLocal extends _$BancoLocal {
   /// `drift_schemas/` guarda o formato de cada versão já distribuída; é com
   /// ele que se testa que o banco de quem atualiza o app chega inteiro.
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
+    // Uma versão por vez, na ordem: o aparelho pode estar várias atrás.
+    onUpgrade: (m, de, para) async {
+      if (de < 2) {
+        // US15: retirada do consentimento.
+        await m.createTable(retiradasDeConsentimento);
+      }
+    },
     // O SQLite vem com chave estrangeira DESLIGADA; sem isto, nada impediria
     // apagar a amostra de um envio, e o envio subiria sem o arquivo.
     beforeOpen: (_) => customStatement('PRAGMA foreign_keys = ON'),

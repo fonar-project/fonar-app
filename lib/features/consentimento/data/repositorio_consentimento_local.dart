@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/banco/banco_local.dart';
+import '../../../core/error/app_exception.dart';
 import '../../../core/relogio.dart';
 import '../domain/consentimento.dart';
 import '../domain/repositorio_consentimento.dart';
@@ -28,11 +29,20 @@ final consentimentoProvider = FutureProvider.family<Consentimento?, String>(
       ref.watch(repositorioConsentimentoProvider).buscar(pacienteId),
 );
 
-/// Os consentimentos, no banco local.
+/// A retirada que está valendo para o paciente, ou `null`.
+final retiradaEmVigorProvider =
+    FutureProvider.family<RetiradaDeConsentimento?, String>(
+      (ref, pacienteId) => ref
+          .watch(repositorioConsentimentoProvider)
+          .retiradaEmVigor(pacienteId),
+    );
+
+/// Os consentimentos e as retiradas, no banco local.
 ///
 /// Cada registro é uma linha nova, e nenhuma é apagada ou reescrita: é a
-/// prova do que foi autorizado, com qual versão do termo e quando. O que vale
-/// é o mais recente.
+/// prova do que foi autorizado, com qual versão do termo e quando, e de
+/// quando foi retirado. Vale o consentimento mais recente, se não tiver sido
+/// retirado.
 ///
 /// TODO(backend): subir pela fila de sincronização quando o Firebase entrar.
 class RepositorioConsentimentoLocal implements RepositorioConsentimento {
@@ -45,29 +55,20 @@ class RepositorioConsentimentoLocal implements RepositorioConsentimento {
   final BancoLocal _banco;
   final DateTime Function() _agora;
 
-  /// Valem só para quem não tem registro no banco, e nunca são gravados.
+  /// Valem só para quem não tem registro no banco, e nunca são gravados. A
+  /// retirada de um deles, essa, vai para o banco.
   final Map<String, Consentimento> exemplos;
 
   @override
-  Future<Consentimento?> buscar(String pacienteId) async {
-    final linha =
-        await (_banco.select(_banco.consentimentos)
-              ..where((c) => c.pacienteId.equals(pacienteId))
-              ..orderBy([
-                (c) => OrderingTerm.desc(c.registradoEm),
-                (c) => OrderingTerm.desc(c.id),
-              ])
-              ..limit(1))
-            .getSingleOrNull();
-    if (linha == null) return exemplos[pacienteId];
-    return Consentimento(
-      pacienteId: linha.pacienteId,
-      registradoEm: linha.registradoEm,
-      versaoDoTermo: linha.versaoDoTermo,
-      quemAutoriza: QuemAutoriza.values.byName(linha.quemAutoriza),
-      nomeDoResponsavel: linha.nomeDoResponsavel,
-    );
-  }
+  Future<Consentimento?> buscar(String pacienteId) async =>
+      switch (await _ultimo(pacienteId)) {
+        (final c?, null) => c,
+        _ => null,
+      };
+
+  @override
+  Future<RetiradaDeConsentimento?> retiradaEmVigor(String pacienteId) async =>
+      (await _ultimo(pacienteId)).$2;
 
   @override
   Future<Consentimento> registrar(
@@ -94,4 +95,85 @@ class RepositorioConsentimentoLocal implements RepositorioConsentimento {
         );
     return consentimento;
   }
+
+  @override
+  Future<RetiradaDeConsentimento> retirar(
+    String pacienteId,
+    PedidoDeRetirada pedido,
+  ) => _banco.transaction(() async {
+    final linha = await _ultimaLinha(pacienteId);
+    final (vigente, retirada) = await _ultimo(pacienteId, linha: linha);
+    if (vigente == null || retirada != null) throw const FalhaDeValidacao();
+
+    final nova = RetiradaDeConsentimento(
+      pacienteId: pacienteId,
+      retiradaEm: _agora(),
+      quemPediu: pedido.quemPediu,
+      nomeDoResponsavel: pedido.nomeDoResponsavel,
+    );
+    await _banco
+        .into(_banco.retiradasDeConsentimento)
+        .insert(
+          RetiradasDeConsentimentoCompanion.insert(
+            pacienteId: pacienteId,
+            // Sem linha no banco, o vigente é o de exemplo.
+            consentimentoId: Value(linha?.id),
+            retiradaEm: nova.retiradaEm,
+            quemPediu: nova.quemPediu.name,
+            nomeDoResponsavel: Value(nova.nomeDoResponsavel),
+          ),
+        );
+    return nova;
+  });
+
+  /// O último consentimento do paciente e, se ele foi retirado, a retirada.
+  Future<(Consentimento?, RetiradaDeConsentimento?)> _ultimo(
+    String pacienteId, {
+    LinhaDoConsentimento? linha,
+  }) async {
+    linha ??= await _ultimaLinha(pacienteId);
+    final consentimento = linha == null
+        ? exemplos[pacienteId]
+        : Consentimento(
+            pacienteId: linha.pacienteId,
+            registradoEm: linha.registradoEm,
+            versaoDoTermo: linha.versaoDoTermo,
+            quemAutoriza: QuemAutoriza.values.byName(linha.quemAutoriza),
+            nomeDoResponsavel: linha.nomeDoResponsavel,
+          );
+    if (consentimento == null) return (null, null);
+
+    final t = _banco.retiradasDeConsentimento;
+    final retirada =
+        await (_banco.select(t)
+              ..where(
+                (r) => linha == null
+                    ? r.pacienteId.equals(pacienteId) &
+                          r.consentimentoId.isNull()
+                    : r.consentimentoId.equals(linha.id),
+              )
+              ..limit(1))
+            .getSingleOrNull();
+    return (
+      consentimento,
+      retirada == null
+          ? null
+          : RetiradaDeConsentimento(
+              pacienteId: retirada.pacienteId,
+              retiradaEm: retirada.retiradaEm,
+              quemPediu: QuemAutoriza.values.byName(retirada.quemPediu),
+              nomeDoResponsavel: retirada.nomeDoResponsavel,
+            ),
+    );
+  }
+
+  Future<LinhaDoConsentimento?> _ultimaLinha(String pacienteId) =>
+      (_banco.select(_banco.consentimentos)
+            ..where((c) => c.pacienteId.equals(pacienteId))
+            ..orderBy([
+              (c) => OrderingTerm.desc(c.registradoEm),
+              (c) => OrderingTerm.desc(c.id),
+            ])
+            ..limit(1))
+          .getSingleOrNull();
 }

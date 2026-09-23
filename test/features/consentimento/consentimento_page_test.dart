@@ -42,6 +42,14 @@ class _RepositorioFalso implements RepositorioConsentimento {
       nomeDoResponsavel: pedido.nomeDoResponsavel,
     );
   }
+
+  @override
+  Future<RetiradaDeConsentimento?> retiradaEmVigor(String pacienteId) async =>
+      null;
+
+  @override
+  Future<RetiradaDeConsentimento> retirar(String id, PedidoDeRetirada p) =>
+      throw UnimplementedError();
 }
 
 const _celular = Size(390, 844);

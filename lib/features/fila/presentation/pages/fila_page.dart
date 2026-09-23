@@ -185,6 +185,11 @@ class _CartaoDoEnvio extends ConsumerWidget {
         AppStrings.filaRecusado,
         AppStrings.filaRecusadoTexto(motivo),
       ),
+      SituacaoDoEnvio.semConsentimento => (
+        NomeIcone.negacao,
+        AppStrings.filaSemConsentimento,
+        AppStrings.filaSemConsentimentoTexto,
+      ),
       SituacaoDoEnvio.enviado => (
         NomeIcone.confirmacao,
         AppStrings.filaEnviado,
@@ -198,7 +203,9 @@ class _CartaoDoEnvio extends ConsumerWidget {
     final Widget? acao = switch (item.situacao) {
       SituacaoDoEnvio.aguardandoNovaTentativa ||
       SituacaoDoEnvio.aguardandoLogin ||
-      SituacaoDoEnvio.recusado => AppBotao.secundario(
+      SituacaoDoEnvio.recusado ||
+      // Sem consentimento novo, a conferência de antes do envio para de novo.
+      SituacaoDoEnvio.semConsentimento => AppBotao.secundario(
         rotulo: item.situacao == SituacaoDoEnvio.aguardandoNovaTentativa
             ? AppStrings.filaTentarAgora
             : AppStrings.filaTentarDeNovo,

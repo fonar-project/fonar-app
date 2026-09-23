@@ -8,6 +8,7 @@ import 'package:fonar_app/core/error/app_exception.dart';
 import 'package:fonar_app/core/network/conexao.dart';
 import 'package:fonar_app/core/relogio.dart';
 import 'package:fonar_app/features/captura/domain/amostra.dart';
+import 'package:fonar_app/features/consentimento/data/repositorio_consentimento_local.dart';
 import 'package:fonar_app/features/fila/data/envio_de_analise_api.dart';
 import 'package:fonar_app/features/fila/data/repositorio_fila_local.dart';
 import 'package:fonar_app/features/fila/domain/item_da_fila.dart';
@@ -106,6 +107,9 @@ Future<_Fila> _montar(WidgetTester tester, {bool online = true}) async {
       // Profissional com a sessão aberta: sem ela a fila não envia.
       sessaoAbertaProvider.overrideWith(() => Sessao(true)),
       repositorioFilaProvider.overrideWithValue(RepositorioFilaEmMemoria()),
+      repositorioConsentimentoProvider.overrideWithValue(
+        RepositorioConsentimentoPlaceholder(),
+      ),
       conexaoOnlineProvider.overrideWith((ref) => ref.watch(rede)),
       relogioProvider.overrideWithValue(() => fila.agora),
     ],
@@ -449,6 +453,9 @@ void main() {
         conexaoOnlineProvider.overrideWithValue(false),
         sessaoAbertaProvider.overrideWith(() => Sessao(true)),
         repositorioFilaProvider.overrideWithValue(repositorio),
+        repositorioConsentimentoProvider.overrideWithValue(
+          RepositorioConsentimentoPlaceholder(),
+        ),
         relogioProvider.overrideWithValue(() {
           leiturasDoRelogio++;
           return agora;

@@ -7,6 +7,7 @@ import '../../../core/network/conexao.dart';
 import '../../../core/relogio.dart';
 import '../../auth/data/sessao.dart';
 import '../../captura/domain/amostra.dart';
+import '../../consentimento/data/repositorio_consentimento_local.dart';
 import '../data/envio_de_analise_api.dart';
 import '../data/repositorio_fila_local.dart';
 import '../domain/item_da_fila.dart';
@@ -27,13 +28,17 @@ import '../domain/repositorio_fila.dart';
 /// - sem sessão aberta, também nada: sair da conta pausa a fila e interrompe
 ///   o envio em curso, e entrar de novo a retoma (ver `Sessao`);
 /// - falha passageira espera cada vez mais (ver [PoliticaDeReenvio]); sessão
-///   expirada e envio recusado não se repetem sozinhos.
+///   expirada e envio recusado não se repetem sozinhos;
+/// - consentimento retirado, nada do paciente sobe: a fila confere antes de
+///   cada envio, e a retirada para na hora o que já estava na fila
+///   ([pararEnviosDoPaciente]).
 class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
   Timer? _proxima;
   var _processando = false;
 
-  /// O cancelamento do envio que está no ar, se houver.
+  /// O cancelamento do envio que está no ar, se houver, e de quem é.
   Cancelamento? _emCurso;
+  String? _pacienteEmCurso;
 
   /// Há rede e há quem esteja com a sessão aberta.
   bool get _podeEnviar =>
@@ -110,6 +115,36 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
     await processar();
   }
 
+  /// O consentimento de [pacienteId] foi retirado: nada dele sobe mais.
+  ///
+  /// O que esperava a vez para; o que está subindo agora é interrompido e,
+  /// na volta, a conferência de antes do envio o para também.
+  Future<void> pararEnviosDoPaciente(String pacienteId) async {
+    await _carregada();
+    if (_pacienteEmCurso == pacienteId) _emCurso?.pedir();
+    final parar = [
+      for (final i in _itens)
+        if (i.pacienteId == pacienteId &&
+            i.pendente &&
+            i.situacao != SituacaoDoEnvio.enviando &&
+            i.situacao != SituacaoDoEnvio.semConsentimento)
+          i.id,
+    ];
+    for (final id in parar) {
+      if (!ref.mounted) return;
+      // Relido a cada passo, como em [_aoVoltarConexao].
+      final atual = _itens.where((i) => i.id == id).firstOrNull;
+      if (atual == null || atual.situacao == SituacaoDoEnvio.enviando) continue;
+      await _salvar(_semConsentimento(atual));
+    }
+  }
+
+  ItemDaFila _semConsentimento(ItemDaFila item) => item.copiar(
+    situacao: SituacaoDoEnvio.semConsentimento,
+    proximaTentativa: () => null,
+    ultimaFalha: () => null,
+  );
+
   /// Envia, um por vez, tudo o que estiver pronto. Chamar de novo enquanto
   /// roda não faz nada — quem está rodando pega o que chegou.
   Future<void> processar() async {
@@ -130,6 +165,34 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
   }
 
   Future<void> _enviar(ItemDaFila item) async {
+    // Conferido a cada envio, e não só na retirada: o item pode ter voltado à
+    // fila ("Tentar de novo") sem consentimento novo.
+    final bool retirado;
+    try {
+      retirado =
+          await ref
+              .read(repositorioConsentimentoProvider)
+              .retiradaEmVigor(item.pacienteId) !=
+          null;
+    } catch (erro) {
+      // Sem saber, não se envia: espera e confere de novo.
+      if (!ref.mounted) return;
+      await _salvar(
+        item.copiar(
+          situacao: SituacaoDoEnvio.aguardandoNovaTentativa,
+          ultimaFalha: () => FalhaDesconhecida(causa: erro).mensagem,
+          proximaTentativa: () =>
+              _agora().add(PoliticaDeReenvio.esperaApos(item.tentativas + 1)),
+        ),
+      );
+      return;
+    }
+    if (!ref.mounted) return;
+    if (retirado) {
+      await _salvar(_semConsentimento(item));
+      return;
+    }
+
     final tentativas = item.tentativas + 1;
     await _salvar(
       item.copiar(situacao: SituacaoDoEnvio.enviando, tentativas: tentativas),
@@ -139,6 +202,7 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
 
     final cancelamento = Cancelamento();
     _emCurso = cancelamento;
+    _pacienteEmCurso = item.pacienteId;
     try {
       final analiseId = await ref
           .read(envioDeAnaliseProvider)
@@ -184,7 +248,10 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
         ),
       );
     } finally {
-      if (identical(_emCurso, cancelamento)) _emCurso = null;
+      if (identical(_emCurso, cancelamento)) {
+        _emCurso = null;
+        _pacienteEmCurso = null;
+      }
     }
   }
 

@@ -20,6 +20,8 @@ import '../../../analise/domain/resultado_da_analise.dart';
 import '../../../analise/presentation/apresentacao_da_medida.dart';
 import '../../../consentimento/data/repositorio_consentimento_local.dart';
 import '../../../consentimento/domain/consentimento.dart';
+import '../../../consentimento/presentation/texto_da_retirada.dart';
+import '../../../fila/domain/item_da_fila.dart';
 import '../../../fila/presentation/fila_controlador.dart';
 import '../../../historico/domain/evolucao_da_medida.dart';
 import '../../../laudo/data/repositorio_laudos_local.dart';
@@ -177,6 +179,7 @@ class _DadosEAcoes extends ConsumerWidget {
       color: AppColors.secundarioSobreCreme,
     );
     final consentimento = ref.watch(consentimentoProvider(paciente.id));
+    final retirada = ref.watch(retiradaEmVigorProvider(paciente.id)).value;
     // Fail-closed: só "registrado" libera a gravação; carregando e erro, não.
     final temConsentimento = consentimento.value != null;
     final analises = ref.watch(analisesDoPacienteProvider(paciente.id)).value;
@@ -235,6 +238,11 @@ class _DadosEAcoes extends ConsumerWidget {
             titulo: AppStrings.consentimentoRegistrado,
             texto: _textoDoConsentimento(c),
           ),
+          AsyncData() when retirada != null => AppSituacao(
+            icone: NomeIcone.negacao,
+            titulo: AppStrings.consentimentoRetirado,
+            texto: textoDaRetirada(retirada),
+          ),
           AsyncData() => const AppSituacao(
             icone: NomeIcone.negacao,
             titulo: AppStrings.consentimentoNaoRegistrado,
@@ -256,6 +264,22 @@ class _DadosEAcoes extends ConsumerWidget {
             ),
           ),
         },
+        // Junto do consentimento, e não das ações da consulta: é direito do
+        // paciente, mas não é o que se faz a cada atendimento — e não pode
+        // parecer o botão de gravar.
+        if (temConsentimento) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: AppBotao.secundario(
+              rotulo: AppStrings.retiradaAcao,
+              aoTocar: () => context.goNamed(
+                AppRoutes.retiradaConsentimentoNome,
+                pathParameters: rotaDoPaciente,
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: AppSpacing.lg),
         // Uma ação primária só: gravar quando pode, registrar o consentimento
         // quando ainda não pode. O gravar bloqueado continua à vista, dizendo
@@ -339,23 +363,33 @@ class _Sessoes extends ConsumerWidget {
     };
     // Gravado e ainda não enviado: não é análise ainda, mas é deste
     // paciente e o profissional precisa saber que está a caminho.
-    final naFila =
-        ref
-            .watch(filaControladorProvider)
-            .value
-            ?.where((i) => i.pacienteId == pacienteId && i.pendente)
-            .length ??
-        0;
+    // As paradas pela retirada do consentimento não estão a caminho: contam
+    // à parte, dizendo por quê.
+    final doPaciente = [
+      for (final i
+          in ref.watch(filaControladorProvider).value ?? const <ItemDaFila>[])
+        if (i.pacienteId == pacienteId && i.pendente) i,
+    ];
+    final parados = doPaciente
+        .where((i) => i.situacao == SituacaoDoEnvio.semConsentimento)
+        .length;
+    final naFila = doPaciente.length - parados;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const _Titulo(AppStrings.perfilSessoesTitulo),
-        if (naFila > 0) ...[
+        if (naFila > 0)
           AppSituacao(
             icone: NomeIcone.passoPendente,
             titulo: AppStrings.perfilNaFila(naFila),
           ),
+        if (parados > 0)
+          AppSituacao(
+            icone: NomeIcone.negacao,
+            titulo: AppStrings.perfilParadosNaFila(parados),
+          ),
+        if (naFila > 0 || parados > 0) ...[
           Align(
             alignment: Alignment.centerLeft,
             child: AppBotao.secundario(

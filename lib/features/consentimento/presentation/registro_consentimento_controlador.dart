@@ -111,7 +111,11 @@ class RegistroConsentimentoControlador extends Notifier<EstadoRegistro> {
 
     // A tela passa a mostrar "registrado" — inclusive se tiver sido fechada e
     // aberta de novo durante o registro.
-    if (registrou) container.invalidate(consentimentoProvider(pacienteId));
+    if (registrou) {
+      container
+        ..invalidate(consentimentoProvider(pacienteId))
+        ..invalidate(retiradaEmVigorProvider(pacienteId));
+    }
 
     if (!ref.mounted) return false;
     state = fim;

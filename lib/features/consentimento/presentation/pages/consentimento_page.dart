@@ -23,14 +23,15 @@ import '../../../pacientes/domain/paciente.dart';
 import '../../data/repositorio_consentimento_local.dart';
 import '../../domain/consentimento.dart';
 import '../registro_consentimento_controlador.dart';
+import '../texto_da_retirada.dart';
 
 /// Tela 03 — consentimento do paciente para a gravação.
 ///
 /// Duas caras, conforme o registro:
 ///
-/// - **não registrado**: o termo, quem autoriza e a concordância. É a tela que
-///   o profissional mostra ao paciente, então o termo vem em letra de leitura,
-///   não em letra de rodapé;
+/// - **não registrado** (ou retirado): o termo, quem autoriza e a
+///   concordância. É a tela que o profissional mostra ao paciente, então o
+///   termo vem em letra de leitura, não em letra de rodapé;
 /// - **registrado**: quando, por quem e com qual versão do termo, e o botão
 ///   que leva à gravação.
 ///
@@ -285,11 +286,19 @@ class _FormularioState extends ConsumerState<_Formulario> {
       children: [
         _NomeDoPaciente(paciente: widget.paciente),
         const SizedBox(height: AppSpacing.md),
-        const AppSituacao(
-          icone: NomeIcone.negacao,
-          titulo: AppStrings.consentimentoNaoRegistrado,
-          texto: AppStrings.consentimentoNaoRegistradoTexto,
-        ),
+        // Retirado antes: diz quando, para ninguém achar que nunca houve.
+        if (ref.watch(retiradaEmVigorProvider(_id)).value case final r?)
+          AppSituacao(
+            icone: NomeIcone.negacao,
+            titulo: AppStrings.consentimentoRetirado,
+            texto: textoDaRetirada(r),
+          )
+        else
+          const AppSituacao(
+            icone: NomeIcone.negacao,
+            titulo: AppStrings.consentimentoNaoRegistrado,
+            texto: AppStrings.consentimentoNaoRegistradoTexto,
+          ),
         const SizedBox(height: AppSpacing.lg),
         Text(
           AppStrings.consentimentoMostreAoPaciente,

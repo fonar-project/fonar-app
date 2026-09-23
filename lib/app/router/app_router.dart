@@ -9,6 +9,7 @@ import '../../features/captura/presentation/pages/captura_page.dart';
 import '../../features/consentimento/data/repositorio_consentimento_local.dart';
 import '../../features/conta/presentation/pages/conta_page.dart';
 import '../../features/consentimento/presentation/pages/consentimento_page.dart';
+import '../../features/consentimento/presentation/pages/retirada_consentimento_page.dart';
 import '../../features/fila/presentation/pages/fila_page.dart';
 import '../../features/historico/presentation/pages/evolucao_modo_paciente_page.dart';
 import '../../features/historico/presentation/pages/evolucao_page.dart';
@@ -67,6 +68,16 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => ConsentimentoPage(
                   pacienteId: state.pathParameters[AppRoutes.paramPacienteId]!,
                 ),
+                routes: [
+                  GoRoute(
+                    name: AppRoutes.retiradaConsentimentoNome,
+                    path: AppRoutes.retiradaConsentimentoCaminho,
+                    builder: (context, state) => RetiradaConsentimentoPage(
+                      pacienteId:
+                          state.pathParameters[AppRoutes.paramPacienteId]!,
+                    ),
+                  ),
+                ],
               ),
               GoRoute(
                 name: AppRoutes.capturaNome,

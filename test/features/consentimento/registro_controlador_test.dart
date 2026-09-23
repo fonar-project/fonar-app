@@ -28,6 +28,14 @@ class _RepositorioLento implements RepositorioConsentimento {
       quemAutoriza: pedido.quemAutoriza,
     );
   }
+
+  @override
+  Future<RetiradaDeConsentimento?> retiradaEmVigor(String pacienteId) async =>
+      null;
+
+  @override
+  Future<RetiradaDeConsentimento> retirar(String id, PedidoDeRetirada p) =>
+      throw UnimplementedError();
 }
 
 void main() {
