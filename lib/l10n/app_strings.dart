@@ -210,6 +210,12 @@ abstract final class AppStrings {
       'silêncio e deixe o aparelho na posição em que vai gravar.';
   static const afericaoMedir = 'Medir ruído ambiente';
   static const afericaoMedirDeNovo = 'Medir de novo';
+  static const afericaoLiberandoMicrofone = 'Liberando o microfone…';
+  static const afericaoMicrofoneDemorando =
+      'O microfone ainda não foi liberado';
+  static const afericaoMicrofoneDemorandoTexto =
+      'Medir de novo e gravar ficam travados até ele ser liberado. Se '
+      'continuar assim, saia desta tela e entre de novo.';
   static const afericaoMedindo = 'Medindo… mantenha silêncio.';
   static const afericaoEsperaGravacao =
       'Termine a gravação em andamento para medir de novo.';
