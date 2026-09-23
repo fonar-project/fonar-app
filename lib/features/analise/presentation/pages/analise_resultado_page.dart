@@ -15,6 +15,9 @@ import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../design_system/widgets/app_status_medida.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../../cape_v/data/repositorio_cape_v_em_memoria.dart';
+import '../../../cape_v/domain/avaliacao_cape_v.dart';
+import '../../../cape_v/presentation/apresentacao_cape_v.dart';
 import '../../../captura/domain/amostra.dart';
 import '../../../pacientes/data/repositorio_pacientes_placeholder.dart';
 import '../../../pacientes/domain/paciente.dart';
@@ -88,6 +91,7 @@ class AnaliseResultadoPage extends ConsumerWidget {
                 ),
               ),
               SituacaoDaAnalise.concluida => _Resultado(
+                pacienteId: pacienteId,
                 resultado: value,
                 paciente: paciente,
                 compacta: compacta,
@@ -124,11 +128,13 @@ class AnaliseResultadoPage extends ConsumerWidget {
 
 class _Resultado extends ConsumerWidget {
   const _Resultado({
+    required this.pacienteId,
     required this.resultado,
     required this.paciente,
     required this.compacta,
   });
 
+  final String pacienteId;
   final ResultadoDaAnalise resultado;
   final Paciente? paciente;
   final bool compacta;
@@ -212,6 +218,9 @@ class _Resultado extends ConsumerWidget {
                 medidas: medidas,
                 motivoJaDito: _motivoComum(medidas),
               ),
+              const SizedBox(height: AppSpacing.xl),
+              _Secao(titulo: AppStrings.capeVSecaoTitulo),
+              _ResumoCapeV(pacienteId: pacienteId, analiseId: resultado.id),
               const SizedBox(height: AppSpacing.xl),
               _Secao(titulo: AppStrings.resultadoEspectrogramaTitulo),
               _Espectrograma(url: resultado.espectrogramaUrl),
@@ -411,6 +420,72 @@ SemClassificacaoPorque? _motivoComum(List<MedidaLida> medidas) {
       if (m.valor != null) m.semClassificacaoPorque,
   };
   return motivos.length == 1 ? motivos.single : null;
+}
+
+/// A CAPE-V desta análise: o que foi marcado, ou o convite para marcar.
+///
+/// Fica na mesma tela das medidas porque é lida junto delas — a avaliação
+/// perceptiva do profissional ao lado do que o servidor mediu —, mas nunca
+/// misturada a elas: são coisas de natureza diferente.
+class _ResumoCapeV extends ConsumerWidget {
+  const _ResumoCapeV({required this.pacienteId, required this.analiseId});
+
+  final String pacienteId;
+  final String analiseId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final textos = Theme.of(context).textTheme;
+    final avaliacao = ref.watch(capeVDaAnaliseProvider(analiseId)).value;
+    final secundario = textos.bodyMedium?.copyWith(
+      color: AppColors.secundarioSobreCreme,
+    );
+    void abrir() => context.goNamed(
+      AppRoutes.capeVNome,
+      pathParameters: {
+        AppRoutes.paramPacienteId: pacienteId,
+        AppRoutes.paramAnaliseId: analiseId,
+      },
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (avaliacao == null)
+          Text(AppStrings.capeVAindaNao, style: secundario)
+        else ...[
+          Text(
+            AppStrings.capeVRegistradaEm(
+              AppStrings.data(avaliacao.registradaEm),
+              AppStrings.hora(avaliacao.registradaEm),
+            ),
+            style: secundario,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          for (final p in ParametroCapeV.values)
+            if (avaliacao.notas[p] case final nota?)
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.xxs),
+                child: Text(
+                  '${p.nome}: ${resumirNota(p, nota)}',
+                  style: textos.bodyMedium,
+                ),
+              ),
+          if (avaliacao.comentarios.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(avaliacao.comentarios, style: secundario),
+          ],
+        ],
+        const SizedBox(height: AppSpacing.sm),
+        AppBotao.secundario(
+          rotulo: avaliacao == null
+              ? AppStrings.capeVRegistrar
+              : AppStrings.capeVEditar,
+          aoTocar: abrir,
+        ),
+      ],
+    );
+  }
 }
 
 StatusMedida _status(ClassificacaoDaMedida c) => switch (c) {

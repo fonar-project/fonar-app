@@ -38,6 +38,7 @@ class AppCampoTexto extends StatelessWidget {
     this.autopreenchimento,
     this.formatadores,
     this.capitalizacao = TextCapitalization.none,
+    this.linhas = 1,
     super.key,
   });
 
@@ -85,6 +86,10 @@ class AppCampoTexto extends StatelessWidget {
   /// `sentences` em texto livre.
   final TextCapitalization capitalizacao;
 
+  /// Mais de uma para texto livre (comentários): o campo nasce com essa
+  /// altura e cresce até o dobro antes de rolar.
+  final int linhas;
+
   bool get _temErro => erro != null && erro!.isNotEmpty;
 
   @override
@@ -131,6 +136,8 @@ class AppCampoTexto extends StatelessWidget {
                 autofillHints: autopreenchimento,
                 inputFormatters: formatadores,
                 textCapitalization: capitalizacao,
+                minLines: linhas,
+                maxLines: linhas == 1 ? 1 : linhas * 2,
                 keyboardType: tipoDeTeclado,
                 textInputAction: acaoDeEntrada,
                 onChanged: aoMudar,

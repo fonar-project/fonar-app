@@ -43,6 +43,10 @@ abstract final class AppRoutes {
   static const analiseResultadoNome = 'analiseResultado';
   static const analiseResultadoCaminho = 'analise/:$paramAnaliseId';
 
+  // /pacientes/:pacienteId/analise/:analiseId/cape-v
+  static const capeVNome = 'capeV';
+  static const capeVCaminho = 'cape-v';
+
   // /fila
   static const filaNome = 'fila';
   static const filaCaminho = '/fila';

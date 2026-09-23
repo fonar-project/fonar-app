@@ -440,6 +440,49 @@ abstract final class AppStrings {
     return valor < 0 ? '−$texto' : texto;
   }
 
+  // ------------------------------------------------------------- CAPE-V --
+  // TODO(clínico): nomes dos parâmetros e das opções a conferir com a versão
+  // da escala adotada pelo projeto.
+  static const capeVTitulo = 'Escala CAPE-V';
+  static const capeVExplicacao =
+      'Avaliação perceptivo-auditiva do profissional. Para cada parâmetro, '
+      'marque na linha o grau do desvio: à esquerda, sem desvio; à direita, '
+      'desvio extremo.';
+  static const capeVGrauGeral = 'Grau geral';
+  static const capeVRugosidade = 'Rugosidade';
+  static const capeVSoprosidade = 'Soprosidade';
+  static const capeVTensao = 'Tensão';
+  static const capeVPitch = 'Pitch';
+  static const capeVLoudness = 'Loudness';
+  static const capeVSemDesvio = 'Sem desvio';
+  static const capeVDesvioExtremo = 'Desvio extremo';
+  static const capeVNaoMarcado = 'Não marcado';
+  static const capeVConsistencia = 'Consistência';
+  static const capeVConsistente = 'Consistente';
+  static const capeVIntermitente = 'Intermitente';
+  static const capeVSentido = 'Sentido do desvio';
+  static const capeVPitchAbaixo = 'Mais grave';
+  static const capeVPitchAcima = 'Mais agudo';
+  static const capeVLoudnessAbaixo = 'Mais fraca';
+  static const capeVLoudnessAcima = 'Mais forte';
+  static const capeVComentarios = 'Comentários (opcional)';
+  static const capeVRegistrar = 'Registrar CAPE-V';
+  static const capeVRegistrando = 'Registrando…';
+  static const capeVMarque = 'Marque na linha. Se não houver desvio, marque 0.';
+  static const capeVEscolhaConsistencia =
+      'Com desvio, escolha se é consistente ou intermitente.';
+  static const capeVEscolhaSentido =
+      'Com desvio, escolha o sentido: abaixo ou acima do esperado.';
+  static const capeVErroCarregar =
+      'Não foi possível abrir a avaliação CAPE-V desta análise.';
+
+  // Na tela de resultado.
+  static const capeVSecaoTitulo = 'Avaliação perceptivo-auditiva (CAPE-V)';
+  static const capeVAindaNao = 'Ainda não registrada para esta análise.';
+  static const capeVEditar = 'Editar CAPE-V';
+  static String capeVRegistradaEm(String data, String hora) =>
+      'Registrada em $data, às $hora.';
+
   // ----------------------------------------------------- tendência AVQI --
   // TODO(clínico): "melhorando" e "piorando" vêm do protótipo e aguardam
   // revisão — é leitura da evolução, e o limiar do que conta como mudança

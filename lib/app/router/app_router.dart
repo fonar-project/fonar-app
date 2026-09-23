@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../design_system/widgets/tela_placeholder.dart';
 import '../../features/analise/presentation/pages/analise_resultado_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/cape_v/presentation/pages/cape_v_page.dart';
 import '../../features/captura/presentation/pages/captura_page.dart';
 import '../../features/consentimento/data/repositorio_consentimento_placeholder.dart';
 import '../../features/consentimento/presentation/pages/consentimento_page.dart';
@@ -80,6 +81,18 @@ final routerProvider = Provider<GoRouter>((ref) {
                   pacienteId: state.pathParameters[AppRoutes.paramPacienteId]!,
                   analiseId: state.pathParameters[AppRoutes.paramAnaliseId]!,
                 ),
+                routes: [
+                  GoRoute(
+                    name: AppRoutes.capeVNome,
+                    path: AppRoutes.capeVCaminho,
+                    builder: (context, state) => CapeVPage(
+                      pacienteId:
+                          state.pathParameters[AppRoutes.paramPacienteId]!,
+                      analiseId:
+                          state.pathParameters[AppRoutes.paramAnaliseId]!,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

@@ -10,6 +10,8 @@ import 'package:fonar_app/features/analise/data/repositorio_analises_placeholder
 import 'package:fonar_app/features/analise/domain/faixa_de_referencia.dart';
 import 'package:fonar_app/features/analise/domain/resultado_da_analise.dart';
 import 'package:fonar_app/features/analise/presentation/pages/analise_resultado_page.dart';
+import 'package:fonar_app/features/cape_v/data/repositorio_cape_v_em_memoria.dart';
+import 'package:fonar_app/features/cape_v/domain/avaliacao_cape_v.dart';
 import 'package:fonar_app/features/captura/domain/amostra.dart';
 import 'package:fonar_app/features/historico/domain/evolucao_da_medida.dart';
 import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_placeholder.dart';
@@ -82,6 +84,7 @@ Future<void> _abrir(
   Future<ResultadoDaAnalise> Function()? resposta,
   Paciente? paciente,
   CatalogoDeReferencias? catalogo,
+  AvaliacaoCapeV? capeV,
   Size tamanho = const Size(1440, 2000),
   double escala = 1,
 }) async {
@@ -93,10 +96,14 @@ Future<void> _abrir(
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
   }
 
+  final capeVs = RepositorioCapeVEmMemoria();
+  if (capeV != null) await capeVs.registrar(capeV);
+
   await tester.pumpWidget(
     ProviderScope(
       retry: (_, _) => null,
       overrides: [
+        repositorioCapeVProvider.overrideWithValue(capeVs),
         repositorioAnalisesProvider.overrideWithValue(
           _Repositorio(resposta ?? () async => _concluida),
         ),
@@ -261,6 +268,46 @@ void main() {
 
     expect(find.text(AppStrings.resultadoErroCarregar), findsOneWidget);
     expect(find.text(AppStrings.tentarNovamente), findsOneWidget);
+  });
+
+  testWidgets('sem CAPE-V: diz que não há e oferece registrar', (tester) async {
+    await _abrir(tester);
+
+    expect(find.text(AppStrings.capeVSecaoTitulo), findsOneWidget);
+    expect(find.text(AppStrings.capeVAindaNao), findsOneWidget);
+    expect(find.text(AppStrings.capeVRegistrar), findsOneWidget);
+  });
+
+  testWidgets('com CAPE-V: resume o que foi marcado', (tester) async {
+    await _abrir(
+      tester,
+      capeV: AvaliacaoCapeV(
+        analiseId: 'an-1',
+        pacienteId: 'p1',
+        registradaEm: DateTime(2026, 9, 23, 11, 15),
+        comentarios: 'Comentário (teste).',
+        notas: {
+          for (final p in ParametroCapeV.values) p: const NotaCapeV(valor: 0),
+          ParametroCapeV.pitch: const NotaCapeV(
+            valor: 37,
+            consistencia: Consistencia.consistente,
+            direcao: DirecaoDoDesvio.abaixo,
+          ),
+        },
+      ),
+    );
+
+    expect(
+      find.text(AppStrings.capeVRegistradaEm('23 set 2026', '11:15')),
+      findsOneWidget,
+    );
+    expect(
+      find.text('${AppStrings.capeVPitch}: 37 · consistente · mais grave'),
+      findsOneWidget,
+    );
+    expect(find.text('${AppStrings.capeVGrauGeral}: 0'), findsOneWidget);
+    expect(find.text('Comentário (teste).'), findsOneWidget);
+    expect(find.text(AppStrings.capeVEditar), findsOneWidget);
   });
 
   for (final (nome, tamanho) in [
