@@ -8,6 +8,7 @@ import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/captura/presentation/pages/captura_page.dart';
 import '../../features/consentimento/presentation/pages/consentimento_page.dart';
 import '../../features/historico/presentation/pages/historico_page.dart';
+import '../../features/pacientes/presentation/pages/novo_paciente_page.dart';
 import '../../features/pacientes/presentation/pages/paciente_detalhe_page.dart';
 import '../../features/pacientes/presentation/pages/pacientes_list_page.dart';
 import '../../l10n/app_strings.dart';
@@ -49,15 +50,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const PacientesListPage(),
         routes: [
           // Antes de :pacienteId — ver AppRoutes.novaAvaliacaoCaminho.
-          // TODO(US02): perfil de paciente novo, da tela 02.
           GoRoute(
             name: AppRoutes.novaAvaliacaoNome,
             path: AppRoutes.novaAvaliacaoCaminho,
-            builder: (context, state) => const TelaPlaceholder(
-              titulo: AppStrings.novaAvaliacaoTitulo,
-              rota: AppRoutes.novaAvaliacaoCaminhoCompleto,
-              destino: DestinoPrincipal.novaAvaliacao,
-            ),
+            builder: (context, state) => const NovoPacientePage(),
           ),
           GoRoute(
             name: AppRoutes.pacienteDetalheNome,

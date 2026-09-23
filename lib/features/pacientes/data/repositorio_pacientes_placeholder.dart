@@ -1,12 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../historico/domain/evolucao_da_medida.dart';
+import '../domain/novo_paciente.dart';
 import '../domain/paciente.dart';
 import '../domain/repositorio_pacientes.dart';
 
 /// TODO(drift): trocar pelo repositório do banco local.
 final repositorioPacientesProvider = Provider<RepositorioPacientes>(
-  (ref) => const RepositorioPacientesPlaceholder(),
+  (ref) => RepositorioPacientesPlaceholder(),
 );
 
 /// Lista de pacientes da tela, já carregada.
@@ -19,11 +20,20 @@ final pacientesProvider = FutureProvider<List<Paciente>>(
 /// Todo nome termina em "de Exemplo" e toda queixa em "(exemplo)": dado de
 /// desenvolvimento precisa ser reconhecível como tal em qualquer captura de
 /// tela, inclusive nas que vão parar no texto do TCC.
+///
+/// O que se cadastra fica só na memória e some ao fechar o app. É o bastante
+/// para percorrer o fluxo cadastro → lista; persistir de verdade é trabalho do
+/// Drift.
 class RepositorioPacientesPlaceholder implements RepositorioPacientes {
-  const RepositorioPacientesPlaceholder();
+  RepositorioPacientesPlaceholder();
+
+  final _cadastrados = <Paciente>[];
 
   @override
   Future<List<Paciente>> listar() async => [
+    // Recém-cadastrado ainda não tem sessão, e mesmo assim vai no topo: é
+    // quem o profissional acabou de atender e vai procurar em seguida.
+    ..._cadastrados.reversed,
     Paciente(
       id: 'exemplo-a',
       nome: 'Paciente A. de Exemplo',
@@ -60,4 +70,18 @@ class RepositorioPacientesPlaceholder implements RepositorioPacientes {
       direcaoAvqi: DirecaoDaMedida.semComparacao,
     ),
   ];
+
+  @override
+  Future<Paciente> cadastrar(NovoPaciente novo) async {
+    final paciente = Paciente(
+      // TODO(drift): o id definitivo vem do banco local (UUID gerado no
+      // aparelho, para não colidir na sincronização).
+      id: 'local-${DateTime.now().microsecondsSinceEpoch}',
+      nome: novo.nome,
+      queixa: novo.queixa,
+      direcaoAvqi: DirecaoDaMedida.semComparacao,
+    );
+    _cadastrados.add(paciente);
+    return paciente;
+  }
 }

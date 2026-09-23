@@ -82,6 +82,47 @@ abstract final class AppStrings {
       'Não foi possível abrir a lista de pacientes deste aparelho.';
   static const tentarNovamente = 'Tentar novamente';
 
+  // ------------------------------------------------ cadastro de paciente --
+  static const cadastroTitulo = 'Novo paciente';
+  static const cadastroDescricao =
+      'Preencha o perfil para iniciar a avaliação. Em seguida vêm o registro '
+      'do consentimento e a gravação.';
+  static const cadastroCampoNome = 'Nome completo';
+  static const cadastroCampoNascimento = 'Data de nascimento';
+  static const cadastroNascimentoDica = 'dd/mm/aaaa';
+  static const cadastroCampoSexo = 'Sexo';
+  static const cadastroSexoFeminino = 'Feminino';
+  static const cadastroSexoMasculino = 'Masculino';
+  static const cadastroSexoNaoInformado = 'Não informar';
+
+  /// Diz para que serve a pergunta, e o que acontece sem resposta — a
+  /// consequência de "Não informar" precisa estar dita antes da escolha.
+  static const cadastroSexoApoio =
+      'Usado só para escolher a faixa de referência das medidas. Sem esta '
+      'informação, as medidas aparecem sem classificação.';
+  static const cadastroCampoQueixa = 'Queixa principal';
+  static const cadastroQueixaDica = 'ex.: rouquidão ao fim do dia';
+  static const cadastroSalvar = 'Salvar e continuar';
+  static const cadastroSalvando = 'Salvando…';
+  static const cadastroCancelar = 'Cancelar';
+  static const cadastroSalvoNoAparelho =
+      'O cadastro fica salvo neste aparelho e sincroniza quando houver '
+      'conexão.';
+
+  // Erros de campo: dizem o que fazer, não só o que está errado.
+  static const cadastroInformeNome = 'Informe o nome do paciente.';
+  static const cadastroInformeNascimento =
+      'Informe a data de nascimento: dia, mês e ano.';
+  static const cadastroNascimentoInvalido =
+      'Data inexistente. Confira dia, mês e ano — ex.: 02/07/1985.';
+  static const cadastroNascimentoNoFuturo =
+      'A data de nascimento está no futuro. Confira o ano.';
+  static String cadastroNascimentoImplausivel(int anos) =>
+      'A data indica mais de $anos anos. Confira o ano.';
+  static const cadastroEscolhaSexo =
+      'Escolha uma opção. Se o paciente preferir, use “Não informar”.';
+  static const cadastroInformeQueixa = 'Informe a queixa principal.';
+
   // ----------------------------------------------------- tendência AVQI --
   // TODO(clínico): "melhorando" e "piorando" vêm do protótipo e aguardam
   // revisão — é leitura da evolução, e o limiar do que conta como mudança
