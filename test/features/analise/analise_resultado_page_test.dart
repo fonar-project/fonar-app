@@ -17,6 +17,12 @@ import 'package:fonar_app/features/historico/domain/evolucao_da_medida.dart';
 import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_placeholder.dart';
 import 'package:fonar_app/features/pacientes/domain/novo_paciente.dart';
 import 'package:fonar_app/features/pacientes/domain/paciente.dart';
+import 'package:fonar_app/features/fila/data/repositorio_fila_em_memoria.dart';
+import 'package:fonar_app/features/fila/domain/repositorio_fila.dart';
+import 'package:fonar_app/features/fila/domain/item_da_fila.dart';
+import 'package:fonar_app/features/reproducao/data/reprodutor_just_audio.dart';
+import 'package:fonar_app/features/reproducao/domain/reprodutor.dart';
+import 'package:fonar_app/features/reproducao/presentation/widgets/player_de_amostra.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 
 class _Repositorio implements RepositorioAnalises {
@@ -91,6 +97,7 @@ Future<void> _abrir(
   Size tamanho = const Size(1440, 2000),
   double escala = 1,
   String pacienteDaRota = 'p1',
+  ItemDaFila? envio,
 }) async {
   tester.view.physicalSize = tamanho;
   tester.view.devicePixelRatio = 1;
@@ -117,6 +124,8 @@ Future<void> _abrir(
           (ref) async => [paciente ?? _paciente()],
         ),
         conexaoOnlineProvider.overrideWithValue(true),
+        repositorioFilaProvider.overrideWithValue(_FilaFixa([?envio])),
+        reprodutorProvider.overrideWithValue(_ReprodutorQuieto()),
       ],
       child: MaterialApp(
         theme: AppTheme.claro,
@@ -248,6 +257,50 @@ void main() {
     expect(find.text(AppStrings.resultadoExemploTitulo), findsOneWidget);
   });
 
+  group('ouvir as amostras', () {
+    testWidgets('com o áudio no aparelho, um player por tarefa', (
+      tester,
+    ) async {
+      await _abrir(
+        tester,
+        envio: ItemDaFila(
+          id: 'envio-s1',
+          pacienteId: 'p1',
+          nomeDoPaciente: 'Ana de Teste',
+          sessaoId: 's1',
+          criadoEm: DateTime(2026, 7, 2, 9),
+          situacao: SituacaoDoEnvio.enviado,
+          analiseId: 'an-1',
+          amostras: [
+            for (final t in TarefaDeGravacao.values)
+              Amostra(
+                id: 'a-${t.name}',
+                pacienteId: 'p1',
+                sessaoId: 's1',
+                tarefa: t,
+                caminho: '/amostras/p1/${t.name}.wav',
+                gravadaEm: DateTime(2026, 7, 2, 9),
+                duracao: const Duration(seconds: 4),
+                taxaDeAmostragem: 44100,
+                canais: 1,
+                problemas: const [],
+              ),
+          ],
+        ),
+      );
+
+      expect(find.byType(PlayerDeAmostra), findsNWidgets(2));
+      expect(find.text(AppStrings.resultadoAudioIndisponivel), findsNothing);
+    });
+
+    testWidgets('sem o áudio no aparelho, diz', (tester) async {
+      await _abrir(tester);
+
+      expect(find.byType(PlayerDeAmostra), findsNothing);
+      expect(find.text(AppStrings.resultadoAudioIndisponivel), findsOneWidget);
+    });
+  });
+
   testWidgets('análise de outro paciente não é mostrada', (tester) async {
     // Achado da revisão de 23/09: as medidas de um paciente eram lidas com o
     // perfil de outro.
@@ -350,4 +403,34 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+}
+
+class _ReprodutorQuieto implements Reprodutor {
+  @override
+  Future<Duration?> abrir(String caminho) async => null;
+  @override
+  Future<void> tocar() async {}
+  @override
+  Future<void> pausar() async {}
+  @override
+  Future<void> irPara(Duration posicao) async {}
+  @override
+  Stream<Duration> get posicoes => const Stream.empty();
+  @override
+  Stream<void> get terminou => const Stream.empty();
+  @override
+  Future<void> fechar() async {}
+}
+
+/// Fila com os envios dados, só para leitura.
+class _FilaFixa implements RepositorioFila {
+  _FilaFixa(this.itens);
+  final List<ItemDaFila> itens;
+
+  @override
+  Future<List<ItemDaFila>> listar() async => itens;
+  @override
+  Future<void> adicionar(ItemDaFila item) async {}
+  @override
+  Future<void> atualizar(ItemDaFila item) async {}
 }

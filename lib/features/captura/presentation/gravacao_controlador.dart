@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../fila/presentation/fila_controlador.dart';
+import '../../reproducao/presentation/reproducao_controlador.dart';
 import '../data/configuracao_de_captura.dart';
 import '../data/gravador_record.dart';
 import '../data/repositorio_amostras_placeholder.dart';
@@ -105,6 +106,11 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
 
   Future<void> iniciar(TarefaDeGravacao tarefa) async {
     if (state.ocupado) return;
+    // O som do alto-falante entraria no microfone: nada toca enquanto grava.
+    if (ref.exists(reproducaoControladorProvider)) {
+      await ref.read(reproducaoControladorProvider.notifier).parar();
+      if (!ref.mounted || state.ocupado) return;
+    }
     state = EstadoDaGravacao(
       sessaoId: state.sessaoId,
       amostras: state.amostras,

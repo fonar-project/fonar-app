@@ -96,6 +96,18 @@ dependencies:
   pdf: ^3.13.1
   printing: ^5.15.1
 
+  # Ouvir as gravações (US13). O `just_audio` é o que a stack do projeto já
+  # prevê (CLAUDE.md). Só REPRODUZ o arquivo: não analisa nem desenha nada —
+  # toda medida continua no servidor.
+  #
+  # Ele não cobre o Windows sozinho, e Android e Windows precisam das mesmas
+  # funções. O `just_audio_windows` é a implementação para Windows pelo
+  # reprodutor do próprio sistema, licença MIT. A outra opção, o
+  # `just_audio_media_kit`, embute a libmpv — e trazer GPL para dentro do
+  # executável é justamente o que o CLAUDE.md proíbe.
+  just_audio: ^0.10.6
+  just_audio_windows: ^0.2.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

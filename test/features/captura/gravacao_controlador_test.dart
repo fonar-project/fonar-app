@@ -8,6 +8,9 @@ import 'package:fonar_app/features/captura/data/repositorio_amostras_placeholder
 import 'package:fonar_app/features/captura/domain/amostra.dart';
 import 'package:fonar_app/features/captura/domain/gravador.dart';
 import 'package:fonar_app/features/captura/presentation/gravacao_controlador.dart';
+import 'package:fonar_app/features/reproducao/data/reprodutor_just_audio.dart';
+import 'package:fonar_app/features/reproducao/domain/reprodutor.dart';
+import 'package:fonar_app/features/reproducao/presentation/reproducao_controlador.dart';
 
 // Achados da revisão de 23/09: a gravação podia começar depois de a tela
 // fechar, e erro ou fim do fluxo de nível não encerravam a gravação.
@@ -139,4 +142,50 @@ void main() {
       );
     });
   });
+
+  test('gravar para o que estiver tocando', () async {
+    // O som do alto-falante entraria no microfone e na amostra.
+    final gravador = _Gravador();
+    final comReproducao = ProviderContainer(
+      overrides: [
+        gravadorProvider.overrideWithValue(gravador),
+        arquivosDeAmostraProvider.overrideWithValue(_Arquivos()),
+        repositorioAmostrasProvider.overrideWithValue(
+          RepositorioAmostrasPlaceholder(),
+        ),
+        reprodutorProvider.overrideWithValue(_ReprodutorQuieto()),
+      ],
+    );
+    addTearDown(comReproducao.dispose);
+    comReproducao.listen(reproducaoControladorProvider, (_, _) {});
+    comReproducao.listen(gravacaoControladorProvider('p1'), (_, _) {});
+    await comReproducao
+        .read(reproducaoControladorProvider.notifier)
+        .alternar('/amostras/p1/antiga.wav');
+    expect(comReproducao.read(reproducaoControladorProvider).tocando, isTrue);
+
+    await comReproducao
+        .read(gravacaoControladorProvider('p1').notifier)
+        .iniciar(TarefaDeGravacao.falaEncadeada);
+
+    expect(comReproducao.read(reproducaoControladorProvider).tocando, isFalse);
+    expect(gravador.inicios, 1);
+  });
+}
+
+class _ReprodutorQuieto implements Reprodutor {
+  @override
+  Future<Duration?> abrir(String caminho) async => const Duration(seconds: 3);
+  @override
+  Future<void> tocar() async {}
+  @override
+  Future<void> pausar() async {}
+  @override
+  Future<void> irPara(Duration posicao) async {}
+  @override
+  Stream<Duration> get posicoes => const Stream.empty();
+  @override
+  Stream<void> get terminou => const Stream.empty();
+  @override
+  Future<void> fechar() async {}
 }

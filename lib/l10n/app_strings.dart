@@ -607,6 +607,30 @@ abstract final class AppStrings {
   static String perfilLaudoGerado(String data) => 'Laudo gerado em $data';
   static String perfilAbrirSessao(String data) => 'Abrir o resultado de $data';
 
+  // ------------------------------------------------------------ reprodução --
+  static String reproducaoOuvir(String gravacao) => 'Ouvir: $gravacao';
+  static String reproducaoPausar(String gravacao) => 'Pausar: $gravacao';
+  static const reproducaoPosicao = 'Posição na gravação';
+  static String reproducaoTempo(String atual, String total) =>
+      '$atual / $total';
+  static String reproducaoPosicaoDe(String atual, String total) =>
+      '$atual de $total';
+  static const reproducaoFalhou = 'Não foi possível tocar esta gravação.';
+
+  /// O motivo do bloqueio precisa estar dito: um "ouvir" desabilitado sem
+  /// explicação parece defeito.
+  static const reproducaoBloqueadaGravando =
+      'Para ouvir, espere a gravação terminar: o som do alto-falante entraria '
+      'no microfone.';
+  static const resultadoAudioIndisponivel =
+      'O áudio desta análise não está neste aparelho.';
+
+  /// "0:07", "1:23".
+  static String minutosSegundos(Duration d) {
+    final segundos = d.inSeconds;
+    return '${segundos ~/ 60}:${(segundos % 60).toString().padLeft(2, '0')}';
+  }
+
   // --------------------------------------------------------------- laudo --
   static const laudoTitulo = 'Laudo';
   static const resultadoPrepararLaudo = 'Preparar laudo';

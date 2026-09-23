@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../reproducao/presentation/reproducao_controlador.dart';
 import '../data/fonte_de_nivel_record.dart';
 import '../domain/afericao_de_ruido.dart';
 import '../domain/fonte_de_nivel.dart';
@@ -99,6 +100,11 @@ class AfericaoControlador extends Notifier<EstadoDaAfericao> {
     // fechando, os dois disputariam o aparelho.
     if (state is AfericaoMedindo || _fechando != null) return;
     state = const AfericaoMedindo();
+    // Nada toca enquanto se mede o silêncio da sala.
+    if (ref.exists(reproducaoControladorProvider)) {
+      await ref.read(reproducaoControladorProvider.notifier).parar();
+      if (!ref.mounted) return;
+    }
 
     final bool permitido;
     try {

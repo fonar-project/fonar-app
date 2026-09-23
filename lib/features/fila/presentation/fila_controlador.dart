@@ -271,3 +271,18 @@ final filaControladorProvider =
     AsyncNotifierProvider<FilaControlador, List<ItemDaFila>>(
       FilaControlador.new,
     );
+
+/// As amostras que viraram a análise [analiseId], se ainda estão neste
+/// aparelho — achadas pelo envio da fila que devolveu essa análise.
+///
+/// TODO(backend): com a API, ouvir também análises gravadas em outro
+/// aparelho — o áudio viria dela.
+final amostrasDaAnaliseProvider = Provider.autoDispose
+    .family<Map<TarefaDeGravacao, Amostra>, String>((ref, analiseId) {
+      final itens = ref.watch(filaControladorProvider).value ?? const [];
+      final envio = itens.where((i) => i.analiseId == analiseId).firstOrNull;
+      return {
+        for (final amostra in envio?.amostras ?? const <Amostra>[])
+          amostra.tarefa: amostra,
+      };
+    });

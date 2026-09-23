@@ -11,6 +11,7 @@ import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../../pacientes/data/repositorio_pacientes_placeholder.dart';
+import '../../../reproducao/presentation/widgets/player_de_amostra.dart';
 import '../../domain/amostra.dart';
 import '../../domain/verificacao_da_amostra.dart';
 import '../gravacao_controlador.dart';
@@ -183,6 +184,17 @@ class _CartaoDaTarefa extends StatelessWidget {
       corpo = [
         if (amostra != null) ...[
           _SituacaoDaAmostra(amostra: amostra),
+          const SizedBox(height: AppSpacing.xs),
+          // Ouvir antes de mandar para análise: é assim que se nota um
+          // ruído de fundo ou uma tosse que o medidor não mostra.
+          PlayerDeAmostra(
+            caminho: amostra.caminho,
+            rotulo: titulo,
+            duracaoConhecida: amostra.duracao,
+            bloqueio: estado.ocupado
+                ? AppStrings.reproducaoBloqueadaGravando
+                : null,
+          ),
           const SizedBox(height: AppSpacing.sm),
         ],
         if (rejeitada != null) ...[

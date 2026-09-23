@@ -19,6 +19,8 @@ import '../../../cape_v/data/repositorio_cape_v_em_memoria.dart';
 import '../../../cape_v/domain/avaliacao_cape_v.dart';
 import '../../../cape_v/presentation/apresentacao_cape_v.dart';
 import '../../../captura/domain/amostra.dart';
+import '../../../fila/presentation/fila_controlador.dart';
+import '../../../reproducao/presentation/widgets/player_de_amostra.dart';
 import '../../../pacientes/data/repositorio_pacientes_placeholder.dart';
 import '../../../pacientes/domain/paciente.dart';
 import '../../data/catalogo_de_referencias_vazio.dart';
@@ -154,6 +156,7 @@ class _Resultado extends ConsumerWidget {
       catalogo: ref.watch(catalogoDeReferenciasProvider),
     );
     final quando = resultado.realizadaEm;
+    final audios = ref.watch(amostrasDaAnaliseProvider(resultado.id));
 
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(
@@ -206,8 +209,23 @@ class _Resultado extends ConsumerWidget {
                 for (final MapEntry(key: tarefa, value: q)
                     in resultado.qualidade.entries) ...[
                   _QualidadeDaAmostra(tarefa: tarefa, qualidade: q),
+                  if (audios[tarefa] case final amostra?) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    PlayerDeAmostra(
+                      caminho: amostra.caminho,
+                      rotulo: _nomeDaTarefa(tarefa),
+                      duracaoConhecida: amostra.duracao,
+                    ),
+                  ],
                   const SizedBox(height: AppSpacing.sm),
                 ],
+                if (audios.isEmpty)
+                  Text(
+                    AppStrings.resultadoAudioIndisponivel,
+                    style: textos.bodySmall?.copyWith(
+                      color: AppColors.secundarioSobreCreme,
+                    ),
+                  ),
               ],
               const SizedBox(height: AppSpacing.lg),
               _Secao(titulo: AppStrings.resultadoMedidasTitulo),
@@ -293,10 +311,7 @@ class _QualidadeDaAmostra extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final nome = switch (tarefa) {
-      TarefaDeGravacao.vogalSustentada => AppStrings.tarefaVogalTitulo,
-      TarefaDeGravacao.falaEncadeada => AppStrings.tarefaFalaTitulo,
-    };
+    final nome = _nomeDaTarefa(tarefa);
     return qualidade.adequada
         ? AppSituacao(
             icone: NomeIcone.confirmacao,
@@ -309,6 +324,11 @@ class _QualidadeDaAmostra extends StatelessWidget {
           );
   }
 }
+
+String _nomeDaTarefa(TarefaDeGravacao tarefa) => switch (tarefa) {
+  TarefaDeGravacao.vogalSustentada => AppStrings.tarefaVogalTitulo,
+  TarefaDeGravacao.falaEncadeada => AppStrings.tarefaFalaTitulo,
+};
 
 /// Cartões de medida em uma, duas ou três colunas, conforme a largura.
 class _GradeDeMedidas extends StatelessWidget {

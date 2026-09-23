@@ -1,6 +1,6 @@
 # Pendências abertas
 
-O que ficou em aberto das US02 a US12, reunido num lugar só e organizado por
+O que ficou em aberto das US02 a US13, reunido num lugar só e organizado por
 **quem precisa resolver**. Cada item aponta onde está no código — lá há um
 `TODO` com o mesmo assunto, e é lá que a correção acontece.
 
@@ -62,6 +62,7 @@ commit.
 | "Sessão expirada" na fila deve levar ao login (depende do Firebase Auth). | 06 | `fila/presentation/pages/fila_page.dart` |
 | **Cada envio da fila levar o id de quem gravou** (uid do Firebase) e só subir na sessão dessa pessoa. Hoje sair pausa a fila e entrar de novo a retoma, mas o placeholder não distingue quem entrou. | 11 | `auth/data/sessao.dart` |
 | Espectrograma no laudo: depende do contrato do resultado com a imagem. | 10 | `laudo/presentation/pdf_do_laudo.dart` |
+| Ouvir a análise gravada em OUTRO aparelho: hoje só toca o que ainda está neste (achado pelo envio da fila). Precisa da API servir o áudio. | 13 | `fila/presentation/fila_controlador.dart` (`amostrasDaAnaliseProvider`) |
 | README e a seção "Estado atual" do CLAUDE.md ainda dizem que só existe o esqueleto. | — | `README.md`, `CLAUDE.md` |
 
 ## Verificar em aparelho real
@@ -78,6 +79,7 @@ rede simulados.
 | Se o `setOnConfigChanged` avisa quando o aparelho troca a taxa. | 04 | `captura/data/fonte_de_nivel_record.dart` |
 | Fila: desligar a rede, mandar uma gravação, religar — ela sobe sozinha? | 06 | `fila/presentation/fila_controlador.dart` |
 | Sair da conta com um envio no ar: o upload é mesmo interrompido (CancelToken do Dio) e o item volta para a fila? | 11 | `fila/data/envio_de_analise_api.dart` |
+| Ouvir as gravações no Android e no Windows — no Windows, o `just_audio_windows` precisa compilar e tocar o WAV da área privada. | 13 | `reproducao/data/reprodutor_just_audio.dart` |
 | Laudo: "abrir ou compartilhar" e "imprimir ou salvar" no Android e no Windows, e a pré-visualização A4 no Windows (o `printing` baixa o pdfium no build). | 10 | `laudo/data/saida_do_laudo.dart`, `laudo/presentation/laudo_controlador.dart` |
 
 ## Já existiam antes da US02
