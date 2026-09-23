@@ -99,6 +99,10 @@ class CadastroPacienteControlador extends Notifier<EstadoCadastro> {
     }
 
     state = const EstadoCadastro(salvando: true);
+    // Guardado ANTES da espera: se a tela fechar no meio do salvamento, este
+    // controlador é descartado e o `ref` não pode mais ser usado — mas o
+    // container, que vive o app inteiro, pode. Ver a invalidação abaixo.
+    final container = ref.container;
     Paciente? salvo;
     EstadoCadastro fim;
     try {
@@ -114,7 +118,7 @@ class CadastroPacienteControlador extends Notifier<EstadoCadastro> {
 
     // A lista precisa mostrar o paciente novo quando o profissional voltar a
     // ela — inclusive se a tela tiver sido fechada no meio do salvamento.
-    if (salvo != null) ref.invalidate(pacientesProvider);
+    if (salvo != null) container.invalidate(pacientesProvider);
 
     if (!ref.mounted) return null;
     state = fim;

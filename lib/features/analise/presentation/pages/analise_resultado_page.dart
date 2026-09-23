@@ -26,6 +26,7 @@ import '../../data/repositorio_analises_placeholder.dart';
 import '../../domain/leitura_do_resultado.dart';
 import '../../domain/resultado_da_analise.dart';
 import '../apresentacao_da_medida.dart';
+import '../aviso_de_outro_paciente.dart';
 
 /// Tela 07 — resultado da análise.
 ///
@@ -61,7 +62,9 @@ class AnaliseResultadoPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final analise = ref.watch(analiseProvider(analiseId));
+    final analise = ref.watch(
+      analiseDoPacienteProvider((pacienteId: pacienteId, analiseId: analiseId)),
+    );
     final paciente = ref.watch(pacienteProvider(pacienteId)).value;
     void atualizar() => ref.invalidate(analiseProvider(analiseId));
 
@@ -96,6 +99,9 @@ class AnaliseResultadoPage extends ConsumerWidget {
                 compacta: compacta,
               ),
             },
+            // A análise precisa ser do paciente da rota — ver `daPaciente`.
+            AsyncError(:final error) when error is AnaliseDeOutroPaciente =>
+              AvisoDeOutroPaciente(aoVoltar: () => _voltar(context)),
             AsyncError() => AppEstado.central(
               titulo: AppStrings.resultadoErroCarregar,
               acao: AppBotao.secundario(

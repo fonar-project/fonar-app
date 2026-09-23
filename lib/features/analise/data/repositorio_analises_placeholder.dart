@@ -18,6 +18,16 @@ final analiseProvider = FutureProvider.autoDispose
           ref.watch(repositorioAnalisesProvider).buscar(analiseId),
     );
 
+/// A análise, conferida contra o paciente — ver [daPaciente]. É por aqui que
+/// as telas de um paciente leem uma análise.
+final analiseDoPacienteProvider = FutureProvider.autoDispose
+    .family<ResultadoDaAnalise, ({String pacienteId, String analiseId})>(
+      (ref, chave) async => daPaciente(
+        await ref.watch(analiseProvider(chave.analiseId).future),
+        chave.pacienteId,
+      ),
+    );
+
 /// Todas as análises de um paciente, para a evolução.
 final analisesDoPacienteProvider = FutureProvider.autoDispose
     .family<List<ResultadoDaAnalise>, String>(
