@@ -11,6 +11,7 @@ import '../../pacientes/domain/paciente.dart';
 /// daqui, e nenhum dos dois decide conteúdo por conta própria.
 class ConteudoDoLaudo {
   const ConteudoDoLaudo({
+    required this.pacienteId,
     required this.nomeDoPaciente,
     required this.dataDeNascimento,
     required this.sexo,
@@ -24,6 +25,9 @@ class ConteudoDoLaudo {
     required this.exemplo,
   });
 
+  /// De quem é o laudo. O controlador confere com o paciente da tela antes
+  /// de gerar.
+  final String pacienteId;
   final String nomeDoPaciente;
   final DateTime? dataDeNascimento;
   final SexoDeReferencia? sexo;
@@ -50,29 +54,40 @@ class ConteudoDoLaudo {
   bool get rascunho => geradoEm == null;
 }
 
+/// Reúne o conteúdo do laudo de [resultado] para [paciente].
+///
+/// O paciente é OBRIGATÓRIO, e a análise precisa ser dele — ver
+/// `daPaciente`, que lança `AnaliseDeOutroPaciente` se não for. Antes, com o
+/// cadastro ausente, o laudo saía com o nome em branco, e nada impedia juntar
+/// o cadastro de um paciente com as medidas de outro (achados da revisão de
+/// 23/09).
 ConteudoDoLaudo montarConteudo({
   required ResultadoDaAnalise resultado,
-  required Paciente? paciente,
+  required Paciente paciente,
   required AvaliacaoCapeV? capeV,
   required String conclusao,
   required Profissional profissional,
   required CatalogoDeReferencias catalogo,
   required DateTime? geradoEm,
-}) => ConteudoDoLaudo(
-  nomeDoPaciente: paciente?.nome ?? '',
-  dataDeNascimento: paciente?.dataDeNascimento,
-  sexo: paciente?.sexo,
-  realizadaEm: resultado.realizadaEm,
-  medidas: lerMedidas(
-    resultado: resultado,
-    sexo: paciente?.sexo,
-    dataDeNascimento: paciente?.dataDeNascimento,
-    catalogo: catalogo,
-  ),
-  qualidade: resultado.qualidade,
-  capeV: capeV,
-  conclusao: conclusao.trim(),
-  profissional: profissional,
-  geradoEm: geradoEm,
-  exemplo: resultado.exemplo,
-);
+}) {
+  daPaciente(resultado, paciente.id);
+  return ConteudoDoLaudo(
+    pacienteId: paciente.id,
+    nomeDoPaciente: paciente.nome,
+    dataDeNascimento: paciente.dataDeNascimento,
+    sexo: paciente.sexo,
+    realizadaEm: resultado.realizadaEm,
+    medidas: lerMedidas(
+      resultado: resultado,
+      sexo: paciente.sexo,
+      dataDeNascimento: paciente.dataDeNascimento,
+      catalogo: catalogo,
+    ),
+    qualidade: resultado.qualidade,
+    capeV: capeV,
+    conclusao: conclusao.trim(),
+    profissional: profissional,
+    geradoEm: geradoEm,
+    exemplo: resultado.exemplo,
+  );
+}

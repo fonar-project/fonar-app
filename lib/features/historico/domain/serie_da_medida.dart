@@ -107,14 +107,25 @@ ComparacaoDasUltimas? compararUltimas(
 
 /// Para onde a medida foi de [anterior] a [atual].
 ///
-/// Diferença MENOR que o [limiar] é estável; do limiar para cima, mudou.
+/// Diferença MENOR que o [limiar] é estável; do limiar para cima, mudou. Valor
+/// igual é estável com qualquer limiar, inclusive zero — com limiar zero, a
+/// diferença zero não era "menor que o limiar" e caía em "desceu" (achado da
+/// revisão de 23/09).
+///
+/// Entrada que não dá base para comparar — valor ou limiar não finito,
+/// limiar negativo — não vira direção nenhuma: [DirecaoDaMedida.semComparacao].
 DirecaoDaMedida direcaoEntre(
   double anterior,
   double atual, {
   required double limiar,
 }) {
-  assert(limiar >= 0, 'Limiar de mudança negativo não faz sentido.');
+  if (!anterior.isFinite || !atual.isFinite) {
+    return DirecaoDaMedida.semComparacao;
+  }
+  if (!limiar.isFinite || limiar < 0) return DirecaoDaMedida.semComparacao;
   final diferenca = atual - anterior;
-  if (diferenca.abs() < limiar) return DirecaoDaMedida.estavel;
+  if (diferenca == 0 || diferenca.abs() < limiar) {
+    return DirecaoDaMedida.estavel;
+  }
   return diferenca > 0 ? DirecaoDaMedida.subiu : DirecaoDaMedida.desceu;
 }

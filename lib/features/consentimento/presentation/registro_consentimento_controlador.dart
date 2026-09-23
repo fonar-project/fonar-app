@@ -90,6 +90,9 @@ class RegistroConsentimentoControlador extends Notifier<EstadoRegistro> {
     }
 
     state = const EstadoRegistro(registrando: true);
+    // Guardado antes da espera — ver o mesmo cuidado no cadastro de paciente:
+    // com a tela fechada no meio do registro, o `ref` já foi descartado.
+    final container = ref.container;
     var registrou = false;
     EstadoRegistro fim;
     try {
@@ -108,7 +111,7 @@ class RegistroConsentimentoControlador extends Notifier<EstadoRegistro> {
 
     // A tela passa a mostrar "registrado" — inclusive se tiver sido fechada e
     // aberta de novo durante o registro.
-    if (registrou) ref.invalidate(consentimentoProvider(pacienteId));
+    if (registrou) container.invalidate(consentimentoProvider(pacienteId));
 
     if (!ref.mounted) return false;
     state = fim;

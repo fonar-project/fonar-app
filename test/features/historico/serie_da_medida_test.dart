@@ -97,6 +97,28 @@ void main() {
       expect(direcaoEntre(3.2, 3.12, limiar: 0.1), DirecaoDaMedida.estavel);
     });
 
+    test('valor igual é estável, inclusive com limiar zero', () {
+      // Achado da revisão de 23/09: dava "desceu".
+      expect(direcaoEntre(3, 3, limiar: 0), DirecaoDaMedida.estavel);
+      expect(direcaoEntre(3, 3, limiar: 0.1), DirecaoDaMedida.estavel);
+      expect(direcaoEntre(3, 3.01, limiar: 0), DirecaoDaMedida.subiu);
+    });
+
+    test('entrada inválida não vira direção', () {
+      for (final (anterior, atual, limiar) in [
+        (double.nan, 3.0, 0.1),
+        (3.0, double.infinity, 0.1),
+        (3.0, 4.0, double.nan),
+        (3.0, 4.0, -1.0),
+      ]) {
+        expect(
+          direcaoEntre(anterior, atual, limiar: limiar),
+          DirecaoDaMedida.semComparacao,
+          reason: '($anterior, $atual, $limiar)',
+        );
+      }
+    });
+
     test('do limiar para cima, mudou', () {
       expect(direcaoEntre(3, 3.5, limiar: 0.5), DirecaoDaMedida.subiu);
       expect(direcaoEntre(3.5, 3, limiar: 0.5), DirecaoDaMedida.desceu);

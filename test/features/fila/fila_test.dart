@@ -300,6 +300,30 @@ void main() {
       expect(fila.item.situacao, SituacaoDoEnvio.enviado);
     });
 
+    _testarFila('prazo vencido sem rede: espera a rede, e envia uma vez só', (
+      tester,
+      fila,
+    ) async {
+      fila.envio.falharCom(const FalhaDeConexao());
+      await fila.enfileirar();
+      await _assentar(tester);
+      expect(fila.item.situacao, SituacaoDoEnvio.aguardandoNovaTentativa);
+
+      fila.ligarRede(false);
+      await _assentar(tester);
+      // Passa bem do prazo, sem rede: nada é tentado.
+      await _passar(tester, fila, const Duration(minutes: 5));
+      expect(fila.envio.recebidos, hasLength(1));
+
+      fila.ligarRede(true);
+      await _assentar(tester);
+      expect(fila.envio.recebidos, hasLength(2));
+      expect(fila.item.situacao, SituacaoDoEnvio.enviado);
+
+      await _passar(tester, fila, const Duration(hours: 1));
+      expect(fila.envio.recebidos, hasLength(2));
+    });
+
     _testarFila('um envio por vez, do mais antigo para o mais novo', (
       tester,
       fila,
@@ -356,5 +380,41 @@ void main() {
 
       expect(fila.item.situacao, SituacaoDoEnvio.aguardandoNovaTentativa);
     });
+  });
+
+  test('offline com prazo vencido não gira temporizador sem pausa', () async {
+    // Reprodução da revisão de 23/09: com o prazo vencido e sem rede, a fila
+    // se reagendava centenas de vezes em poucos milissegundos.
+    final agora = DateTime(2026, 9, 23);
+    final repositorio = RepositorioFilaEmMemoria();
+    await repositorio.adicionar(
+      ItemDaFila(
+        id: 'envio-s',
+        pacienteId: 'p1',
+        nomeDoPaciente: 'Ana de Teste',
+        sessaoId: 's',
+        amostras: [_amostra],
+        criadoEm: agora,
+        situacao: SituacaoDoEnvio.aguardandoNovaTentativa,
+        proximaTentativa: agora.subtract(const Duration(seconds: 1)),
+      ),
+    );
+    var leiturasDoRelogio = 0;
+    final container = ProviderContainer(
+      overrides: [
+        conexaoOnlineProvider.overrideWithValue(false),
+        repositorioFilaProvider.overrideWithValue(repositorio),
+        relogioProvider.overrideWithValue(() {
+          leiturasDoRelogio++;
+          return agora;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    container.listen(filaControladorProvider, (_, _) {});
+    await container.read(filaControladorProvider.future);
+
+    await Future<void>.delayed(const Duration(milliseconds: 80));
+    expect(leiturasDoRelogio, lessThan(5));
   });
 }

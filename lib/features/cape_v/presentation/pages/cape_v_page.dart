@@ -15,6 +15,9 @@ import '../../../../design_system/widgets/app_escolha_unica.dart';
 import '../../../../design_system/widgets/app_estado.dart';
 import '../../../../design_system/widgets/app_mensagem_de_campo.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../../analise/data/repositorio_analises_placeholder.dart';
+import '../../../analise/domain/resultado_da_analise.dart';
+import '../../../analise/presentation/aviso_de_outro_paciente.dart';
 import '../../../pacientes/data/repositorio_pacientes_placeholder.dart';
 import '../../domain/avaliacao_cape_v.dart';
 import '../apresentacao_cape_v.dart';
@@ -59,7 +62,14 @@ class CapeVPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final analise = ref.watch(
+      analiseDoPacienteProvider((pacienteId: pacienteId, analiseId: analiseId)),
+    );
     final estado = ref.watch(capeVControladorProvider(analiseId));
+    void tentarDeNovo() {
+      ref.invalidate(analiseProvider(analiseId));
+      ref.invalidate(capeVControladorProvider(analiseId));
+    }
 
     return Scaffold(
       body: LayoutBuilder(
@@ -75,21 +85,24 @@ class CapeVPage extends ConsumerWidget {
                 compacta: compacta,
               ),
               Expanded(
-                child: switch (estado) {
-                  AsyncData(:final value) => _Formulario(
+                child: switch ((analise, estado)) {
+                  // A análise precisa ser deste paciente — ver `daPaciente`.
+                  (AsyncError(:final error), _)
+                      when error is AnaliseDeOutroPaciente =>
+                    AvisoDeOutroPaciente(aoVoltar: () => _voltar(context)),
+                  (AsyncError(), _) || (_, AsyncError()) => AppEstado.central(
+                    titulo: AppStrings.capeVErroCarregar,
+                    acao: AppBotao.secundario(
+                      rotulo: AppStrings.tentarNovamente,
+                      aoTocar: tentarDeNovo,
+                    ),
+                  ),
+                  (AsyncData(), AsyncData(:final value)) => _Formulario(
                     pacienteId: pacienteId,
                     analiseId: analiseId,
                     estado: value,
                     compacta: compacta,
                     aoRegistrar: () => _voltar(context),
-                  ),
-                  AsyncError() => AppEstado.central(
-                    titulo: AppStrings.capeVErroCarregar,
-                    acao: AppBotao.secundario(
-                      rotulo: AppStrings.tentarNovamente,
-                      aoTocar: () =>
-                          ref.invalidate(capeVControladorProvider(analiseId)),
-                    ),
                   ),
                   _ => const Center(
                     child: CircularProgressIndicator(
