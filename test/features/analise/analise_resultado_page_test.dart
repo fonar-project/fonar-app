@@ -87,6 +87,7 @@ Future<void> _abrir(
   AvaliacaoCapeV? capeV,
   Size tamanho = const Size(1440, 2000),
   double escala = 1,
+  String pacienteDaRota = 'p1',
 }) async {
   tester.view.physicalSize = tamanho;
   tester.view.devicePixelRatio = 1;
@@ -116,7 +117,10 @@ Future<void> _abrir(
       ],
       child: MaterialApp(
         theme: AppTheme.claro,
-        home: const AnaliseResultadoPage(pacienteId: 'p1', analiseId: 'an-1'),
+        home: AnaliseResultadoPage(
+          pacienteId: pacienteDaRota,
+          analiseId: 'an-1',
+        ),
       ),
     ),
   );
@@ -234,9 +238,21 @@ void main() {
     await _abrir(
       tester,
       resposta: () => const RepositorioAnalisesPlaceholder().buscar('x'),
+      // O resultado de exemplo pertence ao paciente "exemplo".
+      pacienteDaRota: 'exemplo',
     );
 
     expect(find.text(AppStrings.resultadoExemploTitulo), findsOneWidget);
+  });
+
+  testWidgets('análise de outro paciente não é mostrada', (tester) async {
+    // Achado da revisão de 23/09: as medidas de um paciente eram lidas com o
+    // perfil de outro.
+    await _abrir(tester, pacienteDaRota: 'outro-paciente');
+
+    expect(find.text(AppStrings.resultadoDeOutroPaciente), findsOneWidget);
+    expect(find.byType(AppStatusMedida), findsNothing);
+    expect(find.text('3,12'), findsNothing);
   });
 
   testWidgets('sem espectrograma, diz que não há imagem', (tester) async {

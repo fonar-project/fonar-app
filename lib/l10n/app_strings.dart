@@ -210,6 +210,12 @@ abstract final class AppStrings {
       'silêncio e deixe o aparelho na posição em que vai gravar.';
   static const afericaoMedir = 'Medir ruído ambiente';
   static const afericaoMedirDeNovo = 'Medir de novo';
+  static const afericaoLiberandoMicrofone = 'Liberando o microfone…';
+  static const afericaoMicrofoneDemorando =
+      'O microfone ainda não foi liberado';
+  static const afericaoMicrofoneDemorandoTexto =
+      'Medir de novo e gravar ficam travados até ele ser liberado. Se '
+      'continuar assim, saia desta tela e entre de novo.';
   static const afericaoMedindo = 'Medindo… mantenha silêncio.';
   static const afericaoEsperaGravacao =
       'Termine a gravação em andamento para medir de novo.';
@@ -298,6 +304,9 @@ abstract final class AppStrings {
       'usando o microfone e tente de novo.';
   static const tarefaFalhaFinalizar =
       'A gravação não pôde ser finalizada e foi descartada. Grave de novo.';
+  static const tarefaFalhaInterrompida =
+      'O microfone parou de responder no meio da gravação. Ela foi '
+      'descartada — grave de novo.';
 
   // O que a conferência encontrou. Diz o que fazer, não só o que houve.
   static const problemaArquivoIlegivel =
@@ -416,6 +425,10 @@ abstract final class AppStrings {
       'minutos.';
   static const resultadoAtualizar = 'Atualizar';
   static const resultadoFalhouTitulo = 'A análise não pôde ser concluída';
+  static const resultadoDeOutroPaciente = 'Esta análise não é deste paciente';
+  static const resultadoDeOutroPacienteTexto =
+      'O resultado aberto pertence a outro cadastro. Volte e abra a análise '
+      'a partir do paciente certo.';
   static const resultadoErroCarregar =
       'Não foi possível abrir o resultado desta análise.';
 
