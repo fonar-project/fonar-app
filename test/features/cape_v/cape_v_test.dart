@@ -1,15 +1,20 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fonar_app/app/router/app_routes.dart';
+import 'package:fonar_app/features/analise/data/repositorio_analises_placeholder.dart';
+import 'package:fonar_app/features/analise/domain/resultado_da_analise.dart';
 import 'package:fonar_app/core/network/conexao.dart';
 import 'package:fonar_app/core/relogio.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/features/cape_v/data/repositorio_cape_v_em_memoria.dart';
 import 'package:fonar_app/features/cape_v/domain/avaliacao_cape_v.dart';
 import 'package:fonar_app/features/cape_v/presentation/apresentacao_cape_v.dart';
+import 'package:fonar_app/features/cape_v/presentation/cape_v_controlador.dart';
 import 'package:fonar_app/features/cape_v/presentation/pages/cape_v_page.dart';
 import 'package:fonar_app/features/historico/domain/evolucao_da_medida.dart';
 import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_placeholder.dart';
@@ -20,9 +25,24 @@ Map<ParametroCapeV, NotaCapeV> _todasSemDesvio() => {
   for (final p in ParametroCapeV.values) p: const NotaCapeV(valor: 0),
 };
 
+/// Análises de teste: [dono] é o paciente a quem todas pertencem.
+class _Analises implements RepositorioAnalises {
+  _Analises({this.dono = 'p1'});
+  final String dono;
+
+  @override
+  Future<ResultadoDaAnalise> buscar(String analiseId) async =>
+      ResultadoDaAnalise(
+        id: analiseId,
+        pacienteId: dono,
+        situacao: SituacaoDaAnalise.concluida,
+      );
+}
+
 Future<RepositorioCapeVEmMemoria> _abrir(
   WidgetTester tester, {
   AvaliacaoCapeV? existente,
+  String donoDaAnalise = 'p1',
   Size tamanho = const Size(390, 2600),
   double escala = 1,
 }) async {
@@ -41,6 +61,9 @@ Future<RepositorioCapeVEmMemoria> _abrir(
     ProviderScope(
       overrides: [
         repositorioCapeVProvider.overrideWithValue(repositorio),
+        repositorioAnalisesProvider.overrideWithValue(
+          _Analises(dono: donoDaAnalise),
+        ),
         relogioProvider.overrideWithValue(() => DateTime(2026, 9, 23, 11)),
         conexaoOnlineProvider.overrideWithValue(true),
         pacientesProvider.overrideWith(
@@ -324,4 +347,107 @@ void main() {
       });
     }
   });
+
+  group('paciente da análise', () {
+    // Achado da revisão de 23/09: a CAPE-V era registrada com o paciente da
+    // rota sem conferir de quem era a análise.
+    testWidgets('análise de outro paciente: nada de formulário', (
+      tester,
+    ) async {
+      await _abrir(tester, donoDaAnalise: 'outro-paciente');
+
+      expect(find.text(AppStrings.resultadoDeOutroPaciente), findsOneWidget);
+      expect(_escalas, findsNothing);
+    });
+
+    test('o controlador também recusa, sem depender da tela', () async {
+      final repositorio = RepositorioCapeVEmMemoria();
+      final container = ProviderContainer(
+        overrides: [
+          repositorioCapeVProvider.overrideWithValue(repositorio),
+          repositorioAnalisesProvider.overrideWithValue(
+            _Analises(dono: 'outro-paciente'),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.listen(capeVControladorProvider('an-1'), (_, _) {});
+      await container.read(capeVControladorProvider('an-1').future);
+      final controlador = container.read(
+        capeVControladorProvider('an-1').notifier,
+      );
+      for (final p in ParametroCapeV.values) {
+        controlador.marcar(p, 0);
+      }
+
+      final registrou = await controlador.registrar(
+        pacienteId: 'p1',
+        comentarios: '',
+      );
+
+      expect(registrou, isFalse);
+      expect(await repositorio.daAnalise('an-1'), isNull);
+      expect(
+        container.read(capeVControladorProvider('an-1')).value?.erroGeral,
+        AppStrings.resultadoDeOutroPaciente,
+      );
+    });
+  });
+
+  test(
+    'tela fechada no meio do registro: sem erro, e o resumo atualiza',
+    () async {
+      // Achado da revisão de 23/09: a invalidação usava o `ref` descartado.
+      final repositorio = _RepositorioLento();
+      final container = ProviderContainer(
+        overrides: [
+          repositorioCapeVProvider.overrideWithValue(repositorio),
+          repositorioAnalisesProvider.overrideWithValue(_Analises()),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.listen(capeVDaAnaliseProvider('an-1'), (_, _) {});
+      expect(
+        await container.read(capeVDaAnaliseProvider('an-1').future),
+        isNull,
+      );
+
+      final tela = container.listen(
+        capeVControladorProvider('an-1'),
+        (_, _) {},
+      );
+      await container.read(capeVControladorProvider('an-1').future);
+      final controlador = container.read(
+        capeVControladorProvider('an-1').notifier,
+      );
+      for (final p in ParametroCapeV.values) {
+        controlador.marcar(p, 0);
+      }
+      final registrando = controlador.registrar(
+        pacienteId: 'p1',
+        comentarios: '',
+      );
+      await Future<void>.delayed(Duration.zero);
+      tela.close();
+      await container.pump();
+
+      repositorio.espera.complete();
+      await expectLater(registrando, completion(isTrue));
+      expect(
+        await container.read(capeVDaAnaliseProvider('an-1').future),
+        isNotNull,
+      );
+    },
+  );
+}
+
+/// Segura o registro até o teste soltar.
+class _RepositorioLento extends RepositorioCapeVEmMemoria {
+  final espera = Completer<void>();
+
+  @override
+  Future<void> registrar(AvaliacaoCapeV avaliacao) async {
+    await espera.future;
+    await super.registrar(avaliacao);
+  }
 }

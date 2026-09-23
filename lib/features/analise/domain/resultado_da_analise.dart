@@ -73,6 +73,23 @@ class ResultadoDaAnalise {
   final bool exemplo;
 }
 
+/// A análise pedida não é do paciente em que se está.
+class AnaliseDeOutroPaciente implements Exception {
+  const AnaliseDeOutroPaciente();
+}
+
+/// [resultado], se for de [pacienteId]; senão lança [AnaliseDeOutroPaciente].
+///
+/// Uma análise só é lida, avaliada ou laudada no contexto do paciente a que
+/// pertence. Sem esta conferência, as medidas de um paciente eram lidas com o
+/// perfil de outro, e um laudo podia sair com o nome de A e as medidas de B
+/// (achado da revisão de 23/09). Resultado, CAPE-V e laudo passam todos por
+/// aqui.
+ResultadoDaAnalise daPaciente(ResultadoDaAnalise resultado, String pacienteId) {
+  if (resultado.pacienteId != pacienteId) throw const AnaliseDeOutroPaciente();
+  return resultado;
+}
+
 /// De onde vêm os resultados.
 abstract interface class RepositorioAnalises {
   /// Lança só `AppException`.
