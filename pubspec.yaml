@@ -74,6 +74,15 @@ dependencies:
   # não se repete. Pacote oficial do time do Flutter.
   path_provider: ^2.1.6
 
+  # Gráfico de evolução das medidas entre sessões (US09). É o pacote que a
+  # stack do projeto já prevê (CLAUDE.md). Declara Android e Windows e é
+  # Dart puro, sem código nativo.
+  #
+  # NÃO desenha sinal: espectrograma e forma de onda continuam chegando como
+  # imagem pronta do servidor. Aqui ele só liga meia dúzia de números — um
+  # por sessão — que a API já calculou.
+  fl_chart: ^1.2.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

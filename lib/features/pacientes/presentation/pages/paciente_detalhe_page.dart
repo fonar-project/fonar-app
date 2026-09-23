@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../../../../design_system/widgets/tela_placeholder.dart';
 import '../../../../l10n/app_strings.dart';
 
-/// TODO: implementar detalhe do paciente.
+/// TODO: implementar detalhe do paciente. Ele deve levar à evolução
+/// (`AppRoutes.evolucaoNome`), que hoje só se alcança pelo resultado de uma
+/// análise.
 class PacienteDetalhePage extends StatelessWidget {
   const PacienteDetalhePage({required this.pacienteId, super.key});
 

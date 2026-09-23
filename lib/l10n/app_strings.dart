@@ -483,6 +483,78 @@ abstract final class AppStrings {
   static String capeVRegistradaEm(String data, String hora) =>
       'Registrada em $data, às $hora.';
 
+  // ------------------------------------------------------------ evolução --
+  static const evolucaoTitulo = 'Evolução';
+  static const resultadoVerEvolucao = 'Ver evolução do paciente';
+  static String evolucaoSessoes(int n, String primeira, String ultima) => n == 1
+      ? '1 sessão analisada, em $primeira.'
+      : '$n sessões analisadas, de $primeira a $ultima.';
+  static const evolucaoMedidaNoGrafico = 'Medida no gráfico';
+  static String evolucaoUnidade(String unidade) => 'Valores em $unidade.';
+  static const evolucaoVaziaTitulo = 'Nenhuma sessão analisada ainda';
+  static const evolucaoVaziaTexto =
+      'A evolução aparece depois da primeira análise concluída deste '
+      'paciente. Gravação que está na fila entra quando o resultado chegar.';
+  static const evolucaoErroCarregar =
+      'Não foi possível abrir a evolução deste paciente.';
+
+  static const evolucaoMaisRecente = 'Mais recente';
+  static const evolucaoAnterior = 'Anterior';
+  static const evolucaoUmValor =
+      'Só uma sessão com esta medida calculada: ainda não há o que comparar.';
+  static const evolucaoNenhumValor =
+      'O servidor não calculou esta medida em nenhuma sessão.';
+
+  /// Sem limiar de mudança validado, os valores ficam lado a lado e nenhuma
+  /// frase diz que a medida subiu, desceu ou ficou estável.
+  static const evolucaoSemLimiar =
+      'Sem leitura de mudança: ainda não foi definido quanto uma diferença '
+      'entre sessões precisa ter para contar como mudança.';
+  static const evolucaoSubiu = 'subiu';
+  static const evolucaoDesceu = 'desceu';
+  static const evolucaoFicouEstavel = 'ficou estável';
+
+  /// "AVQI desceu entre as duas sessões (melhorando)". A leitura entre
+  /// parênteses só aparece quando a medida tem sentido de melhora.
+  static String evolucaoDirecao(
+    String medida,
+    String direcao, {
+    String? leitura,
+  }) =>
+      '$medida $direcao entre as duas sessões'
+      '${leitura == null ? '' : ' ($leitura)'}.';
+
+  static String evolucaoGraficoDescricao(
+    String medida,
+    int n,
+    String primeira,
+    String ultima,
+  ) => n == 1
+      ? 'Gráfico de $medida com uma sessão, em $primeira. O valor está na '
+            'lista de sessões.'
+      : 'Gráfico da evolução de $medida em $n sessões, de $primeira a '
+            '$ultima. Os valores estão na lista de sessões.';
+  static String evolucaoFaixaLegenda(String faixa) =>
+      'Área sombreada: faixa de referência ($faixa), para o perfil do '
+      'paciente na sessão mais recente.';
+  static const evolucaoGireAparelho =
+      'Gire o aparelho para ver o gráfico maior.';
+  static const evolucaoSessoesTitulo = 'Sessões';
+  static String evolucaoAbrirSessao(String data) =>
+      'Abrir o resultado de $data';
+
+  static const evolucaoMostrarAoPaciente = 'Mostrar ao paciente';
+
+  // Modo paciente: a tela que o profissional vira para o paciente ver.
+  // TODO(clínico): o que o paciente vê, e com que palavras. Hoje: o gráfico da
+  // medida escolhida, as datas e os valores — sem classificação e sem leitura
+  // de melhora, que são conversa do profissional com ele.
+  static const modoPacienteTitulo = 'Evolução da sua voz';
+  static const modoPacienteExplicacao =
+      'Cada ponto é uma sessão de gravação. Quem interpreta estes números é '
+      'o seu fonoaudiólogo.';
+  static const modoPacienteSair = 'Voltar à tela do profissional';
+
   // ----------------------------------------------------- tendência AVQI --
   // TODO(clínico): "melhorando" e "piorando" vêm do protótipo e aguardam
   // revisão — é leitura da evolução, e o limiar do que conta como mudança
@@ -508,6 +580,13 @@ abstract final class AppStrings {
   /// "02 jul 2026". Dia com dois dígitos para as datas alinharem em coluna.
   static String data(DateTime d) =>
       '${d.day.toString().padLeft(2, '0')} ${_meses[d.month - 1]} ${d.year}';
+
+  /// "02 jul", ou "02 jul 26" com [comAno] — para eixo de gráfico, onde a
+  /// data inteira não cabe.
+  static String dataCurta(DateTime d, {bool comAno = false}) {
+    final base = '${d.day.toString().padLeft(2, '0')} ${_meses[d.month - 1]}';
+    return comAno ? '$base ${(d.year % 100).toString().padLeft(2, '0')}' : base;
+  }
 
   /// "09:05".
   static String hora(DateTime d) =>

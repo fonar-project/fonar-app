@@ -18,9 +18,10 @@ enum DirecaoDaMedida {
   estavel,
   desceu,
 
-  /// Menos de duas sessões: não há o que comparar. Estado de primeira classe,
-  /// pelo mesmo princípio de "sem faixa de referência" — sem base, a tela não
-  /// classifica.
+  /// Sem base para comparar: menos de duas sessões, ou nenhum limiar de
+  /// mudança definido para a medida (ver `LimiaresDeMudanca`). Estado de
+  /// primeira classe, pelo mesmo princípio de "sem faixa de referência" — sem
+  /// base, a tela não classifica.
   semComparacao,
 }
 

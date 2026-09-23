@@ -23,7 +23,6 @@ import '../../../pacientes/data/repositorio_pacientes_placeholder.dart';
 import '../../../pacientes/domain/paciente.dart';
 import '../../data/catalogo_de_referencias_vazio.dart';
 import '../../data/repositorio_analises_placeholder.dart';
-import '../../domain/faixa_de_referencia.dart';
 import '../../domain/leitura_do_resultado.dart';
 import '../../domain/resultado_da_analise.dart';
 import '../apresentacao_da_medida.dart';
@@ -206,17 +205,32 @@ class _Resultado extends ConsumerWidget {
               ],
               const SizedBox(height: AppSpacing.lg),
               _Secao(titulo: AppStrings.resultadoMedidasTitulo),
-              if (_motivoComum(medidas) case final motivo?) ...[
+              if (motivoComum(medidas) case final motivo?) ...[
                 AppSituacao(
                   icone: NomeIcone.semReferencia,
                   titulo: AppStrings.statusSemReferencia,
-                  texto: _explicar(motivo),
+                  texto: explicarSemClassificacao(motivo),
                 ),
                 const SizedBox(height: AppSpacing.md),
               ],
               _GradeDeMedidas(
                 medidas: medidas,
-                motivoJaDito: _motivoComum(medidas),
+                motivoJaDito: motivoComum(medidas),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              // A medida de hoje ganha sentido ao lado das anteriores.
+              Align(
+                alignment: Alignment.centerLeft,
+                child: AppBotao.secundario(
+                  rotulo: AppStrings.resultadoVerEvolucao,
+                  icone: NomeIcone.avancar,
+                  // `push`: o voltar da evolução traz de volta a este
+                  // resultado.
+                  aoTocar: () => context.pushNamed(
+                    AppRoutes.evolucaoNome,
+                    pathParameters: {AppRoutes.paramPacienteId: pacienteId},
+                  ),
+                ),
               ),
               const SizedBox(height: AppSpacing.xl),
               _Secao(titulo: AppStrings.capeVSecaoTitulo),
@@ -327,7 +341,7 @@ class _CartaoDaMedida extends StatelessWidget {
     final motivo = lida.semClassificacaoPorque;
     final explicacao = motivo == null || motivo == motivoJaDito
         ? null
-        : _explicar(motivo);
+        : explicarSemClassificacao(motivo);
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -365,7 +379,7 @@ class _CartaoDaMedida extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          AppStatusMedida(status: _status(lida.classificacao)),
+          AppStatusMedida(status: statusDaClassificacao(lida.classificacao)),
           if (faixa != null) ...[
             const SizedBox(height: AppSpacing.xs),
             Text(
@@ -401,25 +415,6 @@ class _CartaoDaMedida extends StatelessWidget {
       ),
     );
   }
-}
-
-String _explicar(SemClassificacaoPorque motivo) => switch (motivo) {
-  SemClassificacaoPorque.naoCalculada => AppStrings.resultadoNaoCalculadaTexto,
-  SemClassificacaoPorque.perfilIncompleto =>
-    AppStrings.resultadoPerfilIncompleto,
-  SemClassificacaoPorque.semFaixaValidada =>
-    AppStrings.resultadoSemFaixaValidada,
-};
-
-/// O motivo, quando TODAS as medidas calculadas estão sem classificação pelo
-/// mesmo motivo. Aí ele é dito uma vez, acima das medidas: seis cartões com a
-/// mesma frase são ruído, e o ruído esconde a medida que tem algo diferente.
-SemClassificacaoPorque? _motivoComum(List<MedidaLida> medidas) {
-  final motivos = {
-    for (final m in medidas)
-      if (m.valor != null) m.semClassificacaoPorque,
-  };
-  return motivos.length == 1 ? motivos.single : null;
 }
 
 /// A CAPE-V desta análise: o que foi marcado, ou o convite para marcar.
@@ -487,13 +482,6 @@ class _ResumoCapeV extends ConsumerWidget {
     );
   }
 }
-
-StatusMedida _status(ClassificacaoDaMedida c) => switch (c) {
-  ClassificacaoDaMedida.dentroDaFaixa => StatusMedida.dentroDaFaixa,
-  ClassificacaoDaMedida.limitrofe => StatusMedida.limitrofe,
-  ClassificacaoDaMedida.foraDaFaixa => StatusMedida.foraDaFaixa,
-  ClassificacaoDaMedida.semReferencia => StatusMedida.semReferencia,
-};
 
 /// Imagem pronta do servidor. O aplicativo não desenha espectrograma.
 ///

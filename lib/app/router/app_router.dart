@@ -10,6 +10,8 @@ import '../../features/captura/presentation/pages/captura_page.dart';
 import '../../features/consentimento/data/repositorio_consentimento_placeholder.dart';
 import '../../features/consentimento/presentation/pages/consentimento_page.dart';
 import '../../features/fila/presentation/pages/fila_page.dart';
+import '../../features/historico/presentation/pages/evolucao_modo_paciente_page.dart';
+import '../../features/historico/presentation/pages/evolucao_page.dart';
 import '../../features/historico/presentation/pages/historico_page.dart';
 import '../../features/pacientes/presentation/pages/novo_paciente_page.dart';
 import '../../features/pacientes/presentation/pages/paciente_detalhe_page.dart';
@@ -90,6 +92,23 @@ final routerProvider = Provider<GoRouter>((ref) {
                           state.pathParameters[AppRoutes.paramPacienteId]!,
                       analiseId:
                           state.pathParameters[AppRoutes.paramAnaliseId]!,
+                    ),
+                  ),
+                ],
+              ),
+              GoRoute(
+                name: AppRoutes.evolucaoNome,
+                path: AppRoutes.evolucaoCaminho,
+                builder: (context, state) => EvolucaoPage(
+                  pacienteId: state.pathParameters[AppRoutes.paramPacienteId]!,
+                ),
+                routes: [
+                  GoRoute(
+                    name: AppRoutes.modoPacienteNome,
+                    path: AppRoutes.modoPacienteCaminho,
+                    builder: (context, state) => EvolucaoModoPacientePage(
+                      pacienteId:
+                          state.pathParameters[AppRoutes.paramPacienteId]!,
                     ),
                   ),
                 ],

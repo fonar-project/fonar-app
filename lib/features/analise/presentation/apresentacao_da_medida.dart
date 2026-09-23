@@ -1,6 +1,8 @@
+import '../../../design_system/widgets/app_status_medida.dart';
 import '../../../l10n/app_strings.dart';
 import '../../historico/domain/evolucao_da_medida.dart';
 import '../domain/faixa_de_referencia.dart';
+import '../domain/leitura_do_resultado.dart';
 
 /// Como cada medida aparece: nome, descrição, unidade e casas decimais.
 ///
@@ -60,3 +62,22 @@ extension ApresentacaoDaMedida on MedidaAcustica {
     return 'a partir de ${_comUnidade(minimo!)}';
   }
 }
+
+/// Por que a medida está sem classificação, em uma frase para o profissional.
+String explicarSemClassificacao(SemClassificacaoPorque motivo) =>
+    switch (motivo) {
+      SemClassificacaoPorque.naoCalculada =>
+        AppStrings.resultadoNaoCalculadaTexto,
+      SemClassificacaoPorque.perfilIncompleto =>
+        AppStrings.resultadoPerfilIncompleto,
+      SemClassificacaoPorque.semFaixaValidada =>
+        AppStrings.resultadoSemFaixaValidada,
+    };
+
+/// O status do design system para cada classificação.
+StatusMedida statusDaClassificacao(ClassificacaoDaMedida c) => switch (c) {
+  ClassificacaoDaMedida.dentroDaFaixa => StatusMedida.dentroDaFaixa,
+  ClassificacaoDaMedida.limitrofe => StatusMedida.limitrofe,
+  ClassificacaoDaMedida.foraDaFaixa => StatusMedida.foraDaFaixa,
+  ClassificacaoDaMedida.semReferencia => StatusMedida.semReferencia,
+};

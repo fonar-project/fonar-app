@@ -87,3 +87,14 @@ MedidaLida _comCatalogo(MedidaCalculada m, FaixaDeReferencia? faixa) {
         : null,
   );
 }
+
+/// O motivo, quando TODAS as medidas com valor estão sem classificação pelo
+/// mesmo motivo. Aí ele é dito uma vez, acima das medidas: seis cartões com a
+/// mesma frase são ruído, e o ruído esconde a medida que tem algo diferente.
+SemClassificacaoPorque? motivoComum(Iterable<MedidaLida> medidas) {
+  final motivos = {
+    for (final m in medidas)
+      if (m.valor != null) m.semClassificacaoPorque,
+  };
+  return motivos.length == 1 ? motivos.single : null;
+}

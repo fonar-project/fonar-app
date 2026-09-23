@@ -77,4 +77,10 @@ class ResultadoDaAnalise {
 abstract interface class RepositorioAnalises {
   /// Lança só `AppException`.
   Future<ResultadoDaAnalise> buscar(String analiseId);
+
+  /// Todas as análises do paciente, em qualquer situação e ordem. Quem filtra
+  /// e ordena é quem usa — ver `sessoesAnalisadas`.
+  ///
+  /// Lança só `AppException`.
+  Future<List<ResultadoDaAnalise>> doPaciente(String pacienteId);
 }

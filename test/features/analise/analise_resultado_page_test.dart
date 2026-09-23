@@ -24,6 +24,9 @@ class _Repositorio implements RepositorioAnalises {
   final Future<ResultadoDaAnalise> Function() resposta;
   @override
   Future<ResultadoDaAnalise> buscar(String analiseId) => resposta();
+  @override
+  Future<List<ResultadoDaAnalise>> doPaciente(String pacienteId) async =>
+      const [];
 }
 
 /// Catálogo de TESTE, com números sem referência nenhuma: uma faixa por
