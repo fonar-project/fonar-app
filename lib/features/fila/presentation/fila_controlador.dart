@@ -176,8 +176,16 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
   }
 
   /// Acorda a fila na hora da próxima tentativa agendada, se houver.
+  ///
+  /// Sem conexão, nenhum relógio: quem acorda a fila é a volta da rede
+  /// ([_aoVoltarConexao]). Com um prazo já vencido, um temporizador armado
+  /// offline disparava na hora, achava a rede fora e se reagendava — um
+  /// ciclo sem pausa, gastando bateria justamente sem rede (achado da
+  /// revisão de 23/09).
   void _agendar() {
     _proxima?.cancel();
+    _proxima = null;
+    if (!ref.read(conexaoOnlineProvider)) return;
     final agendadas = [
       for (final i in _itens)
         if (i.situacao == SituacaoDoEnvio.aguardandoNovaTentativa &&

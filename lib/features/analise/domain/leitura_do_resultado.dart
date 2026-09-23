@@ -71,9 +71,14 @@ List<MedidaLida> lerMedidas({
           semClassificacaoPorque: SemClassificacaoPorque.perfilIncompleto,
         )
       else
-        _comCatalogo(m, catalogo.faixa(m.medida, perfil)),
+        _comCatalogo(m, _validaOuNula(catalogo.faixa(m.medida, perfil))),
   ];
 }
+
+/// Faixa inválida do catálogo conta como faixa ausente: a tela não mostra
+/// limite nem procedência de um dado que não pode classificar.
+FaixaDeReferencia? _validaOuNula(FaixaDeReferencia? faixa) =>
+    faixa != null && faixa.valida ? faixa : null;
 
 MedidaLida _comCatalogo(MedidaCalculada m, FaixaDeReferencia? faixa) {
   final classificacao = classificar(m.valor, faixa);

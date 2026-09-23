@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/error/app_exception.dart';
 import '../../../core/relogio.dart';
 import '../../../l10n/app_strings.dart';
+import '../../analise/data/repositorio_analises_placeholder.dart';
+import '../../analise/domain/resultado_da_analise.dart';
 import '../data/repositorio_cape_v_em_memoria.dart';
 import '../domain/avaliacao_cape_v.dart';
 
@@ -104,33 +106,45 @@ class CapeVControlador extends AsyncNotifier<EstadoCapeV> {
       return false;
     }
 
+    // Tudo o que se usa depois das esperas é lido ANTES: com a tela fechada
+    // no meio do registro, o `ref` deste controlador já foi descartado — o
+    // container, não (achado da revisão de 23/09).
+    final container = ref.container;
+    final agora = ref.read(relogioProvider);
+    final analises = ref.read(repositorioAnalisesProvider);
+    final avaliacoes = ref.read(repositorioCapeVProvider);
+
     state = AsyncData(atual.copiar(registrando: true, erroGeral: () => null));
     try {
-      await ref
-          .read(repositorioCapeVProvider)
-          .registrar(
-            AvaliacaoCapeV(
-              analiseId: analiseId,
-              pacienteId: pacienteId,
-              notas: atual.notas,
-              registradaEm: ref.read(relogioProvider)(),
-              comentarios: comentarios.trim(),
-            ),
-          );
+      // A conferência vale aqui, e não só na tela: nenhuma avaliação é
+      // registrada para uma análise de outro paciente.
+      daPaciente(await analises.buscar(analiseId), pacienteId);
+      await avaliacoes.registrar(
+        AvaliacaoCapeV(
+          analiseId: analiseId,
+          pacienteId: pacienteId,
+          notas: atual.notas,
+          registradaEm: agora(),
+          comentarios: comentarios.trim(),
+        ),
+      );
     } catch (e) {
       if (ref.mounted) {
         state = AsyncData(
           atual.copiar(
             registrando: false,
-            erroGeral: () =>
-                e is AppException ? e.mensagem : AppStrings.erroDesconhecido,
+            erroGeral: () => switch (e) {
+              AnaliseDeOutroPaciente() => AppStrings.resultadoDeOutroPaciente,
+              AppException() => e.mensagem,
+              _ => AppStrings.erroDesconhecido,
+            },
           ),
         );
       }
       return false;
     }
 
-    ref.invalidate(capeVDaAnaliseProvider(analiseId));
+    container.invalidate(capeVDaAnaliseProvider(analiseId));
     if (ref.mounted) state = AsyncData(atual.copiar(registrando: false));
     return true;
   }
