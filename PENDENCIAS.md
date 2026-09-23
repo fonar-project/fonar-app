@@ -1,6 +1,6 @@
 # Pendências abertas
 
-O que ficou em aberto das US02 a US11, reunido num lugar só e organizado por
+O que ficou em aberto das US02 a US12, reunido num lugar só e organizado por
 **quem precisa resolver**. Cada item aponta onde está no código — lá há um
 `TODO` com o mesmo assunto, e é lá que a correção acontece.
 
@@ -53,12 +53,11 @@ commit.
 
 | Pendência | US | Onde |
 |---|---|---|
-| **Numeração das US03 a US10 foi deduzida** das telas do protótipo e do índice de ícones — conferir com o backlog. A US11 (conta) veio do `TODO(US11)` que a equipe deixou no roteador. | 03–10 | — |
+| **Numeração das US03 a US10 foi deduzida** das telas do protótipo e do índice de ícones — conferir com o backlog. A US11 (conta) veio do `TODO(US11)` que a equipe deixou no roteador; a US12 (perfil do paciente) foi escolhida pelo Felipe. | 03–10 | — |
 | **Drift**: pacientes, consentimentos, gravações, fila, CAPE-V e laudos estão em memória e somem ao fechar o app. Decisão registrada: entra numa US própria, trocando só os repositórios. | 06 | todos os `TODO(drift)` |
 | Retomar a sessão de gravação em andamento ao voltar para a tela (hoje abre outra, e as gravações da anterior ficam órfãs no disco). | 05 | `captura/presentation/gravacao_controlador.dart` |
 | Retirada do consentimento: o termo promete, o app ainda não tem. | 03 | `consentimento/domain/consentimento.dart` |
 | Cadastro: queixa obrigatória e "salvar leva ao consentimento" foram decisões sem o protótipo. Faltam aviso de paciente duplicado e aviso ao sair com o formulário preenchido. | 02 | `pacientes/presentation/pages/novo_paciente_page.dart` |
-| Tela 02 do protótipo parece ser o **perfil do paciente** (com a situação do consentimento), ainda placeholder. Hoje a evolução só é alcançada pelo resultado de uma análise; o perfil deve levar a ela também. | 02, 09 | `pacientes/presentation/pages/paciente_detalhe_page.dart` |
 | Espectrograma em modo paisagem, tela cheia, no celular. | 07 | `analise/presentation/pages/analise_resultado_page.dart` |
 | "Sessão expirada" na fila deve levar ao login (depende do Firebase Auth). | 06 | `fila/presentation/pages/fila_page.dart` |
 | **Cada envio da fila levar o id de quem gravou** (uid do Firebase) e só subir na sessão dessa pessoa. Hoje sair pausa a fila e entrar de novo a retoma, mas o placeholder não distingue quem entrou. | 11 | `auth/data/sessao.dart` |

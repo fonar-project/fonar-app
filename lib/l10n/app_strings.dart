@@ -568,6 +568,45 @@ abstract final class AppStrings {
       'o seu fonoaudiólogo.';
   static const modoPacienteSair = 'Voltar à tela do profissional';
 
+  // ---------------------------------------------------- perfil do paciente --
+  static const perfilErroCarregar =
+      'Não foi possível abrir o perfil deste paciente.';
+  static const perfilNaoEncontrado = 'Paciente não encontrado neste aparelho';
+  static const perfilNaoEncontradoTexto =
+      'O cadastro pode ter sido feito em outro aparelho e ainda não '
+      'sincronizado.';
+  static const perfilVoltarParaLista = 'Voltar para a lista';
+  static String perfilQueixa(String queixa) => 'Queixa: $queixa';
+  static String perfilNascimento(String data, int idade) =>
+      'Nascimento: $data ($idade ${idade == 1 ? 'ano' : 'anos'})';
+  static const perfilNascimentoNaoInformado = 'Nascimento: não informado';
+  static String perfilSexo(String sexo) => 'Sexo: $sexo';
+  static const perfilSexoNaoInformado = 'Sexo: não informado';
+  static const perfilSemPerfilDeReferencia =
+      'Sem sexo ou data de nascimento, as medidas aparecem sem classificação.';
+
+  static const perfilNovaGravacao = 'Nova gravação';
+  static const perfilGravacaoBloqueada =
+      'Registre o consentimento para liberar a gravação.';
+  static const perfilRegistrarConsentimento = 'Registrar consentimento';
+  static const perfilVerEvolucao = 'Ver evolução';
+
+  static const perfilSessoesTitulo = 'Sessões';
+  static const perfilSemSessoes =
+      'Nenhuma sessão analisada ainda. Depois da primeira gravação enviada, '
+      'as análises aparecem aqui.';
+  static String perfilNaFila(int n) => n == 1
+      ? '1 gravação deste paciente aguarda envio na fila.'
+      : '$n gravações deste paciente aguardam envio na fila.';
+  static const perfilVerFila = 'Ver fila';
+  static const perfilAnaliseProcessando = 'Em análise no servidor';
+  static const perfilSemData = 'Sessão sem data';
+  static const perfilAnaliseFalhou = 'Análise não concluída';
+  static const perfilAmostrasAdequadas = 'Amostras adequadas';
+  static const perfilAmostraComProblema = 'Amostra com problema';
+  static String perfilLaudoGerado(String data) => 'Laudo gerado em $data';
+  static String perfilAbrirSessao(String data) => 'Abrir o resultado de $data';
+
   // --------------------------------------------------------------- laudo --
   static const laudoTitulo = 'Laudo';
   static const resultadoPrepararLaudo = 'Preparar laudo';

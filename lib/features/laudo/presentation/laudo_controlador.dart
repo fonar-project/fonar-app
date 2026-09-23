@@ -52,6 +52,7 @@ class LaudoControlador extends AsyncNotifier<EstadoDoLaudo> {
     try {
       // Lidos antes das esperas: com a tela fechada no meio da geração, o
       // `ref` deste controlador já foi descartado (revisão de 23/09).
+      final container = ref.container;
       final repositorio = ref.read(repositorioLaudosProvider);
       final gerador = ref.read(geradorDePdfProvider);
       final geradoEm = ref.read(relogioProvider)();
@@ -70,6 +71,8 @@ class LaudoControlador extends AsyncNotifier<EstadoDoLaudo> {
         pdf: pdf,
       );
       await repositorio.registrar(laudo);
+      // O perfil do paciente, embaixo na pilha, passa a mostrar o laudo.
+      container.invalidate(laudosDoPacienteProvider(pacienteId));
       if (ref.mounted) state = AsyncData(EstadoDoLaudo(laudo: laudo));
       return laudo;
     } catch (_) {

@@ -7,6 +7,13 @@ final repositorioLaudosProvider = Provider<RepositorioLaudos>(
   (ref) => RepositorioLaudosEmMemoria(),
 );
 
+/// Os laudos de um paciente, para o perfil dele.
+final laudosDoPacienteProvider = FutureProvider.autoDispose
+    .family<List<Laudo>, String>(
+      (ref, pacienteId) =>
+          ref.watch(repositorioLaudosProvider).doPaciente(pacienteId),
+    );
+
 /// PLACEHOLDER — some ao fechar o app.
 class RepositorioLaudosEmMemoria implements RepositorioLaudos {
   RepositorioLaudosEmMemoria();
@@ -19,4 +26,10 @@ class RepositorioLaudosEmMemoria implements RepositorioLaudos {
   @override
   Future<void> registrar(Laudo laudo) async =>
       _porAnalise[laudo.analiseId] = laudo;
+
+  @override
+  Future<List<Laudo>> doPaciente(String pacienteId) async => [
+    for (final l in _porAnalise.values)
+      if (l.pacienteId == pacienteId) l,
+  ];
 }

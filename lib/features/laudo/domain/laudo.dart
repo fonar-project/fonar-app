@@ -43,6 +43,9 @@ abstract interface class RepositorioLaudos {
 
   /// Registra, substituindo o anterior da mesma análise.
   Future<void> registrar(Laudo laudo);
+
+  /// Os laudos gerados para as análises de [pacienteId], em qualquer ordem.
+  Future<List<Laudo>> doPaciente(String pacienteId);
 }
 
 /// O que se confere antes de gerar o laudo.
