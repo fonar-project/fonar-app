@@ -187,6 +187,79 @@ abstract final class AppStrings {
       'Marque a concordância para registrar. Sem ela, a gravação continua '
       'bloqueada.';
 
+  // -------------------------------------------------- captura / medidor --
+  static const medidorRotulo = 'Nível do microfone';
+  static const medidorSemSinal = 'Sem sinal';
+  static const medidorBaixo = 'Baixo';
+  static const medidorAdequado = 'Sinal adequado';
+  static const medidorAlto = 'Alto';
+  static const medidorSaturando = 'Saturando';
+
+  /// Na aferição de ruído: diz o que é o número, sem julgar a sala — quem
+  /// julga é a conclusão, ao fim dos 5 segundos.
+  static const medidorAmbiente = 'Ruído da sala';
+
+  /// "−42 dBFS". Sinal de menos tipográfico, que não quebra do número.
+  static String nivelDbfs(double dbfs) => dbfs.isFinite
+      ? '${dbfs < -0.5 ? '−' : ''}${dbfs.abs().round()} dBFS'
+      : '— dBFS';
+
+  static const afericaoTitulo = 'Ruído ambiente';
+  static const afericaoExplicacao =
+      'Antes de gravar, o FONAR mede o ruído da sala por 5 segundos. Peça '
+      'silêncio e deixe o aparelho na posição em que vai gravar.';
+  static const afericaoMedir = 'Medir ruído ambiente';
+  static const afericaoMedirDeNovo = 'Medir de novo';
+  static const afericaoMedindo = 'Medindo… mantenha silêncio.';
+
+  static const afericaoSemPermissao = 'Sem permissão de microfone';
+  static const afericaoSemPermissaoTexto =
+      'Permita o uso do microfone pelo FONAR nas configurações do aparelho e '
+      'tente de novo.';
+  static const afericaoFalhou = 'Não foi possível abrir o microfone';
+  static const afericaoFalhouTexto =
+      'Confira se outro aplicativo está usando o microfone e tente de novo.';
+
+  static const afericaoMudo = 'O microfone não está captando som';
+
+  /// Diz o que fazer nas duas plataformas, sem perguntar qual é: o texto é o
+  /// mesmo em qualquer aparelho, e quem está num lê a sua parte.
+  static const afericaoMudoTexto =
+      'A gravação fica bloqueada até o microfone captar som. No Windows, abra '
+      'Configurações > Privacidade e segurança > Microfone e ative o acesso '
+      'ao microfone, inclusive para aplicativos da área de trabalho. No '
+      'Android, confira a permissão de microfone do FONAR. Depois, meça de '
+      'novo.';
+  static const afericaoRuidoAlto = 'Ruído ambiente acima do limite';
+  static String afericaoRuidoAltoTexto(String nivel, String limite) =>
+      'Nível típico da sala: $nivel (limite: $limite). Feche portas e '
+      'janelas, desligue ventilador ou ar-condicionado e meça de novo.';
+  static const afericaoSemRestricao = 'Ruído ambiente dentro do limite';
+  static String afericaoSemRestricaoTexto(String nivel) =>
+      'Nível típico da sala: $nivel.';
+
+  static const afericaoAjusteTitulo = 'O aparelho mudou o formato da captura';
+  static String afericaoAjusteTexto({
+    required int taxaUsada,
+    required int canaisUsados,
+    required int taxaPedida,
+    required int canaisPedidos,
+  }) =>
+      'Pedido: $taxaPedida Hz, $canaisPedidos '
+      '${canaisPedidos == 1 ? 'canal' : 'canais'}. Usado: $taxaUsada Hz, '
+      '$canaisUsados ${canaisUsados == 1 ? 'canal' : 'canais'}. Avise o '
+      'suporte antes de usar este aparelho em consulta.';
+
+  static const capturaIniciarGravacao = 'Iniciar gravação';
+  static const capturaBloqueadaMicrofone =
+      'Bloqueada: o microfone não está captando som.';
+  static const capturaBloqueadaSemAfericao =
+      'Meça o ruído ambiente antes de gravar.';
+
+  /// TODO(US05): remover quando a gravação das tarefas existir.
+  static const capturaGravacaoIndisponivel =
+      'A gravação das tarefas ainda não foi implementada (placeholder).';
+
   // ----------------------------------------------------- tendência AVQI --
   // TODO(clínico): "melhorando" e "piorando" vêm do protótipo e aguardam
   // revisão — é leitura da evolução, e o limiar do que conta como mudança

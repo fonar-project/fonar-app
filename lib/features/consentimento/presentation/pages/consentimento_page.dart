@@ -3,21 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
-import '../../../../core/network/conexao.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_colors.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
+import '../../../../design_system/widgets/app_cabecalho_de_tarefa.dart';
 import '../../../../design_system/widgets/app_caixa_de_marcacao.dart';
 import '../../../../design_system/widgets/app_campo_texto.dart';
 import '../../../../design_system/widgets/app_escolha_unica.dart';
 import '../../../../design_system/widgets/app_estado.dart';
 import '../../../../design_system/widgets/app_fundo.dart';
 import '../../../../design_system/widgets/app_icone.dart';
-import '../../../../design_system/widgets/app_indicador_conexao.dart';
 import '../../../../design_system/widgets/app_mensagem_de_campo.dart';
-import '../../../../design_system/widgets/app_toque.dart';
+import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../../pacientes/data/repositorio_pacientes_placeholder.dart';
 import '../../../pacientes/domain/paciente.dart';
@@ -96,7 +95,11 @@ class ConsentimentoPage extends ConsumerWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _Cabecalho(pacienteId: pacienteId, compacta: compacta),
+              AppCabecalhoDeTarefa(
+                titulo: AppStrings.consentimentoTitulo,
+                aoVoltar: () => _voltar(context),
+                compacta: compacta,
+              ),
               Expanded(child: conteudo),
             ],
           );
@@ -104,19 +107,6 @@ class ConsentimentoPage extends ConsumerWidget {
       ),
     );
   }
-}
-
-void _irParaGravacao(BuildContext context, String pacienteId) =>
-    context.goNamed(
-      AppRoutes.capturaNome,
-      pathParameters: {AppRoutes.paramPacienteId: pacienteId},
-    );
-
-class _Cabecalho extends ConsumerWidget {
-  const _Cabecalho({required this.pacienteId, required this.compacta});
-
-  final String pacienteId;
-  final bool compacta;
 
   void _voltar(BuildContext context) {
     if (context.canPop()) {
@@ -128,80 +118,13 @@ class _Cabecalho extends ConsumerWidget {
       );
     }
   }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final textos = Theme.of(context).textTheme;
-
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.lavandaClaro)),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Container(
-          constraints: BoxConstraints(minHeight: compacta ? 0 : 76),
-          padding: EdgeInsets.symmetric(
-            horizontal: compacta ? AppSpacing.xs : AppSpacing.lg,
-            vertical: AppSpacing.xs,
-          ),
-          alignment: Alignment.centerLeft,
-          child: Row(
-            children: [
-              Semantics(
-                label: AppStrings.voltar,
-                child: AppToque(
-                  aoTocar: () => _voltar(context),
-                  raio: AppRadius.bordaPequena,
-                  child: const SizedBox.square(
-                    dimension: AppSpacing.alvoDeToqueMinimo,
-                    child: Center(
-                      child: AppIcone(
-                        nome: NomeIcone.voltar,
-                        cor: AppColors.roxoProfundo,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.xxs),
-              // Wrap no espaço que sobra ao lado do voltar: com o texto do
-              // sistema ampliado, o indicador de conexão desce para a linha
-              // de baixo e o título quebra linha em vez de estourar.
-              Expanded(
-                child: Wrap(
-                  alignment: WrapAlignment.spaceBetween,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: AppSpacing.md,
-                  runSpacing: AppSpacing.xs,
-                  children: [
-                    Semantics(
-                      header: true,
-                      child: Text(
-                        AppStrings.consentimentoTitulo,
-                        style: compacta
-                            ? textos.titleLarge
-                            : textos.headlineSmall,
-                      ),
-                    ),
-                    // Esta tela não tem a barra lateral, então a conexão
-                    // aparece aqui em qualquer largura.
-                    Padding(
-                      padding: const EdgeInsets.only(right: AppSpacing.xs),
-                      child: AppIndicadorConexao(
-                        online: ref.watch(conexaoOnlineProvider),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
+
+void _irParaGravacao(BuildContext context, String pacienteId) =>
+    context.goNamed(
+      AppRoutes.capturaNome,
+      pathParameters: {AppRoutes.paramPacienteId: pacienteId},
+    );
 
 /// Área rolável com largura de leitura: o termo em linha de 1200 px não se lê.
 class _Rolagem extends StatelessWidget {
@@ -222,51 +145,6 @@ class _Rolagem extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 640),
           child: child,
         ),
-      ),
-    );
-  }
-}
-
-/// Situação do consentimento: ícone e texto, nunca só cor.
-class _Situacao extends StatelessWidget {
-  const _Situacao({
-    required this.icone,
-    required this.titulo,
-    required this.texto,
-  });
-
-  final NomeIcone icone;
-  final String titulo;
-  final String texto;
-
-  @override
-  Widget build(BuildContext context) {
-    final textos = Theme.of(context).textTheme;
-
-    return MergeSemantics(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Roxo, não verde nem vermelho: essas cores são só de status de
-          // medida e de saturação de áudio.
-          AppIcone(nome: icone, cor: AppColors.roxoProfundo, tamanho: 28),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(titulo, style: textos.titleMedium),
-                const SizedBox(height: AppSpacing.xxs),
-                Text(
-                  texto,
-                  style: textos.bodyMedium?.copyWith(
-                    color: AppColors.secundarioSobreCreme,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -306,7 +184,7 @@ class _Registrado extends StatelessWidget {
       children: [
         _NomeDoPaciente(paciente: paciente),
         const SizedBox(height: AppSpacing.lg),
-        _Situacao(
+        AppSituacao(
           icone: NomeIcone.confirmacao,
           titulo: AppStrings.consentimentoRegistrado,
           texto: AppStrings.consentimentoRegistradoTexto(
@@ -407,7 +285,7 @@ class _FormularioState extends ConsumerState<_Formulario> {
       children: [
         _NomeDoPaciente(paciente: widget.paciente),
         const SizedBox(height: AppSpacing.md),
-        const _Situacao(
+        const AppSituacao(
           icone: NomeIcone.negacao,
           titulo: AppStrings.consentimentoNaoRegistrado,
           texto: AppStrings.consentimentoNaoRegistradoTexto,

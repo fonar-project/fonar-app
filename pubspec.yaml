@@ -54,6 +54,18 @@ dependencies:
   # atrás de portal cativo aparece como conectado e não chega à API.
   connectivity_plus: ^7.3.1
 
+  # Captura de áudio. É o pacote que a stack do projeto já prevê (CLAUDE.md).
+  #
+  # Escolhido por três motivos: declara Android e Windows; deixa DESLIGAR
+  # ganho automático, supressão de ruído e cancelamento de eco, e escolher a
+  # fonte de áudio do Android — exigência da regra de captura; e avisa, pelo
+  # `setOnConfigChanged`, quando o aparelho troca a taxa ou os canais pedidos.
+  #
+  # NÃO é biblioteca de análise: não calcula nenhuma medida. A única leitura
+  # usada é o nível (amplitude), para o medidor e a aferição de ruído — a
+  # exceção permitida. Toda medida acústica continua no servidor.
+  record: ^7.1.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
