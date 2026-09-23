@@ -425,6 +425,10 @@ abstract final class AppStrings {
       'minutos.';
   static const resultadoAtualizar = 'Atualizar';
   static const resultadoFalhouTitulo = 'A análise não pôde ser concluída';
+  static const resultadoDeOutroPaciente = 'Esta análise não é deste paciente';
+  static const resultadoDeOutroPacienteTexto =
+      'O resultado aberto pertence a outro cadastro. Volte e abra a análise '
+      'a partir do paciente certo.';
   static const resultadoErroCarregar =
       'Não foi possível abrir o resultado desta análise.';
 

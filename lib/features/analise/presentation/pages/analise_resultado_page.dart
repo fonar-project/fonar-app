@@ -70,6 +70,18 @@ class AnaliseResultadoPage extends ConsumerWidget {
               Breakpoints.de(restricoes.maxWidth) == LarguraDeTela.compacta;
 
           final Widget conteudo = switch (analise) {
+            // A análise precisa ser do paciente da rota. Sem esta conferência,
+            // as medidas de um seriam lidas com o perfil — e mostradas com o
+            // nome — de outro (achado da revisão de 23/09).
+            AsyncData(:final value) when value.pacienteId != pacienteId =>
+              AppEstado.central(
+                titulo: AppStrings.resultadoDeOutroPaciente,
+                texto: AppStrings.resultadoDeOutroPacienteTexto,
+                acao: AppBotao.secundario(
+                  rotulo: AppStrings.voltar,
+                  aoTocar: () => _voltar(context),
+                ),
+              ),
             AsyncData(:final value) => switch (value.situacao) {
               SituacaoDaAnalise.processando => AppEstado.central(
                 titulo: AppStrings.resultadoProcessandoTitulo,

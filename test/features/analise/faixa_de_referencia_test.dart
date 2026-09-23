@@ -216,4 +216,50 @@ void main() {
       }
     }
   });
+
+  group('faixa inválida do catálogo não classifica', () {
+    // Achado da revisão de 23/09: com limite NaN, o valor caía em "dentro da
+    // faixa".
+    for (final (nome, faixa) in [
+      (
+        'limite NaN',
+        const FaixaDeReferencia(procedencia: 'Teste', maximo: double.nan),
+      ),
+      (
+        'limite infinito',
+        const FaixaDeReferencia(procedencia: 'Teste', minimo: double.infinity),
+      ),
+      (
+        'mínimo acima do máximo',
+        const FaixaDeReferencia(procedencia: 'Teste', minimo: 5, maximo: 1),
+      ),
+      (
+        'sem procedência',
+        const FaixaDeReferencia(procedencia: '  ', maximo: 5),
+      ),
+      (
+        'margem negativa',
+        const FaixaDeReferencia(
+          procedencia: 'Teste',
+          maximo: 5,
+          margemLimitrofe: -1,
+        ),
+      ),
+    ]) {
+      test(nome, () {
+        expect(faixa.valida, isFalse);
+        expect(classificar(3, faixa), ClassificacaoDaMedida.semReferencia);
+      });
+    }
+
+    test('faixa válida continua classificando', () {
+      const faixa = FaixaDeReferencia(
+        procedencia: 'Teste',
+        minimo: 1,
+        maximo: 5,
+      );
+      expect(faixa.valida, isTrue);
+      expect(classificar(3, faixa), ClassificacaoDaMedida.dentroDaFaixa);
+    });
+  });
 }

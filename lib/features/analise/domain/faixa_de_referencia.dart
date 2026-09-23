@@ -37,6 +37,26 @@ class FaixaDeReferencia {
   /// De onde veio a faixa: estudo, população, equipamento. Exibida ao
   /// profissional junto da classificação.
   final String procedencia;
+
+  /// A faixa pode classificar alguém?
+  ///
+  /// Conferido em tempo de execução, e não só pelo `assert` do construtor:
+  /// a faixa vai vir de um catálogo, e dado de catálogo pode chegar
+  /// quebrado. Comparar com um limite NaN dá sempre falso, e o valor caía em
+  /// "dentro da faixa" — achado da revisão de 23/09. Faixa inválida não
+  /// classifica: a medida fica sem referência, nunca "normal".
+  bool get valida {
+    final minimo = this.minimo;
+    final maximo = this.maximo;
+    final margem = margemLimitrofe;
+    if (procedencia.trim().isEmpty) return false;
+    if (minimo == null && maximo == null) return false;
+    if (minimo != null && !minimo.isFinite) return false;
+    if (maximo != null && !maximo.isFinite) return false;
+    if (minimo != null && maximo != null && minimo > maximo) return false;
+    if (margem != null && (!margem.isFinite || margem < 0)) return false;
+    return true;
+  }
 }
 
 /// Para quem a faixa vale.
@@ -90,10 +110,10 @@ enum ClassificacaoDaMedida {
 
 /// Classifica [valor] frente a [faixa].
 ///
-/// Sem faixa ou sem valor, [ClassificacaoDaMedida.semReferencia] — nunca um
-/// palpite. Limítrofe só existe quando o catálogo define a margem.
+/// Sem faixa válida ou sem valor, [ClassificacaoDaMedida.semReferencia] —
+/// nunca um palpite. Limítrofe só existe quando o catálogo define a margem.
 ClassificacaoDaMedida classificar(double? valor, FaixaDeReferencia? faixa) {
-  if (valor == null || !valor.isFinite || faixa == null) {
+  if (valor == null || !valor.isFinite || faixa == null || !faixa.valida) {
     return ClassificacaoDaMedida.semReferencia;
   }
   final minimo = faixa.minimo;
