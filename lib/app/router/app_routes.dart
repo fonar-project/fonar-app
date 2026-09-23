@@ -47,6 +47,10 @@ abstract final class AppRoutes {
   static const capeVNome = 'capeV';
   static const capeVCaminho = 'cape-v';
 
+  // /pacientes/:pacienteId/analise/:analiseId/laudo
+  static const laudoNome = 'laudo';
+  static const laudoCaminho = 'laudo';
+
   // /pacientes/:pacienteId/evolucao
   static const evolucaoNome = 'evolucao';
   static const evolucaoCaminho = 'evolucao';

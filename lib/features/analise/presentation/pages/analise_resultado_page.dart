@@ -238,6 +238,24 @@ class _Resultado extends ConsumerWidget {
               const SizedBox(height: AppSpacing.xl),
               _Secao(titulo: AppStrings.resultadoEspectrogramaTitulo),
               _Espectrograma(url: resultado.espectrogramaUrl),
+              const SizedBox(height: AppSpacing.xl),
+              // Por último: o laudo é o passo que fecha a sessão, depois de
+              // medidas, CAPE-V e espectrograma revistos.
+              _Secao(titulo: AppStrings.laudoTitulo),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: AppBotao.primario(
+                  rotulo: AppStrings.resultadoPrepararLaudo,
+                  icone: NomeIcone.avancar,
+                  aoTocar: () => context.goNamed(
+                    AppRoutes.laudoNome,
+                    pathParameters: {
+                      AppRoutes.paramPacienteId: pacienteId,
+                      AppRoutes.paramAnaliseId: resultado.id,
+                    },
+                  ),
+                ),
+              ),
             ],
           ),
         ),

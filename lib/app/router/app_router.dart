@@ -13,6 +13,7 @@ import '../../features/fila/presentation/pages/fila_page.dart';
 import '../../features/historico/presentation/pages/evolucao_modo_paciente_page.dart';
 import '../../features/historico/presentation/pages/evolucao_page.dart';
 import '../../features/historico/presentation/pages/historico_page.dart';
+import '../../features/laudo/presentation/pages/laudo_page.dart';
 import '../../features/pacientes/presentation/pages/novo_paciente_page.dart';
 import '../../features/pacientes/presentation/pages/paciente_detalhe_page.dart';
 import '../../features/pacientes/presentation/pages/pacientes_list_page.dart';
@@ -88,6 +89,16 @@ final routerProvider = Provider<GoRouter>((ref) {
                     name: AppRoutes.capeVNome,
                     path: AppRoutes.capeVCaminho,
                     builder: (context, state) => CapeVPage(
+                      pacienteId:
+                          state.pathParameters[AppRoutes.paramPacienteId]!,
+                      analiseId:
+                          state.pathParameters[AppRoutes.paramAnaliseId]!,
+                    ),
+                  ),
+                  GoRoute(
+                    name: AppRoutes.laudoNome,
+                    path: AppRoutes.laudoCaminho,
+                    builder: (context, state) => LaudoPage(
                       pacienteId:
                           state.pathParameters[AppRoutes.paramPacienteId]!,
                       analiseId:

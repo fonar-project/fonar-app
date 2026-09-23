@@ -83,6 +83,19 @@ dependencies:
   # por sessão — que a API já calculou.
   fl_chart: ^1.2.0
 
+  # Laudo em PDF, montado no próprio aplicativo (US10). Decisão registrada:
+  # gerar no app, e não no servidor, para funcionar sem conexão depois que o
+  # resultado já chegou.
+  #
+  # `pdf`: Dart puro, licença Apache 2.0 — não é GPL, e pode ir dentro do
+  # executável. Monta o documento; não toca em áudio.
+  #
+  # `printing`: pré-visualização do A4, folha de compartilhar e diálogo de
+  # impressão, em Android e Windows com o mesmo código. Licença Apache 2.0. No
+  # Windows, o build baixa o pdfium (BSD) para rasterizar a pré-visualização.
+  pdf: ^3.13.1
+  printing: ^5.15.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

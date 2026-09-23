@@ -555,6 +555,110 @@ abstract final class AppStrings {
       'o seu fonoaudiólogo.';
   static const modoPacienteSair = 'Voltar à tela do profissional';
 
+  // --------------------------------------------------------------- laudo --
+  static const laudoTitulo = 'Laudo';
+  static const resultadoPrepararLaudo = 'Preparar laudo';
+  static const laudoErroCarregar =
+      'Não foi possível abrir o laudo desta análise.';
+
+  static const laudoConferenciaTitulo = 'Antes de gerar';
+  static const laudoConferenciaOk = 'Resolvido';
+  static const laudoConferenciaPendente = 'Pendente — impede gerar';
+  static const laudoConferenciaAviso = 'Aviso — não impede gerar';
+
+  // Cada item: o que é, e o que fazer quando não está resolvido.
+  static const laudoItemConsentimento = 'Consentimento registrado';
+  static const laudoItemConsentimentoFalta =
+      'Não há consentimento registrado para este paciente. Registre antes de '
+      'gerar o laudo.';
+  static const laudoItemAnalise = 'Análise concluída';
+  static const laudoItemAnaliseFalta =
+      'A análise ainda não terminou no servidor.';
+  static const laudoItemQualidade = 'Amostras adequadas para análise';
+  static const laudoItemQualidadeAviso =
+      'Alguma amostra teve problema. O laudo informa qual.';
+  static const laudoItemCapeV = 'CAPE-V registrada';
+  static const laudoItemCapeVAviso =
+      'Sem CAPE-V, o laudo sai só com as medidas acústicas.';
+  static const laudoItemConclusao = 'Conclusão do profissional';
+  static const laudoItemConclusaoFalta = 'Escreva a conclusão abaixo.';
+
+  static const laudoIrParaConsentimento = 'Registrar consentimento';
+  static const laudoIrParaCapeV = 'Registrar CAPE-V';
+
+  static const laudoCampoConclusao = 'Conclusão do profissional';
+  static const laudoConclusaoApoio =
+      'Escrita por você. O FONAR não escreve nem sugere conclusão.';
+
+  static const laudoGerar = 'Gerar laudo';
+  static const laudoGerando = 'Gerando…';
+  static const laudoGerarBloqueado =
+      'Resolva os itens pendentes da conferência para gerar.';
+  static String laudoGeradoEm(String data, String hora) =>
+      'Laudo gerado em $data, às $hora.';
+  static const laudoTextoMudou =
+      'A conclusão mudou depois da última geração. Gere de novo para o PDF '
+      'incluir a mudança.';
+  static const laudoCompartilhar = 'Abrir ou compartilhar o PDF';
+  static const laudoImprimir = 'Imprimir ou salvar em PDF';
+  static const laudoErroGerar =
+      'Não foi possível gerar o laudo. Tente de novo.';
+  static const laudoErroSaida =
+      'Não foi possível abrir o PDF neste aparelho. Tente de novo.';
+
+  static const laudoPreviaTitulo = 'Pré-visualização';
+  static const laudoResumoTitulo = 'O que vai no laudo';
+  static String laudoResumoMedidas(int n) =>
+      n == 1 ? '1 medida acústica' : '$n medidas acústicas';
+  static const laudoResumoComCapeV = 'Avaliação CAPE-V';
+  static const laudoResumoSemCapeV = 'Sem avaliação CAPE-V';
+  static const laudoResumoConclusao = 'Conclusão do profissional';
+  static const laudoResumoSemConclusao = 'Conclusão ainda não escrita';
+
+  // No documento.
+  static const laudoDocTitulo = 'Laudo de avaliação vocal';
+  static const laudoDocRascunho =
+      'RASCUNHO — pré-visualização, ainda não gerado';
+  static const laudoDocExemplo =
+      'DADOS DE EXEMPLO — documento sem valor clínico';
+  static const laudoDocIdentificacao = 'Identificação';
+  static const laudoDocPaciente = 'Paciente';
+  static const laudoDocNascimento = 'Data de nascimento';
+  static const laudoDocSexo = 'Sexo';
+  static const laudoDocNaoInformado = 'Não informado';
+  static const laudoDocGravacao = 'Data da gravação';
+  static const laudoDocMedidas = 'Medidas acústicas';
+  static const laudoDocColunaMedida = 'Medida';
+  static const laudoDocColunaValor = 'Valor';
+  static const laudoDocColunaFaixa = 'Faixa de referência';
+  static const laudoDocColunaSituacao = 'Situação';
+  static const laudoDocSemFaixa = '—';
+  static const laudoDocQualidade = 'Qualidade das amostras';
+  static const laudoDocCapeV = 'Avaliação perceptivo-auditiva (CAPE-V)';
+  static const laudoDocCapeVNaoRegistrada = 'Não registrada nesta sessão.';
+  static const laudoDocColunaParametro = 'Parâmetro';
+  static const laudoDocColunaNota = 'Nota (0–100)';
+  static const laudoDocColunaConsistencia = 'Consistência';
+  static const laudoDocColunaSentido = 'Sentido';
+  static const laudoDocComentarios = 'Comentários';
+  static const laudoDocConclusao = 'Conclusão do profissional';
+  static String laudoDocGeradoEm(String data, String hora) =>
+      'Gerado em $data, às $hora.';
+
+  /// Rodapé de toda página: de onde vêm as medidas e de quem é a conclusão.
+  static const laudoDocRodape =
+      'Medidas acústicas calculadas no servidor com o motor do Praat. '
+      'Ferramenta de apoio à decisão: a interpretação e a conclusão são do '
+      'profissional que assina.';
+  static String laudoDocPagina(int atual, int total) =>
+      'Página $atual de $total';
+
+  /// Sem o nome do paciente, de propósito: o nome do arquivo aparece em
+  /// pasta, e-mail e histórico de compartilhamento.
+  static String laudoNomeDoArquivo(DateTime d) =>
+      'laudo-fonar-${d.year}-${d.month.toString().padLeft(2, '0')}-'
+      '${d.day.toString().padLeft(2, '0')}.pdf';
+
   // ----------------------------------------------------- tendência AVQI --
   // TODO(clínico): "melhorando" e "piorando" vêm do protótipo e aguardam
   // revisão — é leitura da evolução, e o limiar do que conta como mudança

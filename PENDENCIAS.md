@@ -1,6 +1,6 @@
 # Pendências abertas
 
-O que ficou em aberto das US02 a US09, reunido num lugar só e organizado por
+O que ficou em aberto das US02 a US10, reunido num lugar só e organizado por
 **quem precisa resolver**. Cada item aponta onde está no código — lá há um
 `TODO` com o mesmo assunto, e é lá que a correção acontece.
 
@@ -22,6 +22,8 @@ commit.
 | CAPE-V: esconder o número enquanto se marca, como na folha de papel? | 08 | `cape_v/presentation/pages/cape_v_page.dart` |
 | **Limiar de mudança de cada medida** — quanto uma diferença entre sessões precisa ter para contar como mudança. Até lá a evolução mostra os valores lado a lado e não diz que a medida subiu, desceu ou ficou estável. | 09 | `historico/data/limiares_de_mudanca_indefinidos.dart` |
 | "Melhorando" / "piorando" na tendência do AVQI (lista) e na evolução. | 01, 09 | `l10n/app_strings.dart` |
+| Laudo: quais itens da conferência **impedem** gerar e quais só avisam (hoje impedem consentimento, análise concluída e conclusão escrita; CAPE-V e amostra com problema só avisam). | 10 | `laudo/domain/laudo.dart` |
+| Laudo: título, seções e ordem do documento — conferir com o modelo que a orientação espera. | 10 | `laudo/presentation/pdf_do_laudo.dart` |
 | Modo paciente: o que o paciente vê e com que palavras. Hoje: gráfico da medida escolhida, datas e valores — sem classificação e sem leitura de melhora. | 09 | `l10n/app_strings.dart`, `historico/presentation/pages/evolucao_modo_paciente_page.dart` |
 
 ## Orientação jurídica
@@ -31,6 +33,8 @@ commit.
 | **Texto do termo de consentimento** — provisório, marcado na tela. Ao trocar, mudar também a versão do termo. | 03 | `l10n/app_strings.dart`, `consentimento/data/repositorio_consentimento_placeholder.dart` |
 | Quando o responsável legal é obrigatório, e se o registro precisa de mais dados dele. | 03 | `consentimento/domain/consentimento.dart` |
 | WAV gravados ficam sem criptografia na área privada do app: precisa cifrar em repouso? | 05 | `captura/data/gravador_record.dart` |
+| **PDF do laudo na pasta temporária**: para compartilhar, o `printing` grava o arquivo na TEMP (no Windows, fica lá depois de aberto). Apagar depois, ou salvar só onde o profissional escolher? | 10 | `laudo/data/saida_do_laudo.dart` |
+| Gerar o laudo de novo substitui o anterior. Laudo já entregue precisa ficar guardado como foi (versões)? Assinatura digital? | 10 | `laudo/domain/laudo.dart` |
 
 ## API de análise (backend)
 
@@ -48,13 +52,14 @@ commit.
 | Pendência | US | Onde |
 |---|---|---|
 | **Numeração das US03 a US09 foi deduzida** das telas do protótipo e do índice de ícones — conferir com o backlog. | 03–09 | — |
-| **Drift**: pacientes, consentimentos, gravações, fila e CAPE-V estão em memória e somem ao fechar o app. Decisão registrada: entra numa US própria, trocando só os repositórios. | 06 | todos os `TODO(drift)` |
+| **Drift**: pacientes, consentimentos, gravações, fila, CAPE-V e laudos estão em memória e somem ao fechar o app. Decisão registrada: entra numa US própria, trocando só os repositórios. | 06 | todos os `TODO(drift)` |
 | Retomar a sessão de gravação em andamento ao voltar para a tela (hoje abre outra, e as gravações da anterior ficam órfãs no disco). | 05 | `captura/presentation/gravacao_controlador.dart` |
 | Retirada do consentimento: o termo promete, o app ainda não tem. | 03 | `consentimento/domain/consentimento.dart` |
 | Cadastro: queixa obrigatória e "salvar leva ao consentimento" foram decisões sem o protótipo. Faltam aviso de paciente duplicado e aviso ao sair com o formulário preenchido. | 02 | `pacientes/presentation/pages/novo_paciente_page.dart` |
 | Tela 02 do protótipo parece ser o **perfil do paciente** (com a situação do consentimento), ainda placeholder. Hoje a evolução só é alcançada pelo resultado de uma análise; o perfil deve levar a ela também. | 02, 09 | `pacientes/presentation/pages/paciente_detalhe_page.dart` |
 | Espectrograma em modo paisagem, tela cheia, no celular. | 07 | `analise/presentation/pages/analise_resultado_page.dart` |
 | "Sessão expirada" na fila deve levar ao login (depende do Firebase Auth). | 06 | `fila/presentation/pages/fila_page.dart` |
+| Espectrograma no laudo: depende do contrato do resultado com a imagem. | 10 | `laudo/presentation/pdf_do_laudo.dart` |
 | README e a seção "Estado atual" do CLAUDE.md ainda dizem que só existe o esqueleto. | — | `README.md`, `CLAUDE.md` |
 
 ## Verificar em aparelho real
@@ -70,6 +75,7 @@ rede simulados.
 | O WAV gravado sai PCM 16 bits, 44,1 kHz, mono — e a conferência aceita. | 05 | `captura/data/gravador_record.dart` |
 | Se o `setOnConfigChanged` avisa quando o aparelho troca a taxa. | 04 | `captura/data/fonte_de_nivel_record.dart` |
 | Fila: desligar a rede, mandar uma gravação, religar — ela sobe sozinha? | 06 | `fila/presentation/fila_controlador.dart` |
+| Laudo: "abrir ou compartilhar" e "imprimir ou salvar" no Android e no Windows, e a pré-visualização A4 no Windows (o `printing` baixa o pdfium no build). | 10 | `laudo/data/saida_do_laudo.dart`, `laudo/presentation/laudo_controlador.dart` |
 
 ## Já existiam antes da US02
 
