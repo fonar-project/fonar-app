@@ -134,7 +134,7 @@ Future<GoRouter> _abrir(
       // Sem rede: a fila guarda e não envia.
       conexaoOnlineProvider.overrideWithValue(false),
       relogioProvider.overrideWithValue(() => DateTime(2026, 9, 23)),
-      pacientesProvider.overrideWith((ref) async => [?(paciente ?? _paciente)]),
+      pacientesProvider.overrideWith((ref) async => [paciente ?? _paciente]),
       repositorioConsentimentoProvider.overrideWithValue(
         _Consentimentos(tem: consentimento),
       ),
