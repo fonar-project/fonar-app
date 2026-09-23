@@ -6,6 +6,7 @@ import '../../design_system/widgets/tela_placeholder.dart';
 import '../../features/analise/presentation/pages/analise_resultado_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/captura/presentation/pages/captura_page.dart';
+import '../../features/consentimento/data/repositorio_consentimento_placeholder.dart';
 import '../../features/consentimento/presentation/pages/consentimento_page.dart';
 import '../../features/historico/presentation/pages/historico_page.dart';
 import '../../features/pacientes/presentation/pages/novo_paciente_page.dart';
@@ -32,12 +33,6 @@ final routerProvider = Provider<GoRouter>((ref) {
     // TODO(auth): redirect que manda para /login quando não há sessão, e tira
     // de /login quando já há. Vai depender de um provider de estado de
     // autenticação (Firebase Auth) + `refreshListenable`.
-    //
-    // TODO(LGPD — bloqueio técnico): a rota de captura não pode ser alcançável
-    // sem consentimento registrado para aquele paciente. O bloqueio é aqui, no
-    // redirect, não um aviso na tela de captura: se o consentimento não estiver
-    // registrado, redirecionar para /pacientes/:pacienteId/consentimento.
-    // Áudio de voz vinculado a paciente é dado pessoal sensível.
     routes: [
       GoRoute(
         name: AppRoutes.loginNome,
@@ -72,6 +67,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 name: AppRoutes.capturaNome,
                 path: AppRoutes.capturaCaminho,
+                redirect: (context, state) => _exigirConsentimento(ref, state),
                 builder: (context, state) => CapturaPage(
                   pacienteId: state.pathParameters[AppRoutes.paramPacienteId]!,
                 ),
@@ -118,3 +114,35 @@ final routerProvider = Provider<GoRouter>((ref) {
     // TODO: tela de erro própria, em pt-BR, no lugar da padrão do go_router.
   );
 });
+
+/// BLOQUEIO TÉCNICO da LGPD: sem consentimento registrado, a gravação não
+/// abre — quem tenta chegar nela vai parar no consentimento do paciente.
+///
+/// Mora aqui, no roteador, e não na tela de gravação, de propósito. Um aviso
+/// na tela pode ser ignorado, e uma verificação dentro da tela pode ser
+/// esquecida por quem a reescrever; o redirect vale para QUALQUER caminho que
+/// leve à gravação — botão, link, voltar do navegador, rota digitada no
+/// desktop. Áudio de voz vinculado a paciente é dado pessoal sensível.
+///
+/// Pergunta ao repositório a cada navegação, sem cache: um consentimento
+/// acabado de registrar precisa liberar a gravação na mesma hora, e um
+/// revogado precisa bloqueá-la na mesma hora.
+///
+/// Falha FECHADA: se a consulta der erro, o bloqueio vale como se não houvesse
+/// consentimento. Na dúvida, não se grava — a tela de consentimento mostra o
+/// erro e deixa tentar de novo.
+Future<String?> _exigirConsentimento(Ref ref, GoRouterState state) async {
+  final pacienteId = state.pathParameters[AppRoutes.paramPacienteId]!;
+  try {
+    final consentimento = await ref
+        .read(repositorioConsentimentoProvider)
+        .buscar(pacienteId);
+    if (consentimento != null) return null;
+  } catch (_) {
+    // Segue para o bloqueio.
+  }
+  return state.namedLocation(
+    AppRoutes.consentimentoNome,
+    pathParameters: {AppRoutes.paramPacienteId: pacienteId},
+  );
+}

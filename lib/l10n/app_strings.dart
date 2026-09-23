@@ -123,6 +123,70 @@ abstract final class AppStrings {
       'Escolha uma opção. Se o paciente preferir, use “Não informar”.';
   static const cadastroInformeQueixa = 'Informe a queixa principal.';
 
+  // --------------------------------------------------------- consentimento --
+  static const voltar = 'Voltar';
+  static String consentimentoPaciente(String nome) => 'Paciente: $nome';
+  static const consentimentoMostreAoPaciente =
+      'Mostre esta tela ao paciente, ou leia o termo em voz alta.';
+
+  // TODO(jurídico): TEXTO PROVISÓRIO do termo, escrito para o fluxo funcionar
+  // — não foi revisado juridicamente e não deve ir para produção assim. Ao
+  // trocar, mude também `versaoAtualDoTermo` no repositório de consentimento.
+  static const consentimentoTermoTitulo =
+      'Termo de consentimento (texto provisório)';
+  static const consentimentoTermoItens = [
+    'Sua voz será gravada durante esta consulta.',
+    'A gravação é enviada a um servidor, que calcula medidas acústicas da '
+        'voz. O profissional usa essas medidas como apoio à avaliação; o '
+        'sistema não emite diagnóstico.',
+    'A gravação e as medidas ficam vinculadas ao seu cadastro. Voz é dado '
+        'pessoal sensível e é tratada conforme a LGPD.',
+    'Você pode retirar este consentimento a qualquer momento, pedindo ao '
+        'profissional.',
+  ];
+
+  static const consentimentoCampoQuem = 'Quem autoriza';
+  static const consentimentoQuemPaciente = 'O próprio paciente';
+  static const consentimentoQuemResponsavel = 'Responsável legal';
+  static const consentimentoQuemApoio =
+      'Quando o paciente não pode autorizar sozinho — por exemplo, uma '
+      'criança —, quem autoriza é o responsável legal.';
+  static const consentimentoCampoResponsavel = 'Nome do responsável legal';
+  static const consentimentoConcordancia =
+      'Quem autoriza leu ou ouviu o termo e concorda com a gravação e com o '
+      'envio para análise.';
+  static const consentimentoRegistrar = 'Registrar consentimento';
+  static const consentimentoRegistrando = 'Registrando…';
+
+  static const consentimentoNaoRegistrado = 'Consentimento não registrado';
+  static const consentimentoNaoRegistradoTexto =
+      'A gravação fica bloqueada até o consentimento ser registrado.';
+  static const consentimentoRegistrado = 'Consentimento registrado';
+  static String consentimentoRegistradoTexto({
+    required String data,
+    required String hora,
+    required String quem,
+    required String versao,
+  }) => 'Em $data, às $hora, $quem. Versão do termo: $versao.';
+  static const consentimentoPeloPaciente = 'pelo próprio paciente';
+  static String consentimentoPeloResponsavel(String nome) =>
+      'por $nome (responsável legal)';
+  static const consentimentoIniciarGravacao = 'Iniciar gravação';
+
+  static const consentimentoErroCarregar =
+      'Não foi possível verificar o consentimento deste paciente.';
+  static const consentimentoPacienteNaoEncontrado =
+      'Paciente não encontrado neste aparelho';
+  static const consentimentoVoltarParaLista = 'Voltar para a lista';
+
+  static const consentimentoEscolhaQuem =
+      'Escolha quem autoriza: o próprio paciente ou o responsável legal.';
+  static const consentimentoInformeResponsavel =
+      'Informe o nome do responsável legal.';
+  static const consentimentoMarqueConcordancia =
+      'Marque a concordância para registrar. Sem ela, a gravação continua '
+      'bloqueada.';
+
   // ----------------------------------------------------- tendência AVQI --
   // TODO(clínico): "melhorando" e "piorando" vêm do protótipo e aguardam
   // revisão — é leitura da evolução, e o limiar do que conta como mudança
@@ -148,6 +212,11 @@ abstract final class AppStrings {
   /// "02 jul 2026". Dia com dois dígitos para as datas alinharem em coluna.
   static String data(DateTime d) =>
       '${d.day.toString().padLeft(2, '0')} ${_meses[d.month - 1]} ${d.year}';
+
+  /// "09:05".
+  static String hora(DateTime d) =>
+      '${d.hour.toString().padLeft(2, '0')}:'
+      '${d.minute.toString().padLeft(2, '0')}';
 
   // --------------------------------------------------------------- login --
   static const loginSubtitulo = 'Avaliação vocal clínica';

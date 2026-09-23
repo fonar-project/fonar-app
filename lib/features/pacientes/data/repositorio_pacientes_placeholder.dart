@@ -15,6 +15,22 @@ final pacientesProvider = FutureProvider<List<Paciente>>(
   (ref) => ref.watch(repositorioPacientesProvider).listar(),
 );
 
+/// Um paciente pelo id, ou `null` se ele não estiver neste aparelho.
+///
+/// Deriva da lista: com dezenas de pacientes por profissional, procurar na
+/// lista já carregada custa menos que uma consulta própria, e cadastrar um
+/// paciente novo atualiza os dois de uma vez.
+final pacienteProvider = FutureProvider.family<Paciente?, String>((
+  ref,
+  pacienteId,
+) async {
+  final todos = await ref.watch(pacientesProvider.future);
+  for (final paciente in todos) {
+    if (paciente.id == pacienteId) return paciente;
+  }
+  return null;
+});
+
 /// PLACEHOLDER — pacientes fictícios, os mesmos do protótipo.
 ///
 /// Todo nome termina em "de Exemplo" e toda queixa em "(exemplo)": dado de
