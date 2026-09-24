@@ -243,6 +243,29 @@ void main() {
       expect(await banco.consentimentos.count().getSingle(), 2);
     });
 
+    test(
+      'vale o último registrado, mesmo com o relógio corrigido para trás',
+      () async {
+        // Revisão de 24/09: a ordem era pelo horário, e o registro feito depois
+        // de acertar o relógio perdia para o anterior.
+        final banco = _banco();
+        var hora = DateTime(2026, 9, 23, 10);
+        final repositorio = RepositorioConsentimentoLocal(
+          banco,
+          agora: () => hora,
+        );
+
+        await repositorio.registrar('p1', _pedido());
+        hora = DateTime(2026, 9, 23, 9);
+        await repositorio.registrar('p1', _pedido(responsavel: 'Rui de Teste'));
+
+        final vigente = await repositorio.buscar('p1');
+        expect(vigente?.nomeDoResponsavel, 'Rui de Teste');
+        // O horário gravado é o do relógio, como prova.
+        expect(vigente?.registradoEm, DateTime(2026, 9, 23, 9));
+      },
+    );
+
     test('o de um paciente não vale para outro', () async {
       final repositorio = RepositorioConsentimentoLocal(
         _banco(),

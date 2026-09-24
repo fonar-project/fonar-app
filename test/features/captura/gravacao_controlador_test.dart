@@ -3,10 +3,13 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fonar_app/features/captura/data/fonte_de_nivel_record.dart';
 import 'package:fonar_app/features/captura/data/gravador_record.dart';
 import 'package:fonar_app/features/captura/data/repositorio_amostras_local.dart';
 import 'package:fonar_app/features/captura/domain/amostra.dart';
+import 'package:fonar_app/features/captura/domain/fonte_de_nivel.dart';
 import 'package:fonar_app/features/captura/domain/gravador.dart';
+import 'package:fonar_app/features/captura/presentation/afericao_controlador.dart';
 import 'package:fonar_app/features/captura/presentation/gravacao_controlador.dart';
 import 'package:fonar_app/features/reproducao/data/reprodutor_just_audio.dart';
 import 'package:fonar_app/features/reproducao/domain/reprodutor.dart';
@@ -173,13 +176,71 @@ void main() {
     expect(comReproducao.read(reproducaoControladorProvider).tocando, isFalse);
     expect(gravador.inicios, 1);
   });
+
+  // Revisão de 24/09: a gravação que ainda abria não era parada, e tocava
+  // depois, com o microfone já ligado.
+  group('áudio ainda abrindo quando a coleta começa', () {
+    late _ReprodutorQuieto reprodutor;
+    late ProviderContainer c;
+    late Future<void> abrindo;
+
+    setUp(() async {
+      reprodutor = _ReprodutorQuieto()..segurarAbrir = Completer<void>();
+      c = ProviderContainer(
+        overrides: [
+          gravadorProvider.overrideWithValue(_Gravador()),
+          arquivosDeAmostraProvider.overrideWithValue(_Arquivos()),
+          repositorioAmostrasProvider.overrideWithValue(
+            RepositorioAmostrasPlaceholder(),
+          ),
+          fonteDeNivelProvider.overrideWithValue(_FonteSemPermissao()),
+          reprodutorProvider.overrideWithValue(reprodutor),
+        ],
+      );
+      addTearDown(c.dispose);
+      c.listen(reproducaoControladorProvider, (_, _) {});
+      abrindo = c
+          .read(reproducaoControladorProvider.notifier)
+          .alternar('/amostras/p1/antiga.wav');
+      await Future<void>.delayed(Duration.zero);
+    });
+
+    test('gravar: a gravação antiga não toca depois', () async {
+      c.listen(gravacaoControladorProvider('p1'), (_, _) {});
+      await c
+          .read(gravacaoControladorProvider('p1').notifier)
+          .iniciar(TarefaDeGravacao.falaEncadeada);
+      reprodutor.segurarAbrir!.complete();
+      await abrindo;
+
+      expect(reprodutor.toques, 0);
+      expect(c.read(reproducaoControladorProvider).tocando, isFalse);
+    });
+
+    test('aferir: a gravação antiga não toca depois', () async {
+      c.listen(afericaoControladorProvider, (_, _) {});
+      await c.read(afericaoControladorProvider.notifier).medir();
+      reprodutor.segurarAbrir!.complete();
+      await abrindo;
+
+      expect(reprodutor.toques, 0);
+      expect(c.read(reproducaoControladorProvider).tocando, isFalse);
+    });
+  });
 }
 
 class _ReprodutorQuieto implements Reprodutor {
+  Completer<void>? segurarAbrir;
+  var toques = 0;
+
   @override
-  Future<Duration?> abrir(String caminho) async => const Duration(seconds: 3);
+  Future<Duration?> abrir(String caminho) async {
+    await segurarAbrir?.future;
+    return const Duration(seconds: 3);
+  }
+
   @override
-  Future<void> tocar() async {}
+  Future<void> tocar() async => toques++;
   @override
   Future<void> pausar() async {}
   @override
@@ -188,6 +249,21 @@ class _ReprodutorQuieto implements Reprodutor {
   Stream<Duration> get posicoes => const Stream.empty();
   @override
   Stream<void> get terminou => const Stream.empty();
+  @override
+  Stream<Object> get falhas => const Stream.empty();
+  @override
+  Future<void> fechar() async {}
+}
+
+/// Microfone sem permissão: a aferição para logo depois de parar o áudio.
+class _FonteSemPermissao implements FonteDeNivel {
+  @override
+  AjusteDeConfiguracao? get ajuste => null;
+  @override
+  Future<bool> pedirPermissao() async => false;
+  @override
+  Future<Stream<double>> abrir(Duration intervalo) async =>
+      const Stream.empty();
   @override
   Future<void> fechar() async {}
 }
