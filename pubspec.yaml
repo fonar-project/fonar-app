@@ -108,6 +108,14 @@ dependencies:
   just_audio: ^0.10.6
   just_audio_windows: ^0.2.3
 
+  # O token de autenticação no cofre do sistema (US18): cifrado com chave do
+  # Keystore no Android e com chave no Gerenciador de Credenciais no Windows.
+  # O CLAUDE.md não deixa distribuir com o token em memória nem em
+  # `SharedPreferences` — é a chave de acesso a dado de saúde. Licença BSD-3;
+  # guarda texto, não mexe com áudio. Exige o backup automático do Android
+  # desligado (ver o AndroidManifest.xml).
+  flutter_secure_storage: ^11.2.0
+
   # Banco local (US14): pacientes, consentimentos, fila, CAPE-V e laudos
   # sobrevivem ao app fechado. É o que a stack do projeto já prevê (CLAUDE.md)
   # — a fila de sincronização precisa estar no disco para a gravação feita

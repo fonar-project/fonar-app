@@ -154,8 +154,9 @@ como tal.
 
 ## Estado atual
 Esqueleto: rotas, tema, tokens, camada de rede e permissões. Nenhuma feature
-implementada. `TokenStorageEmMemoria` é placeholder e não serve para build
-distribuível — precisa migrar para armazenamento seguro da plataforma.
+implementada. O token de autenticação fica no cofre do sistema
+(`TokenStorageSeguro`), e o backup automático do Android está desligado de
+propósito — não reativar.
 
 ## Git
 Branch: `nome/USxx-featureImplementada` — ex.: `felipe/US04-medidorDeNivel`

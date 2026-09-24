@@ -6,6 +6,7 @@
 // `test/core/banco_local_test.dart`.
 
 import 'package:fonar_app/core/error/app_exception.dart';
+import 'package:fonar_app/core/storage/token_storage.dart';
 import 'package:fonar_app/features/cape_v/domain/avaliacao_cape_v.dart';
 import 'package:fonar_app/features/captura/domain/amostra.dart';
 import 'package:fonar_app/features/captura/domain/gravador.dart';
@@ -176,4 +177,18 @@ class RepositorioLaudosEmMemoria implements RepositorioLaudos {
     for (final l in _porAnalise.values)
       if (l.pacienteId == pacienteId) l,
   ];
+}
+
+/// Token só na memória, para os testes que não precisam do cofre do sistema.
+class TokenStorageEmMemoria implements TokenStorage {
+  String? token;
+
+  @override
+  Future<String?> lerToken() async => token;
+
+  @override
+  Future<void> salvarToken(String token) async => this.token = token;
+
+  @override
+  Future<void> limpar() async => token = null;
 }

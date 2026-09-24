@@ -12,10 +12,20 @@
          filtrar aparelhos incompativeis antes da instalacao. -->
     <uses-feature android:name="android.hardware.microphone" android:required="true"/>
 
+    <!-- Sem backup automatico. O padrao do Android sobe a area privada do app
+         para o Google Drive da conta do aparelho: o banco local (pacientes,
+         consentimentos, fila) e os WAV de voz - dado pessoal sensivel pela
+         LGPD, numa conta pessoal. Alem disso, o token restaurado de outro
+         aparelho nao decifra (a chave do Keystore nao vai junto no backup).
+         allowBackup cobre ate o Android 11; dataExtractionRules, do 12 em
+         diante, inclusive a transferencia para um aparelho novo. -->
     <application
         android:label="FONAR"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/regras_de_extracao">
         <activity
             android:name=".MainActivity"
             android:exported="true"

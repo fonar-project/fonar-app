@@ -349,15 +349,17 @@ desenvolvimento: todo build de debug funciona sem ela. Se alguém "limpar" essa
 linha, o app continua perfeito na máquina de quem removeu e chega sem rede na
 mão do usuário.
 
-### `TokenStorageEmMemoria` não serve para build distribuível
+### Token no cofre do sistema, e sem backup automático no Android
 
-`lib/core/storage/token_storage.dart` guarda o token só em memória. É
-placeholder, para o esqueleto rodar.
+O token fica em `lib/core/storage/token_storage.dart`, no cofre do sistema
+(`flutter_secure_storage`): cifrado com chave do Keystore no Android e com
+chave guardada no Gerenciador de Credenciais no Windows. Token de acesso a
+dado de saúde não pode ficar em `SharedPreferences`.
 
-Antes de qualquer build que saia da máquina de desenvolvimento, precisa ser
-trocado por armazenamento seguro da plataforma (Keystore no Android, DPAPI no
-Windows) ou por obter o token do Firebase Auth sob demanda, sem persistir nada.
-Token de acesso a dado de saúde não pode ficar em `SharedPreferences`.
+O `AndroidManifest.xml` desliga o backup automático (`allowBackup` e
+`dataExtractionRules`). Não reative: o padrão do Android sobe a área privada
+do app — banco local e WAV de voz — para o Google Drive da conta do aparelho,
+e o token restaurado em outro aparelho não decifra.
 
 ### Não instale o Flutter em caminho com espaço, acento ou dentro de Program Files
 

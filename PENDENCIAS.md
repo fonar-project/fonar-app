@@ -1,6 +1,6 @@
 # Pendências abertas
 
-O que ficou em aberto das US02 a US17, reunido num lugar só e organizado por
+O que ficou em aberto das US02 a US18, reunido num lugar só e organizado por
 **quem precisa resolver**. Cada item aponta onde está no código — lá há um
 `TODO` com o mesmo assunto, e é lá que a correção acontece.
 
@@ -55,7 +55,7 @@ commit.
 
 | Pendência | US | Onde |
 |---|---|---|
-| **Numeração das US03 a US10 foi deduzida** das telas do protótipo e do índice de ícones — conferir com o backlog. A US11 (conta) veio do `TODO(US11)` que a equipe deixou no roteador; as US12 (perfil do paciente), US13 (ouvir as gravações), US14 (dados salvos no aparelho), US15 (retirar o consentimento), US16 (retomar a sessão de gravação) e US17 (espectrograma no celular) foram escolhidas pelo Felipe. | 03–10 | — |
+| **Numeração das US03 a US10 foi deduzida** das telas do protótipo e do índice de ícones — conferir com o backlog. A US11 (conta) veio do `TODO(US11)` que a equipe deixou no roteador; as US12 (perfil do paciente), US13 (ouvir as gravações), US14 (dados salvos no aparelho), US15 (retirar o consentimento), US16 (retomar a sessão de gravação), US17 (espectrograma no celular) e US18 (token no cofre do sistema) foram escolhidas pelo Felipe. | 03–10 | — |
 | **Pacientes, consentimentos (e retiradas) e CAPE-V só no aparelho**: estão no banco local, mas ainda não sobem para o Firebase. | 14, 15 | `TODO(backend)` nos repositórios `*_local.dart` |
 | **Pacientes e consentimentos de exemplo** aparecem por cima do banco (não são gravados nele). Saem quando a API de análise responder de verdade — os resultados de exemplo são amarrados aos ids deles. | 14 | `pacientes/data/pacientes_de_exemplo.dart`, `consentimento/data/consentimentos_de_exemplo.dart` |
 | "Última sessão" e tendência do AVQI do paciente cadastrado: hoje sempre "sem sessão" e "sem comparação" — dependem do contrato do resultado. | 14 | `pacientes/data/repositorio_pacientes_local.dart` |
@@ -85,6 +85,7 @@ rede simulados.
 | **Banco local no Android e no Windows**: cadastrar, fechar o app de verdade e abrir de novo — o paciente, o consentimento e a fila continuam lá? O arquivo fica na área privada (`getApplicationSupportDirectory`), e não em "Documentos". | 14 | `core/banco/banco_local.dart` |
 | O build baixa o SQLite pronto (conferido por SHA-256) na primeira compilação de cada plataforma: precisa de rede nessa hora. | 14 | `pubspec.yaml` (`drift_flutter`) |
 | Espectrograma em tela cheia: girar o celular, pinça e arrastar no Android; roda do mouse, arrastar e teclado (setas, + e −) no Windows. | 17 | `analise/presentation/pages/espectrograma_page.dart` |
+| **Token no cofre do sistema**: guardar, fechar o app e abrir de novo no Android e no Windows. E, no Android, confirmar que o backup automático está mesmo desligado (Configurações → Sistema → Backup não lista o FONAR). | 18 | `core/storage/token_storage.dart`, `AndroidManifest.xml` |
 | Ouvir as gravações no Android e no Windows — no Windows, o `just_audio_windows` precisa compilar e tocar o WAV da área privada. | 13 | `reproducao/data/reprodutor_just_audio.dart` |
 | Laudo: "abrir ou compartilhar" e "imprimir ou salvar" no Android e no Windows, e a pré-visualização A4 no Windows (o `printing` baixa o pdfium no build). | 10 | `laudo/data/saida_do_laudo.dart`, `laudo/presentation/laudo_controlador.dart` |
 
@@ -92,6 +93,6 @@ rede simulados.
 
 Continuam valendo, com `TODO` no código: autenticação com Firebase (redirect
 de login, sessão, modo offline — e, desde a US11, o perfil do profissional e
-o sair da conta), `TokenStorageEmMemoria` fora de build distribuível,
+o sair da conta),
 recuperação e troca de senha, tema escuro, tela de erro própria do roteador,
 histórico.
