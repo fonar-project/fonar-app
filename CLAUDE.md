@@ -153,7 +153,7 @@ Todo dado exibido em desenvolvimento é placeholder e deve ser identificável
 como tal.
 
 ## Estado atual
-O fluxo da avaliação existe de ponta a ponta no aparelho (US00 a US21 — lista
+O fluxo da avaliação existe de ponta a ponta no aparelho (US00 a US23 — lista
 e resumo no README): cadastro, consentimento e retirada, aferição, gravação,
 fila, resultado, CAPE-V, evolução, laudo em PDF, com os dados num banco local
 (Drift, `lib/core/banco/`).

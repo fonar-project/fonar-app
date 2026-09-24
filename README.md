@@ -48,7 +48,8 @@ O caminho de uma avaliação, na ordem em que o profissional passa por ele:
    um modo para mostrar ao paciente — e gera o **laudo em PDF** (US10).
 
 Em volta disso: o **perfil do paciente** (US12) reúne dados, consentimento,
-sessões, laudos e fila; a **conta** (US11) tem os dados do profissional e o
+sessões, laudos e fila; o **histórico** (US23) lista as avaliações de todos os
+pacientes, por mês, para achar uma pelo quando; a **conta** (US11) tem os dados do profissional e o
 sair; tudo fica num **banco local** (US14); e o token vai para o **cofre do
 sistema** (US18).
 
@@ -324,7 +325,7 @@ lib/
     ├── fila/              envio para a análise, com e sem conexão
     ├── analise/           resultado, faixas de referência, espectrograma
     ├── cape_v/            a escala perceptivo-auditiva
-    ├── historico/         evolução entre sessões e modo paciente
+    ├── historico/         histórico geral, evolução e modo paciente
     ├── laudo/             conferência, PDF, compartilhar e imprimir
     └── conta/             dados do profissional e sair
 

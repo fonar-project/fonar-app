@@ -1,6 +1,6 @@
 # Pendências abertas
 
-O que ficou em aberto das US02 a US22, reunido num lugar só e organizado por
+O que ficou em aberto das US02 a US23, reunido num lugar só e organizado por
 **quem precisa resolver**. Cada item aponta onde está no código — lá há um
 `TODO` com o mesmo assunto, e é lá que a correção acontece.
 
@@ -45,7 +45,7 @@ commit.
 | Pendência | US | Onde |
 |---|---|---|
 | **Contrato de envio** — suposto: `POST /analises`, multipart, `Idempotency-Key`. | 06 | `fila/data/envio_de_analise_api.dart` |
-| **Contrato do resultado** — `GET /analises/{id}` e, para a evolução, `GET /pacientes/{id}/analises`; hoje as telas mostram resultados de exemplo, avisados como tal. | 07, 09 | `analise/data/repositorio_analises_placeholder.dart` |
+| **Contrato do resultado** — `GET /analises/{id}`; para a evolução, `GET /pacientes/{id}/analises`; para o histórico geral, `GET /analises` paginado (hoje ele pergunta paciente por paciente); hoje as telas mostram resultados de exemplo, avisados como tal. | 07, 09 | `analise/data/repositorio_analises_placeholder.dart` |
 | Taxa de amostragem e canais que a API espera (hoje 44,1 kHz mono). | 04 | `captura/data/configuracao_de_captura.dart` |
 | Quando o aparelho troca taxa ou canais: bloqueia ou só avisa? (hoje só avisa) | 04, 05 | `captura/presentation/pages/captura_page.dart`, `captura/domain/verificacao_da_amostra.dart` |
 | Unidade de cada medida (shimmer em % ou dB?). Se a API mandar a unidade, ela prevalece. | 07 | `analise/presentation/apresentacao_da_medida.dart` |
@@ -55,7 +55,8 @@ commit.
 
 | Pendência | US | Onde |
 |---|---|---|
-| **Numeração das US03 a US10 foi deduzida** das telas do protótipo e do índice de ícones — conferir com o backlog. A US11 (conta) veio do `TODO(US11)` que a equipe deixou no roteador; as US12 (perfil do paciente), US13 (ouvir as gravações), US14 (dados salvos no aparelho), US15 (retirar o consentimento), US16 (retomar a sessão de gravação), US17 (espectrograma no celular), US18 (token no cofre do sistema), US19 (limpeza de gravações não enviadas), US20 (editar os dados do paciente), US21 (aviso de duplicado e de saída sem salvar) e US22 (documentação) foram escolhidas pelo Felipe. | 03–10 | — |
+| **Numeração das US03 a US10 foi deduzida** das telas do protótipo e do índice de ícones — conferir com o backlog. A US11 (conta) veio do `TODO(US11)` que a equipe deixou no roteador; as US12 (perfil do paciente), US13 (ouvir as gravações), US14 (dados salvos no aparelho), US15 (retirar o consentimento), US16 (retomar a sessão de gravação), US17 (espectrograma no celular), US18 (token no cofre do sistema), US19 (limpeza de gravações não enviadas), US20 (editar os dados do paciente), US21 (aviso de duplicado e de saída sem salvar), US22 (documentação) e US23 (histórico geral) foram escolhidas pelo Felipe. | 03–10 | — |
+| `TelaPlaceholder` não é mais usada por rota nenhuma — o histórico (US23) era a última tela de andaime. Remover junto com as strings dela e reescrever os testes de convenção que a usam em `app_estrutura_test.dart`. | 23 | `design_system/widgets/tela_placeholder.dart` |
 | **Pacientes, consentimentos (e retiradas) e CAPE-V só no aparelho**: estão no banco local, mas ainda não sobem para o Firebase. | 14, 15 | `TODO(backend)` nos repositórios `*_local.dart` |
 | **Pacientes e consentimentos de exemplo** aparecem por cima do banco (não são gravados nele). Saem quando a API de análise responder de verdade — os resultados de exemplo são amarrados aos ids deles. | 14 | `pacientes/data/pacientes_de_exemplo.dart`, `consentimento/data/consentimentos_de_exemplo.dart` |
 | "Última sessão" e tendência do AVQI do paciente cadastrado: hoje sempre "sem sessão" e "sem comparação" — dependem do contrato do resultado. | 14 | `pacientes/data/repositorio_pacientes_local.dart` |
@@ -94,5 +95,4 @@ rede simulados.
 Continuam valendo, com `TODO` no código: autenticação com Firebase (redirect
 de login, sessão, modo offline — e, desde a US11, o perfil do profissional e
 o sair da conta),
-recuperação e troca de senha, tema escuro, tela de erro própria do roteador,
-histórico.
+recuperação e troca de senha, tema escuro, tela de erro própria do roteador.

@@ -11,7 +11,7 @@ define a divisão de trabalho.
 
 ## O que já existe
 
-O app já tem o fluxo da avaliação inteiro no aparelho (US00 a US21), ainda
+O app já tem o fluxo da avaliação inteiro no aparelho (US00 a US23), ainda
 sem backend: login, API de análise e resultados são placeholder. O resumo de
 cada US está no `README.md`, e o que falta — separado por quem decide:
 clínica, jurídico, backend, equipe — está no `PENDENCIAS.md`. Antes de

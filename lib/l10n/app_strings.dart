@@ -41,6 +41,24 @@ abstract final class AppStrings {
   static const capturaTitulo = 'Gravação';
   static const analiseResultadoTitulo = 'Resultado da análise';
   static const historicoTitulo = 'Histórico';
+  static const historicoDescricao =
+      'Todas as avaliações feitas neste aparelho, da mais recente para a mais '
+      'antiga.';
+  static const historicoBuscaDica = 'Buscar por paciente ou queixa';
+  static const historicoVazioTitulo = 'Nenhuma avaliação ainda';
+  static const historicoVazioTexto =
+      'Depois da primeira gravação enviada, as avaliações aparecem aqui.';
+  static String historicoSemResultado(String termo) =>
+      'Nenhuma avaliação de paciente com "$termo".';
+  static const historicoLimparBusca = 'Limpar busca';
+  static const historicoErroCarregar = 'Não foi possível carregar o histórico.';
+  static const historicoSemData = 'Data a confirmar';
+  static const historicoProcessando = 'Em análise no servidor';
+  static const historicoFalhou = 'A análise falhou';
+  static const historicoAvqiNaoCalculado = 'AVQI não calculado';
+  static const historicoLaudoGerado = 'Laudo gerado';
+  static String historicoAbrir(String paciente, String data) =>
+      'Abrir a avaliação de $paciente, $data';
   static const novaAvaliacaoTitulo = 'Nova avaliação';
   static const filaTitulo = 'Fila de sincronização';
   static const contaTitulo = 'Conta';
@@ -54,6 +72,7 @@ abstract final class AppStrings {
   static const navFila = 'Fila de sincronização';
   static const navFilaCurto = 'Fila';
   static const navConta = 'Conta';
+  static const navHistorico = 'Histórico';
 
   // ------------------------------------------------------------ pacientes --
   static const pacientesBuscaDica = 'Buscar por nome ou queixa';
@@ -932,6 +951,15 @@ abstract final class AppStrings {
       '$pacientesColunaTendencia: $leitura';
 
   // --------------------------------------------------------------- datas --
+  static const _mesesPorExtenso = [
+    'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', //
+    'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+  ];
+
+  /// "setembro de 2026".
+  static String mesEAno(DateTime d) =>
+      '${_mesesPorExtenso[d.month - 1]} de ${d.year}';
+
   static const _meses = [
     'jan', 'fev', 'mar', 'abr', 'mai', 'jun', //
     'jul', 'ago', 'set', 'out', 'nov', 'dez',
