@@ -23,6 +23,7 @@ import '../../features/pacientes/presentation/pages/paciente_detalhe_page.dart';
 import '../../features/pacientes/presentation/pages/pacientes_list_page.dart';
 import '../app_estrutura.dart';
 import 'app_routes.dart';
+import 'saida_protegida.dart';
 
 /// Roteador do app.
 ///
@@ -56,6 +57,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             name: AppRoutes.novaAvaliacaoNome,
             path: AppRoutes.novaAvaliacaoCaminho,
+            onExit: confirmarSaida(ref, (_) => chaveDoCadastro),
             builder: (context, state) => const NovoPacientePage(),
           ),
           GoRoute(
@@ -68,6 +70,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 name: AppRoutes.edicaoPacienteNome,
                 path: AppRoutes.edicaoPacienteCaminho,
+                onExit: confirmarSaida(
+                  ref,
+                  (state) => chaveDaEdicao(
+                    state.pathParameters[AppRoutes.paramPacienteId]!,
+                  ),
+                ),
                 builder: (context, state) => EditarPacientePage(
                   pacienteId: state.pathParameters[AppRoutes.paramPacienteId]!,
                 ),

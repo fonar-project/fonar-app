@@ -123,6 +123,22 @@ abstract final class AppStrings {
       'Escolha uma opção. Se o paciente preferir, use “Não informar”.';
   static const cadastroInformeQueixa = 'Informe a queixa principal.';
 
+  // ------------------------------------------------ sair sem salvar --
+  static const saidaTitulo = 'Sair sem salvar?';
+  static const saidaTexto =
+      'O que foi preenchido aqui ainda não foi salvo e vai se perder.';
+  static const saidaDescartar = 'Sair e descartar';
+  static const saidaContinuar = 'Continuar preenchendo';
+
+  // ------------------------------------------------ paciente duplicado --
+  static const duplicadoTitulo =
+      'Já existe um paciente com este nome e data de nascimento';
+  static String duplicadoTexto(String nome, String nascimento) =>
+      '$nome, nascimento em $nascimento. Se for a mesma pessoa, abra o '
+      'cadastro que já existe: dois cadastros partem o histórico em dois.';
+  static const duplicadoAbrirExistente = 'Abrir o cadastro existente';
+  static const duplicadoSalvarMesmoAssim = 'É outra pessoa: salvar';
+
   // ---------------------------------------------- edição dos dados --
   static const edicaoTitulo = 'Editar dados do paciente';
   static const edicaoSalvar = 'Salvar alterações';

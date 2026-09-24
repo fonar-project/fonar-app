@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_estrutura.dart';
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/saida_protegida.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_colors.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
@@ -33,8 +34,9 @@ import '../widgets/campos_do_paciente.dart';
 /// TODO(equipe): decisões tomadas sem o protótipo da tela 02, a confirmar:
 /// - queixa principal obrigatória (a lista de pacientes sempre a mostra);
 /// - salvar segue direto para o consentimento, e não para o perfil.
-/// Faltam também: aviso de paciente possivelmente duplicado (mesmo nome e
-/// data de nascimento) e aviso ao sair com o formulário preenchido.
+///
+/// Salvar confere antes se o paciente já existe (ver `possivelDuplicado`), e
+/// sair com o formulário preenchido pergunta antes (ver `confirmarSaida`).
 class NovoPacientePage extends ConsumerStatefulWidget {
   const NovoPacientePage({super.key});
 
@@ -52,6 +54,32 @@ class _NovoPacientePageState extends ConsumerState<NovoPacientePage> {
   SexoDeReferencia? _sexo;
 
   @override
+  void initState() {
+    super.initState();
+    for (final c in [_nome, _nascimento, _queixa]) {
+      c.addListener(_marcarAlterado);
+    }
+  }
+
+  /// Diz ao roteador se há o que perder ao sair — ver `confirmarSaida`.
+  void _marcarAlterado() => ref
+      .read(formulariosAlteradosProvider.notifier)
+      .marcar(
+        chaveDoCadastro,
+        alterado: dadosAlterados(
+          nome: _nome.text,
+          nascimento: _nascimento.text,
+          queixa: _queixa.text,
+          sexo: _sexo,
+          inicial: (nome: '', nascimento: '', queixa: '', sexo: null),
+        ),
+      );
+
+  void _descartarMarca() => ref
+      .read(formulariosAlteradosProvider.notifier)
+      .marcar(chaveDoCadastro, alterado: false);
+
+  @override
   void dispose() {
     _nome.dispose();
     _nascimento.dispose();
@@ -62,7 +90,7 @@ class _NovoPacientePageState extends ConsumerState<NovoPacientePage> {
     super.dispose();
   }
 
-  Future<void> _salvar() async {
+  Future<void> _salvar({bool mesmoAssim = false}) async {
     final paciente = await ref
         .read(cadastroPacienteControladorProvider.notifier)
         .salvar(
@@ -70,10 +98,13 @@ class _NovoPacientePageState extends ConsumerState<NovoPacientePage> {
           nascimento: _nascimento.text,
           sexo: _sexo,
           queixa: _queixa.text,
+          mesmoAssim: mesmoAssim,
         );
     if (!mounted) return;
 
     if (paciente != null) {
+      // Salvo: não há o que perder, e sair não pergunta nada.
+      _descartarMarca();
       context.goNamed(
         AppRoutes.consentimentoNome,
         pathParameters: {AppRoutes.paramPacienteId: paciente.id},
@@ -121,7 +152,10 @@ class _NovoPacientePageState extends ConsumerState<NovoPacientePage> {
           focoNascimento: _focoNascimento,
           focoQueixa: _focoQueixa,
           sexo: _sexo,
-          aoEscolherSexo: (sexo) => setState(() => _sexo = sexo),
+          aoEscolherSexo: (sexo) {
+            setState(() => _sexo = sexo);
+            _marcarAlterado();
+          },
           estado: estado,
           aoEditar: _editou,
           aoConcluir: _salvar,
@@ -133,6 +167,22 @@ class _NovoPacientePageState extends ConsumerState<NovoPacientePage> {
             color: AppColors.secundarioSobreCreme,
           ),
         ),
+        if (estado.duplicado case final existente?) ...[
+          const SizedBox(height: AppSpacing.md),
+          AvisoDeDuplicado(
+            paciente: existente,
+            aoAbrirExistente: () {
+              // Escolheu o cadastro que já existe: o que digitou aqui não
+              // é para guardar.
+              _descartarMarca();
+              context.goNamed(
+                AppRoutes.pacienteDetalheNome,
+                pathParameters: {AppRoutes.paramPacienteId: existente.id},
+              );
+            },
+            aoSalvarMesmoAssim: () => _salvar(mesmoAssim: true),
+          ),
+        ],
         const SizedBox(height: AppSpacing.md),
         _Acoes(
           salvando: estado.salvando,

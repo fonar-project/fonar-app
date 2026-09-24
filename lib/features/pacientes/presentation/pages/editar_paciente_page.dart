@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/saida_protegida.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_colors.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
@@ -139,6 +140,41 @@ class _FormularioState extends ConsumerState<_Formulario> {
 
   String get _id => widget.paciente.id;
 
+  /// Como o formulário abriu: sair sem mexer em nada não pergunta nada.
+  late final _inicial = (
+    nome: _nome.text,
+    nascimento: _nascimento.text,
+    queixa: _queixa.text,
+    sexo: _sexo,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _inicial;
+    for (final c in [_nome, _nascimento, _queixa]) {
+      c.addListener(_marcarAlterado);
+    }
+  }
+
+  /// Diz ao roteador se há o que perder ao sair — ver `confirmarSaida`.
+  void _marcarAlterado() => ref
+      .read(formulariosAlteradosProvider.notifier)
+      .marcar(
+        chaveDaEdicao(_id),
+        alterado: dadosAlterados(
+          nome: _nome.text,
+          nascimento: _nascimento.text,
+          queixa: _queixa.text,
+          sexo: _sexo,
+          inicial: _inicial,
+        ),
+      );
+
+  void _descartarMarca() => ref
+      .read(formulariosAlteradosProvider.notifier)
+      .marcar(chaveDaEdicao(_id), alterado: false);
+
   @override
   void dispose() {
     _nome.dispose();
@@ -153,7 +189,7 @@ class _FormularioState extends ConsumerState<_Formulario> {
   void _editou(CampoDoCadastro campo) =>
       ref.read(edicaoPacienteControladorProvider(_id).notifier).editou(campo);
 
-  Future<void> _salvar() async {
+  Future<void> _salvar({bool mesmoAssim = false}) async {
     final salvo = await ref
         .read(edicaoPacienteControladorProvider(_id).notifier)
         .salvar(
@@ -161,9 +197,11 @@ class _FormularioState extends ConsumerState<_Formulario> {
           nascimento: _nascimento.text,
           sexo: _sexo,
           queixa: _queixa.text,
+          mesmoAssim: mesmoAssim,
         );
     if (!mounted) return;
     if (salvo != null) {
+      _descartarMarca();
       _voltar(context, _id);
       return;
     }
@@ -196,11 +234,28 @@ class _FormularioState extends ConsumerState<_Formulario> {
           focoNascimento: _focoNascimento,
           focoQueixa: _focoQueixa,
           sexo: _sexo,
-          aoEscolherSexo: (sexo) => setState(() => _sexo = sexo),
+          aoEscolherSexo: (sexo) {
+            setState(() => _sexo = sexo);
+            _marcarAlterado();
+          },
           estado: estado,
           aoEditar: _editou,
           aoConcluir: _salvar,
         ),
+        if (estado.duplicado case final existente?) ...[
+          const SizedBox(height: AppSpacing.md),
+          AvisoDeDuplicado(
+            paciente: existente,
+            aoAbrirExistente: () {
+              _descartarMarca();
+              context.goNamed(
+                AppRoutes.pacienteDetalheNome,
+                pathParameters: {AppRoutes.paramPacienteId: existente.id},
+              );
+            },
+            aoSalvarMesmoAssim: () => _salvar(mesmoAssim: true),
+          ),
+        ],
         const SizedBox(height: AppSpacing.lg),
         LayoutBuilder(
           builder: (context, restricoes) {

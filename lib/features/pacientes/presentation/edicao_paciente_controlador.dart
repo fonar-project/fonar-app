@@ -32,6 +32,7 @@ class EdicaoPacienteControlador extends Notifier<EstadoCadastro> {
     required String nascimento,
     required SexoDeReferencia? sexo,
     required String queixa,
+    bool mesmoAssim = false,
   }) async {
     if (state.salvando) return null;
 
@@ -48,6 +49,18 @@ class EdicaoPacienteControlador extends Notifier<EstadoCadastro> {
     }
 
     state = const EstadoCadastro(salvando: true);
+    if (!mesmoAssim) {
+      final duplicado = await procurarDuplicado(
+        ref,
+        dados,
+        ignorarId: pacienteId,
+      );
+      if (!ref.mounted) return null;
+      if (duplicado != null) {
+        state = EstadoCadastro(duplicado: duplicado);
+        return null;
+      }
+    }
     // Guardado antes da espera: a lista e o perfil precisam mostrar a
     // correção mesmo com a tela fechada no meio.
     final container = ref.container;

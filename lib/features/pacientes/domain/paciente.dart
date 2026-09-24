@@ -66,6 +66,11 @@ const _semAcento = {
   'ç': 'c', 'ñ': 'n',
 };
 
+/// [texto] do jeito que se compara nome: sem diferença de maiúscula, acento
+/// ou espaço sobrando.
+String paraComparar(String texto) =>
+    _normalizar(texto.trim().replaceAll(RegExp(r'\s+'), ' '));
+
 // Tabela fixa do português, não Unicode completo. Nome estrangeiro com
 // diacrítico de fora da tabela só casa digitado com o acento.
 String _normalizar(String texto) => texto

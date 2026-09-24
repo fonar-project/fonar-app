@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/formatacao/mascara_de_data.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
+import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_campo_texto.dart';
 import '../../../../design_system/widgets/app_escolha_unica.dart';
+import '../../../../design_system/widgets/app_icone.dart';
+import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../domain/novo_paciente.dart';
+import '../../domain/paciente.dart';
 import '../cadastro_paciente_controlador.dart';
 
 /// Os campos do paciente — nome, nascimento, sexo e queixa —, os mesmos no
@@ -138,3 +142,76 @@ FocusNode? primeiroCampoComErro(
   EstadoCadastro(erroQueixa: _?) when estado.erroSexo == null => queixa,
   _ => null,
 };
+
+/// Já existe um paciente com o mesmo nome e nascimento: abrir o que existe,
+/// ou dizer que é outra pessoa e salvar assim mesmo.
+class AvisoDeDuplicado extends StatelessWidget {
+  const AvisoDeDuplicado({
+    required this.paciente,
+    required this.aoAbrirExistente,
+    required this.aoSalvarMesmoAssim,
+    super.key,
+  });
+
+  final Paciente paciente;
+  final VoidCallback aoAbrirExistente;
+  final VoidCallback aoSalvarMesmoAssim;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      // Aparece depois do toque em salvar, longe do foco: o leitor de tela
+      // precisa anunciar.
+      Semantics(
+        liveRegion: true,
+        child: AppSituacao(
+          icone: NomeIcone.alerta,
+          titulo: AppStrings.duplicadoTitulo,
+          texto: AppStrings.duplicadoTexto(
+            paciente.nome,
+            switch (paciente.dataDeNascimento) {
+              final d? => AppStrings.data(d),
+              null => '',
+            },
+          ),
+        ),
+      ),
+      const SizedBox(height: AppSpacing.sm),
+      Wrap(
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.xs,
+        children: [
+          AppBotao.secundario(
+            rotulo: AppStrings.duplicadoAbrirExistente,
+            icone: NomeIcone.avancar,
+            aoTocar: aoAbrirExistente,
+          ),
+          AppBotao.secundario(
+            rotulo: AppStrings.duplicadoSalvarMesmoAssim,
+            aoTocar: aoSalvarMesmoAssim,
+          ),
+        ],
+      ),
+    ],
+  );
+}
+
+/// O formulário está diferente de como abriu?
+bool dadosAlterados({
+  required String nome,
+  required String nascimento,
+  required String queixa,
+  required SexoDeReferencia? sexo,
+  required ({
+    String nome,
+    String nascimento,
+    String queixa,
+    SexoDeReferencia? sexo,
+  })
+  inicial,
+}) =>
+    nome.trim() != inicial.nome.trim() ||
+    nascimento.trim() != inicial.nascimento.trim() ||
+    queixa.trim() != inicial.queixa.trim() ||
+    sexo != inicial.sexo;
