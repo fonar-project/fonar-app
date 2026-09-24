@@ -136,5 +136,18 @@ void main() {
       expect(lista.first.ultimaSessao, isNull);
       expect(lista.first.direcaoAvqi, DirecaoDaMedida.semComparacao);
     });
+
+    test('cadastros seguidos têm ids diferentes', () async {
+      final repositorio = RepositorioPacientesPlaceholder();
+      final novo = (_validar() as CadastroValido).paciente;
+
+      // Todos no mesmo instante, como Ana e Bia no teste de duplicidade.
+      final salvos = await Future.wait([
+        for (var i = 0; i < 2000; i++) repositorio.cadastrar(novo),
+      ]);
+      final ids = salvos.map((p) => p.id);
+
+      expect(ids.toSet(), hasLength(2000));
+    });
   });
 }

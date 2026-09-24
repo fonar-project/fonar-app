@@ -27,6 +27,10 @@ class RepositorioPacientesPlaceholder implements RepositorioPacientes {
 
   final _cadastrados = <Paciente>[];
 
+  /// Sequência, e não o relógio: dois cadastros seguidos liam o mesmo
+  /// microssegundo e ganhavam o mesmo id (revisão de 24/09).
+  var _ultimoId = 0;
+
   @override
   Future<List<Paciente>> listar() async => [
     ..._cadastrados.reversed,
@@ -36,7 +40,7 @@ class RepositorioPacientesPlaceholder implements RepositorioPacientes {
   @override
   Future<Paciente> cadastrar(NovoPaciente novo) async {
     final paciente = Paciente(
-      id: 'local-${DateTime.now().microsecondsSinceEpoch}',
+      id: 'local-${++_ultimoId}',
       nome: novo.nome,
       queixa: novo.queixa,
       direcaoAvqi: DirecaoDaMedida.semComparacao,
