@@ -38,6 +38,10 @@ class _RepositorioFalso implements RepositorioPacientes {
       direcaoAvqi: DirecaoDaMedida.semComparacao,
     );
   }
+
+  @override
+  Future<Paciente> atualizar(String id, NovoPaciente dados) =>
+      throw UnimplementedError();
 }
 
 const _celular = Size(390, 844);

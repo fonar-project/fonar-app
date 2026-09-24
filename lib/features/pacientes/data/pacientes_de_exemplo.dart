@@ -18,6 +18,7 @@ final pacientesDeExemplo = <Paciente>[
     queixa: 'rouquidão persistente (exemplo)',
     ultimaSessao: DateTime(2026, 7, 23),
     direcaoAvqi: DirecaoDaMedida.desceu,
+    exemplo: true,
   ),
   Paciente(
     id: 'exemplo-b',
@@ -25,6 +26,7 @@ final pacientesDeExemplo = <Paciente>[
     queixa: 'fadiga vocal ao fim do dia (exemplo)',
     ultimaSessao: DateTime(2026, 7, 18),
     direcaoAvqi: DirecaoDaMedida.estavel,
+    exemplo: true,
   ),
   Paciente(
     id: 'exemplo-c',
@@ -32,6 +34,7 @@ final pacientesDeExemplo = <Paciente>[
     queixa: 'soprosidade (exemplo)',
     ultimaSessao: DateTime(2026, 7, 10),
     direcaoAvqi: DirecaoDaMedida.subiu,
+    exemplo: true,
   ),
   Paciente(
     id: 'exemplo-d',
@@ -39,6 +42,7 @@ final pacientesDeExemplo = <Paciente>[
     queixa: 'pitch instável (exemplo)',
     ultimaSessao: DateTime(2026, 7, 2),
     direcaoAvqi: DirecaoDaMedida.desceu,
+    exemplo: true,
   ),
   Paciente(
     id: 'exemplo-e',
@@ -46,5 +50,6 @@ final pacientesDeExemplo = <Paciente>[
     queixa: 'tensão ao falar (exemplo)',
     ultimaSessao: DateTime(2026, 6, 25),
     direcaoAvqi: DirecaoDaMedida.semComparacao,
+    exemplo: true,
   ),
 ];

@@ -33,6 +33,22 @@ class EstadoCadastro {
   /// Falha que não é de um campo — o aparelho não conseguiu salvar.
   final String? erroGeral;
 
+  /// O estado depois de o profissional mexer em [campo]: sem o erro dele.
+  ///
+  /// Não revalida — dizer "data inexistente" a cada dígito de uma data pela
+  /// metade seria gritar com quem ainda está digitando. O erro some ao
+  /// corrigir e volta, se for o caso, no próximo "Salvar". Sem erro no
+  /// campo, devolve o mesmo estado — e ninguém é reconstruído a cada tecla.
+  EstadoCadastro aoEditar(CampoDoCadastro campo) {
+    final temErro = switch (campo) {
+      CampoDoCadastro.nome => erroNome,
+      CampoDoCadastro.nascimento => erroNascimento,
+      CampoDoCadastro.sexo => erroSexo,
+      CampoDoCadastro.queixa => erroQueixa,
+    };
+    return temErro == null ? this : semErroEm(campo);
+  }
+
   /// O mesmo estado sem o erro de [campo].
   EstadoCadastro semErroEm(CampoDoCadastro campo) => EstadoCadastro(
     salvando: salvando,
@@ -49,20 +65,9 @@ class CadastroPacienteControlador extends Notifier<EstadoCadastro> {
   EstadoCadastro build() => const EstadoCadastro();
 
   /// O profissional mexeu em [campo]: o erro dele sai da tela.
-  ///
-  /// Não revalida — dizer "data inexistente" a cada dígito de uma data pela
-  /// metade seria gritar com quem ainda está digitando. O erro some ao
-  /// corrigir e volta, se for o caso, no próximo "Salvar".
   void editou(CampoDoCadastro campo) {
-    final atual = state;
-    final temErro = switch (campo) {
-      CampoDoCadastro.nome => atual.erroNome,
-      CampoDoCadastro.nascimento => atual.erroNascimento,
-      CampoDoCadastro.sexo => atual.erroSexo,
-      CampoDoCadastro.queixa => atual.erroQueixa,
-    };
-    // Sem erro no campo, nada muda — e ninguém é reconstruído a cada tecla.
-    if (temErro != null) state = atual.semErroEm(campo);
+    final novo = state.aoEditar(campo);
+    if (!identical(novo, state)) state = novo;
   }
 
   /// Confere e salva. Devolve o paciente salvo, ou `null` se algo impediu —
@@ -76,26 +81,16 @@ class CadastroPacienteControlador extends Notifier<EstadoCadastro> {
     // Toque duplo em "Salvar e continuar" cadastraria o paciente duas vezes.
     if (state.salvando) return null;
 
-    final resultado = validarCadastro(
+    final conferido = conferirFormulario(
       nome: nome,
       nascimento: nascimento,
       sexo: sexo,
       queixa: queixa,
-      hoje: DateTime.now(),
     );
-
-    final NovoPaciente novo;
-    switch (resultado) {
-      case CadastroInvalido():
-        state = EstadoCadastro(
-          erroNome: _mensagem(resultado.nome),
-          erroNascimento: _mensagem(resultado.nascimento),
-          erroSexo: _mensagem(resultado.sexo),
-          erroQueixa: _mensagem(resultado.queixa),
-        );
-        return null;
-      case CadastroValido(:final paciente):
-        novo = paciente;
+    final novo = conferido.dados;
+    if (novo == null) {
+      state = conferido.erros!;
+      return null;
     }
 
     state = const EstadoCadastro(salvando: true);
@@ -125,6 +120,38 @@ class CadastroPacienteControlador extends Notifier<EstadoCadastro> {
     return salvo;
   }
 }
+
+/// Confere o formulário do paciente — o do cadastro e o da edição: os dados
+/// prontos para salvar, ou o estado com a mensagem de cada campo errado.
+({NovoPaciente? dados, EstadoCadastro? erros}) conferirFormulario({
+  required String nome,
+  required String nascimento,
+  required SexoDeReferencia? sexo,
+  required String queixa,
+}) => switch (validarCadastro(
+  nome: nome,
+  nascimento: nascimento,
+  sexo: sexo,
+  queixa: queixa,
+  hoje: DateTime.now(),
+)) {
+  CadastroInvalido(
+    nome: final n,
+    nascimento: final d,
+    sexo: final s,
+    queixa: final q,
+  ) =>
+    (
+      dados: null,
+      erros: EstadoCadastro(
+        erroNome: _mensagem(n),
+        erroNascimento: _mensagem(d),
+        erroSexo: _mensagem(s),
+        erroQueixa: _mensagem(q),
+      ),
+    ),
+  CadastroValido(:final paciente) => (dados: paciente, erros: null),
+};
 
 String? _mensagem(ProblemaNoCadastro? problema) => switch (problema) {
   null => null,

@@ -123,6 +123,16 @@ abstract final class AppStrings {
       'Escolha uma opção. Se o paciente preferir, use “Não informar”.';
   static const cadastroInformeQueixa = 'Informe a queixa principal.';
 
+  // ---------------------------------------------- edição dos dados --
+  static const edicaoTitulo = 'Editar dados do paciente';
+  static const edicaoSalvar = 'Salvar alterações';
+  static const edicaoAvisoTitulo =
+      'Sexo e nascimento escolhem a faixa de referência';
+  static const edicaoAvisoTexto =
+      'Corrigir aqui muda a classificação das medidas em todas as sessões '
+      'deste paciente. Laudos já gerados continuam como saíram.';
+  static const edicaoExemplo = 'Paciente de exemplo: os dados não se editam.';
+
   // --------------------------------------------------------- consentimento --
   static const voltar = 'Voltar';
   static String consentimentoPaciente(String nome) => 'Paciente: $nome';
@@ -691,6 +701,7 @@ abstract final class AppStrings {
       : '$n gravações deste paciente estão paradas na fila: o consentimento '
             'foi retirado.';
   static const perfilVerFila = 'Ver fila';
+  static const perfilEditarDados = 'Editar dados';
   static String perfilNaoEnviadas(int n) => n == 1
       ? '1 sessão gravada neste aparelho não foi para a análise.'
       : '$n sessões gravadas neste aparelho não foram para a análise.';

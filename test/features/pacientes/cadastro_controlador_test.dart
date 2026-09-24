@@ -29,6 +29,10 @@ class _RepositorioLento implements RepositorioPacientes {
     _cadastrados.add(p);
     return p;
   }
+
+  @override
+  Future<Paciente> atualizar(String id, NovoPaciente dados) =>
+      throw UnimplementedError();
 }
 
 void main() {

@@ -11,6 +11,7 @@ class Paciente {
     this.ultimaSessao,
     this.sexo,
     this.dataDeNascimento,
+    this.exemplo = false,
   });
 
   final String id;
@@ -27,6 +28,10 @@ class Paciente {
   /// aparecem sem classificação.
   final SexoDeReferencia? sexo;
   final DateTime? dataDeNascimento;
+
+  /// Paciente fictício de desenvolvimento, que não está no banco — os dados
+  /// dele não se editam.
+  final bool exemplo;
 
   /// Para onde o AVQI foi entre as duas últimas sessões.
   ///

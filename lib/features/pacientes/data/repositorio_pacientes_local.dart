@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/banco/banco_local.dart';
 import '../../../core/banco/conversao.dart';
 import '../../../core/banco/novo_id.dart';
+import '../../../core/error/app_exception.dart';
 import '../../../core/relogio.dart';
 import '../../historico/domain/evolucao_da_medida.dart';
 import '../domain/novo_paciente.dart';
@@ -79,6 +80,30 @@ class RepositorioPacientesLocal implements RepositorioPacientes {
         ),
       ...exemplos,
     ];
+  }
+
+  @override
+  Future<Paciente> atualizar(String id, NovoPaciente dados) async {
+    final alteradas =
+        await (_banco.update(
+          _banco.pacientes,
+        )..where((p) => p.id.equals(id))).write(
+          PacientesCompanion(
+            nome: Value(dados.nome),
+            queixa: Value(dados.queixa),
+            sexo: Value(dados.sexo.name),
+            dataDeNascimento: Value(dados.dataDeNascimento),
+          ),
+        );
+    if (alteradas == 0) throw const NaoEncontrado();
+    return Paciente(
+      id: id,
+      nome: dados.nome,
+      queixa: dados.queixa,
+      direcaoAvqi: DirecaoDaMedida.semComparacao,
+      sexo: dados.sexo,
+      dataDeNascimento: dados.dataDeNascimento,
+    );
   }
 
   @override

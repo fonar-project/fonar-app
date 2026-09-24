@@ -232,6 +232,20 @@ class _DadosEAcoes extends ConsumerWidget {
             ),
           ),
         ],
+        const SizedBox(height: AppSpacing.xs),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: AppBotao.secundario(
+            rotulo: AppStrings.perfilEditarDados,
+            aoTocar: paciente.exemplo
+                ? null
+                : () => context.pushNamed(
+                    AppRoutes.edicaoPacienteNome,
+                    pathParameters: rotaDoPaciente,
+                  ),
+            motivoDesabilitado: AppStrings.edicaoExemplo,
+          ),
+        ),
         const SizedBox(height: AppSpacing.lg),
         switch (consentimento) {
           AsyncData(value: final c?) => AppSituacao(

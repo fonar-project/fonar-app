@@ -31,6 +31,10 @@ abstract final class AppRoutes {
   static const pacienteDetalheNome = 'pacienteDetalhe';
   static const pacienteDetalheCaminho = ':$paramPacienteId';
 
+  // /pacientes/:pacienteId/editar
+  static const edicaoPacienteNome = 'edicaoPaciente';
+  static const edicaoPacienteCaminho = 'editar';
+
   // /pacientes/:pacienteId/consentimento
   static const consentimentoNome = 'consentimento';
   static const consentimentoCaminho = 'consentimento';

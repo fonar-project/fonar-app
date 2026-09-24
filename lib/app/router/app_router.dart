@@ -17,6 +17,7 @@ import '../../features/historico/presentation/pages/evolucao_modo_paciente_page.
 import '../../features/historico/presentation/pages/evolucao_page.dart';
 import '../../features/historico/presentation/pages/historico_page.dart';
 import '../../features/laudo/presentation/pages/laudo_page.dart';
+import '../../features/pacientes/presentation/pages/editar_paciente_page.dart';
 import '../../features/pacientes/presentation/pages/novo_paciente_page.dart';
 import '../../features/pacientes/presentation/pages/paciente_detalhe_page.dart';
 import '../../features/pacientes/presentation/pages/pacientes_list_page.dart';
@@ -64,6 +65,13 @@ final routerProvider = Provider<GoRouter>((ref) {
               pacienteId: state.pathParameters[AppRoutes.paramPacienteId]!,
             ),
             routes: [
+              GoRoute(
+                name: AppRoutes.edicaoPacienteNome,
+                path: AppRoutes.edicaoPacienteCaminho,
+                builder: (context, state) => EditarPacientePage(
+                  pacienteId: state.pathParameters[AppRoutes.paramPacienteId]!,
+                ),
+              ),
               GoRoute(
                 name: AppRoutes.consentimentoNome,
                 path: AppRoutes.consentimentoCaminho,

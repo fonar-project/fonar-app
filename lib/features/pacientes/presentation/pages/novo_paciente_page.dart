@@ -4,19 +4,17 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_estrutura.dart';
 import '../../../../app/router/app_routes.dart';
-import '../../../../core/formatacao/mascara_de_data.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_colors.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_cabecalho_de_secao.dart';
-import '../../../../design_system/widgets/app_campo_texto.dart';
-import '../../../../design_system/widgets/app_escolha_unica.dart';
 import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_mensagem_de_campo.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../domain/novo_paciente.dart';
 import '../cadastro_paciente_controlador.dart';
+import '../widgets/campos_do_paciente.dart';
 
 /// Tela 02 — perfil do paciente novo, primeiro passo da nova avaliação.
 ///
@@ -88,17 +86,12 @@ class _NovoPacientePageState extends ConsumerState<NovoPacientePage> {
   /// Leva o teclado ao primeiro campo com erro. No celular, com o teclado
   /// aberto, o erro do nome fica fora da tela depois de tocar em "Salvar" lá
   /// embaixo; focar o campo rola até ele.
-  void _focarPrimeiroErro() {
-    final estado = ref.read(cadastroPacienteControladorProvider);
-    final foco = switch (estado) {
-      EstadoCadastro(erroNome: _?) => _focoNome,
-      EstadoCadastro(erroNascimento: _?) => _focoNascimento,
-      EstadoCadastro(erroQueixa: _?) when estado.erroSexo == null =>
-        _focoQueixa,
-      _ => null,
-    };
-    foco?.requestFocus();
-  }
+  void _focarPrimeiroErro() => primeiroCampoComErro(
+    ref.read(cadastroPacienteControladorProvider),
+    nome: _focoNome,
+    nascimento: _focoNascimento,
+    queixa: _focoQueixa,
+  )?.requestFocus();
 
   void _cancelar() => context.goNamed(AppRoutes.pacientesNome);
 
@@ -120,74 +113,18 @@ class _NovoPacientePageState extends ConsumerState<NovoPacientePage> {
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
-        AppCampoTexto(
-          rotulo: AppStrings.cadastroCampoNome,
-          controlador: _nome,
-          foco: _focoNome,
-          erro: estado.erroNome,
-          somenteLeitura: estado.salvando,
-          tipoDeTeclado: TextInputType.name,
-          acaoDeEntrada: TextInputAction.next,
-          aoMudar: (_) => _editou(CampoDoCadastro.nome),
-          aoEnviar: (_) => _focoNascimento.requestFocus(),
-          // Nome próprio: o corretor troca "Thaís" por "Taís" sem pedir.
-          autoCorrecao: false,
-          capitalizacao: TextCapitalization.words,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        AppCampoTexto(
-          rotulo: AppStrings.cadastroCampoNascimento,
-          controlador: _nascimento,
-          foco: _focoNascimento,
-          dica: AppStrings.cadastroNascimentoDica,
-          erro: estado.erroNascimento,
-          somenteLeitura: estado.salvando,
-          tipoDeTeclado: TextInputType.number,
-          acaoDeEntrada: TextInputAction.next,
-          aoMudar: (_) => _editou(CampoDoCadastro.nascimento),
-          aoEnviar: (_) => _focoQueixa.requestFocus(),
-          autoCorrecao: false,
-          formatadores: const [MascaraDeData()],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        AppEscolhaUnica<SexoDeReferencia>(
-          rotulo: AppStrings.cadastroCampoSexo,
-          opcoes: const [
-            AppOpcao(
-              valor: SexoDeReferencia.feminino,
-              rotulo: AppStrings.cadastroSexoFeminino,
-            ),
-            AppOpcao(
-              valor: SexoDeReferencia.masculino,
-              rotulo: AppStrings.cadastroSexoMasculino,
-            ),
-            AppOpcao(
-              valor: SexoDeReferencia.naoInformado,
-              rotulo: AppStrings.cadastroSexoNaoInformado,
-            ),
-          ],
-          selecionado: _sexo,
-          aoEscolher: estado.salvando
-              ? null
-              : (sexo) {
-                  setState(() => _sexo = sexo);
-                  _editou(CampoDoCadastro.sexo);
-                },
-          erro: estado.erroSexo,
-          apoio: AppStrings.cadastroSexoApoio,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        AppCampoTexto(
-          rotulo: AppStrings.cadastroCampoQueixa,
-          controlador: _queixa,
-          foco: _focoQueixa,
-          dica: AppStrings.cadastroQueixaDica,
-          erro: estado.erroQueixa,
-          somenteLeitura: estado.salvando,
-          acaoDeEntrada: TextInputAction.done,
-          aoMudar: (_) => _editou(CampoDoCadastro.queixa),
-          aoEnviar: (_) => _salvar(),
-          capitalizacao: TextCapitalization.sentences,
+        CamposDoPaciente(
+          nome: _nome,
+          nascimento: _nascimento,
+          queixa: _queixa,
+          focoNome: _focoNome,
+          focoNascimento: _focoNascimento,
+          focoQueixa: _focoQueixa,
+          sexo: _sexo,
+          aoEscolherSexo: (sexo) => setState(() => _sexo = sexo),
+          estado: estado,
+          aoEditar: _editou,
+          aoConcluir: _salvar,
         ),
         const SizedBox(height: AppSpacing.lg),
         Text(

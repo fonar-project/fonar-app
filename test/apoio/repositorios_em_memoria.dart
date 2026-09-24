@@ -36,6 +36,20 @@ class RepositorioPacientesPlaceholder implements RepositorioPacientes {
   ];
 
   @override
+  Future<Paciente> atualizar(String id, NovoPaciente dados) async {
+    final i = _cadastrados.indexWhere((p) => p.id == id);
+    if (i < 0) throw const NaoEncontrado();
+    return _cadastrados[i] = Paciente(
+      id: id,
+      nome: dados.nome,
+      queixa: dados.queixa,
+      direcaoAvqi: DirecaoDaMedida.semComparacao,
+      sexo: dados.sexo,
+      dataDeNascimento: dados.dataDeNascimento,
+    );
+  }
+
+  @override
   Future<Paciente> cadastrar(NovoPaciente novo) async {
     final paciente = Paciente(
       id: 'local-${DateTime.now().microsecondsSinceEpoch}',
