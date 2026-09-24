@@ -1,7 +1,14 @@
-# Verificação contínua. Só checagem: não compila release e não publica nada.
+# Verificação contínua, em dois jobs. Nada aqui publica artefato.
+#
+# - `verificacao`, no Ubuntu: formato, análise, testes e código gerado.
+# - `build-windows`, no Windows: compila o código nativo. Existe porque
+#   `flutter test` roda só Dart e nunca invoca o MSVC — quebra de compilação
+#   nativa passa pelos testes inteirinha, como já passou duas vezes (ATL
+#   faltando e `just_audio_windows` contra o MSVC do Visual Studio 2026).
 #
 # A versão do Flutter é a mesma da máquina de referência documentada no README.
-# Se atualizar o Flutter do projeto, atualize os dois lugares juntos.
+# Se atualizar o Flutter do projeto, atualize os três lugares juntos: os dois
+# `flutter-version` daqui e a tabela do README.
 
 name: CI
 
@@ -103,3 +110,43 @@ jobs:
           fi
 
           echo "Os .vec correspondem aos SVG."
+
+  build-windows:
+    name: Build nativo do Windows
+    runs-on: windows-latest
+
+    # A imagem `windows-latest` traz o Visual Studio 2022 com a carga de C++ e
+    # o componente ATL, que é exatamente o que o projeto precisa — ver os
+    # pré-requisitos no README.
+    #
+    # Se um dia a imagem passar a trazer o Visual Studio 2026, este job quebra
+    # no `just_audio_windows`: o plugin usa `<experimental/coroutine>`, que o
+    # MSVC 14.51 rejeita, e o Flutter sempre escolhe a instalação mais recente.
+    # Quando isso acontecer, fixe a imagem em `windows-2025` em vez de
+    # `windows-latest`.
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup do Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.2
+          channel: stable
+          cache: true
+
+      # Deixa registrado no log qual Visual Studio a máquina usou. É a primeira
+      # informação de que se precisa quando este job quebra sem o código ter
+      # mudado.
+      - name: Ambiente
+        run: flutter doctor -v
+
+      - name: Dependências
+        run: flutter pub get
+
+      # Compila o código nativo de verdade, com os plugins do Windows. Não
+      # assina, não empacota e não sobe artefato: o resultado que interessa é
+      # ter compilado.
+      - name: Build do Windows
+        run: flutter build windows

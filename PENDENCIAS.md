@@ -1,11 +1,12 @@
 # Pendências abertas
 
 O que ficou em aberto das US02 a US24, reunido num lugar só e organizado por
-**quem precisa resolver**. Cada item aponta onde está no código — lá há um
-`TODO` com o mesmo assunto, e é lá que a correção acontece.
+**quem precisa resolver**. Cada item aponta onde está no código — quase sempre
+há um `TODO` com o mesmo assunto, e é lá que a correção acontece. Onde não há
+`TODO`, a própria linha explica por quê.
 
-Ao resolver um item, apague a linha daqui **e** o `TODO` do código, no mesmo
-commit.
+Ao resolver um item, apague a linha daqui **e** o `TODO` do código, quando
+houver, no mesmo commit.
 
 ---
 
@@ -70,6 +71,7 @@ commit.
 | Espectrograma no laudo: depende do contrato do resultado com a imagem. | 10 | `laudo/presentation/pdf_do_laudo.dart` |
 | Se a API exigir o token para servir a imagem do espectrograma, os cabeçalhos entram num lugar só. | 17 | `analise/data/imagem_do_servidor.dart` |
 | Ouvir a análise gravada em OUTRO aparelho: hoje só toca o que ainda está neste (achado pelo envio da fila). Precisa da API servir o áudio. | 13 | `fila/presentation/fila_controlador.dart` (`amostrasDaAnaliseProvider`) |
+| **`just_audio_windows` depende de um header obsoleto**, o `<experimental/coroutine>`: o MSVC 14.51, do Visual Studio 2026, já o rejeita, e é por isso que o build do Windows exige o Visual Studio Community 2022 (pré-requisitos no README). Quando a Microsoft remover o header de vez, o plugin para de compilar em qualquer versão e a reprodução no Windows precisa de outra implementação — a alternativa óbvia, o `just_audio_media_kit`, está barrada por embutir a libmpv, que é GPL. Não tem `TODO` no código: a dívida é da dependência, não de um trecho nosso. Quem avisa quando quebrar é o job `build-windows` do CI. | 13 | `pubspec.yaml` (`just_audio_windows`), `.github/workflows/ci.yml` |
 | **WAV sem registro**: se apagar o arquivo antigo falha numa regravação, ou no meio de um descarte já com o registro apagado, o WAV fica no disco sem ninguém que o aponte. Falta uma varredura que compare a pasta de amostras com o banco e apague o que sobrou. | 05, 19 | `captura/presentation/gravacao_controlador.dart` (`_apagarSubstituido`) |
 | Descartar uma sessão confere se ela já está num envio antes de apagar qualquer arquivo, mas conferência e descarte não são uma operação só: um envio criado exatamente entre os dois ainda perderia o WAV. Hoje nenhum fluxo põe na fila a sessão que está na tela de limpeza; se passar a existir, os dois precisam de trava comum. | 19 | `captura/presentation/gravacoes_nao_enviadas_controlador.dart` |
 | Consentimento vigente: no aparelho, vale a ordem de gravação (id autoincremento), não o relógio. Ao sincronizar com o Firebase, a ordem entre aparelhos precisa de regra própria. | 14, 15 | `consentimento/data/repositorio_consentimento_local.dart` |
