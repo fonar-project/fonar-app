@@ -70,6 +70,9 @@ commit.
 | Espectrograma no laudo: depende do contrato do resultado com a imagem. | 10 | `laudo/presentation/pdf_do_laudo.dart` |
 | Se a API exigir o token para servir a imagem do espectrograma, os cabeçalhos entram num lugar só. | 17 | `analise/data/imagem_do_servidor.dart` |
 | Ouvir a análise gravada em OUTRO aparelho: hoje só toca o que ainda está neste (achado pelo envio da fila). Precisa da API servir o áudio. | 13 | `fila/presentation/fila_controlador.dart` (`amostrasDaAnaliseProvider`) |
+| **WAV sem registro**: se apagar o arquivo antigo falha numa regravação, ou no meio de um descarte já com o registro apagado, o WAV fica no disco sem ninguém que o aponte. Falta uma varredura que compare a pasta de amostras com o banco e apague o que sobrou. | 05, 19 | `captura/presentation/gravacao_controlador.dart` (`_apagarSubstituido`) |
+| Descartar uma sessão confere se ela já está num envio antes de apagar qualquer arquivo, mas conferência e descarte não são uma operação só: um envio criado exatamente entre os dois ainda perderia o WAV. Hoje nenhum fluxo põe na fila a sessão que está na tela de limpeza; se passar a existir, os dois precisam de trava comum. | 19 | `captura/presentation/gravacoes_nao_enviadas_controlador.dart` |
+| Consentimento vigente: no aparelho, vale a ordem de gravação (id autoincremento), não o relógio. Ao sincronizar com o Firebase, a ordem entre aparelhos precisa de regra própria. | 14, 15 | `consentimento/data/repositorio_consentimento_local.dart` |
 
 ## Verificar em aparelho real
 
@@ -91,6 +94,7 @@ rede simulados.
 | **Token no cofre do sistema**: guardar, fechar o app e abrir de novo no Android e no Windows. E, no Android, confirmar que o backup automático está mesmo desligado (Configurações → Sistema → Backup não lista o FONAR). | 18 | `core/storage/token_storage.dart`, `AndroidManifest.xml` |
 | **Bloqueio por inatividade**: deixar o app em segundo plano mais de 5 minutos e voltar — bloqueia na hora? No Windows, digitar conta como uso? | 24 | `auth/presentation/widgets/vigia_de_inatividade.dart` |
 | Ouvir as gravações no Android e no Windows — no Windows, o `just_audio_windows` precisa compilar e tocar o WAV da área privada. | 13 | `reproducao/data/reprodutor_just_audio.dart` |
+| Falha no meio da reprodução (desconectar o fone, arquivo corrompido depois do cabeçalho): o player sai de "tocando" e mostra a falha? Os testes simulam o erro; o caminho do `just_audio` não foi exercitado. | 13 | `reproducao/data/reprodutor_just_audio.dart` |
 | Laudo: "abrir ou compartilhar" e "imprimir ou salvar" no Android e no Windows, e a pré-visualização A4 no Windows (o `printing` baixa o pdfium no build). | 10 | `laudo/data/saida_do_laudo.dart`, `laudo/presentation/laudo_controlador.dart` |
 
 ## Já existiam antes da US02

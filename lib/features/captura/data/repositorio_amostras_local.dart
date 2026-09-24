@@ -49,6 +49,23 @@ class RepositorioAmostrasLocal implements RepositorioAmostras {
     return [for (final l in linhas) amostraDaLinha(l)];
   }
 
+  @override
+  Future<bool> estaNumEnvio(String sessaoId) async {
+    final noEnvio =
+        await (_banco.select(_banco.amostrasDoEnvio).join([
+                innerJoin(
+                  _banco.amostras,
+                  _banco.amostras.id.equalsExp(
+                    _banco.amostrasDoEnvio.amostraId,
+                  ),
+                ),
+              ])
+              ..where(_banco.amostras.sessaoId.equals(sessaoId))
+              ..limit(1))
+            .getSingleOrNull();
+    return noEnvio != null;
+  }
+
   /// A chave estrangeira de `AmostrasDoEnvio` recusa apagar gravação que já
   /// está num envio — e a transação desfaz o resto da sessão junto.
   @override

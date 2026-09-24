@@ -39,6 +39,7 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
   /// O cancelamento do envio que está no ar, se houver, e de quem é.
   Cancelamento? _emCurso;
   String? _pacienteEmCurso;
+  String? _idEmCurso;
 
   /// Há rede e há quem esteja com a sessão aberta.
   bool get _podeEnviar =>
@@ -63,10 +64,35 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
       }
     });
 
-    final itens = await ref.read(repositorioFilaProvider).listar();
+    final repositorio = ref.read(repositorioFilaProvider);
+    final itens = [
+      for (final item in await repositorio.listar())
+        await _recuperarInterrompido(repositorio, item),
+    ];
     // Depois de o estado existir: o que ficou pendente de antes sobe já.
     Future.microtask(processar);
     return itens;
+  }
+
+  /// Item que ficou gravado como "enviando" sem envio nenhum no ar: o app
+  /// fechou no meio do upload. Volta para a fila com a MESMA chave — se a API
+  /// chegou a receber, a chave de idempotência evita a análise em dobro.
+  ///
+  /// Só aqui, na carga, e não a cada leitura da lista: fora da carga,
+  /// "enviando" pode ser um envio de verdade em curso (revisão de 24/09).
+  Future<ItemDaFila> _recuperarInterrompido(
+    RepositorioFila repositorio,
+    ItemDaFila item,
+  ) async {
+    if (item.situacao != SituacaoDoEnvio.enviando || item.id == _idEmCurso) {
+      return item;
+    }
+    final recuperado = item.copiar(
+      situacao: SituacaoDoEnvio.naFila,
+      proximaTentativa: () => null,
+    );
+    await repositorio.atualizar(recuperado);
+    return recuperado;
   }
 
   /// Põe uma sessão gravada na fila. Funciona sem conexão.
@@ -165,95 +191,114 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
   }
 
   Future<void> _enviar(ItemDaFila item) async {
-    // Conferido a cada envio, e não só na retirada: o item pode ter voltado à
-    // fila ("Tentar de novo") sem consentimento novo.
-    final bool retirado;
-    try {
-      retirado =
-          await ref
-              .read(repositorioConsentimentoProvider)
-              .retiradaEmVigor(item.pacienteId) !=
-          null;
-    } catch (erro) {
-      // Sem saber, não se envia: espera e confere de novo.
-      if (!ref.mounted) return;
-      await _salvar(
-        item.copiar(
-          situacao: SituacaoDoEnvio.aguardandoNovaTentativa,
-          ultimaFalha: () => FalhaDesconhecida(causa: erro).mensagem,
-          proximaTentativa: () =>
-              _agora().add(PoliticaDeReenvio.esperaApos(item.tentativas + 1)),
-        ),
-      );
-      return;
-    }
-    if (!ref.mounted) return;
-    if (retirado) {
-      await _salvar(_semConsentimento(item));
-      return;
-    }
-
-    final tentativas = item.tentativas + 1;
-    await _salvar(
-      item.copiar(situacao: SituacaoDoEnvio.enviando, tentativas: tentativas),
-    );
-    // Toda espera pode terminar com a fila descartada (app fechando).
-    if (!ref.mounted) return;
-
+    // O cancelamento existe desde o começo, e não só quando o upload
+    // começa: sair da conta ou retirar o consentimento durante as esperas
+    // abaixo também precisa ser visto. Antes, quem saía nesse meio-tempo não
+    // achava envio nenhum para interromper, e o upload começava com a sessão
+    // já fechada (revisão de 24/09).
     final cancelamento = Cancelamento();
     _emCurso = cancelamento;
+    _idEmCurso = item.id;
     _pacienteEmCurso = item.pacienteId;
     try {
-      final analiseId = await ref
-          .read(envioDeAnaliseProvider)
-          .enviar(item, cancelamento: cancelamento);
-      if (!ref.mounted) return;
-      await _salvar(
-        item.copiar(
-          situacao: SituacaoDoEnvio.enviado,
-          tentativas: tentativas,
-          analiseId: analiseId,
-          proximaTentativa: () => null,
-          ultimaFalha: () => null,
-        ),
-      );
-    } catch (erro) {
-      if (!ref.mounted) return;
-      // O contrato é lançar só AppException. Se outra coisa escapar, o item
-      // não pode ficar preso em "enviando" para sempre: vira falha passageira.
-      final falha = erro is AppException
-          ? erro
-          : FalhaDesconhecida(causa: erro);
-      // Interrompido porque o profissional saiu: não foi falha do envio.
-      // Volta para a fila como estava, sem contar tentativa nem esperar.
-      if (falha is EnvioCancelado && cancelamento.pedido) {
+      // Conferido a cada envio, e não só na retirada: o item pode ter voltado
+      // à fila ("Tentar de novo") sem consentimento novo.
+      final bool retirado;
+      try {
+        retirado =
+            await ref
+                .read(repositorioConsentimentoProvider)
+                .retiradaEmVigor(item.pacienteId) !=
+            null;
+      } catch (erro) {
+        // Sem saber, não se envia: espera e confere de novo.
+        if (!ref.mounted) return;
         await _salvar(
           item.copiar(
-            situacao: SituacaoDoEnvio.naFila,
-            proximaTentativa: () => null,
+            situacao: SituacaoDoEnvio.aguardandoNovaTentativa,
+            ultimaFalha: () => FalhaDesconhecida(causa: erro).mensagem,
+            proximaTentativa: () =>
+                _agora().add(PoliticaDeReenvio.esperaApos(item.tentativas + 1)),
           ),
         );
         return;
       }
-      final situacao = PoliticaDeReenvio.depoisDe(falha);
+      if (!ref.mounted) return;
+      if (retirado) {
+        await _salvar(_semConsentimento(item));
+        return;
+      }
+      // Pediram para parar durante a consulta: o item fica como está — a
+      // retirada já o marcou, e sem sessão ou rede ele espera na fila.
+      if (cancelamento.pedido || !_podeEnviar) return;
+
+      final tentativas = item.tentativas + 1;
       await _salvar(
-        item.copiar(
-          situacao: situacao,
-          tentativas: tentativas,
-          ultimaFalha: () => falha.mensagem,
-          proximaTentativa: () =>
-              situacao == SituacaoDoEnvio.aguardandoNovaTentativa
-              ? _agora().add(PoliticaDeReenvio.esperaApos(tentativas))
-              : null,
-        ),
+        item.copiar(situacao: SituacaoDoEnvio.enviando, tentativas: tentativas),
       );
+      // Toda espera pode terminar com a fila descartada (app fechando).
+      if (!ref.mounted) return;
+      // Última conferência antes de transmitir: ninguém pediu para parar, e
+      // ainda há rede e sessão.
+      if (cancelamento.pedido || !_podeEnviar) {
+        await _devolverAFila(item);
+        return;
+      }
+
+      try {
+        final analiseId = await ref
+            .read(envioDeAnaliseProvider)
+            .enviar(item, cancelamento: cancelamento);
+        if (!ref.mounted) return;
+        await _salvar(
+          item.copiar(
+            situacao: SituacaoDoEnvio.enviado,
+            tentativas: tentativas,
+            analiseId: analiseId,
+            proximaTentativa: () => null,
+            ultimaFalha: () => null,
+          ),
+        );
+      } catch (erro) {
+        if (!ref.mounted) return;
+        // O contrato é lançar só AppException. Se outra coisa escapar, o item
+        // não pode ficar preso em "enviando" para sempre: vira falha
+        // passageira.
+        final falha = erro is AppException
+            ? erro
+            : FalhaDesconhecida(causa: erro);
+        // Interrompido porque o profissional saiu: não foi falha do envio.
+        if (falha is EnvioCancelado && cancelamento.pedido) {
+          await _devolverAFila(item);
+          return;
+        }
+        final situacao = PoliticaDeReenvio.depoisDe(falha);
+        await _salvar(
+          item.copiar(
+            situacao: situacao,
+            tentativas: tentativas,
+            ultimaFalha: () => falha.mensagem,
+            proximaTentativa: () =>
+                situacao == SituacaoDoEnvio.aguardandoNovaTentativa
+                ? _agora().add(PoliticaDeReenvio.esperaApos(tentativas))
+                : null,
+          ),
+        );
+      }
     } finally {
       if (identical(_emCurso, cancelamento)) {
         _emCurso = null;
+        _idEmCurso = null;
         _pacienteEmCurso = null;
       }
     }
   }
+
+  /// O envio foi interrompido antes de ser tentado de verdade: volta para a
+  /// fila como estava, sem contar tentativa nem esperar.
+  Future<void> _devolverAFila(ItemDaFila item) => _salvar(
+    item.copiar(situacao: SituacaoDoEnvio.naFila, proximaTentativa: () => null),
+  );
 
   /// A conexão voltou, ou a sessão abriu: o que esperava não precisa mais
   /// esperar.

@@ -9,6 +9,7 @@ import '../../reproducao/presentation/reproducao_controlador.dart';
 import '../data/gravador_record.dart';
 import '../data/repositorio_amostras_local.dart';
 import '../domain/amostra.dart';
+import '../domain/gravador.dart';
 import '../domain/sessao_nao_enviada.dart';
 
 /// As sessões de um paciente que ficaram no aparelho sem ir para a análise —
@@ -22,12 +23,28 @@ final sessoesNaoEnviadasProvider = FutureProvider.autoDispose
           .doPaciente(pacienteId);
       // Sem gravação nenhuma, a fila nem precisa ser lida.
       if (todas.isEmpty) return const [];
-      return sessoesNaoEnviadas(
+      final sessoes = sessoesNaoEnviadas(
         amostrasDoPaciente: todas,
         sessoesNaFila: {for (final i in await fila.listar()) i.sessaoId},
         agora: agora,
       );
+      // O registro não basta: o WAV pode ter saído do disco num descarte que
+      // falhou no meio (revisão de 24/09).
+      final arquivos = ref.read(arquivosDeAmostraProvider);
+      return [
+        for (final s in sessoes)
+          s.comArquivosFaltando(await _semArquivo(arquivos, s)),
+      ];
     });
+
+/// As tarefas de [sessao] cujo arquivo não está no disco.
+Future<Set<TarefaDeGravacao>> _semArquivo(
+  ArquivosDeAmostra arquivos,
+  SessaoNaoEnviada sessao,
+) async => {
+  for (final MapEntry(key: tarefa, value: amostra) in sessao.amostras.entries)
+    if (await arquivos.ler(amostra.caminho) == null) tarefa,
+};
 
 /// O que está acontecendo com as sessões na tela.
 class EstadoDaLimpeza {
@@ -67,7 +84,12 @@ class LimpezaControlador extends Notifier<EstadoDaLimpeza> {
   ///
   /// Os arquivos saem ANTES do registro: se um arquivo não sair, o registro
   /// fica, e a sessão continua na lista para tentar de novo — em vez de um
-  /// WAV de paciente sobrar no disco sem ninguém saber dele.
+  /// WAV de paciente sobrar no disco sem ninguém saber dele. Os que já
+  /// saíram aparecem como faltando, e a sessão deixa de ser enviável.
+  ///
+  /// Sessão que já está num envio não se descarta: a conferência vem antes
+  /// de apagar qualquer arquivo. A chave estrangeira do banco protegia o
+  /// registro, mas não o WAV, que saía antes (revisão de 24/09).
   Future<bool> descartar(SessaoNaoEnviada sessao) async {
     if (state.ocupada != null || state.confirmando != sessao.sessaoId) {
       return false;
@@ -84,10 +106,16 @@ class LimpezaControlador extends Notifier<EstadoDaLimpeza> {
     final repositorio = container.read(repositorioAmostrasProvider);
     String? falha;
     try {
-      for (final amostra in sessao.amostras.values) {
-        await arquivos.apagar(amostra.caminho);
+      // TODO(equipe): conferência e descarte não são atômicos — ver
+      // `PENDENCIAS.md`.
+      if (await repositorio.estaNumEnvio(sessao.sessaoId)) {
+        falha = AppStrings.naoEnviadasJaNaFila;
+      } else {
+        for (final amostra in sessao.amostras.values) {
+          await arquivos.apagar(amostra.caminho);
+        }
+        await repositorio.descartarSessao(sessao.sessaoId);
       }
-      await repositorio.descartarSessao(sessao.sessaoId);
     } on AppException catch (e) {
       falha = e.mensagem;
     } catch (_) {
@@ -113,7 +141,18 @@ class LimpezaControlador extends Notifier<EstadoDaLimpeza> {
     state = EstadoDaLimpeza(ocupada: sessao.sessaoId);
     final container = ref.container;
     var enviou = false;
+    var mensagem = AppStrings.naoEnviadasErroEnviar;
     try {
+      // Conferido agora, e não só quando a lista foi montada: a lista pode
+      // ser de antes de um descarte que falhou no meio.
+      final faltando = await _semArquivo(
+        container.read(arquivosDeAmostraProvider),
+        sessao,
+      );
+      if (faltando.isNotEmpty) {
+        mensagem = AppStrings.naoEnviadasFaltaArquivo;
+        throw StateError('arquivo faltando');
+      }
       await container
           .read(filaControladorProvider.notifier)
           .enfileirar(
@@ -129,12 +168,7 @@ class LimpezaControlador extends Notifier<EstadoDaLimpeza> {
     container.invalidate(sessoesNaoEnviadasProvider(pacienteId));
     if (ref.mounted) {
       state = EstadoDaLimpeza(
-        erro: enviou
-            ? null
-            : (
-                sessaoId: sessao.sessaoId,
-                mensagem: AppStrings.naoEnviadasErroEnviar,
-              ),
+        erro: enviou ? null : (sessaoId: sessao.sessaoId, mensagem: mensagem),
       );
     }
     return enviou;
