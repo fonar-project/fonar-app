@@ -58,8 +58,14 @@ class _Arquivos implements ArquivosDeAmostra {
     return (inicio: bytes, tamanho: bytes.length);
   }
 
+  /// Arquivos que o disco se recusa a apagar — em uso, por exemplo.
+  final presos = <String>{};
+
   @override
-  Future<void> apagar(String caminho) async => conteudo.remove(caminho);
+  Future<void> apagar(String caminho) async {
+    if (presos.contains(caminho)) throw StateError('arquivo em uso');
+    conteudo.remove(caminho);
+  }
 }
 
 /// Microfone e gravador de mentira: emite [niveis] em ciclo e, ao parar,
@@ -342,6 +348,29 @@ void main() {
     expect(find.text(AppStrings.tarefaGravada('4,0 s')), findsOneWidget);
     expect(c.disco.conteudo.keys, isNot(contains(primeira)));
     expect(c.disco.conteudo, hasLength(1));
+  });
+
+  testWidgets('regravação boa fica, mesmo se o arquivo anterior não sair', (
+    tester,
+  ) async {
+    // Revisão de 24/09: a falha ao apagar o arquivo antigo caía no mesmo
+    // tratamento de erro da gravação e apagava o NOVO, já registrado.
+    final c = await _abrir(tester);
+    await _gravar(tester);
+    final primeira = c.disco.conteudo.keys.single;
+    c.disco.presos.add(primeira);
+
+    await _gravar(
+      tester,
+      rotulo: AppStrings.tarefaGravarDeNovo,
+      duracao: const Duration(seconds: 4),
+    );
+
+    final nova = c.repositorio.guardadas.last;
+    expect(nova.caminho, isNot(primeira));
+    expect(c.disco.conteudo.keys, contains(nova.caminho));
+    expect(find.text(AppStrings.tarefaGravada('4,0 s')), findsOneWidget);
+    expect(find.text(AppStrings.tarefaFalhaFinalizar), findsNothing);
   });
 
   testWidgets('arquivo que não é PCM é recusado, mesmo com som', (
