@@ -96,7 +96,22 @@ class _Fila {
       );
 }
 
-Future<_Fila> _montar(WidgetTester tester, {bool online = true}) async {
+/// Fila que segura a gravação do "enviando" até o teste deixar.
+class _FilaLenta extends RepositorioFilaEmMemoria {
+  Completer<void>? segurar;
+
+  @override
+  Future<void> atualizar(ItemDaFila item) async {
+    if (item.situacao == SituacaoDoEnvio.enviando) await segurar?.future;
+    return super.atualizar(item);
+  }
+}
+
+Future<_Fila> _montar(
+  WidgetTester tester, {
+  bool online = true,
+  RepositorioFila? repositorio,
+}) async {
   final envio = _Envio();
   final rede = NotifierProvider<_Rede, bool>(() => _Rede(online));
   late _Fila fila;
@@ -105,7 +120,9 @@ Future<_Fila> _montar(WidgetTester tester, {bool online = true}) async {
       envioDeAnaliseProvider.overrideWithValue(envio),
       // Profissional com a sessão aberta: sem ela a fila não envia.
       sessaoAbertaProvider.overrideWith(() => Sessao(true)),
-      repositorioFilaProvider.overrideWithValue(RepositorioFilaEmMemoria()),
+      repositorioFilaProvider.overrideWithValue(
+        repositorio ?? RepositorioFilaEmMemoria(),
+      ),
       conexaoOnlineProvider.overrideWith((ref) => ref.watch(rede)),
       relogioProvider.overrideWithValue(() => fila.agora),
     ],
@@ -124,9 +141,14 @@ void _testarFila(
   String descricao,
   Future<void> Function(WidgetTester tester, _Fila fila) corpo, {
   bool online = true,
+  RepositorioFila? repositorio,
 }) {
   testWidgets(descricao, (tester) async {
-    final fila = await _montar(tester, online: online);
+    final fila = await _montar(
+      tester,
+      online: online,
+      repositorio: repositorio,
+    );
     try {
       await corpo(tester, fila);
     } finally {
@@ -367,6 +389,32 @@ void main() {
       expect(fila.envio.recebidos, hasLength(2));
       expect(fila.item.situacao, SituacaoDoEnvio.enviado);
     });
+
+    final lenta = _FilaLenta();
+    _testarFila(
+      'sair enquanto o envio ainda se prepara: nada sobe',
+      repositorio: lenta,
+      (tester, fila) async {
+        // Revisão de 24/09: o cancelamento só existia depois de gravar
+        // "enviando"; quem saía nessa espera não interrompia nada e o upload
+        // começava com a sessão fechada.
+        lenta.segurar = Completer<void>();
+        final enfileirando = fila.enfileirar();
+        await _assentar(tester);
+        expect(fila.envio.recebidos, isEmpty);
+
+        fila.container.read(sessaoAbertaProvider.notifier).encerrar();
+        await _assentar(tester);
+        lenta.segurar!.complete();
+        lenta.segurar = null;
+        await enfileirando;
+        await _assentar(tester);
+
+        expect(fila.envio.recebidos, isEmpty);
+        expect(fila.item.situacao, SituacaoDoEnvio.naFila);
+        expect(fila.item.tentativas, 0);
+      },
+    );
 
     _testarFila('um envio por vez, do mais antigo para o mais novo', (
       tester,
