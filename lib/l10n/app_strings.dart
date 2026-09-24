@@ -339,6 +339,11 @@ abstract final class AppStrings {
   static const naoEnviadasOcupada = 'Espere a outra sessão terminar.';
   static const naoEnviadasErroDescartar =
       'Não foi possível apagar tudo. A sessão continua aqui; tente de novo.';
+  static const naoEnviadasSemArquivo = 'Arquivo não encontrado neste aparelho.';
+  static const naoEnviadasFaltaArquivo =
+      'Falta arquivo de gravação: descarte a sessão e grave de novo.';
+  static const naoEnviadasJaNaFila =
+      'Esta sessão já foi para a fila de envio e não se descarta aqui.';
   static const naoEnviadasErroEnviar =
       'Não foi possível pôr a sessão na fila. Tente de novo.';
   static const naoEnviadasErroCarregar =

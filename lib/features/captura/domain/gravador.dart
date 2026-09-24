@@ -53,6 +53,9 @@ abstract interface class RepositorioAmostras {
   /// precisa dela.
   Future<void> descartarSessao(String sessaoId);
 
+  /// Alguma gravação de [sessaoId] já está num envio da fila.
+  Future<bool> estaNumEnvio(String sessaoId);
+
   /// Guarda [amostra] no lugar da anterior da mesma tarefa NA MESMA SESSÃO,
   /// se houver — regravar substitui, não acumula. Sessões anteriores do
   /// paciente não são tocadas.
