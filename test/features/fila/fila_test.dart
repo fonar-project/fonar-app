@@ -14,6 +14,7 @@ import 'package:fonar_app/features/fila/domain/item_da_fila.dart';
 import 'package:fonar_app/features/fila/domain/repositorio_fila.dart';
 import 'package:fonar_app/features/fila/presentation/fila_controlador.dart';
 
+import '../../apoio/banco_em_memoria.dart';
 import '../../apoio/repositorios_em_memoria.dart';
 
 /// Rede ligável e desligável pelo teste.
@@ -415,6 +416,60 @@ void main() {
         expect(fila.item.tentativas, 0);
       },
     );
+
+    testWidgets('envio que o app fechou no meio volta para a fila ao abrir', (
+      tester,
+    ) async {
+      // Revisão de 24/09: o "enviando" gravado antes do upload era lido ao pé
+      // da letra na abertura seguinte, e nada — nem "tentar agora" — o tirava
+      // de lá.
+      final banco = bancoEmMemoria();
+      addTearDown(banco.close);
+      final interrompido = ItemDaFila(
+        id: 'envio-s1',
+        pacienteId: 'p1',
+        nomeDoPaciente: 'Ana de Teste',
+        sessaoId: 's1',
+        amostras: const [],
+        criadoEm: DateTime(2026, 9, 23, 9),
+        situacao: SituacaoDoEnvio.enviando,
+        tentativas: 1,
+      );
+      await RepositorioFilaLocal(banco).adicionar(interrompido);
+
+      final fila = await _montar(
+        tester,
+        repositorio: RepositorioFilaLocal(banco),
+      );
+      try {
+        await _assentar(tester);
+        // Sobe sozinho, uma vez, com a mesma chave de idempotência.
+        expect(fila.envio.recebidos, ['envio-s1']);
+        expect(fila.item.situacao, SituacaoDoEnvio.enviado);
+        final gravado = (await RepositorioFilaLocal(banco).listar()).single;
+        expect(gravado.situacao, SituacaoDoEnvio.enviado);
+      } finally {
+        fila.container.dispose();
+      }
+    });
+
+    _testarFila('enviando de verdade não é tomado por interrompido', (
+      tester,
+      fila,
+    ) async {
+      // A recuperação é só da carga: um envio no ar não volta para a fila
+      // nem sobe duas vezes quando a lista é lida de novo.
+      fila.envio.segurarAteCancelar();
+      await fila.enfileirar();
+      await _assentar(tester);
+      expect(fila.item.situacao, SituacaoDoEnvio.enviando);
+
+      await fila.controlador.tentarAgora(fila.item.id);
+      await fila.controlador.processar();
+      await _assentar(tester);
+      expect(fila.envio.recebidos, hasLength(1));
+      expect(fila.item.situacao, SituacaoDoEnvio.enviando);
+    });
 
     _testarFila('um envio por vez, do mais antigo para o mais novo', (
       tester,

@@ -35,6 +35,9 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
   /// O cancelamento do envio que está no ar, se houver.
   Cancelamento? _emCurso;
 
+  /// O item desse envio.
+  String? _idEmCurso;
+
   /// Há rede e há quem esteja com a sessão aberta.
   bool get _podeEnviar =>
       ref.read(conexaoOnlineProvider) && ref.read(sessaoAbertaProvider);
@@ -58,10 +61,35 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
       }
     });
 
-    final itens = await ref.read(repositorioFilaProvider).listar();
+    final repositorio = ref.read(repositorioFilaProvider);
+    final itens = [
+      for (final item in await repositorio.listar())
+        await _recuperarInterrompido(repositorio, item),
+    ];
     // Depois de o estado existir: o que ficou pendente de antes sobe já.
     Future.microtask(processar);
     return itens;
+  }
+
+  /// Item que ficou gravado como "enviando" sem envio nenhum no ar: o app
+  /// fechou no meio do upload. Volta para a fila com a MESMA chave — se a API
+  /// chegou a receber, a chave de idempotência evita a análise em dobro.
+  ///
+  /// Só aqui, na carga, e não a cada leitura da lista: fora da carga,
+  /// "enviando" pode ser um envio de verdade em curso (revisão de 24/09).
+  Future<ItemDaFila> _recuperarInterrompido(
+    RepositorioFila repositorio,
+    ItemDaFila item,
+  ) async {
+    if (item.situacao != SituacaoDoEnvio.enviando || item.id == _idEmCurso) {
+      return item;
+    }
+    final recuperado = item.copiar(
+      situacao: SituacaoDoEnvio.naFila,
+      proximaTentativa: () => null,
+    );
+    await repositorio.atualizar(recuperado);
+    return recuperado;
   }
 
   /// Põe uma sessão gravada na fila. Funciona sem conexão.
@@ -137,6 +165,7 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
     // 24/09).
     final cancelamento = Cancelamento();
     _emCurso = cancelamento;
+    _idEmCurso = item.id;
     try {
       final tentativas = item.tentativas + 1;
       await _salvar(
@@ -192,7 +221,10 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
         );
       }
     } finally {
-      if (identical(_emCurso, cancelamento)) _emCurso = null;
+      if (identical(_emCurso, cancelamento)) {
+        _emCurso = null;
+        _idEmCurso = null;
+      }
     }
   }
 
