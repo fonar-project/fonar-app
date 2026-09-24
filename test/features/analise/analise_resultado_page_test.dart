@@ -419,6 +419,8 @@ class _ReprodutorQuieto implements Reprodutor {
   @override
   Stream<void> get terminou => const Stream.empty();
   @override
+  Stream<Object> get falhas => const Stream.empty();
+  @override
   Future<void> fechar() async {}
 }
 
