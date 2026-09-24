@@ -153,10 +153,22 @@ Todo dado exibido em desenvolvimento é placeholder e deve ser identificável
 como tal.
 
 ## Estado atual
-Esqueleto: rotas, tema, tokens, camada de rede e permissões. Nenhuma feature
-implementada. O token de autenticação fica no cofre do sistema
-(`TokenStorageSeguro`), e o backup automático do Android está desligado de
-propósito — não reativar.
+O fluxo da avaliação existe de ponta a ponta no aparelho (US00 a US21 — lista
+e resumo no README): cadastro, consentimento e retirada, aferição, gravação,
+fila, resultado, CAPE-V, evolução, laudo em PDF, com os dados num banco local
+(Drift, `lib/core/banco/`).
+
+Ainda é PLACEHOLDER, e identificado como tal: o login (aceita qualquer
+e-mail e senha), a API de análise e os resultados (de exemplo, avisados na
+tela), e os pacientes "de Exemplo", que aparecem por cima do banco sem serem
+gravados nele. O catálogo de faixas de referência está vazio de propósito:
+nenhuma medida é classificada.
+
+O que falta e de quem depende está em `PENDENCIAS.md` — ao resolver um item,
+apague a linha de lá e o `TODO` do código, no mesmo commit.
+
+O token de autenticação fica no cofre do sistema (`TokenStorageSeguro`), e o
+backup automático do Android está desligado de propósito — não reativar.
 
 ## Git
 Branch: `nome/USxx-featureImplementada` — ex.: `felipe/US04-medidorDeNivel`

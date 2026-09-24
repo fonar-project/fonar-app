@@ -1,12 +1,13 @@
 # FONAR — aplicativo
 
-> [!WARNING]
-> **Só existe o esqueleto.** Nenhuma funcionalidade foi implementada. As telas
-> estão vazias, não há captura de áudio, não há Firebase, não há chamada de API
-> e não há persistência local. O que existe é estrutura de pastas, rotas,
-> configuração do Riverpod, cliente HTTP, tema com tokens placeholder e as
-> permissões de plataforma. Se você veio procurar a implementação de alguma
-> coisa, ela ainda não está aqui.
+> [!IMPORTANT]
+> **O app funciona de ponta a ponta no aparelho, mas ainda sem backend.** O
+> login, o envio para a análise e os resultados são **placeholder**: o login
+> aceita qualquer e-mail e senha, a API de análise ainda não existe, e os
+> resultados que aparecem são de exemplo — avisados como tal na tela. Tudo o
+> que é do aparelho é de verdade: cadastro, consentimento, gravação, fila,
+> CAPE-V, laudo em PDF, com os dados salvos num banco local. O que falta, e
+> de quem depende, está em [`PENDENCIAS.md`](PENDENCIAS.md).
 
 Aplicativo do FONAR, plataforma de avaliação vocal clínica para
 fonoaudiólogos. O uso previsto é durante a consulta, com o paciente presente.
@@ -15,6 +16,44 @@ TCC de Engenharia de Software, PUC-Campinas.
 
 **Codebase único para Android e Windows.** Não há funcionalidade exclusiva de
 plataforma: as duas rodam exatamente o mesmo conjunto de recursos.
+
+---
+
+## O que o app faz hoje
+
+O caminho de uma avaliação, na ordem em que o profissional passa por ele:
+
+1. **Entra** (US00) e vê **os pacientes** (US01), com busca que não liga para
+   acento — e, sem conexão, entra no modo offline se houver pacientes no
+   aparelho.
+2. **Cadastra o paciente** (US02) — ou corrige os dados depois (US20). Salvar
+   avisa se já existe alguém com o mesmo nome e nascimento, e sair com o
+   formulário preenchido pergunta antes (US21).
+3. **Registra o consentimento** (US03). Sem ele, a gravação não abre: o
+   bloqueio é do roteador, não um aviso. O paciente pode retirar o
+   consentimento depois (US15), e aí a gravação volta a bloquear e os envios
+   dele param.
+4. **Afere o ruído da sala** (US04) com o medidor de nível ao vivo. Silêncio
+   absoluto é tratado como microfone mudo, nunca como sala silenciosa.
+5. **Grava as tarefas** (US05) — vogal sustentada e fala encadeada —, com cada
+   WAV conferido depois de gravado. Dá para **ouvir** cada gravação (US13).
+   Voltar à gravação no mesmo dia **retoma a sessão** (US16).
+6. **Manda para a análise** pela **fila** (US06), que funciona sem conexão e
+   sobe quando a rede voltar. Sessões que ficaram paradas no aparelho aparecem
+   no perfil para enviar ou descartar (US19).
+7. **Vê o resultado** (US07): as medidas, classificadas só se houver faixa de
+   referência validada — hoje nenhuma há, e o app diz isso. O **espectrograma**
+   abre em tela cheia, deitado no celular (US17).
+8. **Registra a CAPE-V** (US08), vê a **evolução** entre sessões (US09) — com
+   um modo para mostrar ao paciente — e gera o **laudo em PDF** (US10).
+
+Em volta disso: o **perfil do paciente** (US12) reúne dados, consentimento,
+sessões, laudos e fila; a **conta** (US11) tem os dados do profissional e o
+sair; tudo fica num **banco local** (US14); e o token vai para o **cofre do
+sistema** (US18).
+
+A numeração das US03 a US10 foi deduzida das telas do protótipo — confira com
+o backlog antes de citar no texto do TCC (ver `PENDENCIAS.md`).
 
 ---
 
@@ -135,11 +174,15 @@ O primeiro `flutter run -d windows` compila código nativo e demora bem mais que
 os seguintes. O primeiro build Android baixa o Gradle 9.3.1 e as dependências —
 mesma história.
 
+O primeiro build de cada plataforma também baixa o SQLite pronto do banco
+local (conferido por SHA-256) e, no Windows, o pdfium da pré-visualização do
+laudo: precisa de rede nessa hora. Depois, o app funciona sem conexão.
+
 ### Verificar antes de commitar
 
 ```bash
 dart format .                # o CI reprova código fora do formato padrão
-flutter analyze              # precisa terminar com "No issues found!"
+flutter analyze --fatal-infos  # precisa terminar com "No issues found!"
 flutter test                 # roda a suíte
 flutter test test/widget_test.dart                            # um arquivo
 flutter test --plain-name "app sobe e abre na rota inicial"   # um teste
@@ -148,6 +191,18 @@ flutter test --plain-name "app sobe e abre na rota inicial"   # um teste
 Mexeu em ícone — adicionou, removeu ou redesenhou um SVG? Rode também
 `dart run tool/compilar_icones.dart` e commite o que sair dele. O motivo está
 logo abaixo.
+
+Mexeu numa tabela do banco (`lib/core/banco/tabelas.dart`)? Gere o código de
+novo e commite junto:
+
+```bash
+dart run build_runner build
+dart format lib/core/banco
+```
+
+Se a mudança vai para quem já tem o app instalado, suba o `schemaVersion`,
+escreva a migração e guarde o formato novo — o passo a passo está no
+comentário de `schemaVersion`, em `lib/core/banco/banco_local.dart`.
 
 ### Integração contínua
 
@@ -161,6 +216,7 @@ pré-requisitos. **Só verifica:** não compila release e não publica nada.
 | Formatação | `dart format --output=none --set-exit-if-changed .` |
 | Análise | `flutter analyze --fatal-infos` |
 | Testes | `flutter test` |
+| Código do banco | `dart run build_runner build`, e `lib/core/banco` precisa ficar igual |
 | Ícones pré-compilados | `dart run tool/compilar_icones.dart`, e a árvore precisa ficar limpa |
 
 O último passo existe para cobrir o buraco que o
@@ -238,27 +294,44 @@ lib/
 ├── main.dart              ProviderScope na raiz + FonarApp
 ├── app/
 │   ├── app.dart           MaterialApp.router, tema, sem lógica
-│   └── router/            rotas do go_router e constantes de caminho
+│   ├── app_estrutura.dart navegação principal (barra no celular, lateral
+│   │                      no desktop)
+│   ├── licencas.dart      licença da fonte, para "Licenças de software"
+│   └── router/            rotas, o bloqueio de consentimento e a pergunta
+│                          antes de sair de formulário alterado
 ├── core/                  infraestrutura, sem regra de negócio
-│   ├── config/            URL da API e timeouts, via --dart-define
+│   ├── banco/             o banco local (Drift): tabelas, migração, ids
+│   ├── config/            URL da API, timeouts e versão, via --dart-define
 │   ├── error/             AppException selado; erro traduzido para o usuário
-│   ├── network/           cliente Dio + interceptors de token e de erro
-│   ├── storage/           guarda do token (hoje placeholder)
+│   ├── network/           cliente Dio, interceptors e estado da conexão
+│   ├── offline/           se dá para entrar sem conexão
+│   ├── storage/           o token, no cofre do sistema
 │   └── permissions/       contrato de permissão de microfone
 ├── design_system/         tudo que é aparência
-│   ├── tokens/            cor, espaçamento, tipografia, raio — placeholders
+│   ├── tokens/            cor, espaçamento, tipografia, raio
 │   ├── theme/             ThemeData montado a partir dos tokens
-│   ├── widgets/           componentes compartilhados
+│   ├── widgets/           componentes compartilhados (botão, campo,
+│   │                      situação, confirmação, ícone…)
 │   └── breakpoints.dart   as faixas de largura (regra 2)
 ├── l10n/
 │   └── app_strings.dart   TODO texto de interface, em pt-BR
 └── features/              uma pasta por funcionalidade
-    ├── auth/
-    ├── pacientes/
-    ├── consentimento/
-    ├── captura/
-    ├── analise/
-    └── historico/
+    ├── auth/              login, sessão e profissional logado
+    ├── pacientes/         lista, cadastro, perfil e correção dos dados
+    ├── consentimento/     registro e retirada
+    ├── captura/           aferição, gravação, retomada e sessões paradas
+    ├── reproducao/        ouvir uma gravação
+    ├── fila/              envio para a análise, com e sem conexão
+    ├── analise/           resultado, faixas de referência, espectrograma
+    ├── cape_v/            a escala perceptivo-auditiva
+    ├── historico/         evolução entre sessões e modo paciente
+    ├── laudo/             conferência, PDF, compartilhar e imprimir
+    └── conta/             dados do profissional e sair
+
+test/
+├── apoio/                 banco em memória e repositórios falsos
+├── core/migracoes/        o formato de cada versão do banco (gerado)
+└── …                      o mesmo desenho de lib/
 ```
 
 **Divisão por feature, não por camada.** Cada pasta em `features/` se divide em
@@ -281,9 +354,15 @@ nenhuma delas. Se algo em `core/` só serve a uma feature, o lugar dele é dentr
 da feature.
 
 **`design_system/`** concentra a aparência. Telas não inventam cor, espaçamento
-nem raio de borda: puxam dos tokens. Assim, trocar a identidade visual é
-trabalho num lugar só — e hoje os valores são placeholder mesmo, feitos para
-serem substituídos.
+nem raio de borda: puxam dos tokens, que seguem a paleta e a tipografia do
+CLAUDE.md. Assim, trocar a identidade visual é trabalho num lugar só.
+
+**`core/banco/`** é o banco local, um só para o app inteiro: pacientes,
+consentimentos (e retiradas), gravações, fila, CAPE-V e laudos. É o que
+deixa o consultório sem sinal trabalhar. As tabelas guardam enum como texto,
+e quem converte de e para o domínio é o repositório de cada feature, na
+camada `data/`. Os testes usam o mesmo banco, em memória
+(`test/apoio/banco_em_memoria.dart`).
 
 **`l10n/app_strings.dart`** guarda todo texto visível, incluindo as mensagens de
 erro. Dois motivos: revisão da linguagem clínica em um arquivo só, e nenhum
@@ -308,7 +387,8 @@ feat(US04): adiciona medidor de nivel em tempo real
 fix(US07): corrige envio duplicado ao perder conexao
 ```
 
-A feature branch sai da `main`.
+A feature branch sai da `main`. Enquanto os PRs anteriores não entram, cada
+US sai da branch da US anterior, e os PRs se empilham na mesma ordem.
 
 ---
 
