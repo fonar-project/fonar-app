@@ -128,6 +128,9 @@ class _Repositorio implements RepositorioAmostras {
 
   @override
   Future<void> descartarSessao(String sessaoId) async {}
+
+  @override
+  Future<bool> estaNumEnvio(String sessaoId) async => false;
 }
 
 /// Envio que nunca responde: o item fica em "enviando", e o teste olha só

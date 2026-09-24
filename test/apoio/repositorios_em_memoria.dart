@@ -123,6 +123,9 @@ class RepositorioAmostrasPlaceholder implements RepositorioAmostras {
       _amostras.removeWhere((a) => a.sessaoId == sessaoId);
 
   @override
+  Future<bool> estaNumEnvio(String sessaoId) async => false;
+
+  @override
   Future<List<Amostra>> ultimaSessao(String pacienteId) async {
     final doPaciente = [
       for (final a in _amostras)
