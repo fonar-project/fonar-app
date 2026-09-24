@@ -988,6 +988,25 @@ abstract final class AppStrings {
       'decisão do profissional. O FONAR não emite diagnóstico.';
   static const loginCampoEmail = 'E-mail';
   static const loginCampoSenha = 'Senha';
+
+  // --------------------------------------------- bloqueio por inatividade --
+  static const bloqueioTitulo = 'Aplicativo bloqueado';
+  static String bloqueioTexto(int minutos) =>
+      'Depois de $minutos ${minutos == 1 ? 'minuto' : 'minutos'} sem uso, o '
+      'FONAR esconde os dados dos pacientes. A fila de envio continua '
+      'trabalhando, e a tela volta como estava.';
+  static String bloqueioProfissional(String nome) => 'Sessão de $nome';
+  static const bloqueioDesbloquear = 'Desbloquear';
+  static const bloqueioConferindo = 'Conferindo…';
+  static const bloqueioInformeSenha = 'Informe a senha para desbloquear.';
+  static const bloqueioSenhaNaoConfere =
+      'A senha não confere. Confira e tente de novo.';
+  static const bloqueioOfflineTitulo = 'Sem conexão para conferir a senha';
+  static const bloqueioOfflineTexto =
+      'Como no modo offline do login, o desbloqueio não confere a senha '
+      'enquanto não houver conexão.';
+  static const bloqueioContinuarOffline = 'Continuar em modo offline';
+  static const bloqueioSair = 'Sair da conta';
   static const loginInformeEmail = 'Informe o e-mail.';
   static const loginInformeSenha = 'Informe a senha.';
   static const loginBotaoEntrar = 'Entrar';

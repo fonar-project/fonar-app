@@ -14,6 +14,10 @@ class FormulariosAlterados extends Notifier<Set<String>> {
   @override
   Set<String> build() => const {};
 
+  /// Nada mais conta como alterado — quem sai da conta já decidiu perder o
+  /// que estava pela metade.
+  void esquecerTodos() => state = const {};
+
   void marcar(String chave, {required bool alterado}) {
     if (state.contains(chave) == alterado) return;
     state = alterado ? {...state, chave} : ({...state}..remove(chave));

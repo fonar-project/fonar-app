@@ -23,6 +23,14 @@ abstract final class AppConfig {
     defaultValue: 'desenvolvimento',
   );
 
+  /// Sem nenhum toque, tecla ou rolagem por este tempo, o app bloqueia e
+  /// pede a senha: o aparelho fica na mesa do consultório, aberto em dado
+  /// de paciente, enquanto o profissional atende.
+  ///
+  /// TODO(equipe): tempo escolhido sem medir a consulta. Curto demais trava
+  /// no meio do atendimento; longo demais não protege.
+  static const tempoDeInatividade = Duration(minutes: 5);
+
   /// Tempo para abrir a conexão.
   static const timeoutConexao = Duration(seconds: 15);
 

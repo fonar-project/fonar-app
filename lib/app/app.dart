@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../design_system/theme/app_theme.dart';
+import '../features/auth/presentation/widgets/vigia_de_inatividade.dart';
 import '../features/fila/presentation/fila_controlador.dart';
 import '../l10n/app_strings.dart';
 import 'router/app_router.dart';
@@ -30,6 +31,9 @@ class FonarApp extends ConsumerWidget {
       // sistema nem sempre serve.
       themeMode: ThemeMode.light,
       routerConfig: ref.watch(routerProvider),
+      // Por cima do roteador: o bloqueio vale para qualquer tela.
+      builder: (context, filho) =>
+          VigiaDeInatividade(child: filho ?? const SizedBox.shrink()),
     );
   }
 }

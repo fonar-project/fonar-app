@@ -1,6 +1,6 @@
 # Pendências abertas
 
-O que ficou em aberto das US02 a US23, reunido num lugar só e organizado por
+O que ficou em aberto das US02 a US24, reunido num lugar só e organizado por
 **quem precisa resolver**. Cada item aponta onde está no código — lá há um
 `TODO` com o mesmo assunto, e é lá que a correção acontece.
 
@@ -32,6 +32,7 @@ commit.
 | Pendência | US | Onde |
 |---|---|---|
 | **Texto do termo de consentimento** — provisório, marcado na tela. Ao trocar, mudar também a versão do termo. | 03 | `l10n/app_strings.dart`, `consentimento/data/repositorio_consentimento_placeholder.dart` |
+| **Desbloqueio sem conexão não confere a senha** — a mesma regra do "entrar em modo offline" do login, que também não confere. Com o Firebase, conferir sem rede por uma credencial local (PIN do app ou biometria do aparelho)? E o modo offline do login, idem. | 24 | `auth/presentation/desbloqueio_controlador.dart` |
 | Quando o responsável legal é obrigatório, e se o registro precisa de mais dados dele. | 03 | `consentimento/domain/consentimento.dart` |
 | **Sessão de outro dia que ficou pela metade**: desde a US19 o perfil avisa e o profissional ouve, envia ou descarta. Falta decidir se o app apaga sozinho depois de um tempo, e quanto. | 16, 19 | `captura/domain/sessao_nao_enviada.dart` |
 | **Depois da retirada do consentimento**: gravações, análises e laudos anteriores continuam no aparelho — apagar? Os envios que estavam na fila param e só sobem se o profissional pedir depois de um consentimento novo — o consentimento novo cobre gravação anterior? O laudo de sessão anterior também fica bloqueado (a conferência exige consentimento em vigor) — é o certo? | 15 | `consentimento/domain/consentimento.dart` (`RetiradaDeConsentimento`) |
@@ -55,7 +56,8 @@ commit.
 
 | Pendência | US | Onde |
 |---|---|---|
-| **Numeração das US03 a US10 foi deduzida** das telas do protótipo e do índice de ícones — conferir com o backlog. A US11 (conta) veio do `TODO(US11)` que a equipe deixou no roteador; as US12 (perfil do paciente), US13 (ouvir as gravações), US14 (dados salvos no aparelho), US15 (retirar o consentimento), US16 (retomar a sessão de gravação), US17 (espectrograma no celular), US18 (token no cofre do sistema), US19 (limpeza de gravações não enviadas), US20 (editar os dados do paciente), US21 (aviso de duplicado e de saída sem salvar), US22 (documentação) e US23 (histórico geral) foram escolhidas pelo Felipe. | 03–10 | — |
+| **Numeração das US03 a US10 foi deduzida** das telas do protótipo e do índice de ícones — conferir com o backlog. A US11 (conta) veio do `TODO(US11)` que a equipe deixou no roteador; as US12 (perfil do paciente), US13 (ouvir as gravações), US14 (dados salvos no aparelho), US15 (retirar o consentimento), US16 (retomar a sessão de gravação), US17 (espectrograma no celular), US18 (token no cofre do sistema), US19 (limpeza de gravações não enviadas), US20 (editar os dados do paciente), US21 (aviso de duplicado e de saída sem salvar), US22 (documentação), US23 (histórico geral) e US24 (bloqueio por inatividade) foram escolhidas pelo Felipe. | 03–10 | — |
+| **Tempo sem uso até bloquear**: 5 minutos, escolhido sem medir a consulta. O bloqueio também pode cair no meio de uma gravação longa sem toque (a gravação continua embaixo). | 24 | `core/config/app_config.dart` (`tempoDeInatividade`) |
 | `TelaPlaceholder` não é mais usada por rota nenhuma — o histórico (US23) era a última tela de andaime. Remover junto com as strings dela e reescrever os testes de convenção que a usam em `app_estrutura_test.dart`. | 23 | `design_system/widgets/tela_placeholder.dart` |
 | **Pacientes, consentimentos (e retiradas) e CAPE-V só no aparelho**: estão no banco local, mas ainda não sobem para o Firebase. | 14, 15 | `TODO(backend)` nos repositórios `*_local.dart` |
 | **Pacientes e consentimentos de exemplo** aparecem por cima do banco (não são gravados nele). Saem quando a API de análise responder de verdade — os resultados de exemplo são amarrados aos ids deles. | 14 | `pacientes/data/pacientes_de_exemplo.dart`, `consentimento/data/consentimentos_de_exemplo.dart` |
@@ -87,6 +89,7 @@ rede simulados.
 | O build baixa o SQLite pronto (conferido por SHA-256) na primeira compilação de cada plataforma: precisa de rede nessa hora. | 14 | `pubspec.yaml` (`drift_flutter`) |
 | Espectrograma em tela cheia: girar o celular, pinça e arrastar no Android; roda do mouse, arrastar e teclado (setas, + e −) no Windows. | 17 | `analise/presentation/pages/espectrograma_page.dart` |
 | **Token no cofre do sistema**: guardar, fechar o app e abrir de novo no Android e no Windows. E, no Android, confirmar que o backup automático está mesmo desligado (Configurações → Sistema → Backup não lista o FONAR). | 18 | `core/storage/token_storage.dart`, `AndroidManifest.xml` |
+| **Bloqueio por inatividade**: deixar o app em segundo plano mais de 5 minutos e voltar — bloqueia na hora? No Windows, digitar conta como uso? | 24 | `auth/presentation/widgets/vigia_de_inatividade.dart` |
 | Ouvir as gravações no Android e no Windows — no Windows, o `just_audio_windows` precisa compilar e tocar o WAV da área privada. | 13 | `reproducao/data/reprodutor_just_audio.dart` |
 | Laudo: "abrir ou compartilhar" e "imprimir ou salvar" no Android e no Windows, e a pré-visualização A4 no Windows (o `printing` baixa o pdfium no build). | 10 | `laudo/data/saida_do_laudo.dart`, `laudo/presentation/laudo_controlador.dart` |
 
