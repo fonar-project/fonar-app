@@ -14,6 +14,7 @@ import 'package:fonar_app/features/captura/domain/amostra.dart';
 import 'package:fonar_app/features/captura/domain/gravador.dart';
 import 'package:fonar_app/features/captura/domain/sessao_nao_enviada.dart';
 import 'package:fonar_app/features/captura/domain/verificacao_da_amostra.dart';
+import 'package:fonar_app/features/captura/presentation/gravacoes_nao_enviadas_controlador.dart';
 import 'package:fonar_app/features/captura/presentation/pages/gravacoes_nao_enviadas_page.dart';
 import 'package:fonar_app/features/consentimento/data/repositorio_consentimento_local.dart';
 import 'package:fonar_app/features/consentimento/domain/consentimento.dart';
@@ -55,9 +56,13 @@ List<Amostra> _completa(String sessaoId, {DateTime? em}) => [
   for (final t in TarefaDeGravacao.values) _amostra(sessaoId, t, em: em),
 ];
 
+/// Disco que lembra o que apagou: o apagado não se lê mais.
 class _Disco implements ArquivosDeAmostra {
   final apagados = <String>[];
   var falhar = false;
+
+  /// Só estes falham ao apagar.
+  final falharEm = <String>{};
 
   @override
   Future<String> novoCaminho(String pacienteId, TarefaDeGravacao t) async =>
@@ -65,11 +70,11 @@ class _Disco implements ArquivosDeAmostra {
 
   @override
   Future<({Uint8List inicio, int tamanho})?> ler(String caminho) async =>
-      (inicio: Uint8List(44), tamanho: 44);
+      apagados.contains(caminho) ? null : (inicio: Uint8List(44), tamanho: 44);
 
   @override
   Future<void> apagar(String caminho) async {
-    if (falhar) throw Exception('disco ocupado');
+    if (falhar || falharEm.contains(caminho)) throw Exception('disco ocupado');
     apagados.add(caminho);
   }
 }
@@ -87,6 +92,8 @@ class _ReprodutorQuieto implements Reprodutor {
   Stream<Duration> get posicoes => const Stream.empty();
   @override
   Stream<void> get terminou => const Stream.empty();
+  @override
+  Stream<Object> get falhas => const Stream.empty();
   @override
   Future<void> fechar() async {}
 }
@@ -229,6 +236,36 @@ void main() {
       expect([for (final s in sessoes) s.sessaoId], ['s-manha']);
     });
 
+    test('a de hoje anterior a uma já enviada aparece', () {
+      // Revisão de 24/09: a candidata a retomada era escolhida só entre as
+      // não enviadas. A gravação vê a enviada como a mais recente e começa
+      // outra; a limpeza escondia a da manhã como se fosse retomada.
+      final sessoes = sessoesNaoEnviadas(
+        amostrasDoPaciente: [
+          ..._completa('s-manha', em: DateTime(2026, 9, 24, 9)),
+          ..._completa('s-enviada', em: DateTime(2026, 9, 24, 10)),
+        ],
+        sessoesNaFila: {'s-enviada'},
+        agora: _agora,
+      );
+
+      expect([for (final s in sessoes) s.sessaoId], ['s-manha']);
+    });
+
+    test('arquivo faltando: não está completa', () {
+      final sessao = sessoesNaoEnviadas(
+        amostrasDoPaciente: _completa('s-ontem'),
+        sessoesNaFila: {},
+        agora: _agora,
+      ).single;
+
+      expect(sessao.completa, isTrue);
+      expect(
+        sessao.comArquivosFaltando({TarefaDeGravacao.falaEncadeada}).completa,
+        isFalse,
+      );
+    });
+
     test('mais recente primeiro; incompleta ou inválida não está completa', () {
       final sessoes = sessoesNaoEnviadas(
         amostrasDoPaciente: [
@@ -295,6 +332,107 @@ void main() {
 
       await expectLater(repositorio.descartarSessao('s1'), throwsA(anything));
       expect(await repositorio.doPaciente('p1'), hasLength(2));
+    });
+  });
+
+  // Revisão de 24/09: os WAV saíam um a um e o registro só no fim; um
+  // descarte que falhava no meio deixava a sessão "completa", e dava para
+  // mandar para a fila um arquivo que já não existia.
+  group('descarte parcial', () {
+    ({ProviderContainer c, _Disco disco, RepositorioFilaEmMemoria fila}) montar(
+      RepositorioAmostras amostras,
+    ) {
+      final disco = _Disco();
+      final fila = RepositorioFilaEmMemoria();
+      final c = ProviderContainer(
+        overrides: [
+          relogioProvider.overrideWithValue(() => _agora),
+          repositorioAmostrasProvider.overrideWithValue(amostras),
+          arquivosDeAmostraProvider.overrideWithValue(disco),
+          repositorioFilaProvider.overrideWithValue(fila),
+          conexaoOnlineProvider.overrideWithValue(false),
+          reprodutorProvider.overrideWithValue(_ReprodutorQuieto()),
+        ],
+      );
+      addTearDown(c.dispose);
+      c.listen(limpezaControladorProvider('p1'), (_, _) {});
+      c.listen(sessoesNaoEnviadasProvider('p1'), (_, _) {});
+      return (c: c, disco: disco, fila: fila);
+    }
+
+    test('a lista mostra o que falta, e a sessão antiga não vai para a '
+        'fila', () async {
+      final amostras = RepositorioAmostrasPlaceholder();
+      for (final a in _completa('s-ontem')) {
+        await amostras.guardar(a);
+      }
+      final m = montar(amostras);
+      final antes = (await m.c.read(sessoesNaoEnviadasProvider('p1').future))
+          .single;
+      final fala = antes.amostras[TarefaDeGravacao.falaEncadeada]!;
+      m.disco.falharEm.add(fala.caminho);
+      final limpeza = m.c.read(limpezaControladorProvider('p1').notifier);
+
+      limpeza.pedirDescarte('s-ontem');
+      expect(await limpeza.descartar(antes), isFalse);
+      expect(m.disco.apagados, [
+        antes.amostras[TarefaDeGravacao.vogalSustentada]!.caminho,
+      ]);
+
+      // A lista relida diz o que falta, e não está completa.
+      final depois = (await m.c.read(sessoesNaoEnviadasProvider('p1').future))
+          .single;
+      expect(depois.semArquivo, {TarefaDeGravacao.vogalSustentada});
+      expect(depois.completa, isFalse);
+
+      // Mesmo com a lista de antes, que ainda a dava por completa.
+      expect(await limpeza.enviar(antes, nomeDoPaciente: 'Ana'), isFalse);
+      expect(await m.fila.listar(), isEmpty);
+      expect(
+        m.c.read(limpezaControladorProvider('p1')).erro?.mensagem,
+        AppStrings.naoEnviadasFaltaArquivo,
+      );
+
+      // Tentar o descarte de novo termina o serviço.
+      m.disco.falharEm.clear();
+      limpeza.pedirDescarte('s-ontem');
+      expect(await limpeza.descartar(depois), isTrue);
+      expect(await amostras.doPaciente('p1'), isEmpty);
+    });
+
+    test('lista antiga com a sessão já na fila: nenhum WAV sai', () async {
+      final banco = bancoEmMemoria();
+      addTearDown(banco.close);
+      final amostras = RepositorioAmostrasLocal(banco);
+      final gravadas = _completa('s-ontem');
+      for (final a in gravadas) {
+        await amostras.guardar(a);
+      }
+      final m = montar(amostras);
+      final antiga = (await m.c.read(sessoesNaoEnviadasProvider('p1').future))
+          .single;
+      // Entrou na fila depois de a lista ser montada.
+      await RepositorioFilaLocal(banco).adicionar(
+        ItemDaFila(
+          id: 'envio-s-ontem',
+          pacienteId: 'p1',
+          nomeDoPaciente: 'Ana de Teste',
+          sessaoId: 's-ontem',
+          amostras: gravadas,
+          criadoEm: _ontem,
+        ),
+      );
+      final limpeza = m.c.read(limpezaControladorProvider('p1').notifier);
+
+      limpeza.pedirDescarte('s-ontem');
+      expect(await limpeza.descartar(antiga), isFalse);
+
+      expect(m.disco.apagados, isEmpty);
+      expect(await amostras.doPaciente('p1'), hasLength(2));
+      expect(
+        m.c.read(limpezaControladorProvider('p1')).erro?.mensagem,
+        AppStrings.naoEnviadasJaNaFila,
+      );
     });
   });
 
@@ -380,6 +518,22 @@ void main() {
         for (final a in envio.amostras) a.tarefa,
       ], TarefaDeGravacao.values);
       expect(find.text(AppStrings.naoEnviadasVazia), findsOneWidget);
+    });
+
+    testWidgets('descarte que falha no meio: mostra o que falta e não '
+        'envia', (tester) async {
+      final c = await _abrir(tester, gravadas: _completa('s-ontem'));
+      c.disco.falharEm.add(
+        _amostra('s-ontem', TarefaDeGravacao.falaEncadeada).caminho,
+      );
+
+      await _tocar(tester, AppStrings.naoEnviadasDescartar);
+      await _tocar(tester, AppStrings.naoEnviadasDescartarDeVez);
+
+      expect(find.text(AppStrings.naoEnviadasErroDescartar), findsOneWidget);
+      expect(find.text(AppStrings.naoEnviadasSemArquivo), findsOneWidget);
+      expect(_habilitado(tester, AppStrings.naoEnviadasEnviar), isFalse);
+      expect(find.text(AppStrings.naoEnviadasFaltaArquivo), findsOneWidget);
     });
 
     testWidgets('incompleta não se envia, e diz por quê', (tester) async {

@@ -41,8 +41,13 @@ final retiradaEmVigorProvider =
 ///
 /// Cada registro é uma linha nova, e nenhuma é apagada ou reescrita: é a
 /// prova do que foi autorizado, com qual versão do termo e quando, e de
-/// quando foi retirado. Vale o consentimento mais recente, se não tiver sido
-/// retirado.
+/// quando foi retirado. Vale o último consentimento registrado, se não tiver
+/// sido retirado — pela ordem de gravação, e não pelo horário: o relógio do
+/// aparelho pode ter sido corrigido para trás entre um registro e outro. O
+/// horário fica como está, como prova.
+///
+/// TODO(backend): a sincronização vai precisar de uma regra explícita de
+/// ordem entre aparelhos — a sequência local só vale neste banco.
 ///
 /// TODO(backend): subir pela fila de sincronização quando o Firebase entrar.
 class RepositorioConsentimentoLocal implements RepositorioConsentimento {
@@ -170,10 +175,9 @@ class RepositorioConsentimentoLocal implements RepositorioConsentimento {
   Future<LinhaDoConsentimento?> _ultimaLinha(String pacienteId) =>
       (_banco.select(_banco.consentimentos)
             ..where((c) => c.pacienteId.equals(pacienteId))
-            ..orderBy([
-              (c) => OrderingTerm.desc(c.registradoEm),
-              (c) => OrderingTerm.desc(c.id),
-            ])
+            // `id` é autoincremento: cresce a cada registro, com o relógio
+            // certo ou não (revisão de 24/09).
+            ..orderBy([(c) => OrderingTerm.desc(c.id)])
             ..limit(1))
           .getSingleOrNull();
 }

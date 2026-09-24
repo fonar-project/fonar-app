@@ -189,11 +189,17 @@ class _CartaoDaSessao extends ConsumerWidget {
             if (sessao.amostras[tarefa] case final amostra?) ...[
               const SizedBox(height: AppSpacing.sm),
               Text(_nomeDaTarefa(tarefa), style: textos.bodyMedium),
-              PlayerDeAmostra(
-                caminho: amostra.caminho,
-                rotulo: _nomeDaTarefa(tarefa),
-                duracaoConhecida: amostra.duracao,
-              ),
+              if (sessao.semArquivo.contains(tarefa))
+                const AppSituacao(
+                  icone: NomeIcone.alerta,
+                  titulo: AppStrings.naoEnviadasSemArquivo,
+                )
+              else
+                PlayerDeAmostra(
+                  caminho: amostra.caminho,
+                  rotulo: _nomeDaTarefa(tarefa),
+                  duracaoConhecida: amostra.duracao,
+                ),
             ],
           const SizedBox(height: AppSpacing.md),
           if (confirmando) ...[
@@ -232,7 +238,9 @@ class _CartaoDaSessao extends ConsumerWidget {
                           nomeDoPaciente: nomeDoPaciente,
                         )
                       : null,
-                  motivoDesabilitado: !sessao.completa
+                  motivoDesabilitado: sessao.semArquivo.isNotEmpty
+                      ? AppStrings.naoEnviadasFaltaArquivo
+                      : !sessao.completa
                       ? AppStrings.naoEnviadasIncompleta
                       : !comConsentimento
                       ? AppStrings.naoEnviadasSemConsentimento
