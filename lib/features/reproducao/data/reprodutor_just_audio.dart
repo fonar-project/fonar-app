@@ -18,9 +18,21 @@ final reprodutorProvider = Provider.autoDispose<Reprodutor>((ref) {
 /// NÃO VERIFICADO EM APARELHO REAL: o ambiente em que foi escrito não tem
 /// saída de som nem Windows.
 class ReprodutorJustAudio implements Reprodutor {
-  ReprodutorJustAudio();
+  ReprodutorJustAudio() {
+    // Erro no meio da reprodução chega pelo fluxo de eventos do player.
+    _eventos = _player.playbackEventStream.listen(
+      null,
+      onError: (Object erro, StackTrace _) => _avisarFalha(erro),
+    );
+  }
 
   final _player = AudioPlayer();
+  final _falhas = StreamController<Object>.broadcast();
+  late final StreamSubscription<PlaybackEvent> _eventos;
+
+  void _avisarFalha(Object erro) {
+    if (!_falhas.isClosed) _falhas.add(erro);
+  }
 
   @override
   Future<Duration?> abrir(String caminho) => _player.setFilePath(caminho);
@@ -28,8 +40,9 @@ class ReprodutorJustAudio implements Reprodutor {
   @override
   Future<void> tocar() async {
     // `play` só completa quando a reprodução termina ou pausa; a tela não
-    // pode esperar por isso.
-    unawaited(_player.play());
+    // pode esperar por isso. Mas o erro dele não pode se perder: vai para
+    // [falhas].
+    unawaited(_player.play().catchError(_avisarFalha));
   }
 
   @override
@@ -47,5 +60,12 @@ class ReprodutorJustAudio implements Reprodutor {
       .map((_) {});
 
   @override
-  Future<void> fechar() => _player.dispose();
+  Stream<Object> get falhas => _falhas.stream;
+
+  @override
+  Future<void> fechar() async {
+    await _eventos.cancel();
+    await _falhas.close();
+    await _player.dispose();
+  }
 }

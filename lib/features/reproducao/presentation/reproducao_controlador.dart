@@ -36,9 +36,12 @@ class ReproducaoControlador extends Notifier<EstadoDaReproducao> {
   late Reprodutor _reprodutor;
   final _inscricoes = <StreamSubscription<Object?>>[];
 
-  /// Cresce a cada `abrir`: uma abertura que termina depois de outra ter
-  /// começado não pode tomar o lugar dela.
+  /// Cresce a cada `abrir` e a cada [parar]: uma abertura que termina depois
+  /// de outra ter começado, ou depois de pedirem para parar, não toca.
   var _vez = 0;
+
+  /// Uma gravação está sendo aberta e ainda não tocou.
+  var _abrindo = false;
 
   @override
   EstadoDaReproducao build() {
@@ -51,7 +54,11 @@ class ReproducaoControlador extends Notifier<EstadoDaReproducao> {
           }
         }),
       )
-      ..add(_reprodutor.terminou.listen((_) => _aoTerminar()));
+      ..add(_reprodutor.terminou.listen((_) => _aoTerminar()))
+      // Falha que chega depois de começar a tocar (o aparelho perdeu a saída
+      // de som, o arquivo não decodificou no meio): sem isto, a tela seguia
+      // mostrando "tocando" (revisão de 24/09).
+      ..add(_reprodutor.falhas.listen((_) => _aoFalhar()));
     ref.onDispose(() {
       for (final i in _inscricoes) {
         unawaited(i.cancel());
@@ -70,6 +77,11 @@ class ReproducaoControlador extends Notifier<EstadoDaReproducao> {
         await _reprodutor.irPara(Duration.zero);
       }),
     );
+  }
+
+  void _aoFalhar() {
+    if (!ref.mounted || state.caminho == null) return;
+    state = _com(tocando: false, falhou: true);
   }
 
   EstadoDaReproducao _com({
@@ -99,11 +111,13 @@ class ReproducaoControlador extends Notifier<EstadoDaReproducao> {
     }
 
     final vez = ++_vez;
+    _abrindo = true;
     state = EstadoDaReproducao(caminho: caminho);
     try {
       await _reprodutor.pausar();
       final duracao = await _reprodutor.abrir(caminho);
       if (!ref.mounted || vez != _vez) return;
+      _abrindo = false;
       state = EstadoDaReproducao(
         caminho: caminho,
         duracao: duracao,
@@ -112,6 +126,7 @@ class ReproducaoControlador extends Notifier<EstadoDaReproducao> {
       await _reprodutor.tocar();
     } catch (_) {
       if (ref.mounted && vez == _vez) {
+        _abrindo = false;
         state = EstadoDaReproducao(caminho: caminho, falhou: true);
       }
     }
@@ -125,7 +140,17 @@ class ReproducaoControlador extends Notifier<EstadoDaReproducao> {
   }
 
   /// Para o que estiver tocando. Chamado antes de gravar e de medir.
+  ///
+  /// Também desiste de uma gravação que ainda está abrindo: sem isso, ela
+  /// terminava de abrir já com o microfone ligado e tocava por cima da coleta
+  /// (revisão de 24/09).
   Future<void> parar() async {
+    _vez++;
+    if (_abrindo) {
+      _abrindo = false;
+      state = const EstadoDaReproducao();
+      return;
+    }
     if (!state.tocando) return;
     state = _com(tocando: false);
     await _tentar(_reprodutor.pausar);

@@ -16,6 +16,7 @@ class ReprodutorFalso implements Reprodutor {
   final chamadas = <String>[];
   final posicoesCtrl = StreamController<Duration>.broadcast();
   final terminouCtrl = StreamController<void>.broadcast();
+  final falhasCtrl = StreamController<Object>.broadcast();
   final falhaAoAbrir = <String>{};
   Completer<void>? segurarAbrir;
 
@@ -42,6 +43,9 @@ class ReprodutorFalso implements Reprodutor {
 
   @override
   Stream<void> get terminou => terminouCtrl.stream;
+
+  @override
+  Stream<Object> get falhas => falhasCtrl.stream;
 
   @override
   Future<void> fechar() async => chamadas.add('fechar');
@@ -128,6 +132,46 @@ void main() {
       final estado = c.read(reproducaoControladorProvider);
       expect(estado.falhou, isTrue);
       expect(estado.tocando, isFalse);
+    });
+
+    test('parar desiste de uma gravação que ainda está abrindo', () async {
+      // Revisão de 24/09: parar só olhava "tocando"; a gravação que ainda
+      // abria terminava depois e tocava com o microfone já ligado.
+      final (c, r) = _montar();
+      final controlador = c.read(reproducaoControladorProvider.notifier);
+      r.segurarAbrir = Completer<void>();
+      final abrindo = controlador.alternar('/a.wav');
+      await Future<void>.delayed(Duration.zero);
+
+      await controlador.parar();
+      r.segurarAbrir!.complete();
+      await abrindo;
+
+      expect(r.chamadas, isNot(contains('tocar')));
+      final estado = c.read(reproducaoControladorProvider);
+      expect(estado.tocando, isFalse);
+      expect(estado.caminho, isNull);
+
+      // E dá para tocar de novo depois.
+      r.segurarAbrir = null;
+      await controlador.alternar('/a.wav');
+      expect(c.read(reproducaoControladorProvider).tocando, isTrue);
+    });
+
+    test('falha depois de começar a tocar aparece como falha', () async {
+      // Revisão de 24/09: `tocar` não espera o áudio acabar, e o erro que
+      // vinha depois se perdia; a tela seguia em "tocando".
+      final (c, r) = _montar();
+      await c.read(reproducaoControladorProvider.notifier).alternar('/a.wav');
+      expect(c.read(reproducaoControladorProvider).tocando, isTrue);
+
+      r.falhasCtrl.add(Exception('saída de som sumiu'));
+      await Future<void>.delayed(Duration.zero);
+
+      final estado = c.read(reproducaoControladorProvider);
+      expect(estado.tocando, isFalse);
+      expect(estado.falhou, isTrue);
+      expect(estado.caminho, '/a.wav');
     });
 
     test('parar pausa o que estiver tocando', () async {

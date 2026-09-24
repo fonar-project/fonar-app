@@ -17,5 +17,9 @@ abstract interface class Reprodutor {
   /// Emite quando a gravação chega ao fim.
   Stream<void> get terminou;
 
+  /// Emite quando a reprodução falha depois de [tocar] já ter voltado —
+  /// [tocar] não espera o áudio acabar, e o erro chega por aqui.
+  Stream<Object> get falhas;
+
   Future<void> fechar();
 }
