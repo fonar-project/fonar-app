@@ -113,17 +113,7 @@ jobs:
 
   build-windows:
     name: Build nativo do Windows
-    runs-on: windows-latest
-
-    # A imagem `windows-latest` traz o Visual Studio 2022 com a carga de C++ e
-    # o componente ATL, que é exatamente o que o projeto precisa — ver os
-    # pré-requisitos no README.
-    #
-    # Se um dia a imagem passar a trazer o Visual Studio 2026, este job quebra
-    # no `just_audio_windows`: o plugin usa `<experimental/coroutine>`, que o
-    # MSVC 14.51 rejeita, e o Flutter sempre escolhe a instalação mais recente.
-    # Quando isso acontecer, fixe a imagem em `windows-2025` em vez de
-    # `windows-latest`.
+    runs-on: windows-2025
 
     steps:
       - name: Checkout
