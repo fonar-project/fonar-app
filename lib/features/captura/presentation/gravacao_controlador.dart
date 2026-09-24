@@ -210,6 +210,7 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
     );
 
     final arquivos = ref.read(arquivosDeAmostraProvider);
+    Amostra? guardada;
     try {
       await _gravador.parar();
       final lido = await arquivos.ler(caminho);
@@ -248,11 +249,15 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
         problemas: problemas,
       );
 
-      await ref.read(repositorioAmostrasProvider).guardar(amostra);
-      // A anterior da mesma tarefa foi substituída no registro; o arquivo
-      // dela não tem mais quem o referencie.
+      // Lida antes da espera: com a tela fechada no meio, o estado não se lê
+      // mais (revisão de 24/09).
       final anterior = state.amostras[tarefa];
-      if (anterior != null) await arquivos.apagar(anterior.caminho);
+      await ref.read(repositorioAmostrasProvider).guardar(amostra);
+      guardada = amostra;
+      // Daqui em diante o arquivo novo É a amostra: nenhuma falha abaixo o
+      // apaga. Apagar o novo porque o antigo não saiu perdia a coleta boa
+      // com o registro já apontando para ela (revisão de 24/09).
+      if (anterior != null) await _apagarSubstituido(arquivos, anterior);
 
       if (!ref.mounted) return;
       state = EstadoDaGravacao(
@@ -261,9 +266,27 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
         rejeitadas: {...state.rejeitadas}..remove(tarefa),
       );
     } catch (_) {
-      await arquivos.apagar(caminho).catchError((_) {});
+      // Só o que ainda não virou amostra é descartado.
+      if (guardada == null) {
+        await arquivos.apagar(caminho).catchError((_) {});
+      }
       _falhar(tarefa, FalhaDaGravacao.naoFinalizou);
     }
+  }
+
+  /// Apaga o arquivo da amostra que a regravação substituiu.
+  ///
+  /// Falhar aqui não desfaz nada: o registro já aponta para a nova, e o
+  /// arquivo antigo fica sem ninguém que o use.
+  /// TODO(equipe): limpar os WAV que ficaram sem registro — ver
+  /// `PENDENCIAS.md`.
+  Future<void> _apagarSubstituido(
+    ArquivosDeAmostra arquivos,
+    Amostra anterior,
+  ) async {
+    try {
+      await arquivos.apagar(anterior.caminho);
+    } catch (_) {}
   }
 
   /// Põe a sessão na fila de envio para a análise. Devolve `true` se pôs.
