@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../tokens/app_colors.dart';
 import '../tokens/app_spacing.dart';
 import 'app_fundo.dart';
-import 'app_icone.dart';
+import 'app_mensagem_de_campo.dart';
 
 /// Campo de texto do design system.
 ///
@@ -35,6 +36,8 @@ class AppCampoTexto extends StatelessWidget {
     this.foco,
     this.autoCorrecao = true,
     this.autopreenchimento,
+    this.formatadores,
+    this.capitalizacao = TextCapitalization.none,
     super.key,
   });
 
@@ -74,6 +77,13 @@ class AppCampoTexto extends StatelessWidget {
   /// `[AutofillHints.email]`. No desktop do consultório é o que evita digitar
   /// a senha inteira toda manhã.
   final Iterable<String>? autopreenchimento;
+
+  /// Máscara aplicada enquanto se digita — ex.: as barras da data.
+  final List<TextInputFormatter>? formatadores;
+
+  /// Maiúscula automática do teclado do celular. `words` em nome próprio,
+  /// `sentences` em texto livre.
+  final TextCapitalization capitalizacao;
 
   bool get _temErro => erro != null && erro!.isNotEmpty;
 
@@ -119,6 +129,8 @@ class AppCampoTexto extends StatelessWidget {
                 autocorrect: autoCorrecao,
                 enableSuggestions: autoCorrecao,
                 autofillHints: autopreenchimento,
+                inputFormatters: formatadores,
+                textCapitalization: capitalizacao,
                 keyboardType: tipoDeTeclado,
                 textInputAction: acaoDeEntrada,
                 onChanged: aoMudar,
@@ -144,62 +156,12 @@ class AppCampoTexto extends StatelessWidget {
             ],
           ),
         ),
-        if (_temErro)
-          _Mensagem(
-            texto: erro!,
-            cor: AppColors.erro,
-            icone: NomeIcone.alerta,
-            ehErro: true,
-          )
-        else if (apoio != null)
-          _Mensagem(texto: apoio!, cor: corSecundaria),
+        AppMensagemDeCampo(
+          erro: _temErro ? erro : null,
+          apoio: apoio,
+          corDoApoio: corSecundaria,
+        ),
       ],
-    );
-  }
-}
-
-class _Mensagem extends StatelessWidget {
-  const _Mensagem({
-    required this.texto,
-    required this.cor,
-    this.icone,
-    this.ehErro = false,
-  });
-
-  final String texto;
-  final Color cor;
-  final NomeIcone? icone;
-  final bool ehErro;
-
-  @override
-  Widget build(BuildContext context) {
-    final linha = Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.xxs + 2),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (icone != null) ...[
-            AppIcone(nome: icone!, cor: cor, tamanho: 16),
-            const SizedBox(width: AppSpacing.xxs + 2),
-          ],
-          Expanded(
-            child: Text(
-              texto,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: cor,
-                fontWeight: ehErro ? FontWeight.w600 : null,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    // `liveRegion` faz o leitor de tela anunciar o erro no momento em que ele
-    // aparece, em vez de esperar o usuário voltar o foco ao campo.
-    return Semantics(
-      liveRegion: ehErro,
-      child: MergeSemantics(child: linha),
     );
   }
 }

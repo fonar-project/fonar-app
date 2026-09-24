@@ -162,3 +162,10 @@ Branch: `nome/USxx-featureImplementada` — ex.: `felipe/US04-medidorDeNivel`
 Commit: Conventional Commits em português, referenciando a User Story:
 `feat(US04): adiciona medidor de nivel em tempo real`
 Primeiro push vai para a `main`; feature branch sai dela depois.
+
+Sem atribuição de IA em nada que vai para o repositório: nada de
+`Co-Authored-By: Claude`, `Claude-Session:`, "Generated with Claude Code" ou
+link de sessão em mensagem de commit, descrição de PR ou comentário. O autor
+do commit também é a pessoa, nunca `Claude <noreply@anthropic.com>`: antes do
+primeiro commit, confira `git config user.name` e `user.email` e use o nome e o
+e-mail de quem pediu a alteração, como nos commits anteriores dela.
