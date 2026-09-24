@@ -116,6 +116,12 @@ class _Repositorio implements RepositorioAmostras {
   /// Nenhuma sessão anterior: estes testes começam sempre do zero.
   @override
   Future<List<Amostra>> ultimaSessao(String pacienteId) async => const [];
+
+  @override
+  Future<List<Amostra>> doPaciente(String pacienteId) async => const [];
+
+  @override
+  Future<void> descartarSessao(String sessaoId) async {}
 }
 
 /// Envio que nunca responde: o item fica em "enviando", e o teste olha só

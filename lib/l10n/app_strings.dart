@@ -302,6 +302,37 @@ abstract final class AppStrings {
 
   // --------------------------------------------------- gravação das tarefas --
   static const tarefasTitulo = 'Tarefas';
+
+  // ------------------------------------------------ gravações não enviadas --
+  static const naoEnviadasTitulo = 'Gravações não enviadas';
+  static const naoEnviadasExplicacao =
+      'Sessões de outros dias que ficaram pela metade ou não foram para a '
+      'análise. Estão só neste aparelho. Ouça, mande as completas para a '
+      'análise ou descarte o que não serve.';
+  static const naoEnviadasVazia = 'Nenhuma gravação parada neste aparelho.';
+  static String naoEnviadasSessao(String data, String hora) =>
+      'Gravada em $data, às $hora';
+  static String naoEnviadasTarefas(int gravadas, int total) =>
+      '$gravadas de $total tarefas gravadas';
+  static const naoEnviadasEnviar = 'Enviar para análise';
+  static const naoEnviadasIncompleta =
+      'Incompleta: para a análise, é preciso gravar a sessão de novo.';
+  static const naoEnviadasSemConsentimento =
+      'Sem consentimento em vigor: registre um novo para enviar.';
+  static const naoEnviadasDescartar = 'Descartar';
+  static String naoEnviadasConfirmar(int n) =>
+      'Descartar ${n == 1 ? 'a gravação' : 'as $n gravações'} desta sessão? '
+      'O áudio é apagado deste aparelho, e não dá para desfazer.';
+  static const naoEnviadasDescartarDeVez = 'Descartar de vez';
+  static const naoEnviadasManter = 'Manter';
+  static const naoEnviadasDescartando = 'Descartando…';
+  static const naoEnviadasOcupada = 'Espere a outra sessão terminar.';
+  static const naoEnviadasErroDescartar =
+      'Não foi possível apagar tudo. A sessão continua aqui; tente de novo.';
+  static const naoEnviadasErroEnviar =
+      'Não foi possível pôr a sessão na fila. Tente de novo.';
+  static const naoEnviadasErroCarregar =
+      'Não foi possível ler as gravações deste aparelho.';
   static const capturaRetomadaTitulo = 'Sessão de hoje retomada';
   static String capturaRetomadaTexto(String hora, int gravadas, int total) =>
       'Começada às $hora. Já gravadas: $gravadas de $total tarefas — '
@@ -660,6 +691,10 @@ abstract final class AppStrings {
       : '$n gravações deste paciente estão paradas na fila: o consentimento '
             'foi retirado.';
   static const perfilVerFila = 'Ver fila';
+  static String perfilNaoEnviadas(int n) => n == 1
+      ? '1 sessão gravada neste aparelho não foi para a análise.'
+      : '$n sessões gravadas neste aparelho não foram para a análise.';
+  static const perfilRevisarGravacoes = 'Revisar gravações';
   static const perfilAnaliseProcessando = 'Em análise no servidor';
   static const perfilSemData = 'Sessão sem data';
   static const perfilAnaliseFalhou = 'Análise não concluída';

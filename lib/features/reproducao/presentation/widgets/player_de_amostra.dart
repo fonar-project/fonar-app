@@ -53,84 +53,112 @@ class PlayerDeAmostra extends ConsumerWidget {
         ? 0.0
         : (posicao.inMilliseconds / duracao.inMilliseconds).clamp(0.0, 1.0);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
+    final estiloDoTempo = textos.bodySmall?.copyWith(
+      color: AppColors.secundarioSobreCreme,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+    final textoDoTempo = AppStrings.reproducaoTempo(atual, total);
+    final tempo = ExcludeSemantics(
+      child: Text(textoDoTempo, style: estiloDoTempo),
+    );
+
+    return LayoutBuilder(
+      builder: (context, restricoes) {
+        // O tempo fica ao lado da barra quando cabe; com o texto do sistema
+        // grande, ou num cartão estreito, desce para baixo dela — em vez de
+        // espremer a barra até sumir.
+        final larguraDoTempo = (TextPainter(
+          text: TextSpan(text: textoDoTempo, style: estiloDoTempo),
+          textDirection: Directionality.of(context),
+          textScaler: MediaQuery.textScalerOf(context),
+          maxLines: 1,
+        )..layout()).width;
+        final tempoNaLinha =
+            AppSpacing.alvoDeToqueMinimo +
+                AppSpacing.xs +
+                _larguraMinimaDaBarra +
+                larguraDoTempo <=
+            restricoes.maxWidth;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Semantics(
-              label: tocando
-                  ? AppStrings.reproducaoPausar(rotulo)
-                  : AppStrings.reproducaoOuvir(rotulo),
-              enabled: livre,
-              excludeSemantics: true,
-              button: true,
-              child: livre
-                  ? AppToque(
-                      aoTocar: () => controlador.alternar(caminho),
-                      raio: BorderRadius.circular(AppSpacing.alvoDeToqueMinimo),
-                      child: _Botao(tocando: tocando, livre: true),
-                    )
-                  : const _Botao(tocando: false, livre: false),
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            Expanded(
-              // Rótulo e valor num nó só, e ajustável pelo leitor de tela:
-              // quem não vê a barra também precisa poder voltar um trecho.
-              child: MergeSemantics(
-                child: Semantics(
-                  label: AppStrings.reproducaoPosicao,
-                  child: SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      activeTrackColor: AppColors.roxoProfundo,
-                      inactiveTrackColor: AppColors.lavandaClaro,
-                      thumbColor: AppColors.roxoProfundo,
-                      overlayColor: AppColors.roxoVeu,
-                      // Antes de abrir o arquivo a barra não arrasta, mas a
-                      // gravação está disponível: nada de cinza de "desligado"
-                      // do padrão, que também está fora da paleta.
-                      disabledActiveTrackColor: AppColors.lavandaClaro,
-                      disabledInactiveTrackColor: AppColors.lavandaClaro,
-                      disabledThumbColor: AppColors.secundarioSobreCreme,
-                    ),
-                    child: Slider(
-                      value: fracao,
-                      semanticFormatterCallback: (_) =>
-                          AppStrings.reproducaoPosicaoDe(atual, total),
-                      onChanged: minha && livre && !falhou && duracao != null
-                          ? (f) => controlador.irPara(caminho, duracao * f)
-                          : null,
+            Row(
+              children: [
+                Semantics(
+                  label: tocando
+                      ? AppStrings.reproducaoPausar(rotulo)
+                      : AppStrings.reproducaoOuvir(rotulo),
+                  enabled: livre,
+                  excludeSemantics: true,
+                  button: true,
+                  child: livre
+                      ? AppToque(
+                          aoTocar: () => controlador.alternar(caminho),
+                          raio: BorderRadius.circular(
+                            AppSpacing.alvoDeToqueMinimo,
+                          ),
+                          child: _Botao(tocando: tocando, livre: true),
+                        )
+                      : const _Botao(tocando: false, livre: false),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  // Rótulo e valor num nó só, e ajustável pelo leitor de tela:
+                  // quem não vê a barra também precisa poder voltar um trecho.
+                  child: MergeSemantics(
+                    child: Semantics(
+                      label: AppStrings.reproducaoPosicao,
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          activeTrackColor: AppColors.roxoProfundo,
+                          inactiveTrackColor: AppColors.lavandaClaro,
+                          thumbColor: AppColors.roxoProfundo,
+                          overlayColor: AppColors.roxoVeu,
+                          // Antes de abrir o arquivo a barra não arrasta, mas a
+                          // gravação está disponível: nada de cinza de "desligado"
+                          // do padrão, que também está fora da paleta.
+                          disabledActiveTrackColor: AppColors.lavandaClaro,
+                          disabledInactiveTrackColor: AppColors.lavandaClaro,
+                          disabledThumbColor: AppColors.secundarioSobreCreme,
+                        ),
+                        child: Slider(
+                          value: fracao,
+                          semanticFormatterCallback: (_) =>
+                              AppStrings.reproducaoPosicaoDe(atual, total),
+                          onChanged:
+                              minha && livre && !falhou && duracao != null
+                              ? (f) => controlador.irPara(caminho, duracao * f)
+                              : null,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
+                if (tempoNaLinha) tempo,
+              ],
             ),
-            ExcludeSemantics(
-              child: Text(
-                AppStrings.reproducaoTempo(atual, total),
+            if (!tempoNaLinha)
+              Align(alignment: Alignment.centerRight, child: tempo),
+            if (falhou)
+              const AppSituacao(
+                icone: NomeIcone.alerta,
+                titulo: AppStrings.reproducaoFalhou,
+              ),
+            if (bloqueio case final motivo?)
+              Text(
+                motivo,
                 style: textos.bodySmall?.copyWith(
                   color: AppColors.secundarioSobreCreme,
-                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
-            ),
           ],
-        ),
-        if (falhou)
-          const AppSituacao(
-            icone: NomeIcone.alerta,
-            titulo: AppStrings.reproducaoFalhou,
-          ),
-        if (bloqueio case final motivo?)
-          Text(
-            motivo,
-            style: textos.bodySmall?.copyWith(
-              color: AppColors.secundarioSobreCreme,
-            ),
-          ),
-      ],
+        );
+      },
     );
   }
+
+  /// Menos que isto, a barra não dá para arrastar com o dedo.
+  static const _larguraMinimaDaBarra = 120.0;
 }
 
 class _Botao extends StatelessWidget {

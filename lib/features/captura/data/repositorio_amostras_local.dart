@@ -40,6 +40,25 @@ class RepositorioAmostrasLocal implements RepositorioAmostras {
   }
 
   @override
+  Future<List<Amostra>> doPaciente(String pacienteId) async {
+    final linhas =
+        await (_banco.select(_banco.amostras)
+              ..where((a) => a.pacienteId.equals(pacienteId))
+              ..orderBy([(a) => OrderingTerm.asc(a.gravadaEm)]))
+            .get();
+    return [for (final l in linhas) amostraDaLinha(l)];
+  }
+
+  /// A chave estrangeira de `AmostrasDoEnvio` recusa apagar gravação que já
+  /// está num envio — e a transação desfaz o resto da sessão junto.
+  @override
+  Future<void> descartarSessao(String sessaoId) => _banco.transaction(
+    () => (_banco.delete(
+      _banco.amostras,
+    )..where((a) => a.sessaoId.equals(sessaoId))).go(),
+  );
+
+  @override
   Future<void> guardar(Amostra amostra) => _banco.transaction(() async {
     await (_banco.delete(_banco.amostras)..where(
           (a) =>

@@ -7,6 +7,7 @@ import '../../features/analise/presentation/pages/espectrograma_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/cape_v/presentation/pages/cape_v_page.dart';
 import '../../features/captura/presentation/pages/captura_page.dart';
+import '../../features/captura/presentation/pages/gravacoes_nao_enviadas_page.dart';
 import '../../features/consentimento/data/repositorio_consentimento_local.dart';
 import '../../features/conta/presentation/pages/conta_page.dart';
 import '../../features/consentimento/presentation/pages/consentimento_page.dart';
@@ -79,6 +80,13 @@ final routerProvider = Provider<GoRouter>((ref) {
                     ),
                   ),
                 ],
+              ),
+              GoRoute(
+                name: AppRoutes.gravacoesNaoEnviadasNome,
+                path: AppRoutes.gravacoesNaoEnviadasCaminho,
+                builder: (context, state) => GravacoesNaoEnviadasPage(
+                  pacienteId: state.pathParameters[AppRoutes.paramPacienteId]!,
+                ),
               ),
               GoRoute(
                 name: AppRoutes.capturaNome,

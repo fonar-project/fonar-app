@@ -109,6 +109,16 @@ class RepositorioAmostrasPlaceholder implements RepositorioAmostras {
   ];
 
   @override
+  Future<List<Amostra>> doPaciente(String pacienteId) async => [
+    for (final a in _amostras)
+      if (a.pacienteId == pacienteId) a,
+  ];
+
+  @override
+  Future<void> descartarSessao(String sessaoId) async =>
+      _amostras.removeWhere((a) => a.sessaoId == sessaoId);
+
+  @override
   Future<List<Amostra>> ultimaSessao(String pacienteId) async {
     final doPaciente = [
       for (final a in _amostras)

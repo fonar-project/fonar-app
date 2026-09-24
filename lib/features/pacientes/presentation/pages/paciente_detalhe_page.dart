@@ -21,6 +21,7 @@ import '../../../analise/presentation/apresentacao_da_medida.dart';
 import '../../../consentimento/data/repositorio_consentimento_local.dart';
 import '../../../consentimento/domain/consentimento.dart';
 import '../../../consentimento/presentation/texto_da_retirada.dart';
+import '../../../captura/presentation/gravacoes_nao_enviadas_controlador.dart';
 import '../../../fila/domain/item_da_fila.dart';
 import '../../../fila/presentation/fila_controlador.dart';
 import '../../../historico/domain/evolucao_da_medida.dart';
@@ -374,6 +375,10 @@ class _Sessoes extends ConsumerWidget {
         .where((i) => i.situacao == SituacaoDoEnvio.semConsentimento)
         .length;
     final naFila = doPaciente.length - parados;
+    // Voz de paciente parada no aparelho, sem ir para a análise: aparece
+    // aqui para não ficar esquecida.
+    final naoEnviadas =
+        ref.watch(sessoesNaoEnviadasProvider(pacienteId)).value?.length ?? 0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -389,6 +394,24 @@ class _Sessoes extends ConsumerWidget {
             icone: NomeIcone.negacao,
             titulo: AppStrings.perfilParadosNaFila(parados),
           ),
+        if (naoEnviadas > 0) ...[
+          AppSituacao(
+            icone: NomeIcone.alerta,
+            titulo: AppStrings.perfilNaoEnviadas(naoEnviadas),
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: AppBotao.secundario(
+              rotulo: AppStrings.perfilRevisarGravacoes,
+              icone: NomeIcone.avancar,
+              aoTocar: () => context.pushNamed(
+                AppRoutes.gravacoesNaoEnviadasNome,
+                pathParameters: {AppRoutes.paramPacienteId: pacienteId},
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
         if (naFila > 0 || parados > 0) ...[
           Align(
             alignment: Alignment.centerLeft,

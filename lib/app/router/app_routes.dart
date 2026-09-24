@@ -39,6 +39,10 @@ abstract final class AppRoutes {
   static const retiradaConsentimentoNome = 'retiradaConsentimento';
   static const retiradaConsentimentoCaminho = 'retirar';
 
+  // /pacientes/:pacienteId/gravacoes-nao-enviadas
+  static const gravacoesNaoEnviadasNome = 'gravacoesNaoEnviadas';
+  static const gravacoesNaoEnviadasCaminho = 'gravacoes-nao-enviadas';
+
   // /pacientes/:pacienteId/captura
   static const capturaNome = 'captura';
   static const capturaCaminho = 'captura';

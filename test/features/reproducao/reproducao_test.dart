@@ -203,6 +203,47 @@ void main() {
     });
   });
 
+  group('PlayerDeAmostra estreito', () {
+    for (final (nome, largura, escala, naLinha) in [
+      ('largo, texto normal: tempo ao lado da barra', 390.0, 1.0, true),
+      ('estreito, texto em 200%: tempo embaixo', 300.0, 2.0, false),
+    ]) {
+      testWidgets(nome, (tester) async {
+        tester.platformDispatcher.textScaleFactorTestValue = escala;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              reprodutorProvider.overrideWithValue(ReprodutorFalso()),
+            ],
+            child: MaterialApp(
+              theme: AppTheme.claro,
+              home: Scaffold(
+                body: Center(
+                  child: SizedBox(
+                    width: largura,
+                    child: PlayerDeAmostra(
+                      caminho: '/a.wav',
+                      rotulo: 'Vogal',
+                      duracaoConhecida: 3.segundos,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        expect(tester.takeException(), isNull);
+        final barra = tester.getRect(find.byType(Slider));
+        final tempo = tester.getRect(find.text('0:00 / 0:03'));
+        expect(tempo.top >= barra.bottom, !naLinha);
+        // Embaixo ou ao lado, a barra continua dando para arrastar.
+        expect(barra.width, greaterThanOrEqualTo(120));
+      });
+    }
+  });
+
   test('minutos e segundos', () {
     expect(AppStrings.minutosSegundos(7.segundos), '0:07');
     expect(AppStrings.minutosSegundos(83.segundos), '1:23');

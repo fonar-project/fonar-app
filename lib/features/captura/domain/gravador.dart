@@ -45,6 +45,14 @@ abstract interface class RepositorioAmostras {
   /// mais nova —, enviada ou não. Vazio se ele nunca gravou.
   Future<List<Amostra>> ultimaSessao(String pacienteId);
 
+  /// Todas as gravações de [pacienteId] guardadas neste aparelho.
+  Future<List<Amostra>> doPaciente(String pacienteId);
+
+  /// Apaga o REGISTRO das gravações de [sessaoId] — os arquivos, quem apaga
+  /// é quem chama, antes. Sessão que já está num envio não se apaga: a fila
+  /// precisa dela.
+  Future<void> descartarSessao(String sessaoId);
+
   /// Guarda [amostra] no lugar da anterior da mesma tarefa NA MESMA SESSÃO,
   /// se houver — regravar substitui, não acumula. Sessões anteriores do
   /// paciente não são tocadas.
