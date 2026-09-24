@@ -54,6 +54,20 @@ RepositorioConsentimentoLocal _repositorio({BancoLocal? banco}) {
   );
 }
 
+/// Consulta da retirada que o teste segura.
+class _ConferenciaLenta extends RepositorioConsentimentoPlaceholder {
+  Completer<void>? segurar;
+  var consultas = 0;
+
+  @override
+  Future<RetiradaDeConsentimento?> retiradaEmVigor(String pacienteId) async {
+    consultas++;
+    final resposta = await super.retiradaEmVigor(pacienteId);
+    await segurar?.future;
+    return resposta;
+  }
+}
+
 /// Envio que responde na hora, ou segura até ser cancelado.
 class _Envio implements EnvioDeAnalise {
   final recebidos = <String>[];
@@ -99,9 +113,13 @@ ItemDaFila _item(String pacienteId, String sessaoId) => ItemDaFila(
   RepositorioConsentimentoPlaceholder consentimentos,
   RepositorioFila fila,
 })
-_montar({List<ItemDaFila> itens = const [], bool online = true}) {
+_montar({
+  List<ItemDaFila> itens = const [],
+  bool online = true,
+  RepositorioConsentimentoPlaceholder? consentimentos,
+}) {
   final envio = _Envio();
-  final consentimentos = RepositorioConsentimentoPlaceholder();
+  consentimentos ??= RepositorioConsentimentoPlaceholder();
   final fila = RepositorioFilaEmMemoria();
   for (final i in itens) {
     fila.adicionar(i);
@@ -202,6 +220,27 @@ void main() {
       await repositorio.registrar('p1', _consentimento());
       await repositorio.retirar('p1', _retirada());
 
+      await repositorio.registrar('p1', _consentimento());
+
+      expect(await repositorio.buscar('p1'), isNotNull);
+      expect(await repositorio.retiradaEmVigor('p1'), isNull);
+    });
+
+    test('relógio corrigido para trás: o consentimento novo vale', () async {
+      // Revisão de 24/09: o vigente era escolhido pelo horário; registrado
+      // às 9h depois de um retirado às 10h, o novo perdia para o antigo e a
+      // captura seguia bloqueada.
+      final banco = bancoEmMemoria();
+      addTearDown(banco.close);
+      var hora = DateTime(2026, 9, 23, 10);
+      final repositorio = RepositorioConsentimentoLocal(
+        banco,
+        agora: () => hora,
+      );
+      await repositorio.registrar('p1', _consentimento());
+      await repositorio.retirar('p1', _retirada());
+
+      hora = DateTime(2026, 9, 23, 9);
       await repositorio.registrar('p1', _consentimento());
 
       expect(await repositorio.buscar('p1'), isNotNull);
@@ -367,6 +406,56 @@ void main() {
         SituacaoDoEnvio.semConsentimento,
       );
       expect(m.envio.recebidos, ['envio-s1']);
+    });
+
+    // Revisão de 24/09: as esperas antes do upload não tinham cancelamento;
+    // o que acontecia nelas não parava o envio.
+    group('durante a conferência do consentimento, antes do upload', () {
+      late _ConferenciaLenta consentimentos;
+      late ({
+        ProviderContainer container,
+        _Envio envio,
+        RepositorioConsentimentoPlaceholder consentimentos,
+        RepositorioFila fila,
+      })
+      m;
+
+      setUp(() async {
+        consentimentos = _ConferenciaLenta()..segurar = Completer<void>();
+        m = _montar(itens: [_item('p1', 's1')], consentimentos: consentimentos);
+        await consentimentos.registrar('p1', _consentimento());
+        await m.container.read(filaControladorProvider.future);
+        await _assentar();
+        expect(consentimentos.consultas, 1);
+      });
+
+      test('sair da conta: nada sobe, e o item espera na fila', () async {
+        m.container.read(sessaoAbertaProvider.notifier).encerrar();
+        await _assentar();
+        consentimentos.segurar!.complete();
+        await _assentar();
+
+        expect(m.envio.recebidos, isEmpty);
+        final item = _itens(m.container).single;
+        expect(item.situacao, SituacaoDoEnvio.naFila);
+        expect(item.tentativas, 0);
+      });
+
+      test('retirar o consentimento: nada sobe', () async {
+        // A consulta já leu "sem retirada" e está segurada.
+        await consentimentos.retirar('p1', _retirada());
+        await m.container
+            .read(filaControladorProvider.notifier)
+            .pararEnviosDoPaciente('p1');
+        consentimentos.segurar!.complete();
+        await _assentar();
+
+        expect(m.envio.recebidos, isEmpty);
+        expect(
+          _itens(m.container).single.situacao,
+          SituacaoDoEnvio.semConsentimento,
+        );
+      });
     });
 
     test('envio de outro paciente no ar não é interrompido', () async {
