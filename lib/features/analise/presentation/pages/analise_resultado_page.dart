@@ -24,6 +24,7 @@ import '../../../reproducao/presentation/widgets/player_de_amostra.dart';
 import '../../../pacientes/data/repositorio_pacientes_local.dart';
 import '../../../pacientes/domain/paciente.dart';
 import '../../data/catalogo_de_referencias_vazio.dart';
+import '../../data/imagem_do_servidor.dart';
 import '../../data/repositorio_analises_placeholder.dart';
 import '../../domain/leitura_do_resultado.dart';
 import '../../domain/resultado_da_analise.dart';
@@ -261,7 +262,11 @@ class _Resultado extends ConsumerWidget {
               _ResumoCapeV(pacienteId: pacienteId, analiseId: resultado.id),
               const SizedBox(height: AppSpacing.xl),
               _Secao(titulo: AppStrings.resultadoEspectrogramaTitulo),
-              _Espectrograma(url: resultado.espectrogramaUrl),
+              _Espectrograma(
+                url: resultado.espectrogramaUrl,
+                pacienteId: pacienteId,
+                analiseId: resultado.id,
+              ),
               const SizedBox(height: AppSpacing.xl),
               // Por último: o laudo é o passo que fecha a sessão, depois de
               // medidas, CAPE-V e espectrograma revistos.
@@ -529,15 +534,21 @@ class _ResumoCapeV extends ConsumerWidget {
 
 /// Imagem pronta do servidor. O aplicativo não desenha espectrograma.
 ///
-/// TODO(US07 mobile): no celular, o protótipo pede o espectrograma em modo
-/// paisagem, em tela cheia. Hoje a imagem só ocupa a largura da tela.
-class _Espectrograma extends StatelessWidget {
-  const _Espectrograma({required this.url});
+/// Aqui, na largura da página; para ler os detalhes — no celular, deitado —,
+/// abre em tela cheia ([EspectrogramaPage]).
+class _Espectrograma extends ConsumerWidget {
+  const _Espectrograma({
+    required this.url,
+    required this.pacienteId,
+    required this.analiseId,
+  });
 
   final String? url;
+  final String pacienteId;
+  final String analiseId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final secundario = Theme.of(context).textTheme.bodyMedium
         ?.copyWith(color: AppColors.secundarioSobreCreme);
     final endereco = url;
@@ -547,15 +558,33 @@ class _Espectrograma extends StatelessWidget {
         style: secundario,
       );
     }
-    return ClipRRect(
-      borderRadius: AppRadius.bordaMedia,
-      child: Image.network(
-        endereco,
-        semanticLabel: AppStrings.resultadoEspectrogramaDescricao,
-        fit: BoxFit.fitWidth,
-        errorBuilder: (_, _, _) =>
-            Text(AppStrings.resultadoEspectrogramaErro, style: secundario),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ClipRRect(
+          borderRadius: AppRadius.bordaMedia,
+          child: Image(
+            image: ref.watch(imagemDoServidorProvider)(endereco),
+            semanticLabel: AppStrings.resultadoEspectrogramaDescricao,
+            fit: BoxFit.fitWidth,
+            errorBuilder: (_, _, _) =>
+                Text(AppStrings.resultadoEspectrogramaErro, style: secundario),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        AppBotao.secundario(
+          rotulo: AppStrings.resultadoEspectrogramaTelaCheia,
+          icone: NomeIcone.avancar,
+          // `push`: voltar da tela cheia traz de volta a este ponto.
+          aoTocar: () => context.pushNamed(
+            AppRoutes.espectrogramaNome,
+            pathParameters: {
+              AppRoutes.paramPacienteId: pacienteId,
+              AppRoutes.paramAnaliseId: analiseId,
+            },
+          ),
+        ),
+      ],
     );
   }
 }

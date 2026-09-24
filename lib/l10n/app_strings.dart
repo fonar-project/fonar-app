@@ -451,6 +451,18 @@ abstract final class AppStrings {
       'Não foi possível carregar a imagem. Confira a conexão.';
   static const resultadoEspectrogramaDescricao =
       'Espectrograma da gravação, gerado pelo servidor.';
+  static const resultadoEspectrogramaTelaCheia = 'Ver em tela cheia';
+  static const espectrogramaGireAparelho =
+      'Gire o aparelho para ver o espectrograma maior.';
+  static const espectrogramaAproximar = 'Aproximar';
+  static const espectrogramaAjustar = 'Ajustar à tela';
+  static const espectrogramaNoMaximo = 'Aproximação máxima.';
+  static const espectrogramaNoTamanhoDaTela = 'Já está do tamanho da tela.';
+  static const espectrogramaGestos =
+      'Também dá para aproximar com dois dedos, com a roda do mouse ou com + '
+      'e − no teclado, e percorrer arrastando ou com as setas.';
+  static const espectrogramaAreaDica =
+      'Setas percorrem; mais e menos aproximam e afastam; zero ajusta à tela.';
 
   static const resultadoNaoCalculada = 'Não calculada';
   static const resultadoNaoCalculadaTexto =

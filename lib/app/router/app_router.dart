@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/analise/presentation/pages/analise_resultado_page.dart';
+import '../../features/analise/presentation/pages/espectrograma_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/cape_v/presentation/pages/cape_v_page.dart';
 import '../../features/captura/presentation/pages/captura_page.dart';
@@ -95,6 +96,16 @@ final routerProvider = Provider<GoRouter>((ref) {
                   analiseId: state.pathParameters[AppRoutes.paramAnaliseId]!,
                 ),
                 routes: [
+                  GoRoute(
+                    name: AppRoutes.espectrogramaNome,
+                    path: AppRoutes.espectrogramaCaminho,
+                    builder: (context, state) => EspectrogramaPage(
+                      pacienteId:
+                          state.pathParameters[AppRoutes.paramPacienteId]!,
+                      analiseId:
+                          state.pathParameters[AppRoutes.paramAnaliseId]!,
+                    ),
+                  ),
                   GoRoute(
                     name: AppRoutes.capeVNome,
                     path: AppRoutes.capeVCaminho,
