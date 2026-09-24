@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -48,6 +50,18 @@ class _ContaQueNaoSai implements RepositorioDaConta {
   Future<void> sair() => Future.error(const FalhaDesconhecida());
 }
 
+/// Saída que só termina quando o teste deixa — o cofre do sistema pode
+/// demorar.
+class _ContaLenta implements RepositorioDaConta {
+  final pendente = Completer<void>();
+
+  @override
+  Future<void> salvar(Profissional profissional) async {}
+
+  @override
+  Future<void> sair() => pendente.future;
+}
+
 class _Cena {
   _Cena(this.container, this.autenticacao);
   final ProviderContainer container;
@@ -67,6 +81,7 @@ Future<_Cena> _abrir(
   WidgetTester tester, {
   bool online = true,
   bool saidaFalha = false,
+  RepositorioDaConta? conta,
   Size tamanho = const Size(390, 844),
   double escala = 1,
 }) async {
@@ -91,7 +106,9 @@ Future<_Cena> _abrir(
       // O cofre do sistema não existe no teste.
       tokenStorageProvider.overrideWithValue(TokenStorageEmMemoria()),
       if (saidaFalha)
-        repositorioDaContaProvider.overrideWithValue(_ContaQueNaoSai()),
+        repositorioDaContaProvider.overrideWithValue(_ContaQueNaoSai())
+      else if (conta != null)
+        repositorioDaContaProvider.overrideWithValue(conta),
       pacientesProvider.overrideWith(
         (ref) async => const [
           Paciente(
@@ -291,6 +308,86 @@ void main() {
     expect(c.container.read(sessaoAbertaProvider), isFalse);
     expect(find.byType(LoginPage), findsOneWidget);
     expect(find.text('Caio de Teste'), findsNothing);
+  });
+
+  _testar('saída demorada: o bloqueio cobre a tela até o login', (
+    tester,
+  ) async {
+    // Revisão de 24/09: fechar a sessão soltava o bloqueio na hora, e a
+    // tela de baixo voltava à vista durante toda a espera da saída.
+    final conta = _ContaLenta();
+    final c = await _abrir(tester, conta: conta);
+    await tester.enterText(
+      _campo(AppStrings.cadastroCampoNome),
+      'Caio de Teste',
+    );
+    await _passar(tester, c, _limite);
+    await tester.pump();
+
+    await tester.tap(find.text(AppStrings.bloqueioSair).last);
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(c.container.read(sessaoAbertaProvider), isFalse);
+    expect(c.bloqueado, isTrue);
+    expect(find.byType(TelaDeBloqueio), findsOneWidget);
+    expect(find.semantics.byLabel('Caio de Teste'), findsNothing);
+
+    conta.pendente.complete();
+    await tester.pumpAndSettle();
+
+    expect(c.bloqueado, isFalse);
+    expect(find.byType(LoginPage), findsOneWidget);
+    expect(find.byType(TelaDeBloqueio), findsNothing);
+    expect(find.text('Caio de Teste'), findsNothing);
+  });
+
+  group('BloqueioPorInatividade', () {
+    test('sessão que fecha bloqueada continua bloqueada até liberar', () {
+      final container = ProviderContainer(
+        overrides: [
+          sessaoAbertaProvider.overrideWith(() => Sessao(true)),
+          relogioProvider.overrideWithValue(() => DateTime(2026, 9, 24, 10, 6)),
+          limiteDeInatividadeProvider.overrideWithValue(Duration.zero),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.listen(bloqueioPorInatividadeProvider, (_, _) {});
+      final bloqueio = container.read(bloqueioPorInatividadeProvider.notifier);
+      bloqueio.conferir();
+      expect(container.read(bloqueioPorInatividadeProvider), isTrue);
+
+      // Com a sessão aberta, liberar não desbloqueia: só a senha.
+      bloqueio.liberar();
+      expect(container.read(bloqueioPorInatividadeProvider), isTrue);
+
+      container.read(sessaoAbertaProvider.notifier).encerrar();
+      expect(container.read(bloqueioPorInatividadeProvider), isTrue);
+
+      bloqueio.liberar();
+      expect(container.read(bloqueioPorInatividadeProvider), isFalse);
+    });
+
+    test('entrar de novo começa desbloqueado', () {
+      final container = ProviderContainer(
+        overrides: [
+          sessaoAbertaProvider.overrideWith(() => Sessao(true)),
+          relogioProvider.overrideWithValue(() => DateTime(2026, 9, 24, 10, 6)),
+          limiteDeInatividadeProvider.overrideWithValue(Duration.zero),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.listen(bloqueioPorInatividadeProvider, (_, _) {});
+      final sessao = container.read(sessaoAbertaProvider.notifier);
+      container.read(bloqueioPorInatividadeProvider.notifier).conferir();
+      expect(container.read(bloqueioPorInatividadeProvider), isTrue);
+
+      sessao.encerrar();
+      expect(container.read(bloqueioPorInatividadeProvider), isTrue);
+      sessao.abrir();
+
+      expect(container.read(bloqueioPorInatividadeProvider), isFalse);
+    });
   });
 
   _testar('sem sessão aberta, nunca bloqueia', (tester) async {

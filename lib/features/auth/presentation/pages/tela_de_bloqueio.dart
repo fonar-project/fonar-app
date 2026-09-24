@@ -53,17 +53,21 @@ class _TelaDeBloqueioState extends ConsumerState<TelaDeBloqueio> {
   }
 
   Future<void> _sair() async {
-    // Lido antes da espera: fechar a sessão desbloqueia, e esta tela sai de
-    // cena antes de a saída terminar.
+    // Lidos antes da espera, por garantia: a tela pode sair de cena no meio.
     final roteador = ref.read(routerProvider);
+    final bloqueio = ref.read(bloqueioPorInatividadeProvider.notifier);
     // Sem a pergunta de "sair sem salvar": ela abriria por cima do formulário,
     // de volta à vista — e quem escolheu sair da conta já decidiu.
     ref.read(formulariosAlteradosProvider.notifier).esquecerTodos();
+    // Esta tela continua cobrindo a de baixo durante toda a saída — a sessão
+    // fechar não desbloqueia (ver `BloqueioPorInatividade.build`).
     await ref.read(contaControladorProvider.notifier).sair();
-    // Para o login MESMO se a saída falhar: a sessão já fechou — e com ela o
-    // bloqueio —, e ficar aqui mostraria de volta a tela de baixo, com os
-    // dados do paciente. O próximo login sobrescreve o token que ficou.
+    // Para o login MESMO se a saída falhar: a sessão já fechou, e o próximo
+    // login sobrescreve o token que ficou.
     roteador.goNamed(AppRoutes.loginNome);
+    // A cobertura só sai com o login já desenhado por baixo.
+    await WidgetsBinding.instance.endOfFrame;
+    bloqueio.liberar();
   }
 
   @override

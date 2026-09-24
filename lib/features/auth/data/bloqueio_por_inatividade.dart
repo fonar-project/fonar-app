@@ -32,10 +32,17 @@ class BloqueioPorInatividade extends Notifier<bool> {
   @override
   bool build() {
     ref.onDispose(() => _relogio?.cancel());
+    final estavaBloqueado = stateOrNull ?? false;
     _relogio?.cancel();
     _relogio = null;
-    // `watch`: abrir a sessão arma o relógio; fechar desarma e desbloqueia.
-    if (!ref.watch(sessaoAbertaProvider)) return false;
+    // `watch`: abrir a sessão arma o relógio e desbloqueia; fechar desarma.
+    if (!ref.watch(sessaoAbertaProvider)) {
+      // Fechou com o app bloqueado — "Sair da conta" na tela de bloqueio: a
+      // cobertura fica até quem saiu chegar ao login ([liberar]). Soltar
+      // aqui mostrava a tela de baixo, com os dados do paciente, durante
+      // toda a espera da saída (revisão de 24/09).
+      return estavaBloqueado;
+    }
     _ultimaAtividade = _agora();
     _armar();
     return false;
@@ -68,6 +75,13 @@ class BloqueioPorInatividade extends Notifier<bool> {
     _ultimaAtividade = _agora();
     state = false;
     _armar();
+  }
+
+  /// Saiu da conta com o app bloqueado e já está no login: tira a
+  /// cobertura. Com a sessão aberta, não faz nada — aí só a senha libera.
+  void liberar() {
+    if (ref.read(sessaoAbertaProvider)) return;
+    state = false;
   }
 
   void _armar() {
