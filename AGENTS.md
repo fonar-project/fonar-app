@@ -9,6 +9,14 @@ Flutter de avaliação vocal clínica, TCC de Engenharia de Software da
 PUC-Campinas. Somos dois assistentes com acessos diferentes, e é isso que
 define a divisão de trabalho.
 
+## O que já existe
+
+O app já tem o fluxo da avaliação inteiro no aparelho (US00 a US24), ainda
+sem backend: login, API de análise e resultados são placeholder. O resumo de
+cada US está no `README.md`, e o que falta — separado por quem decide:
+clínica, jurídico, backend, equipe — está no `PENDENCIAS.md`. Antes de
+propor algo, peça esses dois arquivos.
+
 ## A diferença que importa
 
 O Claude Code roda dentro do repositório: lê os arquivos, edita, roda

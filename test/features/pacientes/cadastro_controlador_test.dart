@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fonar_app/features/historico/domain/evolucao_da_medida.dart';
-import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_placeholder.dart';
+import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_local.dart';
 import 'package:fonar_app/features/pacientes/domain/novo_paciente.dart';
 import 'package:fonar_app/features/pacientes/domain/paciente.dart';
 import 'package:fonar_app/features/pacientes/domain/repositorio_pacientes.dart';
@@ -29,6 +29,10 @@ class _RepositorioLento implements RepositorioPacientes {
     _cadastrados.add(p);
     return p;
   }
+
+  @override
+  Future<Paciente> atualizar(String id, NovoPaciente dados) =>
+      throw UnimplementedError();
 }
 
 void main() {

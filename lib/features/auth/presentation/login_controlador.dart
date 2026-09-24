@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/error/app_exception.dart';
 import '../../../l10n/app_strings.dart';
 import '../data/repositorio_autenticacao_placeholder.dart';
+import '../data/sessao.dart';
 
 /// Estado do formulário de login.
 class EstadoLogin {
@@ -64,8 +65,14 @@ class LoginControlador extends Notifier<EstadoLogin> {
     // A tela pode ter saído enquanto a autenticação estava no ar.
     if (!ref.mounted) return false;
     state = resultado;
-    return resultado.erroSenha == null && resultado.erroGeral == null;
+    final entrou = resultado.erroSenha == null && resultado.erroGeral == null;
+    if (entrou) ref.read(sessaoAbertaProvider.notifier).abrir();
+    return entrou;
   }
+
+  /// Entra sem conexão, com os dados já guardados no aparelho. A sessão abre
+  /// do mesmo jeito: a fila espera a rede, não um novo login.
+  void entrarOffline() => ref.read(sessaoAbertaProvider.notifier).abrir();
 }
 
 final loginControladorProvider =

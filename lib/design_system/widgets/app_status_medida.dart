@@ -85,10 +85,14 @@ class AppStatusMedida extends StatelessWidget {
       children: [
         AppIcone(nome: status.icone, cor: status.cor, tamanho: 18),
         const SizedBox(width: AppSpacing.xxs + 2),
-        Text(
-          status.rotulo,
-          style: Theme.of(context).textTheme.labelSmall
-              ?.copyWith(color: status.cor),
+        // Flexible: num cartão estreito, ou com o texto do sistema ampliado,
+        // o rótulo quebra linha em vez de estourar o selo.
+        Flexible(
+          child: Text(
+            status.rotulo,
+            style: Theme.of(context).textTheme.labelSmall
+                ?.copyWith(color: status.cor),
+          ),
         ),
       ],
     );

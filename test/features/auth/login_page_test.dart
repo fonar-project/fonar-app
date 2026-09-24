@@ -71,7 +71,7 @@ Future<void> _abrir(
     ProviderScope(
       overrides: [
         conexaoOnlineProvider.overrideWithValue(online),
-        pacientesEmCacheProvider.overrideWithValue(pacientesEmCache),
+        pacientesEmCacheProvider.overrideWith((ref) => pacientesEmCache),
         repositorioAutenticacaoProvider.overrideWithValue(
           repositorio ?? _RepositorioFalso(),
         ),
@@ -300,6 +300,22 @@ void main() {
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
       });
+    }
+
+    // No desktop o painel roxo da marca tem altura de janela e não rolava:
+    // em 200% ele estourava 297 px em 1440×900.
+    for (final tamanho in [const Size(1440, 900), const Size(1024, 768)]) {
+      testWidgets(
+        'desktop ${tamanho.width.round()}×${tamanho.height.round()} em 200% '
+        'não estoura',
+        (tester) async {
+          tester.platformDispatcher.textScaleFactorTestValue = 2;
+          addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+          await _abrir(tester, online: true, tamanho: tamanho);
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+        },
+      );
     }
   });
 

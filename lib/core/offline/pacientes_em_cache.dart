@@ -1,4 +1,7 @@
+import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../banco/banco_local.dart';
 
 /// Quantos pacientes estão salvos neste aparelho.
 ///
@@ -11,8 +14,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Anda junto de `core/network/conexao.dart`: um diz se a rede existe, o outro
 /// diz se dá para trabalhar sem ela.
 ///
-/// PLACEHOLDER — sempre zero.
+/// Conta só o banco local. Os pacientes de exemplo não contam: eles não são
+/// de ninguém, e não justificam entrar sem conexão.
 ///
-/// TODO(drift): contar os pacientes do banco local quando a persistência
-/// existir.
-final pacientesEmCacheProvider = Provider<int>((ref) => 0);
+/// `autoDispose`: conta de novo cada vez que o login aparece. Quem cadastrou
+/// pacientes durante a sessão e saiu sem conexão precisa ver a conta de
+/// agora, não a da abertura do app.
+final pacientesEmCacheProvider = FutureProvider.autoDispose<int>(
+  (ref) => ref.watch(bancoLocalProvider).pacientes.count().getSingle(),
+);

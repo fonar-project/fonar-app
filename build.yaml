@@ -1,0 +1,14 @@
+# Geração do código do banco local (Drift). Rode depois de mexer nas tabelas:
+#
+#     dart run build_runner build
+#
+# e commite o `.g.dart` junto — o CI gera de novo e acusa diferença.
+targets:
+  $default:
+    builders:
+      drift_dev:
+        options:
+          # Data como texto ISO-8601, com fração de segundo. O padrão (inteiro
+          # em segundos) perderia a ordem de duas gravações no mesmo segundo,
+          # e é ilegível para quem abrir o arquivo numa auditoria.
+          store_date_time_values_as_text: true

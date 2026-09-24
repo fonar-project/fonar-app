@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/repositorio_pacientes_placeholder.dart';
+import '../data/repositorio_pacientes_local.dart';
 import '../domain/paciente.dart';
 
 /// Termo digitado na busca da lista de pacientes.

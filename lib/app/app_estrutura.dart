@@ -24,6 +24,11 @@ enum DestinoPrincipal {
     rotuloCurto: AppStrings.navNovaAvaliacaoCurto,
     rota: AppRoutes.novaAvaliacaoNome,
   ),
+  historico(
+    rotulo: AppStrings.navHistorico,
+    rotuloCurto: AppStrings.navHistorico,
+    rota: AppRoutes.historicoNome,
+  ),
   fila(
     rotulo: AppStrings.navFila,
     rotuloCurto: AppStrings.navFilaCurto,

@@ -1,7 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fonar_app/features/historico/domain/evolucao_da_medida.dart';
-import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_placeholder.dart';
 import 'package:fonar_app/features/pacientes/domain/novo_paciente.dart';
+
+import '../../apoio/repositorios_em_memoria.dart';
 
 final _hoje = DateTime(2026, 9, 23);
 
@@ -134,6 +135,19 @@ void main() {
       expect(lista.first.nome, 'Ana de Teste');
       expect(lista.first.ultimaSessao, isNull);
       expect(lista.first.direcaoAvqi, DirecaoDaMedida.semComparacao);
+    });
+
+    test('cadastros seguidos têm ids diferentes', () async {
+      final repositorio = RepositorioPacientesPlaceholder();
+      final novo = (_validar() as CadastroValido).paciente;
+
+      // Todos no mesmo instante, como Ana e Bia no teste de duplicidade.
+      final salvos = await Future.wait([
+        for (var i = 0; i < 2000; i++) repositorio.cadastrar(novo),
+      ]);
+      final ids = salvos.map((p) => p.id);
+
+      expect(ids.toSet(), hasLength(2000));
     });
   });
 }

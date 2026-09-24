@@ -8,6 +8,8 @@ import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/design_system/widgets/tela_placeholder.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 
+import '../apoio/banco_em_memoria.dart';
+
 const _desktop = Size(1440, 900);
 
 Future<void> _pumpar(WidgetTester tester, Widget tela) async {
@@ -76,7 +78,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
 
-      final container = ProviderContainer();
+      final container = ProviderContainer(overrides: [bancoDeTeste()]);
       addTearDown(container.dispose);
       final roteador = container.read(routerProvider);
 

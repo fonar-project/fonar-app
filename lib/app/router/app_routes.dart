@@ -31,9 +31,21 @@ abstract final class AppRoutes {
   static const pacienteDetalheNome = 'pacienteDetalhe';
   static const pacienteDetalheCaminho = ':$paramPacienteId';
 
+  // /pacientes/:pacienteId/editar
+  static const edicaoPacienteNome = 'edicaoPaciente';
+  static const edicaoPacienteCaminho = 'editar';
+
   // /pacientes/:pacienteId/consentimento
   static const consentimentoNome = 'consentimento';
   static const consentimentoCaminho = 'consentimento';
+
+  // /pacientes/:pacienteId/consentimento/retirar
+  static const retiradaConsentimentoNome = 'retiradaConsentimento';
+  static const retiradaConsentimentoCaminho = 'retirar';
+
+  // /pacientes/:pacienteId/gravacoes-nao-enviadas
+  static const gravacoesNaoEnviadasNome = 'gravacoesNaoEnviadas';
+  static const gravacoesNaoEnviadasCaminho = 'gravacoes-nao-enviadas';
 
   // /pacientes/:pacienteId/captura
   static const capturaNome = 'captura';
@@ -42,6 +54,26 @@ abstract final class AppRoutes {
   // /pacientes/:pacienteId/analise/:analiseId
   static const analiseResultadoNome = 'analiseResultado';
   static const analiseResultadoCaminho = 'analise/:$paramAnaliseId';
+
+  // /pacientes/:pacienteId/analise/:analiseId/espectrograma
+  static const espectrogramaNome = 'espectrograma';
+  static const espectrogramaCaminho = 'espectrograma';
+
+  // /pacientes/:pacienteId/analise/:analiseId/cape-v
+  static const capeVNome = 'capeV';
+  static const capeVCaminho = 'cape-v';
+
+  // /pacientes/:pacienteId/analise/:analiseId/laudo
+  static const laudoNome = 'laudo';
+  static const laudoCaminho = 'laudo';
+
+  // /pacientes/:pacienteId/evolucao
+  static const evolucaoNome = 'evolucao';
+  static const evolucaoCaminho = 'evolucao';
+
+  // /pacientes/:pacienteId/evolucao/modo-paciente
+  static const modoPacienteNome = 'modoPaciente';
+  static const modoPacienteCaminho = 'modo-paciente';
 
   // /fila
   static const filaNome = 'fila';

@@ -18,4 +18,10 @@ abstract interface class RepositorioPacientes {
   ///
   /// Lança só `AppException`.
   Future<Paciente> cadastrar(NovoPaciente novo);
+
+  /// Corrige os dados de [id] e devolve como ele passa a aparecer.
+  ///
+  /// Lança só `AppException` — `NaoEncontrado` se o paciente não estiver no
+  /// banco deste aparelho (os de exemplo, por exemplo).
+  Future<Paciente> atualizar(String id, NovoPaciente dados);
 }

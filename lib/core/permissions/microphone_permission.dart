@@ -46,6 +46,13 @@
 ///
 /// Ver a regra de captura no CLAUDE.md: "VERIFICAR empiricamente o que saiu,
 /// não confiar na configuração solicitada".
+///
+/// SITUAÇÃO (US04): os itens 1 a 3 estão na aferição de ruído —
+/// `features/captura/domain/afericao_de_ruido.dart` e a tela de gravação. O
+/// limiar de silêncio ainda é valor de partida, NÃO definido empiricamente.
+/// O item 4 está pela metade: a troca de taxa e de canais pelo aparelho é
+/// detectada e mostrada; conferir o cabeçalho do WAV gravado fica para a
+/// gravação das tarefas. Nada disso foi verificado em aparelho real ainda.
 abstract interface class MicrophonePermission {
   /// Já temos permissão, sem perguntar nada ao usuário?
   Future<bool> temPermissao();

@@ -1,4 +1,5 @@
 import '../../historico/domain/evolucao_da_medida.dart';
+import 'novo_paciente.dart';
 
 /// Paciente como aparece na lista.
 class Paciente {
@@ -8,6 +9,9 @@ class Paciente {
     required this.queixa,
     required this.direcaoAvqi,
     this.ultimaSessao,
+    this.sexo,
+    this.dataDeNascimento,
+    this.exemplo = false,
   });
 
   final String id;
@@ -18,6 +22,16 @@ class Paciente {
 
   /// Nula enquanto o paciente não tiver nenhuma sessão gravada.
   final DateTime? ultimaSessao;
+
+  /// Para escolher a faixa de referência — e só para isso. Nulo quando o
+  /// cadastro não tem (os pacientes de exemplo, por exemplo): aí as medidas
+  /// aparecem sem classificação.
+  final SexoDeReferencia? sexo;
+  final DateTime? dataDeNascimento;
+
+  /// Paciente fictício de desenvolvimento, que não está no banco — os dados
+  /// dele não se editam.
+  final bool exemplo;
 
   /// Para onde o AVQI foi entre as duas últimas sessões.
   ///
@@ -51,6 +65,11 @@ const _semAcento = {
   'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u', //
   'ç': 'c', 'ñ': 'n',
 };
+
+/// [texto] do jeito que se compara nome: sem diferença de maiúscula, acento
+/// ou espaço sobrando.
+String paraComparar(String texto) =>
+    _normalizar(texto.trim().replaceAll(RegExp(r'\s+'), ' '));
 
 // Tabela fixa do português, não Unicode completo. Nome estrangeiro com
 // diacrítico de fora da tabela só casa digitado com o acento.

@@ -15,6 +15,22 @@ abstract final class AppConfig {
     defaultValue: 'http://localhost:8080',
   );
 
+  /// Versão exibida na tela de conta. Entra no build de distribuição por
+  /// `--dart-define=FONAR_VERSAO=...`; sem ela, a tela diz que é versão de
+  /// desenvolvimento — e não um número que ninguém conferiu.
+  static const versao = String.fromEnvironment(
+    'FONAR_VERSAO',
+    defaultValue: 'desenvolvimento',
+  );
+
+  /// Sem nenhum toque, tecla ou rolagem por este tempo, o app bloqueia e
+  /// pede a senha: o aparelho fica na mesa do consultório, aberto em dado
+  /// de paciente, enquanto o profissional atende.
+  ///
+  /// TODO(equipe): tempo escolhido sem medir a consulta. Curto demais trava
+  /// no meio do atendimento; longo demais não protege.
+  static const tempoDeInatividade = Duration(minutes: 5);
+
   /// Tempo para abrir a conexão.
   static const timeoutConexao = Duration(seconds: 15);
 
