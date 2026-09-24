@@ -89,6 +89,24 @@ Drift. Gráficos com fl_chart. Áudio: record para captura, just_audio para
 reprodução. Ícones com vector_graphics_compiler.
 Backend: Firebase (auth e dados) + API Python no Cloud Run (análise).
 
+### Dívida técnica conhecida — `just_audio_windows` e um header obsoleto
+O `just_audio_windows` inclui `<experimental/coroutine>`, header que a
+Microsoft marcou como obsoleto e, a partir do MSVC 14.51 (Build Tools do
+Visual Studio 2026), transformou em erro de compilação. **O build do Windows
+só fecha com o Visual Studio Community 2022** (MSVC 14.44), e está aí a
+dependência: não é preferência de ferramenta, é o único compilador que aceita
+o plugin. Os pré-requisitos completos estão no README.
+
+Quando a Microsoft remover o header de vez, o plugin para de compilar e não
+adianta trocar de versão do Visual Studio. A saída será trocar a implementação
+de reprodução no Windows — e a alternativa óbvia, o `just_audio_media_kit`,
+embute a libmpv, que é GPL e está proibida dentro do executável pela regra
+de processamento de áudio acima. Reproduzir não é analisar: a troca mexe só
+em quem toca o WAV, nunca em quem mede.
+
+Enquanto isso, o job de `flutter build windows` no CI é o que acusa a quebra.
+Teste nenhum pega: os 624 rodam no Ubuntu e não compilam código nativo.
+
 ## Offline
 A fila de sincronização vale para AS DUAS plataformas. Queda de conexão em
 consultório é tão comum quanto ausência de sinal em campo. Gravação funciona

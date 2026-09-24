@@ -113,7 +113,7 @@ aqui.
 | Gradle | 9.3.1 (via wrapper, baixado sozinho no primeiro build) |
 | Android Gradle Plugin | 9.1.0 |
 | Kotlin | 2.4.0 |
-| Visual Studio | Build Tools 2026 18.5.11716.220, com Windows 10 SDK 10.0.26100.0 |
+| Visual Studio | **Community 2022** 17.14.37710.0, com a carga de C++, o componente ATL e o Windows 10 SDK 10.0.26100.0 |
 
 O projeto compila para `minSdk 24`, `targetSdk 36` e `compileSdk 36` — valores
 herdados do Flutter, não fixados à mão em `android/app/build.gradle.kts`.
@@ -125,10 +125,15 @@ Android Studio já resolve — não instale outro Java só por causa disto.
 
 ### Para build Windows: leia isto antes de tentar
 
-**Você precisa do Visual Studio 2022 ou mais recente com a carga de trabalho
-"Desenvolvimento para desktop com C++"** (*Desktop development with C++*).
+**Você precisa do Visual Studio Community 2022** — essa versão, não a mais
+recente — **com duas coisas marcadas:**
 
-Este é o passo que mais trava quem chega no projeto, por três motivos:
+- a carga de trabalho **"Desenvolvimento para desktop com C++"**
+  (*Desktop development with C++*);
+- dentro dela, o componente **"ATL do C++ para as ferramentas de build v143
+  mais recentes"** (*C++ ATL for latest v143 build tools*).
+
+Este é o passo que mais trava quem chega no projeto, por cinco motivos:
 
 1. **Não é o VS Code.** Visual Studio e Visual Studio Code são produtos
    diferentes, de nomes parecidos. Ter o VS Code instalado não ajuda em nada
@@ -141,13 +146,48 @@ Este é o passo que mais trava quem chega no projeto, por três motivos:
    todas as telas e só falha depois, na hora do build. Se já instalou sem
    marcar, abra o *Visual Studio Installer*, clique em *Modificar* e adicione a
    carga.
+4. **A carga C++ também não basta — o ATL é um componente à parte, e vem
+   desmarcado.** Sem ele falta o header `atlstr.h`, e o
+   `flutter_secure_storage_windows` — que guarda o token no Gerenciador de
+   Credenciais — não compila. O erro cita o `atlstr.h` e não diz uma palavra
+   sobre ATL, então não é óbvio o que marcar.
+   No *Visual Studio Installer* → *Modificar* → aba **Componentes
+   individuais**, busque por `ATL` e marque a opção de v143 mais recente.
+5. **Não use o Visual Studio 2026.** Explicado logo abaixo; é a armadilha nova
+   e a mais cara de descobrir sozinho.
 
-Alternativa mais leve: **Build Tools for Visual Studio**, que é a mesma cadeia
-de compilação sem a IDE (é o que está na máquina de referência). Mesma carga
-"Desenvolvimento para desktop com C++", download bem menor. Se você não vai
-escrever C++, prefira esta.
+Se preferir o **Build Tools for Visual Studio**, a mesma cadeia de compilação
+sem a IDE, tem que ser o **Build Tools 2022** — com a mesma carga de C++ e o
+mesmo componente ATL. Atenção: o que a Microsoft oferece hoje na página de
+download é o **Build Tools 2026**, e esse quebra o build. Baixe pelo arquivo
+de versões anteriores, ou vá de Community 2022, que é o que está na máquina de
+referência.
 
-Confirme com `flutter doctor`: a linha de Visual Studio precisa estar com `[√]`.
+Confirme com `flutter doctor -v`: a linha de Visual Studio precisa estar com
+`[√]` **e dizer "Community 2022"**.
+
+#### O Visual Studio 2026 quebra o build, e o Flutter escolhe sozinho
+
+O Build Tools do Visual Studio 2026 traz o MSVC 14.51, e ele **não compila o
+`just_audio_windows`**: o plugin inclui `<experimental/coroutine>`, um header
+obsoleto que a Microsoft transformou em erro nessa versão do compilador. O
+Visual Studio Community 2022 (MSVC 14.44) compila normalmente. O plugin é o que
+toca as gravações no Windows, então não dá para simplesmente tirar — está
+registrado como dívida técnica no `CLAUDE.md`.
+
+E tem o agravante: **o Flutter escolhe sozinho a instalação mais recente do
+Visual Studio, e não oferece opção de trocar.** Não existe flag de linha de
+comando nem variável de ambiente para apontar qual usar. Quem tiver as duas
+instaladas vai ver o build quebrar pela 2026 mesmo tendo a 2022 completa do
+lado — e o erro não diz nada sobre escolha de toolchain.
+
+A saída, nesse caso, é abrir o *Visual Studio Installer* e remover a
+instalação de 2026, ou ao menos a carga de C++ dela. Depois confira no
+`flutter doctor -v` qual instalação ele passou a enxergar.
+
+Nada disso aparece em `flutter test`: os testes rodam em Dart e nunca compilam
+código nativo. Quebra de build só aparece em `flutter build windows` — por isso
+o CI tem um job de Windows, descrito na seção de integração contínua.
 
 ---
 
@@ -209,8 +249,10 @@ comentário de `schemaVersion`, em `lib/core/banco/banco_local.dart`.
 ### Integração contínua
 
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda a cada push e a
-cada pull request, em `ubuntu-latest`, com o mesmo Flutter 3.47.2 da tabela de
-pré-requisitos. **Só verifica:** não compila release e não publica nada.
+cada pull request, com o mesmo Flutter 3.47.2 da tabela de pré-requisitos, em
+dois jobs. Nenhum dos dois publica artefato.
+
+#### `verificacao`, em `ubuntu-latest`
 
 | Passo | Comando |
 |---|---|
@@ -233,9 +275,28 @@ velho, o arquivo muda e o CI acusa. Quando isso acontece, a correção é rodar
 `dart run tool/compilar_icones.dart` na sua máquina e commitar o resultado — a
 própria mensagem de erro do CI diz isso.
 
-Ao subir a versão do Flutter, mude nos dois lugares: na tabela de
-pré-requisitos e no `flutter-version` do workflow. Se divergirem, o CI passa a
-validar um Flutter que ninguém usa.
+#### `build-windows`, em `windows-latest`
+
+Roda `flutter build windows` e mais nada. Compila, não empacota e não sobe
+artefato — o que interessa é ter compilado.
+
+Existe porque **os testes não pegam quebra de compilação nativa, e nunca vão
+pegar**: `flutter test` roda Dart, no Ubuntu, sem chamar o MSVC uma vez
+sequer. A suíte inteira passa verde com o build do Windows em frangalhos — foi
+o que aconteceu com o ATL faltando e com o `just_audio_windows` contra o
+compilador do Visual Studio 2026, as duas armadilhas descritas nos
+pré-requisitos. Compilar de verdade, numa máquina Windows, é o único jeito de
+enxergar isso antes do usuário.
+
+A imagem `windows-latest` do GitHub traz hoje o Visual Studio 2022 com a carga
+de C++ e o ATL, que é a combinação de que o projeto precisa. Se um dia ela passar
+a trazer o 2026, este job quebra no `just_audio_windows` sem ninguém ter tocado
+no código — aí fixe a imagem em `windows-2025`. O passo `flutter doctor -v` do
+job está lá justamente para o log dizer qual Visual Studio foi usado.
+
+Ao subir a versão do Flutter, mude nos três lugares: na tabela de
+pré-requisitos e nos dois `flutter-version` do workflow, um por job. Se
+divergirem, o CI passa a validar um Flutter que ninguém usa.
 
 ### Apontar para a API
 
