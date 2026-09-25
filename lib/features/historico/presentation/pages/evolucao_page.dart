@@ -12,6 +12,7 @@ import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_cabecalho_de_tarefa.dart';
 import '../../../../design_system/widgets/app_escolha_unica.dart';
 import '../../../../design_system/widgets/app_estado.dart';
+import '../../../../design_system/widgets/app_fundo.dart';
 import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../design_system/widgets/app_status_medida.dart';
@@ -546,7 +547,7 @@ class _LinhaDaSessao extends StatelessWidget {
               AppRoutes.paramAnaliseId: sessao.id,
             },
           ),
-          child: Padding(
+          conteudo: (context) => Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.xs,
               vertical: AppSpacing.sm,
@@ -572,8 +573,10 @@ class _LinhaDaSessao extends StatelessWidget {
                             ? medida.formatar(valor)
                             : '${medida.formatar(valor)} ${medida.unidade}',
                         style: valor == null
+                            // Pelo fundo: a linha é clicável, e o véu de hover
+                            // escurece o creme embaixo do texto.
                             ? textos.bodyMedium?.copyWith(
-                                color: AppColors.secundarioSobreCreme,
+                                color: AppFundo.secundarioDe(context),
                               )
                             : textos.titleMedium?.copyWith(
                                 fontFeatures: const [

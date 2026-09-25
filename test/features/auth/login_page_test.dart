@@ -102,6 +102,37 @@ void main() {
       expect(find.text(_telaDePacientes), findsOneWidget);
     });
 
+    // Achado 5.4 da revisão de 24/09: este aviso era o único `SnackBar` do
+    // aplicativo — flutuava, sumia sozinho e vinha fora da paleta.
+    testWidgets('"Esqueci a senha" avisa na própria tela, e o aviso fica', (
+      tester,
+    ) async {
+      await _abrir(tester);
+
+      expect(find.text(AppStrings.loginRecuperacaoIndisponivel), findsNothing);
+
+      await tester.tap(find.text(AppStrings.loginEsqueciSenha));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(AppStrings.loginRecuperacaoIndisponivel),
+        findsOneWidget,
+      );
+      expect(
+        find.text(AppStrings.loginRecuperacaoIndisponivelTexto),
+        findsOneWidget,
+      );
+      expect(find.byType(SnackBar), findsNothing);
+
+      // Não sai sozinho: quem lê devagar não perde o aviso.
+      await tester.pump(const Duration(seconds: 30));
+      await tester.pumpAndSettle();
+      expect(
+        find.text(AppStrings.loginRecuperacaoIndisponivel),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('campos vazios não chegam ao servidor', (tester) async {
       final repositorio = _RepositorioFalso();
       await _abrir(tester, repositorio: repositorio);

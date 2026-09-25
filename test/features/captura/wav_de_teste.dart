@@ -1,10 +1,15 @@
 import 'dart:typed_data';
 
-/// Monta um arquivo WAV para teste: cabeçalho de verdade e áudio zerado.
+/// Monta um arquivo WAV para teste: cabeçalho de verdade e áudio de mentira.
 ///
-/// O conteúdo do áudio não importa — a conferência só lê o cabeçalho e o
-/// tamanho. [comList] põe um bloco `LIST` entre o `fmt ` e o `data`, como
-/// fazem alguns gravadores; [extensivel] usa `WAVE_FORMAT_EXTENSIBLE`.
+/// O áudio vem com bytes DIFERENTES DE ZERO, porque a conferência trata
+/// trecho todo zerado como microfone mudo (`audioTodoEmZero`). Não é sinal
+/// nenhum — é preenchimento que só serve para não parecer silêncio digital.
+/// Com [audioZerado] o arquivo sai todo em zero, que é o caso da falha
+/// silenciosa do Windows.
+///
+/// [comList] põe um bloco `LIST` entre o `fmt ` e o `data`, como fazem alguns
+/// gravadores; [extensivel] usa `WAVE_FORMAT_EXTENSIBLE`.
 Uint8List wavDeTeste({
   required Duration duracao,
   int formato = 1,
@@ -13,6 +18,7 @@ Uint8List wavDeTeste({
   int bits = 16,
   bool comList = false,
   bool extensivel = false,
+  bool audioZerado = false,
 }) {
   final bytesDeAudio =
       taxa * canais * (bits ~/ 8) * duracao.inMicroseconds ~/ 1000000;
@@ -61,6 +67,12 @@ Uint8List wavDeTeste({
 
   texto('data');
   u32(bytesDeAudio);
-  saida.add(Uint8List(bytesDeAudio));
+  saida.add(
+    audioZerado
+        ? Uint8List(bytesDeAudio)
+        : Uint8List.fromList([
+            for (var i = 0; i < bytesDeAudio; i++) 1 + (i % 250),
+          ]),
+  );
   return saida.toBytes();
 }

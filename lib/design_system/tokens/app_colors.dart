@@ -106,5 +106,10 @@ enum FundoDeTexto {
 
   /// Lavanda cheia ou `lavandaSuave` sobre o creme: card secundário, faixa de
   /// aviso, campo desabilitado.
+  ///
+  /// Serve também para qualquer superfície com VÉU em cima — o hover do
+  /// `AppToque`, por exemplo. O véu escurece o fundo, e é este o tom que
+  /// aguenta o fundo escurecido; não é preciso um terceiro token para cada
+  /// mistura, porque o tom escuro passa em todas as que a paleta produz.
   lavanda,
 }

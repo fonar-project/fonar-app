@@ -514,10 +514,7 @@ class _LinhaDaSessao extends StatelessWidget {
     final data = quando == null
         ? AppStrings.perfilSemData
         : AppStrings.data(quando);
-    final avqi = analise.medidas
-        .where((m) => m.medida == MedidaAcustica.avqi)
-        .firstOrNull
-        ?.valor;
+    final avqi = analise.valorDe(MedidaAcustica.avqi);
     final comProblema = analise.qualidade.values.any((q) => !q.adequada);
     final laudo = this.laudo;
 
@@ -542,7 +539,7 @@ class _LinhaDaSessao extends StatelessWidget {
             },
           ),
           raio: AppRadius.bordaMedia,
-          child: Container(
+          conteudo: (context) => Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: AppColors.branco,

@@ -11,6 +11,7 @@ import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_cabecalho_de_secao.dart';
+import '../../../../design_system/widgets/app_confirmacao.dart';
 import '../../../../design_system/widgets/app_campo_texto.dart';
 import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
@@ -350,79 +351,45 @@ class _Sobre extends StatelessWidget {
 
 // ----------------------------------------------------------------- sair --
 
-/// Sair pede confirmação AQUI, na própria tela, e não num diálogo: a
-/// pergunta vem junto do que acontece com o que ficou no aparelho, e o
-/// profissional lê as duas coisas no mesmo lugar.
-class _Sair extends ConsumerStatefulWidget {
+/// Sair pergunta antes, no diálogo do design system (`appConfirmar`).
+///
+/// Até 25/09/2026 a pergunta abria aqui dentro da tela, para vir junto do que
+/// acontece com o que ficou no aparelho. O que se perde continua sendo dito —
+/// é o texto do diálogo, e ele muda conforme a fila —, mas a pergunta passou
+/// a ser a mesma do resto do aplicativo. A justificativa está em
+/// `design_system/widgets/app_confirmacao.dart`.
+class _Sair extends ConsumerWidget {
   const _Sair();
 
   @override
-  ConsumerState<_Sair> createState() => _SairState();
-}
-
-class _SairState extends ConsumerState<_Sair> {
-  var _confirmando = false;
-
-  Future<void> _sair() async {
-    final saiu = await ref.read(contaControladorProvider.notifier).sair();
-    if (saiu && mounted) context.goNamed(AppRoutes.loginNome);
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final estado = ref.watch(contaControladorProvider);
     final pendentes = _pendentes(ref);
-    final textos = Theme.of(context).textTheme;
 
-    if (!_confirmando) {
-      return Align(
-        alignment: Alignment.centerLeft,
-        child: AppBotao.secundario(
-          rotulo: AppStrings.contaSair,
-          aoTocar: estado.salvando
-              ? null
-              : () => setState(() => _confirmando = true),
-          motivoDesabilitado: AppStrings.contaSalvando,
-        ),
+    Future<void> perguntarESair() async {
+      final sair = await appConfirmar(
+        context,
+        titulo: AppStrings.contaSairPergunta,
+        texto: pendentes > 0
+            ? AppStrings.contaSairComFila(pendentes)
+            : AppStrings.contaSairTexto,
+        confirmar: AppStrings.contaConfirmarSair,
+        cancelar: AppStrings.contaCancelar,
       );
+      if (!sair || !context.mounted) return;
+      final saiu = await ref.read(contaControladorProvider.notifier).sair();
+      if (saiu && context.mounted) context.goNamed(AppRoutes.loginNome);
     }
 
-    return _Cartao(
-      children: [
-        Semantics(
-          header: true,
-          liveRegion: true,
-          child: Text(AppStrings.contaSairPergunta, style: textos.titleMedium),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          pendentes > 0
-              ? AppStrings.contaSairComFila(pendentes)
-              : AppStrings.contaSairTexto,
-          style: textos.bodyMedium,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Wrap(
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.sm,
-          children: [
-            AppBotao.secundario(
-              rotulo: estado.saindo
-                  ? AppStrings.contaSaindo
-                  : AppStrings.contaConfirmarSair,
-              aoTocar: estado.saindo ? null : _sair,
-              motivoDesabilitado: AppStrings.contaSaindo,
-            ),
-            AppBotao.secundario(
-              rotulo: AppStrings.contaCancelar,
-              aoTocar: estado.saindo
-                  ? null
-                  : () => setState(() => _confirmando = false),
-              motivoDesabilitado: AppStrings.contaSaindo,
-            ),
-          ],
-        ),
-      ],
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: AppBotao.secundario(
+        rotulo: estado.saindo ? AppStrings.contaSaindo : AppStrings.contaSair,
+        aoTocar: estado.salvando || estado.saindo ? null : perguntarESair,
+        motivoDesabilitado: estado.saindo
+            ? AppStrings.contaSaindo
+            : AppStrings.contaSalvando,
+      ),
     );
   }
 }

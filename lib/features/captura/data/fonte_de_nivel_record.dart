@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:record/record.dart';
 
+import '../domain/ajuste_de_configuracao.dart';
 import '../domain/fonte_de_nivel.dart';
 import 'configuracao_de_captura.dart';
 

@@ -8,6 +8,7 @@ import 'package:fonar_app/core/relogio.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/features/captura/data/gravador_record.dart';
 import 'package:fonar_app/features/captura/data/repositorio_amostras_local.dart';
+import 'package:fonar_app/features/captura/domain/ajuste_de_configuracao.dart';
 import 'package:fonar_app/features/captura/domain/amostra.dart';
 import 'package:fonar_app/features/captura/domain/gravador.dart';
 import 'package:fonar_app/features/captura/domain/retomada.dart';
@@ -43,6 +44,8 @@ Amostra _amostra(
 );
 
 class _Gravador implements Gravador {
+  @override
+  AjusteDeConfiguracao? get ajuste => null;
   var inicios = 0;
   final niveis = StreamController<double>();
 

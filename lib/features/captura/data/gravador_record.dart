@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
+import '../domain/ajuste_de_configuracao.dart';
 import '../domain/amostra.dart';
 import '../domain/gravador.dart';
 import 'configuracao_de_captura.dart';
@@ -34,9 +35,13 @@ class GravadorRecord implements Gravador {
 
   AudioRecorder? _gravador;
   String? _caminho;
+  AjusteDeConfiguracao? _ajuste;
 
   /// Depois de [encerrar], nada reabre o microfone por aqui.
   var _encerrado = false;
+
+  @override
+  AjusteDeConfiguracao? get ajuste => _ajuste;
 
   AudioRecorder get _aberto {
     if (_encerrado) throw StateError('Gravador encerrado.');
@@ -50,6 +55,16 @@ class GravadorRecord implements Gravador {
   Future<Stream<double>> iniciar(String caminho, Duration intervalo) async {
     final gravador = _aberto;
     _caminho = caminho;
+    // Registrado ANTES do `start`, senão o aviso do aparelho chega quando
+    // ninguém está mais ouvindo. Até a US05 isto existia só na aferição, e a
+    // gravação dependia só do cabeçalho do WAV para saber o que saiu.
+    _ajuste = null;
+    await gravador.setOnConfigChanged((usada) {
+      _ajuste = AjusteDeConfiguracao(
+        taxaDeAmostragem: usada.sampleRate,
+        canais: usada.numChannels,
+      );
+    });
     await gravador.start(
       ConfiguracaoDeCaptura.para(ConfiguracaoDeCaptura.formatoDaGravacao),
       path: caminho,
@@ -63,6 +78,8 @@ class GravadorRecord implements Gravador {
   @override
   Future<void> parar() async {
     _caminho = null;
+    // O ajuste NÃO é limpo aqui: quem acabou de parar é justamente quem vai
+    // conferir o que saiu.
     await _gravador?.stop();
   }
 
@@ -79,6 +96,7 @@ class GravadorRecord implements Gravador {
     final caminho = _caminho;
     _gravador = null;
     _caminho = null;
+    _ajuste = null;
     if (gravador == null) return;
     try {
       // `cancel` para e apaga o arquivo em andamento.

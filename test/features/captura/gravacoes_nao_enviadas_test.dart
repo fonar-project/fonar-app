@@ -1,6 +1,5 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fonar_app/app/router/app_router.dart';
@@ -373,7 +372,6 @@ void main() {
       m.disco.falharEm.add(fala.caminho);
       final limpeza = m.c.read(limpezaControladorProvider('p1').notifier);
 
-      limpeza.pedirDescarte('s-ontem');
       expect(await limpeza.descartar(antes), isFalse);
       expect(m.disco.apagados, [
         antes.amostras[TarefaDeGravacao.vogalSustentada]!.caminho,
@@ -395,7 +393,6 @@ void main() {
 
       // Tentar o descarte de novo termina o serviço.
       m.disco.falharEm.clear();
-      limpeza.pedirDescarte('s-ontem');
       expect(await limpeza.descartar(depois), isTrue);
       expect(await amostras.doPaciente('p1'), isEmpty);
     });
@@ -424,7 +421,6 @@ void main() {
       );
       final limpeza = m.c.read(limpezaControladorProvider('p1').notifier);
 
-      limpeza.pedirDescarte('s-ontem');
       expect(await limpeza.descartar(antiga), isFalse);
 
       expect(m.disco.apagados, isEmpty);
@@ -469,10 +465,33 @@ void main() {
       final c = await _abrir(tester, gravadas: _completa('s-ontem'));
 
       await _tocar(tester, AppStrings.naoEnviadasDescartar);
-      expect(find.text(AppStrings.naoEnviadasConfirmar(2)), findsOneWidget);
+      expect(
+        find.text(AppStrings.naoEnviadasDescartarTitulo(2)),
+        findsOneWidget,
+      );
+      expect(find.text(AppStrings.naoEnviadasDescartarTexto), findsOneWidget);
 
       await _tocar(tester, AppStrings.naoEnviadasManter);
-      expect(find.text(AppStrings.naoEnviadasConfirmar(2)), findsNothing);
+      expect(find.text(AppStrings.naoEnviadasDescartarTitulo(2)), findsNothing);
+      expect(c.disco.apagados, isEmpty);
+      expect(await c.amostras.doPaciente('p1'), hasLength(2));
+    });
+
+    // Mesma garantia da tela da conta e do "sair sem salvar": a confirmação é
+    // a do design system, e Esc cancela (achado 5.1 da revisão de 24/09).
+    testWidgets('Esc fecha a pergunta e não apaga nada', (tester) async {
+      final c = await _abrir(tester, gravadas: _completa('s-ontem'));
+
+      await _tocar(tester, AppStrings.naoEnviadasDescartar);
+      expect(
+        find.text(AppStrings.naoEnviadasDescartarTitulo(2)),
+        findsOneWidget,
+      );
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.naoEnviadasDescartarTitulo(2)), findsNothing);
       expect(c.disco.apagados, isEmpty);
       expect(await c.amostras.doPaciente('p1'), hasLength(2));
     });

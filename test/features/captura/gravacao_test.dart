@@ -14,6 +14,7 @@ import 'package:fonar_app/features/captura/data/fonte_de_nivel_record.dart';
 import 'package:fonar_app/features/captura/data/gravador_record.dart';
 import 'package:fonar_app/features/captura/data/repositorio_amostras_local.dart';
 import 'package:fonar_app/features/captura/domain/afericao_de_ruido.dart';
+import 'package:fonar_app/features/captura/domain/ajuste_de_configuracao.dart';
 import 'package:fonar_app/features/captura/domain/amostra.dart';
 import 'package:fonar_app/features/captura/domain/fonte_de_nivel.dart';
 import 'package:fonar_app/features/captura/domain/gravador.dart';
@@ -74,6 +75,11 @@ class _Arquivos implements ArquivosDeAmostra {
 /// escreve no [_Arquivos] o WAV que [arquivo] montar para a duração gravada.
 class _Gravador implements Gravador {
   _Gravador(this.disco);
+
+  /// O que o aparelho avisou ter usado no lugar do pedido. Nulo é o caso
+  /// comum: aceitou tudo, ou não avisou nada.
+  @override
+  AjusteDeConfiguracao? ajuste;
 
   final _Arquivos disco;
   List<double> niveis = const [-22, -18, -20, -16, -21];
@@ -398,6 +404,68 @@ void main() {
 
     expect(find.text(AppStrings.tarefaDescartada), findsOneWidget);
     expect(find.text(AppStrings.problemaNaoEPcm), findsOneWidget);
+  });
+
+  // Achados 7.3 e 7.4 da revisão de 24/09: o `setOnConfigChanged` existia só
+  // na aferição, e a gravação dependia só do cabeçalho do WAV para saber o
+  // que saiu.
+  testWidgets('aparelho avisa que trocou a taxa: ressalva, mesmo com o '
+      'cabeçalho repetindo o que foi pedido', (tester) async {
+    final c = await _abrir(tester);
+    // O arquivo sai com o cabeçalho "certo" — 44,1 kHz mono, o que foi
+    // pedido —, mas o aparelho avisou ter gravado em 48 kHz estéreo.
+    c.gravador.ajuste = const AjusteDeConfiguracao(
+      taxaDeAmostragem: 48000,
+      canais: 2,
+    );
+
+    await _gravar(tester);
+
+    expect(find.text(AppStrings.problemaFormatoAjustado), findsOneWidget);
+    // Ressalva, não descarte: a gravação fica.
+    expect(find.text(AppStrings.tarefaDescartada), findsNothing);
+  });
+
+  testWidgets('aparelho avisa que aceitou o pedido: sem ressalva', (
+    tester,
+  ) async {
+    final c = await _abrir(tester);
+    c.gravador.ajuste = const AjusteDeConfiguracao(
+      taxaDeAmostragem: 44100,
+      canais: 1,
+    );
+
+    await _gravar(tester);
+
+    expect(find.text(AppStrings.problemaFormatoAjustado), findsNothing);
+  });
+
+  testWidgets('profundidade de bits diferente da do encoder é recusada', (
+    tester,
+  ) async {
+    final c = await _abrir(tester);
+    // `ConfiguracaoDeCaptura.bitsPorAmostra` é 16 porque o encoder é `wav`.
+    // Se o que saiu tem outra profundidade, a suposição estava errada.
+    c.gravador.arquivo = (d) => wavDeTeste(duracao: d, bits: 24);
+
+    await _gravar(tester);
+
+    expect(find.text(AppStrings.tarefaDescartada), findsOneWidget);
+    expect(find.text(AppStrings.problemaBitsDiferentes), findsOneWidget);
+  });
+
+  testWidgets('arquivo todo em zero é descartado, mesmo com o medidor '
+      'vendo voz a gravação toda', (tester) async {
+    final c = await _abrir(tester);
+    // O caso do Windows: WAV bem formado, duração certa, amplitude zero — e
+    // o plugin informando nível de voz. Achado 7.1.
+    c.gravador.arquivo = (d) => wavDeTeste(duracao: d, audioZerado: true);
+
+    await _gravar(tester);
+
+    expect(find.text(AppStrings.tarefaDescartada), findsOneWidget);
+    expect(find.text(AppStrings.problemaSemSinal), findsOneWidget);
+    expect(c.disco.conteudo, isEmpty);
   });
 
   testWidgets('toque acidental em parar: curta demais, descartada', (

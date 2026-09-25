@@ -21,7 +21,11 @@ import 'package:fonar_app/features/pacientes/domain/paciente.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:fonar_app/design_system/tokens/app_colors.dart';
+import 'package:fonar_app/design_system/widgets/app_toque.dart';
+
 import '../../apoio/banco_em_memoria.dart';
+import '../../apoio/hover.dart';
 import '../../apoio/repositorios_em_memoria.dart';
 
 const _ana = Paciente(
@@ -309,4 +313,28 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  // Achado da revisão de 24/09: com o cursor no cartão, o véu de hover
+  // escurecia o fundo e o texto secundário continuava com o tom de creme —
+  // 4,35:1, abaixo de AA. Ver `app_colors_test.dart`.
+  group('contraste do cartão no hover', () {
+    testWidgets('data e "em análise" trocam de tom', (tester) async {
+      await _abrir(tester);
+
+      const data = '20 set 2026, 14:00';
+      expect(corDoTexto(tester, data), AppColors.secundarioSobreCreme);
+
+      await passarOMouse(
+        tester,
+        find.ancestor(of: find.text(data), matching: find.byType(AppToque)),
+      );
+
+      expect(corDoTexto(tester, data), AppColors.secundarioSobreLavanda);
+      expect(
+        corDoTexto(tester, AppStrings.historicoProcessando),
+        AppColors.secundarioSobreCreme,
+        reason: 'o cartão de outro paciente não está sob o cursor',
+      );
+    });
+  });
 }

@@ -53,7 +53,7 @@ class AppCabecalhoDeTarefa extends ConsumerWidget {
                 child: AppToque(
                   aoTocar: aoVoltar,
                   raio: AppRadius.bordaPequena,
-                  child: const SizedBox.square(
+                  conteudo: (_) => const SizedBox.square(
                     dimension: AppSpacing.alvoDeToqueMinimo,
                     child: Center(
                       child: AppIcone(

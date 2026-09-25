@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -280,6 +281,22 @@ void main() {
         expect(conta.saiu, isFalse);
 
         await _tocar(tester, find.text(AppStrings.contaCancelar));
+        expect(find.text(AppStrings.contaSairPergunta), findsNothing);
+        expect(conta.saiu, isFalse);
+      });
+
+      // A pergunta passou a ser a do design system (achado 5.1 da revisão de
+      // 24/09): Esc cancela, como em qualquer confirmação destrutiva do
+      // aplicativo. Antes ela abria dentro da tela, e o Esc não fazia nada.
+      testWidgets('Esc fecha a pergunta e não sai da conta', (tester) async {
+        final (_, conta, _) = await _abrir(tester);
+
+        await _tocar(tester, find.text(AppStrings.contaSair));
+        expect(find.text(AppStrings.contaSairPergunta), findsOneWidget);
+
+        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+        await tester.pumpAndSettle();
+
         expect(find.text(AppStrings.contaSairPergunta), findsNothing);
         expect(conta.saiu, isFalse);
       });

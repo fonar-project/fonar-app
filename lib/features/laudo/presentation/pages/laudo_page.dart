@@ -12,6 +12,7 @@ import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_cabecalho_de_tarefa.dart';
+import '../../../../design_system/widgets/app_confirmacao.dart';
 import '../../../../design_system/widgets/app_campo_texto.dart';
 import '../../../../design_system/widgets/app_estado.dart';
 import '../../../../design_system/widgets/app_icone.dart';
@@ -225,6 +226,20 @@ class _LaudoState extends ConsumerState<_Laudo> {
       );
 
   Future<void> _gerar() async {
+    // Gerar de novo APAGA o PDF anterior — é o mesmo registro, uma versão só
+    // (ver `PENDENCIAS.md`: versionar laudo entregue é decisão jurídica
+    // aberta). Enquanto for assim, substituir é destrutivo e pergunta antes,
+    // com o mesmo diálogo do resto do aplicativo.
+    if (widget.estado.laudo != null) {
+      final substituir = await appConfirmar(
+        context,
+        titulo: AppStrings.laudoSubstituirTitulo,
+        texto: AppStrings.laudoSubstituirTexto,
+        confirmar: AppStrings.laudoSubstituir,
+        cancelar: AppStrings.laudoManterOAtual,
+      );
+      if (!substituir || !mounted) return;
+    }
     await ref
         .read(laudoControladorProvider(widget.resultado.id).notifier)
         .gerar(
