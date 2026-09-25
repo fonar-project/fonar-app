@@ -11,11 +11,13 @@ import 'package:fonar_app/features/analise/domain/resultado_da_analise.dart';
 import 'package:fonar_app/core/network/conexao.dart';
 import 'package:fonar_app/core/relogio.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
+import 'package:fonar_app/design_system/widgets/app_escala_visual.dart';
 import 'package:fonar_app/features/cape_v/data/repositorio_cape_v_local.dart';
 import 'package:fonar_app/features/cape_v/domain/avaliacao_cape_v.dart';
 import 'package:fonar_app/features/cape_v/presentation/apresentacao_cape_v.dart';
 import 'package:fonar_app/features/cape_v/presentation/cape_v_controlador.dart';
 import 'package:fonar_app/features/cape_v/presentation/pages/cape_v_page.dart';
+import 'package:fonar_app/features/fila/data/repositorio_fila_local.dart';
 import 'package:fonar_app/features/historico/domain/evolucao_da_medida.dart';
 import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_local.dart';
 import 'package:fonar_app/features/pacientes/domain/paciente.dart';
@@ -48,7 +50,9 @@ Future<RepositorioCapeVEmMemoria> _abrir(
   WidgetTester tester, {
   AvaliacaoCapeV? existente,
   String donoDaAnalise = 'p1',
-  Size tamanho = const Size(390, 2600),
+  // Largura média: a lista de escalas, editável em linha. O celular, com a
+  // escala em tela cheia, tem o seu grupo.
+  Size tamanho = const Size(800, 2600),
   double escala = 1,
 }) async {
   tester.view.physicalSize = tamanho;
@@ -71,6 +75,7 @@ Future<RepositorioCapeVEmMemoria> _abrir(
         ),
         relogioProvider.overrideWithValue(() => DateTime(2026, 9, 23, 11)),
         conexaoOnlineProvider.overrideWithValue(true),
+        repositorioFilaProvider.overrideWithValue(RepositorioFilaEmMemoria()),
         pacientesProvider.overrideWith(
           (ref) async => const [
             Paciente(
@@ -351,6 +356,155 @@ void main() {
         expect(tester.takeException(), isNull);
       });
     }
+  });
+
+  group('régua', () {
+    testWidgets('tocar no tracinho de 30 marca 30 — régua e toque coincidem', (
+      tester,
+    ) async {
+      int? marcado;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.claro,
+          home: Scaffold(
+            body: Center(
+              child: SizedBox(
+                width: 524,
+                child: AppEscalaVisual(
+                  rotulo: 'Teste',
+                  valor: null,
+                  aoMudar: (v) => marcado = v,
+                  rotuloMinimo: 'min',
+                  rotuloMaximo: 'max',
+                  textoNaoMarcado: 'não marcado',
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      final caixa = tester.getRect(find.byType(Slider));
+      // A trilha tem 12 px de recuo em cada ponta: 500 px para 100 mm.
+      for (final v in [0, 30, 77, 100]) {
+        await tester.tapAt(Offset(caixa.left + 12 + v * 5, caixa.center.dy));
+        await tester.pumpAndSettle();
+        expect(marcado, v);
+      }
+    });
+
+    testWidgets('a marca aparece com o número e o "/100"', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.claro,
+          home: const Scaffold(
+            body: AppEscalaVisual(
+              rotulo: 'Teste',
+              valor: 38,
+              aoMudar: null,
+              rotuloMinimo: 'min',
+              rotuloMaximo: 'max',
+              textoNaoMarcado: 'não marcado',
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('38'), findsOneWidget);
+      expect(find.text(' /100'), findsOneWidget);
+    });
+  });
+
+  group('celular: escala em tela cheia', () {
+    Future<RepositorioCapeVEmMemoria> abrir(
+      WidgetTester tester, {
+      double escala = 1,
+    }) => _abrir(tester, tamanho: const Size(390, 844), escala: escala);
+
+    Finder abrirEscala(ParametroCapeV p) => find.bySemanticsLabel(
+      RegExp('^${p.nome}, .*${AppStrings.capeVAbrirEscala}\$'),
+    );
+
+    testWidgets('a lista resume; a escala se marca em tela cheia', (
+      tester,
+    ) async {
+      final semantica = tester.ensureSemantics();
+      await abrir(tester);
+
+      // Na lista, nenhuma escala editável: a linha de 100 mm não cabe ali
+      // com precisão.
+      expect(_escalas, findsNothing);
+      expect(
+        find.text('${AppStrings.capeVAbrirEscala} ›'),
+        findsNWidgets(ParametroCapeV.values.length),
+      );
+
+      await _tocar(tester, abrirEscala(ParametroCapeV.rugosidade));
+      expect(find.text(AppStrings.capeVRugosidade), findsOneWidget);
+      expect(find.text(AppStrings.capeVParametroDe(2, 6)), findsOneWidget);
+      expect(find.text(AppStrings.capeVGireAparelho), findsOneWidget);
+      expect(_escalas, findsOneWidget);
+
+      await _marcar(tester, 0, 0.5);
+      await _tocar(tester, find.text(AppStrings.capeVIntermitente));
+      expect(find.text(AppStrings.capeVConsistencia), findsOneWidget);
+
+      // Próximo: o parâmetro seguinte, sem voltar à lista.
+      await _tocar(tester, find.text(AppStrings.capeVProximo));
+      expect(find.text(AppStrings.capeVParametroDe(3, 6)), findsOneWidget);
+      expect(find.text(AppStrings.capeVNaoMarcado), findsWidgets);
+
+      await _tocar(tester, find.text(AppStrings.capeVConcluir));
+      expect(_escalas, findsNothing);
+      // O cartão mostra o que foi marcado lá.
+      expect(find.text('50'), findsOneWidget);
+      expect(
+        find.text(AppStrings.capeVIntermitente.toLowerCase()),
+        findsOneWidget,
+      );
+      semantica.dispose();
+    });
+
+    testWidgets('registrar sem marcar aponta cada parâmetro na lista', (
+      tester,
+    ) async {
+      final repositorio = await abrir(tester);
+
+      await _registrar(tester);
+
+      expect(find.text(AppStrings.capeVMarque), findsNWidgets(6));
+      expect(await repositorio.daAnalise('an-1'), isNull);
+    });
+
+    testWidgets('deitado, sem o aviso de girar', (tester) async {
+      final semantica = tester.ensureSemantics();
+      await abrir(tester);
+      await _tocar(tester, abrirEscala(ParametroCapeV.grauGeral));
+      expect(find.text(AppStrings.capeVGireAparelho), findsOneWidget);
+
+      // Girou com a escala aberta: ela continua ali, sem o aviso.
+      tester.view.physicalSize = const Size(844, 390);
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.capeVConcluir), findsOneWidget);
+      expect(find.text(AppStrings.capeVGireAparelho), findsNothing);
+      expect(_escalas, findsOneWidget);
+      expect(tester.takeException(), isNull);
+      semantica.dispose();
+    });
+
+    testWidgets('em 200% nem a lista nem a tela cheia estouram', (
+      tester,
+    ) async {
+      final semantica = tester.ensureSemantics();
+      await abrir(tester, escala: 2);
+      await _registrar(tester);
+      expect(tester.takeException(), isNull);
+
+      await _tocar(tester, abrirEscala(ParametroCapeV.pitch));
+      await _marcar(tester, 0, 0.5);
+      expect(tester.takeException(), isNull);
+      semantica.dispose();
+    });
   });
 
   group('paciente da análise', () {

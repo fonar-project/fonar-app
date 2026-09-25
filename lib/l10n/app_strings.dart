@@ -664,6 +664,13 @@ abstract final class AppStrings {
   static const capeVLoudnessAcima = 'Mais forte';
   static const capeVComentarios = 'Comentários (opcional)';
   static const capeVRegistrar = 'Registrar CAPE-V';
+  static const capeVAmostra = 'Amostra';
+  static const capeVAbrirEscala = 'Abrir escala';
+  static String capeVParametroDe(int n, int total) => 'CAPE-V · $n de $total';
+  static const capeVAnterior = 'Anterior';
+  static const capeVProximo = 'Próximo';
+  static const capeVConcluir = 'Concluir';
+  static const capeVGireAparelho = 'Gire o aparelho para a escala ficar maior.';
   static const capeVRegistrando = 'Registrando…';
   static const capeVMarque = 'Marque na linha. Se não houver desvio, marque 0.';
   static const capeVEscolhaConsistencia =

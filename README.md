@@ -48,8 +48,10 @@ O caminho de uma avaliação, na ordem em que o profissional passa por ele:
    abre em tela cheia, deitado no celular (US17). AVQI e CPPS vêm em
    destaque, as demais medidas menores, e o próximo passo — CAPE-V ou laudo —
    fica num rodapé fixo (US27).
-8. **Registra a CAPE-V** (US08), vê a **evolução** entre sessões (US09) — com
-   um modo para mostrar ao paciente — e gera o **laudo em PDF** (US10).
+8. **Registra a CAPE-V** (US08) numa régua de 100 mm, ouvindo a amostra — no
+   celular, cada escala abre em tela cheia, para marcar deitado (US28) —, vê a
+   **evolução** entre sessões (US09) — com um modo para mostrar ao paciente — e
+   gera o **laudo em PDF** (US10).
 
 Em volta disso: o **perfil do paciente** (US12) reúne dados, consentimento,
 sessões, laudos e fila; o **histórico** (US23) lista as avaliações de todos os
