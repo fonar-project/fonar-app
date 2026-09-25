@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
@@ -54,7 +54,7 @@ class PlayerDeAmostra extends ConsumerWidget {
         : (posicao.inMilliseconds / duracao.inMilliseconds).clamp(0.0, 1.0);
 
     final estiloDoTempo = textos.bodySmall?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
       fontFeatures: const [FontFeature.tabularFigures()],
     );
     final textoDoTempo = AppStrings.reproducaoTempo(atual, total);
@@ -110,16 +110,16 @@ class PlayerDeAmostra extends ConsumerWidget {
                       label: AppStrings.reproducaoPosicao,
                       child: SliderTheme(
                         data: SliderTheme.of(context).copyWith(
-                          activeTrackColor: AppColors.roxoProfundo,
-                          inactiveTrackColor: AppColors.lavandaClaro,
-                          thumbColor: AppColors.roxoProfundo,
-                          overlayColor: AppColors.roxoVeu,
+                          activeTrackColor: context.cores.acento,
+                          inactiveTrackColor: context.cores.borda,
+                          thumbColor: context.cores.acento,
+                          overlayColor: context.cores.veu,
                           // Antes de abrir o arquivo a barra não arrasta, mas a
                           // gravação está disponível: nada de cinza de "desligado"
                           // do padrão, que também está fora da paleta.
-                          disabledActiveTrackColor: AppColors.lavandaClaro,
-                          disabledInactiveTrackColor: AppColors.lavandaClaro,
-                          disabledThumbColor: AppColors.secundarioSobreCreme,
+                          disabledActiveTrackColor: context.cores.borda,
+                          disabledInactiveTrackColor: context.cores.borda,
+                          disabledThumbColor: context.cores.secundario,
                         ),
                         child: Slider(
                           value: fracao,
@@ -148,7 +148,7 @@ class PlayerDeAmostra extends ConsumerWidget {
               Text(
                 motivo,
                 style: textos.bodySmall?.copyWith(
-                  color: AppColors.secundarioSobreCreme,
+                  color: context.cores.secundario,
                 ),
               ),
           ],
@@ -174,11 +174,13 @@ class _Botao extends StatelessWidget {
     alignment: Alignment.center,
     decoration: BoxDecoration(
       shape: BoxShape.circle,
-      color: livre ? AppColors.roxoProfundo : AppColors.lavandaClaro,
+      color: livre ? context.cores.primaria : context.cores.lavanda,
     ),
     child: AppIcone(
       nome: tocando ? NomeIcone.pausar : NomeIcone.reproduzir,
-      cor: livre ? AppColors.branco : AppColors.secundarioSobreLavanda,
+      cor: livre
+          ? context.cores.sobrePrimaria
+          : context.cores.secundarioSobreLavanda,
     ),
   );
 }

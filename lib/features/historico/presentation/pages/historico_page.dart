@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/app_estrutura.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../design_system/breakpoints.dart';
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/tokens/app_typography.dart';
@@ -63,7 +63,7 @@ class HistoricoPage extends ConsumerWidget {
                   Text(
                     AppStrings.historicoDescricao,
                     style: textos.bodyMedium?.copyWith(
-                      color: AppColors.secundarioSobreCreme,
+                      color: context.cores.secundario,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
@@ -127,8 +127,8 @@ class HistoricoPage extends ConsumerWidget {
               ),
             ),
             _ => estado(
-              const Center(
-                child: CircularProgressIndicator(color: AppColors.roxoProfundo),
+              Center(
+                child: CircularProgressIndicator(color: context.cores.acento),
               ),
             ),
           };
@@ -226,7 +226,7 @@ class _CampoBuscaState extends ConsumerState<_CampoBusca> {
             hint: ExcludeSemantics(
               child: Text(
                 AppStrings.historicoBuscaDica,
-                style: estilo?.copyWith(color: AppColors.secundarioSobreCreme),
+                style: estilo?.copyWith(color: context.cores.secundario),
               ),
             ),
           ),
@@ -268,7 +268,7 @@ class _Linha extends StatelessWidget {
   Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
     final secundario = textos.bodySmall?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
     final analise = entrada.analise;
     final quando = switch (analise.realizadaEm) {
@@ -300,7 +300,7 @@ class _Linha extends StatelessWidget {
           Text(
             MedidaAcustica.avqi.formatar(avqi!),
             style: AppTypography.medidaCompacta.copyWith(
-              color: AppColors.cinzaChumbo,
+              color: context.cores.texto,
             ),
           ),
         ],
@@ -322,7 +322,7 @@ class _Linha extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            border: Border.all(color: AppColors.lavandaClaro),
+            border: Border.all(color: context.cores.borda),
             borderRadius: AppRadius.bordaMedia,
           ),
           child: Row(
@@ -338,9 +338,9 @@ class _Linha extends StatelessWidget {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const AppIcone(
+                          AppIcone(
                             nome: NomeIcone.confirmacao,
-                            cor: AppColors.roxoProfundo,
+                            cor: context.cores.acento,
                             tamanho: 16,
                           ),
                           const SizedBox(width: AppSpacing.xxs),
@@ -364,10 +364,7 @@ class _Linha extends StatelessWidget {
                 child: direita,
               ),
               const SizedBox(width: AppSpacing.xs),
-              const AppIcone(
-                nome: NomeIcone.avancar,
-                cor: AppColors.roxoProfundo,
-              ),
+              AppIcone(nome: NomeIcone.avancar, cor: context.cores.acento),
             ],
           ),
         ),

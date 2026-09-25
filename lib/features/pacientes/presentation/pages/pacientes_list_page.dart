@@ -6,7 +6,7 @@ import '../../../../app/app_estrutura.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/network/conexao.dart';
 import '../../../../design_system/breakpoints.dart';
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/tokens/app_typography.dart';
@@ -88,8 +88,8 @@ class _Conteudo extends ConsumerWidget {
     return ref
         .watch(pacientesFiltradosProvider)
         .when(
-          loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColors.roxoProfundo),
+          loading: () => Center(
+            child: CircularProgressIndicator(color: context.cores.acento),
           ),
           error: (_, _) => AppEstado.central(
             titulo: AppStrings.pacientesErroCarregar,
@@ -161,8 +161,8 @@ class _LayoutExpandido extends StatelessWidget {
             horizontal: 30,
             vertical: AppSpacing.sm,
           ),
-          decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: AppColors.lavandaClaro)),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: context.cores.borda)),
           ),
           // Wrap, não Row com Spacer: em 1024 px de janela o painel já é
           // estreito, e com a fonte ampliada busca, contagem e botão não cabem
@@ -218,8 +218,8 @@ class _LayoutCompacto extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         DecoratedBox(
-          decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: AppColors.lavandaClaro)),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: context.cores.borda)),
           ),
           child: SafeArea(
             bottom: false,
@@ -250,7 +250,7 @@ class _LayoutCompacto extends ConsumerWidget {
                                 fontSize: 19,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: 0.95,
-                                color: AppColors.roxoProfundo,
+                                color: context.cores.acento,
                               ),
                         ),
                       ),
@@ -273,8 +273,8 @@ class _LayoutCompacto extends ConsumerWidget {
               horizontal: AppSpacing.md,
               vertical: AppSpacing.sm,
             ),
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: AppColors.lavandaClaro)),
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: context.cores.borda)),
             ),
             child: AppBotao.primario(
               rotulo: AppStrings.navNovaAvaliacao,
@@ -307,7 +307,7 @@ class _Contagem extends ConsumerWidget {
       child: Text(
         AppStrings.pacientesQuantidade(quantidade),
         style: Theme.of(context).textTheme.bodySmall
-            ?.copyWith(color: AppColors.secundarioSobreCreme),
+            ?.copyWith(color: context.cores.secundario),
       ),
     );
   }
@@ -370,9 +370,7 @@ class _CampoBuscaState extends ConsumerState<_CampoBusca> {
             hint: ExcludeSemantics(
               child: Text(
                 AppStrings.pacientesBuscaDica,
-                style: estiloDoTexto?.copyWith(
-                  color: AppColors.secundarioSobreCreme,
-                ),
+                style: estiloDoTexto?.copyWith(color: context.cores.secundario),
               ),
             ),
           ),
@@ -394,7 +392,7 @@ class _Tabela extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cabecalho = AppTypography.overline.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
 
     return Column(
@@ -493,11 +491,11 @@ class _LinhaTabela extends StatelessWidget {
 
     return AppToque(
       aoTocar: () => _abrir(context, paciente),
-      corDoHover: AppColors.lavandaSuave,
+      corDoHover: context.cores.suave,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: AppColors.lavandaClaro)),
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: context.cores.borda)),
         ),
         child: _Colunas(
           paciente: Column(
@@ -508,7 +506,7 @@ class _LinhaTabela extends StatelessWidget {
               Text(
                 paciente.queixa,
                 style: textos.bodySmall?.copyWith(
-                  color: AppColors.secundarioSobreCreme,
+                  color: context.cores.secundario,
                 ),
               ),
             ],
@@ -523,9 +521,9 @@ class _LinhaTabela extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: _ChipTendencia(direcao: paciente.direcaoAvqi),
           ),
-          seta: const AppIcone(
+          seta: AppIcone(
             nome: NomeIcone.avancar,
-            cor: AppColors.roxoProfundo,
+            cor: context.cores.acento,
             tamanho: 22,
           ),
         ),
@@ -567,7 +565,7 @@ class _Card extends StatelessWidget {
   Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
     final secundario = textos.bodySmall?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
 
     return AppToque(
@@ -576,7 +574,7 @@ class _Card extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.fromLTRB(14, 13, 10, 13),
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.lavandaClaro),
+          border: Border.all(color: context.cores.borda),
           borderRadius: AppRadius.bordaMedia,
         ),
         child: Column(
@@ -593,9 +591,9 @@ class _Card extends StatelessWidget {
                     ],
                   ),
                 ),
-                const AppIcone(
+                AppIcone(
                   nome: NomeIcone.avancar,
-                  cor: AppColors.roxoProfundo,
+                  cor: context.cores.acento,
                   tamanho: 22,
                 ),
               ],
@@ -682,9 +680,7 @@ class _ChipTendencia extends StatelessWidget {
     };
 
     final comparavel = icone != null;
-    final cor = comparavel
-        ? AppColors.cinzaChumbo
-        : AppColors.secundarioSobreCreme;
+    final cor = comparavel ? context.cores.texto : context.cores.secundario;
 
     return Semantics(
       label: AppStrings.pacientesTendencia(texto),
@@ -699,7 +695,7 @@ class _ChipTendencia extends StatelessWidget {
           border: Border.all(
             // Sem comparação a borda fica lavanda, mais leve: não há
             // afirmação nenhuma sendo feita.
-            color: comparavel ? cor : AppColors.lavandaClaro,
+            color: comparavel ? cor : context.cores.borda,
             width: 1.5,
           ),
         ),
@@ -739,7 +735,7 @@ class _NotaTendencia extends StatelessWidget {
       child: Text(
         AppStrings.pacientesNotaTendencia,
         style: Theme.of(context).textTheme.bodySmall
-            ?.copyWith(color: AppColors.secundarioSobreCreme),
+            ?.copyWith(color: context.cores.secundario),
       ),
     );
   }

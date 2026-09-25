@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../tokens/app_colors.dart';
+import '../tokens/app_cores.dart';
 import '../tokens/app_spacing.dart';
 import 'app_icone.dart';
 
@@ -32,7 +32,7 @@ class AppMensagemDeCampo extends StatelessWidget {
     if (erro case final erro? when erro.isNotEmpty) {
       return _Linha(
         texto: erro,
-        cor: AppColors.erro,
+        cor: context.cores.erro,
         icone: NomeIcone.alerta,
         ehErro: true,
       );

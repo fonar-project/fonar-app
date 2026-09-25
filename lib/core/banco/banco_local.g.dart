@@ -3960,6 +3960,218 @@ class LaudosCompanion extends UpdateCompanion<LinhaDoLaudo> {
   }
 }
 
+class $PreferenciasTable extends Preferencias
+    with TableInfo<$PreferenciasTable, LinhaDePreferencia> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PreferenciasTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _chaveMeta = const VerificationMeta('chave');
+  @override
+  late final GeneratedColumn<String> chave = GeneratedColumn<String>(
+    'chave',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _valorMeta = const VerificationMeta('valor');
+  @override
+  late final GeneratedColumn<String> valor = GeneratedColumn<String>(
+    'valor',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [chave, valor];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'preferencias';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LinhaDePreferencia> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('chave')) {
+      context.handle(
+        _chaveMeta,
+        chave.isAcceptableOrUnknown(data['chave']!, _chaveMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_chaveMeta);
+    }
+    if (data.containsKey('valor')) {
+      context.handle(
+        _valorMeta,
+        valor.isAcceptableOrUnknown(data['valor']!, _valorMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_valorMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {chave};
+  @override
+  LinhaDePreferencia map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LinhaDePreferencia(
+      chave: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}chave'],
+      )!,
+      valor: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}valor'],
+      )!,
+    );
+  }
+
+  @override
+  $PreferenciasTable createAlias(String alias) {
+    return $PreferenciasTable(attachedDatabase, alias);
+  }
+}
+
+class LinhaDePreferencia extends DataClass
+    implements Insertable<LinhaDePreferencia> {
+  final String chave;
+  final String valor;
+  const LinhaDePreferencia({required this.chave, required this.valor});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['chave'] = Variable<String>(chave);
+    map['valor'] = Variable<String>(valor);
+    return map;
+  }
+
+  PreferenciasCompanion toCompanion(bool nullToAbsent) {
+    return PreferenciasCompanion(chave: Value(chave), valor: Value(valor));
+  }
+
+  factory LinhaDePreferencia.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LinhaDePreferencia(
+      chave: serializer.fromJson<String>(json['chave']),
+      valor: serializer.fromJson<String>(json['valor']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'chave': serializer.toJson<String>(chave),
+      'valor': serializer.toJson<String>(valor),
+    };
+  }
+
+  LinhaDePreferencia copyWith({String? chave, String? valor}) =>
+      LinhaDePreferencia(
+        chave: chave ?? this.chave,
+        valor: valor ?? this.valor,
+      );
+  LinhaDePreferencia copyWithCompanion(PreferenciasCompanion data) {
+    return LinhaDePreferencia(
+      chave: data.chave.present ? data.chave.value : this.chave,
+      valor: data.valor.present ? data.valor.value : this.valor,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LinhaDePreferencia(')
+          ..write('chave: $chave, ')
+          ..write('valor: $valor')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(chave, valor);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LinhaDePreferencia &&
+          other.chave == this.chave &&
+          other.valor == this.valor);
+}
+
+class PreferenciasCompanion extends UpdateCompanion<LinhaDePreferencia> {
+  final Value<String> chave;
+  final Value<String> valor;
+  final Value<int> rowid;
+  const PreferenciasCompanion({
+    this.chave = const Value.absent(),
+    this.valor = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PreferenciasCompanion.insert({
+    required String chave,
+    required String valor,
+    this.rowid = const Value.absent(),
+  }) : chave = Value(chave),
+       valor = Value(valor);
+  static Insertable<LinhaDePreferencia> custom({
+    Expression<String>? chave,
+    Expression<String>? valor,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (chave != null) 'chave': chave,
+      if (valor != null) 'valor': valor,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PreferenciasCompanion copyWith({
+    Value<String>? chave,
+    Value<String>? valor,
+    Value<int>? rowid,
+  }) {
+    return PreferenciasCompanion(
+      chave: chave ?? this.chave,
+      valor: valor ?? this.valor,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (chave.present) {
+      map['chave'] = Variable<String>(chave.value);
+    }
+    if (valor.present) {
+      map['valor'] = Variable<String>(valor.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PreferenciasCompanion(')
+          ..write('chave: $chave, ')
+          ..write('valor: $valor, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$BancoLocal extends GeneratedDatabase {
   _$BancoLocal(QueryExecutor e) : super(e);
   $BancoLocalManager get managers => $BancoLocalManager(this);
@@ -3977,6 +4189,7 @@ abstract class _$BancoLocal extends GeneratedDatabase {
   );
   late final $NotasCapeVTable notasCapeV = $NotasCapeVTable(this);
   late final $LaudosTable laudos = $LaudosTable(this);
+  late final $PreferenciasTable preferencias = $PreferenciasTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3991,6 +4204,7 @@ abstract class _$BancoLocal extends GeneratedDatabase {
     avaliacoesCapeV,
     notasCapeV,
     laudos,
+    preferencias,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -6975,6 +7189,157 @@ typedef $$LaudosTableProcessedTableManager =
       LinhaDoLaudo,
       PrefetchHooks Function()
     >;
+typedef $$PreferenciasTableCreateCompanionBuilder =
+    PreferenciasCompanion Function({
+      required String chave,
+      required String valor,
+      Value<int> rowid,
+    });
+typedef $$PreferenciasTableUpdateCompanionBuilder =
+    PreferenciasCompanion Function({
+      Value<String> chave,
+      Value<String> valor,
+      Value<int> rowid,
+    });
+
+class $$PreferenciasTableFilterComposer
+    extends Composer<_$BancoLocal, $PreferenciasTable> {
+  $$PreferenciasTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get chave => $composableBuilder(
+    column: $table.chave,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get valor => $composableBuilder(
+    column: $table.valor,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PreferenciasTableOrderingComposer
+    extends Composer<_$BancoLocal, $PreferenciasTable> {
+  $$PreferenciasTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get chave => $composableBuilder(
+    column: $table.chave,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get valor => $composableBuilder(
+    column: $table.valor,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PreferenciasTableAnnotationComposer
+    extends Composer<_$BancoLocal, $PreferenciasTable> {
+  $$PreferenciasTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get chave =>
+      $composableBuilder(column: $table.chave, builder: (column) => column);
+
+  GeneratedColumn<String> get valor =>
+      $composableBuilder(column: $table.valor, builder: (column) => column);
+}
+
+class $$PreferenciasTableTableManager
+    extends
+        RootTableManager<
+          _$BancoLocal,
+          $PreferenciasTable,
+          LinhaDePreferencia,
+          $$PreferenciasTableFilterComposer,
+          $$PreferenciasTableOrderingComposer,
+          $$PreferenciasTableAnnotationComposer,
+          $$PreferenciasTableCreateCompanionBuilder,
+          $$PreferenciasTableUpdateCompanionBuilder,
+          (
+            LinhaDePreferencia,
+            BaseReferences<
+              _$BancoLocal,
+              $PreferenciasTable,
+              LinhaDePreferencia
+            >,
+          ),
+          LinhaDePreferencia,
+          PrefetchHooks Function()
+        > {
+  $$PreferenciasTableTableManager(_$BancoLocal db, $PreferenciasTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PreferenciasTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PreferenciasTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PreferenciasTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> chave = const Value.absent(),
+            Value<String> valor = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) => PreferenciasCompanion(chave: chave, valor: valor, rowid: rowid),
+          createCompanionCallback:
+              ({
+                required String chave,
+                required String valor,
+                Value<int> rowid = const Value.absent(),
+              }) => PreferenciasCompanion.insert(
+                chave: chave,
+                valor: valor,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$PreferenciasTable, LinhaDePreferencia>(table),
+                  BaseReferences<
+                    _$BancoLocal,
+                    $PreferenciasTable,
+                    LinhaDePreferencia
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PreferenciasTableProcessedTableManager =
+    ProcessedTableManager<
+      _$BancoLocal,
+      $PreferenciasTable,
+      LinhaDePreferencia,
+      $$PreferenciasTableFilterComposer,
+      $$PreferenciasTableOrderingComposer,
+      $$PreferenciasTableAnnotationComposer,
+      $$PreferenciasTableCreateCompanionBuilder,
+      $$PreferenciasTableUpdateCompanionBuilder,
+      (
+        LinhaDePreferencia,
+        BaseReferences<_$BancoLocal, $PreferenciasTable, LinhaDePreferencia>,
+      ),
+      LinhaDePreferencia,
+      PrefetchHooks Function()
+    >;
 
 class $BancoLocalManager {
   final _$BancoLocal _db;
@@ -7000,4 +7365,6 @@ class $BancoLocalManager {
       $$NotasCapeVTableTableManager(_db, _db.notasCapeV);
   $$LaudosTableTableManager get laudos =>
       $$LaudosTableTableManager(_db, _db.laudos);
+  $$PreferenciasTableTableManager get preferencias =>
+      $$PreferenciasTableTableManager(_db, _db.preferencias);
 }

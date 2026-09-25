@@ -6,7 +6,7 @@ import '../../../../app/router/app_routes.dart';
 import '../../../../app/router/trilhas.dart';
 import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/tokens/app_typography.dart';
@@ -98,8 +98,8 @@ class EvolucaoPage extends ConsumerWidget {
                       ref.invalidate(analisesDoPacienteProvider(pacienteId)),
                 ),
               ),
-              _ => const Center(
-                child: CircularProgressIndicator(color: AppColors.roxoProfundo),
+              _ => Center(
+                child: CircularProgressIndicator(color: context.cores.acento),
               ),
             };
 
@@ -159,7 +159,7 @@ class _Evolucao extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final textos = Theme.of(context).textTheme;
     final secundario = textos.bodySmall?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
     final medida = ref.watch(medidaDaEvolucaoProvider(pacienteId));
     final serie = serieDe(medida, sessoes);
@@ -232,8 +232,8 @@ class _Evolucao extends ConsumerWidget {
     final cartao = Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.branco,
-        border: Border.all(color: AppColors.lavandaClaro),
+        color: context.cores.cartao,
+        border: Border.all(color: context.cores.borda),
         borderRadius: AppRadius.bordaMedia,
       ),
       child: Column(
@@ -256,9 +256,9 @@ class _Evolucao extends ConsumerWidget {
             const SizedBox(height: AppSpacing.xxs),
             Row(
               children: [
-                const AppIcone(
+                AppIcone(
                   nome: NomeIcone.informacao,
-                  cor: AppColors.secundarioSobreCreme,
+                  cor: context.cores.secundario,
                   tamanho: 16,
                 ),
                 const SizedBox(width: AppSpacing.xxs),
@@ -454,7 +454,7 @@ class _Comparacao extends StatelessWidget {
   Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
     final secundario = textos.bodySmall?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
     final comparacao = this.comparacao;
     if (comparacao == null) {
@@ -495,7 +495,7 @@ class _Comparacao extends StatelessWidget {
                   DirecaoDaMedida.desceu => NomeIcone.tendenciaDesce,
                   _ => NomeIcone.tendenciaEstavel,
                 },
-                cor: AppColors.cinzaChumbo,
+                cor: context.cores.texto,
                 tamanho: 20,
               ),
               const SizedBox(width: AppSpacing.xs),
@@ -546,7 +546,7 @@ class _ValorDaSessao extends StatelessWidget {
           Text(
             rotulo,
             style: AppTypography.overline.copyWith(
-              color: AppColors.secundarioSobreCreme,
+              color: context.cores.secundario,
             ),
           ),
           Wrap(
@@ -556,7 +556,7 @@ class _ValorDaSessao extends StatelessWidget {
               Text(
                 medida.formatar(ponto.valor!),
                 style: AppTypography.medidaCompacta.copyWith(
-                  color: AppColors.cinzaChumbo,
+                  color: context.cores.texto,
                 ),
               ),
               if (medida.unidade.isNotEmpty)
@@ -566,7 +566,7 @@ class _ValorDaSessao extends StatelessWidget {
           Text(
             AppStrings.data(ponto.realizadaEm),
             style: textos.bodySmall?.copyWith(
-              color: AppColors.secundarioSobreCreme,
+              color: context.cores.secundario,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
@@ -603,8 +603,8 @@ class _LinhaDaSessao extends StatelessWidget {
     final data = AppStrings.data(sessao.realizadaEm!);
 
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.lavandaClaro)),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: context.cores.borda)),
       ),
       child: Semantics(
         hint: AppStrings.evolucaoAbrirSessao(data),
@@ -646,7 +646,7 @@ class _LinhaDaSessao extends StatelessWidget {
                             : '${medida.formatar(valor)} ${medida.unidade}',
                         style: valor == null
                             ? textos.bodyMedium?.copyWith(
-                                color: AppColors.secundarioSobreCreme,
+                                color: context.cores.secundario,
                               )
                             : textos.titleMedium?.copyWith(
                                 fontFeatures: const [
@@ -662,9 +662,9 @@ class _LinhaDaSessao extends StatelessWidget {
                     ],
                   ),
                 ),
-                const AppIcone(
+                AppIcone(
                   nome: NomeIcone.avancar,
-                  cor: AppColors.roxoProfundo,
+                  cor: context.cores.acento,
                   tamanho: 22,
                 ),
               ],

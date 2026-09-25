@@ -6,7 +6,7 @@ import '../../../../app/router/app_routes.dart';
 import '../../../../app/router/trilhas.dart';
 import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_cabecalho_de_tarefa.dart';
@@ -64,8 +64,8 @@ class RetiradaConsentimentoPage extends ConsumerWidget {
                 ),
               );
             } else if (!paciente.hasValue || !consentimento.hasValue) {
-              conteudo = const Center(
-                child: CircularProgressIndicator(color: AppColors.roxoProfundo),
+              conteudo = Center(
+                child: CircularProgressIndicator(color: context.cores.acento),
               );
             } else if (paciente.value case final encontrado?) {
               conteudo = switch (consentimento.value) {
@@ -289,7 +289,7 @@ class _FormularioState extends ConsumerState<_Formulario> {
         ),
         AppMensagemDeCampo(
           erro: estado.erroGeral,
-          corDoApoio: AppColors.secundarioSobreCreme,
+          corDoApoio: context.cores.secundario,
         ),
       ],
     );

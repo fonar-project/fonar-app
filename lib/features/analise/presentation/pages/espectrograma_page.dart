@@ -8,7 +8,7 @@ import '../../../../app/router/trilhas.dart';
 import '../../../pacientes/data/repositorio_pacientes_local.dart';
 import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_cabecalho_de_tarefa.dart';
@@ -187,8 +187,8 @@ class _EspectrogramaPageState extends ConsumerState<EspectrogramaPage> {
                       ref.invalidate(analiseProvider(widget.analiseId)),
                 ),
               ),
-              _ => const Center(
-                child: CircularProgressIndicator(color: AppColors.roxoProfundo),
+              _ => Center(
+                child: CircularProgressIndicator(color: context.cores.acento),
               ),
             };
 
@@ -225,7 +225,7 @@ class _EspectrogramaPageState extends ConsumerState<EspectrogramaPage> {
   Widget _visor(String url, {required bool compacta}) {
     final textos = Theme.of(context).textTheme;
     final secundario = textos.bodySmall?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
     final tela = MediaQuery.sizeOf(context);
     final emPe = MediaQuery.orientationOf(context) == Orientation.portrait;
@@ -284,7 +284,7 @@ class _EspectrogramaPageState extends ConsumerState<EspectrogramaPage> {
                           decoration: BoxDecoration(
                             border: Border.all(
                               color: _foco.hasFocus
-                                  ? AppColors.roxoProfundo
+                                  ? context.cores.acento
                                   : Colors.transparent,
                               width: 2,
                             ),
@@ -307,31 +307,36 @@ class _EspectrogramaPageState extends ConsumerState<EspectrogramaPage> {
                                 maxScale: EspectrogramaPage.maximo,
                                 // Ocupa a área toda, e o `contain` encaixa a imagem nela —
                                 // sem isso, fica no tamanho natural.
-                                child: SizedBox.expand(
-                                  child: Image(
-                                    image: ref.watch(imagemDoServidorProvider)(
-                                      url,
-                                    ),
-                                    fit: BoxFit.contain,
-                                    excludeFromSemantics: true,
-                                    loadingBuilder: (_, filho, progresso) =>
-                                        progresso == null
-                                        ? filho
-                                        : const Center(
-                                            child: CircularProgressIndicator(
-                                              color: AppColors.roxoProfundo,
+                                // No escuro, a área fica clara como a
+                                // imagem — ver `AppMolduraDeImagem`.
+                                child: ColoredBox(
+                                  color: context.cores.molduraDeImagem,
+                                  child: SizedBox.expand(
+                                    child: Image(
+                                      image: ref.watch(
+                                        imagemDoServidorProvider,
+                                      )(url),
+                                      fit: BoxFit.contain,
+                                      excludeFromSemantics: true,
+                                      loadingBuilder: (_, filho, progresso) =>
+                                          progresso == null
+                                          ? filho
+                                          : Center(
+                                              child: CircularProgressIndicator(
+                                                color: context.cores.acento,
+                                              ),
                                             ),
+                                      errorBuilder: (_, _, _) => Center(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(
+                                            AppSpacing.md,
                                           ),
-                                    errorBuilder: (_, _, _) => Center(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(
-                                          AppSpacing.md,
-                                        ),
-                                        child: Text(
-                                          AppStrings.resultadoEspectrogramaErro,
-                                          style: textos.bodyMedium?.copyWith(
-                                            color:
-                                                AppColors.secundarioSobreCreme,
+                                          child: Text(
+                                            AppStrings
+                                                .resultadoEspectrogramaErro,
+                                            style: textos.bodyMedium?.copyWith(
+                                              color: context.cores.secundario,
+                                            ),
                                           ),
                                         ),
                                       ),

@@ -58,7 +58,8 @@ sessões, laudos e fila; o **histórico** (US23) lista as avaliações de todos 
 pacientes, por mês, para achar uma pelo quando; a **conta** (US11) tem os dados do profissional e o
 sair; tudo fica num **banco local** (US14); o token vai para o **cofre do
 sistema** (US18); e, depois de 5 minutos sem uso, o app **bloqueia** e pede a
-senha, sem perder a tela que estava aberta (US24).
+senha, sem perder a tela que estava aberta (US24). O app tem **tema escuro**,
+que segue o sistema ou a escolha feita na conta (US30).
 
 A numeração das US03 a US10 foi deduzida das telas do protótipo — confira com
 o backlog antes de citar no texto do TCC (ver `PENDENCIAS.md`).

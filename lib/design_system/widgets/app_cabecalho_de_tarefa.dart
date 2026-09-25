@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/network/conexao.dart';
 import '../../l10n/app_strings.dart';
 import '../breakpoints.dart';
-import '../tokens/app_colors.dart';
+import '../tokens/app_cores.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_spacing.dart';
 import 'app_icone.dart';
@@ -75,8 +75,8 @@ class AppCabecalhoDeTarefa extends ConsumerWidget {
     final textos = Theme.of(context).textTheme;
     final compacta = largura == LarguraDeTela.compacta;
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.lavandaClaro)),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: context.cores.borda)),
       ),
       child: SafeArea(
         bottom: false,
@@ -94,12 +94,12 @@ class AppCabecalhoDeTarefa extends ConsumerWidget {
                 child: AppToque(
                   aoTocar: aoVoltar,
                   raio: AppRadius.bordaPequena,
-                  child: const SizedBox.square(
+                  child: SizedBox.square(
                     dimension: AppSpacing.alvoDeToqueMinimo,
                     child: Center(
                       child: AppIcone(
                         nome: NomeIcone.voltar,
-                        cor: AppColors.roxoProfundo,
+                        cor: context.cores.acento,
                       ),
                     ),
                   ),
@@ -132,7 +132,7 @@ class AppCabecalhoDeTarefa extends ConsumerWidget {
                             Text(
                               sub,
                               style: textos.bodySmall?.copyWith(
-                                color: AppColors.secundarioSobreCreme,
+                                color: context.cores.secundario,
                               ),
                             ),
                         ],
@@ -157,8 +157,8 @@ class AppCabecalhoDeTarefa extends ConsumerWidget {
   Widget _expandido(BuildContext context) {
     final passos = trilha.isEmpty ? [ItemDaTrilha(titulo)] : trilha;
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.lavandaClaro)),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: context.cores.borda)),
       ),
       child: SafeArea(
         bottom: false,
@@ -216,7 +216,7 @@ class _Trilha extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final base = Theme.of(context).textTheme.bodyMedium
-        ?.copyWith(fontSize: 14, color: AppColors.secundarioSobreCreme);
+        ?.copyWith(fontSize: 14, color: context.cores.secundario);
     return Semantics(
       header: true,
       child: Wrap(
@@ -236,7 +236,7 @@ class _Trilha extends StatelessWidget {
                       passo.rotulo,
                       style: base?.copyWith(
                         decoration: TextDecoration.underline,
-                        decorationColor: AppColors.secundarioSobreCreme,
+                        decorationColor: context.cores.secundario,
                       ),
                     ),
                   ),
@@ -246,7 +246,7 @@ class _Trilha extends StatelessWidget {
               Text(
                 passo.rotulo,
                 style: base?.copyWith(
-                  color: AppColors.cinzaChumbo,
+                  color: context.cores.texto,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -270,10 +270,8 @@ class AppPilulaDeSituacao extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: const BoxDecoration(
-        border: Border.fromBorderSide(
-          BorderSide(color: AppColors.lavandaClaro),
-        ),
+      decoration: BoxDecoration(
+        border: Border.fromBorderSide(BorderSide(color: context.cores.borda)),
         borderRadius: AppRadius.bordaPilula,
       ),
       child: Text(
@@ -281,7 +279,7 @@ class AppPilulaDeSituacao extends StatelessWidget {
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
           fontSize: 13,
           fontWeight: FontWeight.w600,
-          color: AppColors.cinzaChumbo,
+          color: context.cores.texto,
         ),
       ),
     );

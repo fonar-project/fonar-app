@@ -7,7 +7,7 @@ import '../../../../app/router/trilhas.dart';
 import '../../../../app/app_estrutura.dart';
 import '../../../../app/router/saida_protegida.dart';
 import '../../../../design_system/breakpoints.dart';
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_cabecalho_de_tarefa.dart';
@@ -81,8 +81,8 @@ class EditarPacientePage extends ConsumerWidget {
                   aoTocar: () => ref.invalidate(pacientesProvider),
                 ),
               ),
-              _ => const Center(
-                child: CircularProgressIndicator(color: AppColors.roxoProfundo),
+              _ => Center(
+                child: CircularProgressIndicator(color: context.cores.acento),
               ),
             };
 
@@ -309,7 +309,7 @@ class _FormularioState extends ConsumerState<_Formulario> {
         ),
         AppMensagemDeCampo(
           erro: estado.erroGeral,
-          corDoApoio: AppColors.secundarioSobreCreme,
+          corDoApoio: context.cores.secundario,
         ),
       ],
     );

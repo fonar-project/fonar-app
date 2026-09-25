@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../design_system/breakpoints.dart';
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
@@ -209,10 +209,8 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
               ),
               if (palco.acoes.isNotEmpty)
                 DecoratedBox(
-                  decoration: const BoxDecoration(
-                    border: Border(
-                      top: BorderSide(color: AppColors.lavandaClaro),
-                    ),
+                  decoration: BoxDecoration(
+                    border: Border(top: BorderSide(color: context.cores.borda)),
                   ),
                   child: SafeArea(
                     top: false,
@@ -243,7 +241,7 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.lavandaClaro),
+                      border: Border.all(color: context.cores.borda),
                       borderRadius: AppRadius.bordaMedia,
                     ),
                     child: Column(
@@ -288,9 +286,7 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
                               AppStrings.capturaAtalhos,
                               textAlign: TextAlign.end,
                               style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: AppColors.secundarioSobreCreme,
-                                  ),
+                                  ?.copyWith(color: context.cores.secundario),
                             ),
                           ),
                       ],
@@ -355,8 +351,8 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
                   child: LinearProgressIndicator(
                     value: progresso,
                     minHeight: 4,
-                    color: AppColors.roxoProfundo,
-                    backgroundColor: AppColors.lavandaClaro,
+                    color: context.cores.acento,
+                    backgroundColor: context.cores.borda,
                   ),
                 ),
               ],
@@ -513,12 +509,12 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
         corpo: [
           _Cabeca(rotulo: rotulo, instrucao: AppStrings.instrucaoConferindo),
           const SizedBox(height: AppSpacing.lg),
-          const Center(
+          Center(
             child: SizedBox.square(
               dimension: 28,
               child: CircularProgressIndicator(
                 strokeWidth: 3,
-                color: AppColors.roxoProfundo,
+                color: context.cores.acento,
               ),
             ),
           ),
@@ -825,7 +821,7 @@ class _Cabeca extends StatelessWidget {
             fontSize: 12,
             letterSpacing: 2,
             fontWeight: FontWeight.w700,
-            color: AppColors.secundarioSobreCreme,
+            color: context.cores.secundario,
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -848,7 +844,7 @@ class _Cabeca extends StatelessWidget {
                       : 44,
                   height: 1.2,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.cinzaChumbo,
+                  color: context.cores.texto,
                 ),
               ),
             ),
@@ -859,9 +855,7 @@ class _Cabeca extends StatelessWidget {
           Text(
             AppStrings.instrucaoProvisoria,
             textAlign: TextAlign.center,
-            style: textos.bodySmall?.copyWith(
-              color: AppColors.secundarioSobreCreme,
-            ),
+            style: textos.bodySmall?.copyWith(color: context.cores.secundario),
           ),
         ],
       ],
@@ -880,7 +874,7 @@ class _Apoio extends StatelessWidget {
       texto,
       textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.bodyMedium
-          ?.copyWith(color: AppColors.secundarioSobreCreme),
+          ?.copyWith(color: context.cores.secundario),
     ),
   );
 }
@@ -905,9 +899,9 @@ class _Cronometro extends StatelessWidget {
           alignment: WrapAlignment.center,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            const AppIcone(
+            AppIcone(
               nome: NomeIcone.gravar,
-              cor: AppColors.roxoProfundo,
+              cor: context.cores.acento,
               tamanho: 18,
             ),
             const SizedBox(width: AppSpacing.xs),
@@ -916,7 +910,7 @@ class _Cronometro extends StatelessWidget {
               style: textos.labelSmall?.copyWith(
                 letterSpacing: 2,
                 fontWeight: FontWeight.w700,
-                color: AppColors.roxoProfundo,
+                color: context.cores.acento,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -969,7 +963,7 @@ class _Etapas extends StatelessWidget {
             Container(
               width: compacta ? 12 : 48,
               height: 1.5,
-              color: AppColors.lavandaClaro,
+              color: context.cores.borda,
             ),
           _Etapa(
             numero: i + 1,
@@ -1019,23 +1013,25 @@ class _Etapa extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: atual ? AppColors.roxoProfundo : null,
+        color: atual ? context.cores.primaria : null,
         border: Border.all(
-          color: destaque ? AppColors.roxoProfundo : AppColors.lavandaClaro,
+          color: destaque ? context.cores.acento : context.cores.borda,
           width: 1.5,
         ),
       ),
       child: concluida
-          ? const AppIcone(
+          ? AppIcone(
               nome: NomeIcone.confirmacao,
-              cor: AppColors.roxoProfundo,
+              cor: context.cores.acento,
               tamanho: 16,
             )
           : Text(
               '$numero',
               style: textos.labelSmall?.copyWith(
                 fontWeight: FontWeight.w700,
-                color: atual ? AppColors.creme : AppColors.secundarioSobreCreme,
+                color: atual
+                    ? context.cores.sobrePrimaria
+                    : context.cores.secundario,
               ),
             ),
     );
@@ -1061,8 +1057,8 @@ class _Etapa extends StatelessWidget {
                       fontSize: 14,
                       fontWeight: atual ? FontWeight.w700 : FontWeight.w600,
                       color: atual
-                          ? AppColors.cinzaChumbo
-                          : AppColors.secundarioSobreCreme,
+                          ? context.cores.texto
+                          : context.cores.secundario,
                     ),
                   ),
                   if (!compacta)
@@ -1070,7 +1066,7 @@ class _Etapa extends StatelessWidget {
                       situacao,
                       style: textos.bodySmall?.copyWith(
                         fontSize: 12,
-                        color: AppColors.secundarioSobreCreme,
+                        color: context.cores.secundario,
                       ),
                     ),
                 ],
@@ -1101,8 +1097,8 @@ class _Rodape extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: AppColors.lavandaClaro)),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: context.cores.borda)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -1117,7 +1113,7 @@ class _Rodape extends StatelessWidget {
               child: Text(
                 texto,
                 style: Theme.of(context).textTheme.bodySmall
-                    ?.copyWith(color: AppColors.secundarioSobreCreme),
+                    ?.copyWith(color: context.cores.secundario),
               ),
             ),
             Wrap(
@@ -1155,7 +1151,7 @@ class _LinhaDaRevisao extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.lavandaClaro),
+          border: Border.all(color: context.cores.borda),
           borderRadius: AppRadius.bordaMedia,
         ),
         child: Column(

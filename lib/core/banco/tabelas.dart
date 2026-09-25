@@ -169,3 +169,16 @@ class Laudos extends Table {
   @override
   Set<Column<Object>> get primaryKey => {analiseId};
 }
+
+/// Preferências deste aparelho, como chave e valor — hoje, só o tema (US30).
+///
+/// Ficam no aparelho, não na conta: consultório com luz forte e casa à noite
+/// pedem escolhas diferentes do mesmo profissional.
+@DataClassName('LinhaDePreferencia')
+class Preferencias extends Table {
+  TextColumn get chave => text()();
+  TextColumn get valor => text()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {chave};
+}

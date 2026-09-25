@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_strings.dart';
-import '../tokens/app_colors.dart';
+import '../tokens/app_cores.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_spacing.dart';
 import 'app_icone.dart';
@@ -35,16 +35,18 @@ class AppIndicadorConexao extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final corBase = sobreFundoEscuro ? AppColors.creme : AppColors.cinzaChumbo;
+    final corBase = sobreFundoEscuro
+        ? context.cores.sobrePrimaria
+        : context.cores.texto;
     final corDoPonto = sobreFundoEscuro
-        ? AppColors.creme
-        : (online ? AppColors.roxoProfundo : AppColors.cinzaChumbo);
+        ? context.cores.sobrePrimaria
+        : (online ? context.cores.acento : context.cores.texto);
 
     final borda = online
         ? BorderSide(
             color: sobreFundoEscuro
-                ? AppColors.creme.withValues(alpha: 0.4)
-                : AppColors.lavandaClaro,
+                ? context.cores.sobrePrimaria.withValues(alpha: 0.4)
+                : context.cores.borda,
           )
         : BorderSide(color: corBase, width: 1.5);
 

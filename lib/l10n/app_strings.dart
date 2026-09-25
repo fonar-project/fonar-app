@@ -964,6 +964,13 @@ abstract final class AppStrings {
   };
   static const contaVerFila = 'Ver fila';
 
+  static const contaAparencia = 'Aparência';
+  static const contaTema = 'Tema';
+  static const contaTemaSistema = 'Do sistema';
+  static const contaTemaClaro = 'Claro';
+  static const contaTemaEscuro = 'Escuro';
+  static const contaTemaApoio =
+      'Vale para este aparelho. O laudo em PDF sai sempre em papel branco.';
   static const contaFaixasTitulo = 'Faixas de referência';
   static const contaFaixasPendente = 'Validação clínica pendente';
   static const contaFaixasEmUso = 'Catálogo em uso';

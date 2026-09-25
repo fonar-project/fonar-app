@@ -9,7 +9,7 @@ import '../../../../app/router/app_routes.dart';
 import '../../../../app/router/trilhas.dart';
 import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
@@ -133,8 +133,8 @@ class LaudoPage extends ConsumerWidget {
                 );
               }
             } else {
-              conteudo = const Center(
-                child: CircularProgressIndicator(color: AppColors.roxoProfundo),
+              conteudo = Center(
+                child: CircularProgressIndicator(color: context.cores.acento),
               );
             }
 
@@ -352,8 +352,8 @@ class _LaudoState extends ConsumerState<_Laudo> {
       children: [
         Expanded(
           child: DecoratedBox(
-            decoration: const BoxDecoration(
-              border: Border(right: BorderSide(color: AppColors.lavandaClaro)),
+            decoration: BoxDecoration(
+              border: Border(right: BorderSide(color: context.cores.borda)),
             ),
             child: Semantics(
               label: AppStrings.laudoPreviaTitulo,
@@ -409,7 +409,7 @@ class _Painel extends StatelessWidget {
   Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
     final secundario = textos.bodySmall?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
     final laudo = estado.laudo;
     final mudou = laudo != null && laudo.conclusao != conclusao.text.trim();
@@ -538,7 +538,7 @@ class _ItemDaConferencia extends StatelessWidget {
   Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
     final secundario = textos.bodySmall?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
     final (nome, explicacao) = switch (item) {
       ItemDaConferencia.consentimento => (
@@ -612,8 +612,8 @@ class _ItemDaConferencia extends StatelessWidget {
             child: AppIcone(
               nome: icone,
               cor: situacao == SituacaoDoItem.ok
-                  ? AppColors.roxoProfundo
-                  : AppColors.cinzaChumbo,
+                  ? context.cores.acento
+                  : context.cores.texto,
               tamanho: 20,
             ),
           ),
@@ -656,7 +656,7 @@ class _Resumo extends StatelessWidget {
   Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
     final secundario = textos.bodyMedium?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
     final quando = conteudo.realizadaEm;
     final conclusao = conteudo.conclusao;
@@ -669,8 +669,8 @@ class _Resumo extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.branco,
-        border: Border.all(color: AppColors.lavandaClaro),
+        color: context.cores.cartao,
+        border: Border.all(color: context.cores.borda),
         borderRadius: AppRadius.bordaMedia,
       ),
       child: Column(

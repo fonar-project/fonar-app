@@ -26,6 +26,7 @@ import 'package:fonar_app/features/fila/domain/item_da_fila.dart';
 import 'package:fonar_app/features/fila/presentation/pages/fila_page.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 
+import '../../apoio/banco_em_memoria.dart';
 import '../../apoio/repositorios_em_memoria.dart';
 
 class _Conta implements RepositorioDaConta {
@@ -91,6 +92,7 @@ Future<(GoRouter, _Conta, ProviderContainer)> _abrir(
     overrides: [
       // Sem rede: a fila não tenta enviar, e os envios ficam pendentes.
       conexaoOnlineProvider.overrideWithValue(false),
+      bancoDeTeste(),
       repositorioFilaProvider.overrideWithValue(fila),
       repositorioDaContaProvider.overrideWithValue(c),
     ],

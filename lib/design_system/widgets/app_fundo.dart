@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../tokens/app_colors.dart';
+import '../tokens/app_cores.dart';
 
 /// Declara, para os componentes abaixo, sobre qual fundo eles estão desenhados.
 ///
@@ -14,7 +15,7 @@ import '../tokens/app_colors.dart';
 ///
 /// ```dart
 /// Container(
-///   color: AppColors.lavandaSuave,
+///   color: context.cores.suave,
 ///   child: const AppFundo(
 ///     fundo: FundoDeTexto.lavanda,
 ///     child: AppBotao.secundario(...),
@@ -36,7 +37,7 @@ class AppFundo extends InheritedWidget {
 
   /// O tom de texto secundário do fundo em volta.
   static Color secundarioDe(BuildContext context) =>
-      AppColors.secundarioSobre(de(context));
+      AppCores.de(context).secundarioSobre(de(context));
 
   @override
   bool updateShouldNotify(AppFundo anterior) => anterior.fundo != fundo;

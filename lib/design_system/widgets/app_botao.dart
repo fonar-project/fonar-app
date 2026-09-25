@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../tokens/app_colors.dart';
+import '../tokens/app_cores.dart';
 import '../tokens/app_movimento.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_spacing.dart';
@@ -161,24 +161,26 @@ class AppBotao extends StatelessWidget {
       style: _estiloBase(context, alturaPrimario).copyWith(
         backgroundColor: WidgetStateProperty.resolveWith((estados) {
           if (estados.contains(WidgetState.disabled)) {
-            return AppColors.lavandaClaro;
+            return context.cores.lavanda;
           }
           if (estados.contains(WidgetState.pressed)) {
-            return AppColors.roxoPressionado;
+            return context.cores.primariaPressionada;
           }
-          if (estados.contains(WidgetState.hovered)) return AppColors.roxoHover;
-          return AppColors.roxoProfundo;
+          if (estados.contains(WidgetState.hovered)) {
+            return context.cores.primariaHover;
+          }
+          return context.cores.primaria;
         }),
         foregroundColor: WidgetStateProperty.resolveWith(
           (estados) => estados.contains(WidgetState.disabled)
-              ? AppColors.secundarioSobreLavanda
-              : AppColors.creme,
+              ? context.cores.secundarioSobreLavanda
+              : context.cores.sobrePrimaria,
         ),
         // Anel de foco de 3 px na cor de foco do projeto. Sem isso, navegar por
         // teclado no desktop vira adivinhação.
         side: WidgetStateProperty.resolveWith(
           (estados) => estados.contains(WidgetState.focused)
-              ? const BorderSide(color: AppColors.foco, width: 3)
+              ? BorderSide(color: context.cores.foco, width: 3)
               : BorderSide.none,
         ),
       ),
@@ -193,7 +195,7 @@ class AppBotao extends StatelessWidget {
         backgroundColor: WidgetStateProperty.resolveWith((estados) {
           if (estados.contains(WidgetState.pressed) ||
               estados.contains(WidgetState.hovered)) {
-            return AppColors.roxoVeu;
+            return context.cores.veu;
           }
           return Colors.transparent;
         }),
@@ -203,16 +205,16 @@ class AppBotao extends StatelessWidget {
         foregroundColor: WidgetStateProperty.resolveWith(
           (estados) => estados.contains(WidgetState.disabled)
               ? AppFundo.secundarioDe(context)
-              : AppColors.roxoProfundo,
+              : context.cores.acento,
         ),
         side: WidgetStateProperty.resolveWith((estados) {
           if (estados.contains(WidgetState.disabled)) {
-            return const BorderSide(color: AppColors.lavandaClaro);
+            return BorderSide(color: context.cores.borda);
           }
           if (estados.contains(WidgetState.focused)) {
-            return const BorderSide(color: AppColors.foco, width: 3);
+            return BorderSide(color: context.cores.foco, width: 3);
           }
-          return const BorderSide(color: AppColors.roxoProfundo, width: 1.5);
+          return BorderSide(color: context.cores.acento, width: 1.5);
         }),
       ),
       child: _conteudo(),

@@ -6,7 +6,7 @@ import 'package:printing/printing.dart';
 
 import '../../../core/relogio.dart';
 import '../../analise/domain/resultado_da_analise.dart';
-import '../../../design_system/tokens/app_colors.dart';
+import '../../../design_system/tokens/app_cores.dart';
 import '../data/repositorio_laudos_local.dart';
 import '../domain/conteudo_do_laudo.dart';
 import '../domain/laudo.dart';
@@ -102,17 +102,18 @@ final geradorDePdfProvider =
 final previaDoPdfProvider =
     Provider<Widget Function(Future<Uint8List> Function() gerar)>(
       (ref) =>
-          (gerar) => PdfPreview(
-            build: (_) => gerar(),
-            useActions: false,
-            allowPrinting: false,
-            allowSharing: false,
-            canChangeOrientation: false,
-            canChangePageFormat: false,
-            canDebug: false,
-            maxPageWidth: 640,
-            scrollViewDecoration: const BoxDecoration(
-              color: AppColors.lavandaClaro,
+          (gerar) => Builder(
+            builder: (context) => PdfPreview(
+              build: (_) => gerar(),
+              useActions: false,
+              allowPrinting: false,
+              allowSharing: false,
+              canChangeOrientation: false,
+              canChangePageFormat: false,
+              canDebug: false,
+              maxPageWidth: 640,
+              // A folha continua branca; em volta dela, a cor do tema.
+              scrollViewDecoration: BoxDecoration(color: context.cores.borda),
             ),
           ),
     );

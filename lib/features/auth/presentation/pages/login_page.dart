@@ -6,7 +6,7 @@ import '../../../../app/router/app_routes.dart';
 import '../../../../core/network/conexao.dart';
 import '../../../../core/offline/pacientes_em_cache.dart';
 import '../../../../design_system/breakpoints.dart';
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
@@ -156,7 +156,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 onPressed: _esqueciSenha,
                 style:
                     TextButton.styleFrom(
-                      foregroundColor: AppColors.roxoProfundo,
+                      foregroundColor: context.cores.acento,
                       minimumSize: const Size(0, AppSpacing.alvoDeToqueMinimo),
                       textStyle: textos.labelSmall?.copyWith(
                         decoration: TextDecoration.underline,
@@ -166,7 +166,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       // navega por teclado. Mesmo anel dos outros controles.
                       side: WidgetStateProperty.resolveWith(
                         (estados) => estados.contains(WidgetState.focused)
-                            ? const BorderSide(color: AppColors.foco, width: 3)
+                            ? BorderSide(color: context.cores.foco, width: 3)
                             : BorderSide.none,
                       ),
                       shape: const WidgetStatePropertyAll(
@@ -239,7 +239,7 @@ class _LayoutExpandido extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
-    const creme = AppColors.creme;
+    final creme = context.cores.sobrePrimaria;
     final cremeSuave = creme.withValues(alpha: 0.85);
 
     return Row(
@@ -247,7 +247,7 @@ class _LayoutExpandido extends StatelessWidget {
       children: [
         Container(
           width: _larguraDoPainel,
-          color: AppColors.roxoProfundo,
+          color: context.cores.lateral,
           // Rola quando não couber: com o texto do sistema em 200%, marca,
           // subtítulo e descrição passam da altura de uma janela de 900 px.
           // Alinhado à esquerda, como antes — `Center` o centralizaria na
@@ -340,7 +340,7 @@ class _LayoutCompacto extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ColoredBox(
-          color: AppColors.roxoProfundo,
+          color: context.cores.lateral,
           child: SafeArea(
             bottom: false,
             child: Padding(
@@ -368,7 +368,9 @@ class _LayoutCompacto extends StatelessWidget {
                       Text(
                         AppStrings.loginSubtitulo,
                         style: textos.bodySmall?.copyWith(
-                          color: AppColors.creme.withValues(alpha: 0.85),
+                          color: context.cores.sobrePrimaria.withValues(
+                            alpha: 0.85,
+                          ),
                         ),
                       ),
                     ],
@@ -424,7 +426,7 @@ class _Marca extends StatelessWidget {
         style: Theme.of(context).textTheme.displaySmall?.copyWith(
           fontSize: tamanho,
           letterSpacing: tamanho * 0.05,
-          color: AppColors.creme,
+          color: context.cores.sobrePrimaria,
         ),
       ),
     );
@@ -440,7 +442,7 @@ class _AvisoApoioDecisao extends StatelessWidget {
       AppStrings.avisoApoioDecisao,
       textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.bodySmall
-          ?.copyWith(color: AppColors.secundarioSobreCreme),
+          ?.copyWith(color: context.cores.secundario),
     );
   }
 }
@@ -459,9 +461,9 @@ class _ErroGeral extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const AppIcone(
+            AppIcone(
               nome: NomeIcone.alerta,
-              cor: AppColors.erro,
+              cor: context.cores.erro,
               tamanho: 16,
             ),
             const SizedBox(width: AppSpacing.xxs + 2),
@@ -469,7 +471,7 @@ class _ErroGeral extends StatelessWidget {
               child: Text(
                 mensagem,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.erro,
+                  color: context.cores.erro,
                   fontWeight: FontWeight.w600,
                 ),
               ),

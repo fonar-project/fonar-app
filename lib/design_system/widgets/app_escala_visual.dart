@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../tokens/app_colors.dart';
+import '../tokens/app_cores.dart';
 import '../tokens/app_spacing.dart';
 import '../tokens/app_typography.dart';
 import 'app_fundo.dart';
@@ -92,7 +92,7 @@ class AppEscalaVisual extends StatelessWidget {
                           Text(
                             '$valor',
                             style: AppTypography.medidaCompacta.copyWith(
-                              color: AppColors.cinzaChumbo,
+                              color: context.cores.texto,
                             ),
                           ),
                           Text(
@@ -117,8 +117,8 @@ class AppEscalaVisual extends StatelessWidget {
             minimo: minimo,
             maximo: maximo,
             valor: valor,
-            corDoTraco: AppColors.cinzaChumbo,
-            corDaMarca: AppColors.roxoProfundo,
+            corDoTraco: context.cores.texto,
+            corDaMarca: context.cores.acento,
             estiloDoNumero: textos.labelSmall!.copyWith(color: secundario),
             espacoDosNumeros: espacoDosNumeros,
             escalaDoTexto: MediaQuery.textScalerOf(context),
@@ -138,18 +138,18 @@ class AppEscalaVisual extends StatelessWidget {
                     trackHeight: 2,
                     trackShape: const _TrilhaDaRegua(),
                     padding: EdgeInsets.zero,
-                    activeTrackColor: AppColors.cinzaChumbo,
+                    activeTrackColor: context.cores.texto,
                     inactiveTrackColor: temErro
-                        ? AppColors.erro
-                        : AppColors.cinzaChumbo,
-                    thumbColor: AppColors.roxoProfundo,
+                        ? context.cores.erro
+                        : context.cores.texto,
+                    thumbColor: context.cores.acento,
                     // Sem marca, sem ponto. Só a cor transparente não bastava:
                     // o contorno e a sombra do polegar continuavam desenhados
                     // em 0, e a escala parecia marcada em "sem desvio".
                     thumbShape: marcado
                         ? const RoundSliderThumbShape(enabledThumbRadius: 8)
                         : SliderComponentShape.noThumb,
-                    overlayColor: AppColors.roxoVeu,
+                    overlayColor: context.cores.veu,
                     // A régua já marca as divisões.
                     tickMarkShape: SliderTickMarkShape.noTickMark,
                     showValueIndicator: ShowValueIndicator.never,

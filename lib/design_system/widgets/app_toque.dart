@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../tokens/app_colors.dart';
+import '../tokens/app_cores.dart';
 
 /// Área clicável que não é botão: linha de lista, card, item de navegação.
 ///
@@ -12,8 +12,8 @@ class AppToque extends StatefulWidget {
   const AppToque({
     required this.aoTocar,
     required this.child,
-    this.corDoFoco = AppColors.foco,
-    this.corDoHover = AppColors.roxoVeu,
+    this.corDoFoco,
+    this.corDoHover,
     this.raio = BorderRadius.zero,
     this.selecionado,
     super.key,
@@ -22,10 +22,12 @@ class AppToque extends StatefulWidget {
   final VoidCallback aoTocar;
   final Widget child;
 
-  /// Sobre fundo roxo o azul de foco some; ali, passe [AppColors.creme].
-  final Color corDoFoco;
+  /// Sem valor, a cor de foco do tema. Sobre fundo roxo o azul de foco some;
+  /// ali, passe `context.cores.sobrePrimaria`.
+  final Color? corDoFoco;
 
-  final Color corDoHover;
+  /// Sem valor, o véu do tema.
+  final Color? corDoHover;
   final BorderRadius raio;
 
   /// Para itens de navegação: anuncia ao leitor de tela qual está ativo.
@@ -48,15 +50,18 @@ class _AppToqueState extends State<AppToque> {
         onFocusChange: (focado) => setState(() => _focado = focado),
         borderRadius: widget.raio,
         focusColor: Colors.transparent,
-        hoverColor: widget.corDoHover,
-        highlightColor: widget.corDoHover,
+        hoverColor: widget.corDoHover ?? context.cores.veu,
+        highlightColor: widget.corDoHover ?? context.cores.veu,
         splashFactory: NoSplash.splashFactory,
         child: DecoratedBox(
           position: DecorationPosition.foreground,
           decoration: BoxDecoration(
             borderRadius: widget.raio,
             border: _focado
-                ? Border.all(color: widget.corDoFoco, width: 3)
+                ? Border.all(
+                    color: widget.corDoFoco ?? context.cores.foco,
+                    width: 3,
+                  )
                 : null,
           ),
           child: widget.child,

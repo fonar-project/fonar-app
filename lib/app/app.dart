@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../design_system/theme/app_theme.dart';
 import '../features/auth/presentation/widgets/vigia_de_inatividade.dart';
+import '../features/conta/data/preferencia_de_tema_local.dart';
+import '../features/conta/domain/tema_escolhido.dart';
 import '../features/fila/presentation/fila_controlador.dart';
 import '../l10n/app_strings.dart';
 import 'router/app_router.dart';
@@ -22,14 +24,15 @@ class FonarApp extends ConsumerWidget {
       title: AppStrings.appTitle,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.claro,
-      // A identidade do FONAR só define paleta clara. Enquanto não houver
-      // variante escura desenhada e com contraste verificado, o aplicativo
-      // ignora a preferência do sistema de propósito — ver [AppTheme.escuro].
-      //
-      // TODO: desenhar o tema escuro e, junto dele, permitir que o usuário
-      // force claro/escuro. Consultório costuma ter luz forte; a escolha do
-      // sistema nem sempre serve.
-      themeMode: ThemeMode.light,
+      darkTheme: AppTheme.escuro,
+      // A escolha da tela Conta; enquanto carrega, a do sistema.
+      themeMode: switch (ref.watch(temaEscolhidoProvider).value) {
+        TemaEscolhido.claro => ThemeMode.light,
+        TemaEscolhido.escuro => ThemeMode.dark,
+        TemaEscolhido.sistema || null => ThemeMode.system,
+      },
+      // Troca de tema sem transição: é mudança de ajuste, não animação.
+      themeAnimationDuration: Duration.zero,
       routerConfig: ref.watch(routerProvider),
       // Por cima do roteador: o bloqueio vale para qualquer tela.
       builder: (context, filho) =>

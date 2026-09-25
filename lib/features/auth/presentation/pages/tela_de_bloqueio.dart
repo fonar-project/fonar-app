@@ -5,7 +5,7 @@ import '../../../../app/router/app_router.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../app/router/saida_protegida.dart';
 import '../../../../core/network/conexao.dart';
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_campo_texto.dart';
@@ -81,7 +81,7 @@ class _TelaDeBloqueioState extends ConsumerState<TelaDeBloqueio> {
     final saida = ref.watch(contaControladorProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.creme,
+      backgroundColor: context.cores.fundo,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -107,7 +107,7 @@ class _TelaDeBloqueioState extends ConsumerState<TelaDeBloqueio> {
                   Text(
                     AppStrings.bloqueioTexto(minutos),
                     style: textos.bodyMedium?.copyWith(
-                      color: AppColors.secundarioSobreCreme,
+                      color: context.cores.secundario,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),

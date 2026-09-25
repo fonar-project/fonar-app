@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_movimento.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
@@ -63,19 +63,19 @@ class MedidorDeNivel extends StatelessWidget {
       ZonaDeNivel.saturando => AppStrings.medidorSaturando,
     };
     final corDaBarra = switch (zona) {
-      _ when neutro => AppColors.roxoProfundo,
-      null || ZonaDeNivel.semSinal => AppColors.lavandaClaro,
-      ZonaDeNivel.baixo => AppColors.cinzaChumbo,
-      ZonaDeNivel.adequado => AppColors.sucesso,
-      ZonaDeNivel.alto => AppColors.atencao,
-      ZonaDeNivel.saturando => AppColors.erro,
+      _ when neutro => context.cores.acento,
+      null || ZonaDeNivel.semSinal => context.cores.borda,
+      ZonaDeNivel.baixo => context.cores.texto,
+      ZonaDeNivel.adequado => context.cores.sucesso,
+      ZonaDeNivel.alto => context.cores.atencao,
+      ZonaDeNivel.saturando => context.cores.erro,
     };
     // A cor do TEXTO só muda na saturação — o único estado que pede ação
     // imediata. Nos outros, texto verde ou amarelo sobre creme competiria
     // com a própria barra.
     final corDoTexto = zona == ZonaDeNivel.saturando
-        ? AppColors.erro
-        : AppColors.cinzaChumbo;
+        ? context.cores.erro
+        : context.cores.texto;
     final numero = valor == null ? '' : AppStrings.nivelDbfs(valor);
 
     // Um nó só para o leitor de tela, sem `liveRegion`: o valor muda dez
@@ -98,9 +98,9 @@ class MedidorDeNivel extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (zona == ZonaDeNivel.saturando) ...[
-                      const AppIcone(
+                      AppIcone(
                         nome: NomeIcone.alerta,
-                        cor: AppColors.erro,
+                        cor: context.cores.erro,
                         tamanho: 18,
                       ),
                       const SizedBox(width: AppSpacing.xxs),
@@ -127,7 +127,7 @@ class MedidorDeNivel extends StatelessWidget {
               borderRadius: AppRadius.bordaPilula,
               child: Container(
                 height: _altura,
-                color: AppColors.lavandaSuave,
+                color: context.cores.suave,
                 alignment: Alignment.centerLeft,
                 child: TweenAnimationBuilder<double>(
                   tween: Tween(end: fracao),

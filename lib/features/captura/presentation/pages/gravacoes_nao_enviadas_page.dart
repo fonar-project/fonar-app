@@ -6,7 +6,7 @@ import '../../../../app/router/app_routes.dart';
 import '../../../../app/router/trilhas.dart';
 import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
@@ -87,7 +87,7 @@ class GravacoesNaoEnviadasPage extends ConsumerWidget {
                         Text(
                           AppStrings.naoEnviadasExplicacao,
                           style: textos.bodyMedium?.copyWith(
-                            color: AppColors.secundarioSobreCreme,
+                            color: context.cores.secundario,
                           ),
                         ),
                         const SizedBox(height: AppSpacing.lg),
@@ -112,8 +112,8 @@ class GravacoesNaoEnviadasPage extends ConsumerWidget {
                       ref.invalidate(sessoesNaoEnviadasProvider(pacienteId)),
                 ),
               ),
-              _ => const Center(
-                child: CircularProgressIndicator(color: AppColors.roxoProfundo),
+              _ => Center(
+                child: CircularProgressIndicator(color: context.cores.acento),
               ),
             };
 
@@ -174,7 +174,7 @@ class _CartaoDaSessao extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.lavandaClaro),
+        border: Border.all(color: context.cores.borda),
         borderRadius: AppRadius.bordaMedia,
       ),
       child: Column(
@@ -195,9 +195,7 @@ class _CartaoDaSessao extends ConsumerWidget {
               sessao.amostras.length,
               TarefaDeGravacao.values.length,
             ),
-            style: textos.bodySmall?.copyWith(
-              color: AppColors.secundarioSobreCreme,
-            ),
+            style: textos.bodySmall?.copyWith(color: context.cores.secundario),
           ),
           for (final tarefa in TarefaDeGravacao.values)
             if (sessao.amostras[tarefa] case final amostra?) ...[

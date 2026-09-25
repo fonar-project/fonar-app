@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../core/network/conexao.dart';
 import '../design_system/breakpoints.dart';
-import '../design_system/tokens/app_colors.dart';
+import '../design_system/tokens/app_cores.dart';
 import '../design_system/tokens/app_spacing.dart';
 import '../design_system/widgets/app_indicador_conexao.dart';
 import '../design_system/widgets/app_toque.dart';
@@ -135,19 +135,18 @@ class _BarraLateral extends ConsumerWidget {
 
   static const _largura = 222.0;
   static const _margem = 22.0;
-  static final _divisoria = Divider(
-    color: AppColors.creme.withValues(alpha: 0.18),
-  );
+  static Widget _divisoria(BuildContext context) =>
+      Divider(color: context.cores.sobrePrimaria.withValues(alpha: 0.18));
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final textos = Theme.of(context).textTheme;
     final profissional = ref.watch(profissionalAtualProvider);
-    const creme = AppColors.creme;
+    final creme = context.cores.sobrePrimaria;
 
     return Container(
       width: _largura,
-      color: AppColors.roxoProfundo,
+      color: context.cores.lateral,
       child: SafeArea(
         right: false,
         // Rola quando não cabe. Com o texto do sistema em 200% os quatro
@@ -195,12 +194,12 @@ class _BarraLateral extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    _divisoria,
+                    _divisoria(context),
                     const SizedBox(height: AppSpacing.sm),
                     for (final destino in DestinoPrincipal.values)
                       _ItemLateral(destino: destino, ativo: destino == ativo),
                     const Spacer(),
-                    _divisoria,
+                    _divisoria(context),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         _margem,
@@ -248,7 +247,7 @@ class _ItemLateral extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const creme = AppColors.creme;
+    final creme = context.cores.sobrePrimaria;
     return AppToque(
       aoTocar: () => context.goNamed(destino.rota),
       selecionado: ativo,
@@ -291,9 +290,9 @@ class _BarraInferior extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: AppColors.creme,
-        border: Border(top: BorderSide(color: AppColors.lavandaClaro)),
+      decoration: BoxDecoration(
+        color: context.cores.fundo,
+        border: Border(top: BorderSide(color: context.cores.borda)),
       ),
       child: SafeArea(
         top: false,
@@ -331,7 +330,7 @@ class _ItemInferior extends StatelessWidget {
           // Traço em cima da aba ativa, além do peso e da cor do texto.
           border: Border(
             top: BorderSide(
-              color: ativo ? AppColors.roxoProfundo : Colors.transparent,
+              color: ativo ? context.cores.acento : Colors.transparent,
               width: 3,
             ),
           ),
@@ -346,10 +345,10 @@ class _ItemInferior extends StatelessWidget {
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: ativo
-                  ? AppColors.roxoProfundo
+                  ? context.cores.acento
                   // A barra inferior é creme, não lavanda: o token escuro aqui
                   // seria o do fundo errado.
-                  : AppColors.secundarioSobreCreme,
+                  : context.cores.secundario,
               fontWeight: ativo ? FontWeight.w800 : FontWeight.w600,
             ),
           ),

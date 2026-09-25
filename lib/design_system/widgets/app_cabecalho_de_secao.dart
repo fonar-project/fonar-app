@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/network/conexao.dart';
 import '../breakpoints.dart';
-import '../tokens/app_colors.dart';
+import '../tokens/app_cores.dart';
 import '../tokens/app_spacing.dart';
 import 'app_cabecalho_de_tarefa.dart';
 import 'app_indicador_conexao.dart';
@@ -48,8 +48,8 @@ class AppCabecalhoDeSecao extends ConsumerWidget {
     );
 
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.lavandaClaro)),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: context.cores.borda)),
       ),
       child: SafeArea(
         bottom: false,

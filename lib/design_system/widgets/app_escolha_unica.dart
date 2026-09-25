@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../tokens/app_colors.dart';
+import '../tokens/app_cores.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_spacing.dart';
 import 'app_fundo.dart';
@@ -75,7 +75,7 @@ class AppEscolhaUnica<T> extends StatelessWidget {
                 child: Text(
                   rotulo,
                   style: textos.labelSmall?.copyWith(
-                    color: AppColors.cinzaChumbo,
+                    color: context.cores.texto,
                   ),
                 ),
               ),
@@ -125,11 +125,13 @@ class _Opcao extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final corDoTexto = marcada ? AppColors.creme : AppColors.cinzaChumbo;
+    final corDoTexto = marcada
+        ? context.cores.sobrePrimaria
+        : context.cores.texto;
     final borda = switch ((marcada, comErro)) {
-      (true, _) => AppColors.roxoProfundo,
-      (false, true) => AppColors.erro,
-      (false, false) => AppColors.cinzaChumbo,
+      (true, _) => context.cores.primaria,
+      (false, true) => context.cores.erro,
+      (false, false) => context.cores.bordaDeCampo,
     };
 
     final conteudo = Container(
@@ -141,7 +143,7 @@ class _Opcao extends StatelessWidget {
         vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: marcada ? AppColors.roxoProfundo : null,
+        color: marcada ? context.cores.primaria : null,
         border: Border.all(color: borda, width: 1.5),
         borderRadius: AppRadius.bordaPilula,
       ),

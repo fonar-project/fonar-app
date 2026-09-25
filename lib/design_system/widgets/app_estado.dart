@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../tokens/app_colors.dart';
+import '../tokens/app_cores.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_spacing.dart';
 import 'app_fundo.dart';
@@ -77,8 +78,8 @@ class AppEstado extends StatelessWidget {
         vertical: _central ? AppSpacing.lg : AppSpacing.md,
       ),
       decoration: BoxDecoration(
-        color: AppColors.lavandaSuave,
-        border: Border.all(color: AppColors.lavandaClaro),
+        color: context.cores.suave,
+        border: Border.all(color: context.cores.borda),
         borderRadius: AppRadius.bordaMedia,
       ),
       // Quem pinta a superfície declara o fundo: a ação aqui dentro é um
@@ -104,7 +105,7 @@ class AppEstado extends StatelessWidget {
                 texto,
                 textAlign: alinhamento,
                 style: (_central ? textos.bodyMedium : textos.bodySmall)
-                    ?.copyWith(color: AppColors.secundarioSobreLavanda),
+                    ?.copyWith(color: context.cores.secundarioSobreLavanda),
               ),
             ],
             SizedBox(height: _central ? AppSpacing.lg : AppSpacing.sm),

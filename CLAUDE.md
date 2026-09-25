@@ -133,6 +133,19 @@ Paleta:
 - `#5A5472` secundário sobre LAVANDA (4,86:1) — o `#6E6787` sobre lavanda dá
   só 3,62:1 e reprova para texto pequeno. Use o token certo para cada fundo.
 
+Tema escuro (US30, paleta aprovada em 25/09/2026): derivado da marca, sem
+matiz novo. Fundo `#17131F`, cartão `#211B2B`, texto `#F1E9DC`, secundário
+`#A198B3`. O roxo profundo, que no claro faz botão, texto e barra lateral, no
+escuro se divide em três: botão `#6A2F93`, acento (link, ícone, gráfico)
+`#D2B0EC`, barra lateral `#260838`. Estados ficam mais claros para passar no
+fundo escuro. O profissional escolhe na Conta: do sistema (padrão), claro ou
+escuro. O laudo em PDF sai sempre em papel branco.
+
+Nenhum widget usa `AppColors` direto: as cores entram pelo tema, por PAPEL —
+`context.cores.fundo`, `.texto`, `.primaria`, `.acento` (ver
+`design_system/tokens/app_cores.dart`). Cor nova entra lá, com os dois
+valores, e o contraste dos dois temas é conferido em `app_colors_test.dart`.
+
 Verde, amarelo e vermelho são reservados EXCLUSIVAMENTE para status de
 normalidade de medida e saturação de áudio. Nunca como decoração.
 

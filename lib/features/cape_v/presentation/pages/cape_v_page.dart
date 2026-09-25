@@ -6,7 +6,7 @@ import '../../../../app/router/app_routes.dart';
 import '../../../../app/router/trilhas.dart';
 import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
@@ -135,9 +135,9 @@ class CapeVPage extends ConsumerWidget {
                       compacta: compacta,
                       aoRegistrar: () => _voltar(context),
                     ),
-                    _ => const Center(
+                    _ => Center(
                       child: CircularProgressIndicator(
-                        color: AppColors.roxoProfundo,
+                        color: context.cores.acento,
                       ),
                     ),
                   },
@@ -242,7 +242,7 @@ class _FormularioState extends ConsumerState<_Formulario> {
                     Text(
                       AppStrings.capeVExplicacao,
                       style: textos.bodyMedium?.copyWith(
-                        color: AppColors.secundarioSobreCreme,
+                        color: context.cores.secundario,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
@@ -295,7 +295,7 @@ class _FormularioState extends ConsumerState<_Formulario> {
                   registrar,
                   AppMensagemDeCampo(
                     erro: estado.erroGeral,
-                    corDoApoio: AppColors.secundarioSobreCreme,
+                    corDoApoio: context.cores.secundario,
                   ),
                 ],
               ),
@@ -317,15 +317,13 @@ class _Faixa extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const borda = BorderSide(color: AppColors.lavandaClaro);
+    final borda = BorderSide(color: context.cores.borda);
     final compacta =
         Breakpoints.de(MediaQuery.sizeOf(context).width) ==
         LarguraDeTela.compacta;
     return DecoratedBox(
       decoration: BoxDecoration(
-        border: embaixo
-            ? const Border(bottom: borda)
-            : const Border(top: borda),
+        border: embaixo ? Border(bottom: borda) : Border(top: borda),
       ),
       child: SafeArea(
         top: false,
@@ -363,7 +361,7 @@ class _OuvirState extends ConsumerState<_Ouvir> {
       return Text(
         AppStrings.resultadoAudioIndisponivel,
         style: Theme.of(context).textTheme.bodySmall
-            ?.copyWith(color: AppColors.secundarioSobreCreme),
+            ?.copyWith(color: context.cores.secundario),
       );
     }
     final tarefa = audios.containsKey(_escolhida)
@@ -425,8 +423,8 @@ class _Parametro extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.branco,
-        border: Border.all(color: AppColors.lavandaClaro),
+        color: context.cores.cartao,
+        border: Border.all(color: context.cores.borda),
         borderRadius: AppRadius.bordaMedia,
       ),
       child: Column(
@@ -533,7 +531,7 @@ class _ParametroCompacto extends StatelessWidget {
   Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
     final secundario = textos.bodySmall?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
     final valor = nota.valor;
     final resumo = valor == null
@@ -562,7 +560,7 @@ class _ParametroCompacto extends StatelessWidget {
                     Text(
                       '$valor',
                       style: AppTypography.medidaCompacta.copyWith(
-                        color: AppColors.cinzaChumbo,
+                        color: context.cores.texto,
                       ),
                     ),
                     Text(' /100', style: secundario),
@@ -573,7 +571,9 @@ class _ParametroCompacto extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           SizedBox(
             height: 14,
-            child: CustomPaint(painter: _LinhaCompacta(valor: valor)),
+            child: CustomPaint(
+              painter: _LinhaCompacta(valor: valor, cores: context.cores),
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
           Wrap(
@@ -589,9 +589,9 @@ class _ParametroCompacto extends StatelessWidget {
               Text(
                 '${AppStrings.capeVAbrirEscala} ›',
                 style: textos.labelLarge?.copyWith(
-                  color: AppColors.roxoProfundo,
+                  color: context.cores.acento,
                   decoration: TextDecoration.underline,
-                  decorationColor: AppColors.roxoProfundo,
+                  decorationColor: context.cores.acento,
                 ),
               ),
             ],
@@ -599,7 +599,7 @@ class _ParametroCompacto extends StatelessWidget {
           if (problema case final p?)
             AppMensagemDeCampo(
               erro: mensagemDoProblema(p),
-              corDoApoio: AppColors.secundarioSobreCreme,
+              corDoApoio: context.cores.secundario,
             ),
         ],
       ),
@@ -607,8 +607,8 @@ class _ParametroCompacto extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.branco,
-        border: Border.all(color: AppColors.lavandaClaro),
+        color: context.cores.cartao,
+        border: Border.all(color: context.cores.borda),
         borderRadius: AppRadius.bordaMedia,
       ),
       child: Semantics(
@@ -631,9 +631,10 @@ class _ParametroCompacto extends StatelessWidget {
 
 /// A linha do cartão compacto, com a marca. Só leitura.
 class _LinhaCompacta extends CustomPainter {
-  _LinhaCompacta({required this.valor});
+  _LinhaCompacta({required this.valor, required this.cores});
 
   final int? valor;
+  final AppCores cores;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -642,7 +643,7 @@ class _LinhaCompacta extends CustomPainter {
       Offset(0, meio),
       Offset(size.width, meio),
       Paint()
-        ..color = AppColors.lavandaClaro
+        ..color = cores.borda
         ..strokeWidth = 2,
     );
     if (valor case final v?) {
@@ -651,7 +652,7 @@ class _LinhaCompacta extends CustomPainter {
         Offset(x, 0),
         Offset(x, size.height),
         Paint()
-          ..color = AppColors.roxoProfundo
+          ..color = cores.acento
           ..strokeWidth = 3
           ..strokeCap = StrokeCap.round,
       );
@@ -659,7 +660,8 @@ class _LinhaCompacta extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_LinhaCompacta antes) => antes.valor != valor;
+  bool shouldRepaint(_LinhaCompacta antes) =>
+      antes.valor != valor || antes.cores != cores;
 }
 
 /// Um parâmetro por vez, com a régua na largura toda — deitado, de ponta a
@@ -687,7 +689,7 @@ class _EscalaEmTelaCheiaState extends ConsumerState<_EscalaEmTelaCheia> {
     );
     final textos = Theme.of(context).textTheme;
     final secundario = textos.bodySmall?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
     final todos = ParametroCapeV.values;
     final i = todos.indexOf(_parametro);
@@ -704,10 +706,8 @@ class _EscalaEmTelaCheiaState extends ConsumerState<_EscalaEmTelaCheia> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             DecoratedBox(
-              decoration: const BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: AppColors.lavandaClaro),
-                ),
+              decoration: BoxDecoration(
+                border: Border(bottom: BorderSide(color: context.cores.borda)),
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -728,12 +728,12 @@ class _EscalaEmTelaCheiaState extends ConsumerState<_EscalaEmTelaCheia> {
                           child: AppToque(
                             aoTocar: concluir,
                             raio: AppRadius.bordaPequena,
-                            child: const SizedBox.square(
+                            child: SizedBox.square(
                               dimension: AppSpacing.alvoDeToqueMinimo,
                               child: Center(
                                 child: AppIcone(
                                   nome: NomeIcone.voltar,
-                                  cor: AppColors.roxoProfundo,
+                                  cor: context.cores.acento,
                                 ),
                               ),
                             ),
@@ -823,7 +823,7 @@ class _EscalaEmTelaCheiaState extends ConsumerState<_EscalaEmTelaCheia> {
                                 Text(
                                   '${nota.valor}',
                                   style: AppTypography.medidaDestaque.copyWith(
-                                    color: AppColors.cinzaChumbo,
+                                    color: context.cores.texto,
                                   ),
                                 ),
                                 Text(' /100', style: secundario),

@@ -6,7 +6,7 @@ import '../../../../app/router/app_routes.dart';
 import '../../../../app/router/trilhas.dart';
 import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/tokens/app_typography.dart';
@@ -14,6 +14,7 @@ import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_cabecalho_de_tarefa.dart';
 import '../../../../design_system/widgets/app_estado.dart';
 import '../../../../design_system/widgets/app_icone.dart';
+import '../../../../design_system/widgets/app_moldura_de_imagem.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../design_system/widgets/app_status_medida.dart';
 import '../../../../l10n/app_strings.dart';
@@ -118,8 +119,8 @@ class AnaliseResultadoPage extends ConsumerWidget {
                   aoTocar: atualizar,
                 ),
               ),
-              _ => const Center(
-                child: CircularProgressIndicator(color: AppColors.roxoProfundo),
+              _ => Center(
+                child: CircularProgressIndicator(color: context.cores.acento),
               ),
             };
 
@@ -179,7 +180,7 @@ class _Resultado extends ConsumerWidget {
     );
     final quando = resultado.realizadaEm;
     final secundario = textos.bodySmall?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
     final motivo = motivoComum(medidas);
     final capeV = ref.watch(capeVDaAnaliseProvider(resultado.id)).value;
@@ -276,8 +277,8 @@ class _Resultado extends ConsumerWidget {
           ),
         ),
         DecoratedBox(
-          decoration: const BoxDecoration(
-            border: Border(top: BorderSide(color: AppColors.lavandaClaro)),
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: context.cores.borda)),
           ),
           child: SafeArea(
             top: false,
@@ -436,7 +437,7 @@ class _CartaoDaAmostra extends ConsumerWidget {
     final textos = Theme.of(context).textTheme;
     final audios = ref.watch(amostrasDaAnaliseProvider(resultado.id));
     final secundario = textos.bodySmall?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
 
     final amostras = Column(
@@ -476,8 +477,8 @@ class _CartaoDaAmostra extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.branco,
-        border: Border.all(color: AppColors.lavandaClaro),
+        color: context.cores.cartao,
+        border: Border.all(color: context.cores.borda),
         borderRadius: AppRadius.bordaMedia,
       ),
       child: LayoutBuilder(
@@ -603,7 +604,7 @@ class _CartaoDaMedida extends StatelessWidget {
     final valor = lida.valor;
     final faixa = lida.faixa;
     final secundario = textos.bodySmall?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
 
     final motivo = lida.semClassificacaoPorque;
@@ -614,8 +615,8 @@ class _CartaoDaMedida extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(destaque ? AppSpacing.lg : AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.branco,
-        border: Border.all(color: AppColors.lavandaClaro),
+        color: context.cores.cartao,
+        border: Border.all(color: context.cores.borda),
         borderRadius: AppRadius.bordaMedia,
       ),
       child: Column(
@@ -640,7 +641,7 @@ class _CartaoDaMedida extends StatelessWidget {
                       : (destaque
                                 ? AppTypography.medidaDestaque
                                 : AppTypography.medida)
-                            .copyWith(color: AppColors.cinzaChumbo),
+                            .copyWith(color: context.cores.texto),
                 ),
                 if (valor != null && medida.unidade.isNotEmpty)
                   Text(medida.unidade, style: textos.bodyMedium),
@@ -661,9 +662,9 @@ class _CartaoDaMedida extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const AppIcone(
+                AppIcone(
                   nome: NomeIcone.informacao,
-                  cor: AppColors.secundarioSobreCreme,
+                  cor: context.cores.secundario,
                   tamanho: 16,
                 ),
                 const SizedBox(width: AppSpacing.xxs),
@@ -700,7 +701,7 @@ class _ResumoCapeV extends StatelessWidget {
   Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
     final secundario = textos.bodyMedium?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
     final avaliacao = this.avaliacao;
     // Registrar ou editar fica nas ações da tela — ver `_Acoes`.
@@ -754,7 +755,7 @@ class _Espectrograma extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final secundario = Theme.of(context).textTheme.bodyMedium
-        ?.copyWith(color: AppColors.secundarioSobreCreme);
+        ?.copyWith(color: context.cores.secundario);
     final endereco = url;
     if (endereco == null) {
       return Text(
@@ -765,14 +766,18 @@ class _Espectrograma extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ClipRRect(
-          borderRadius: AppRadius.bordaMedia,
-          child: Image(
-            image: ref.watch(imagemDoServidorProvider)(endereco),
-            semanticLabel: AppStrings.resultadoEspectrogramaDescricao,
-            fit: BoxFit.fitWidth,
-            errorBuilder: (_, _, _) =>
-                Text(AppStrings.resultadoEspectrogramaErro, style: secundario),
+        AppMolduraDeImagem(
+          child: ClipRRect(
+            borderRadius: AppRadius.bordaMedia,
+            child: Image(
+              image: ref.watch(imagemDoServidorProvider)(endereco),
+              semanticLabel: AppStrings.resultadoEspectrogramaDescricao,
+              fit: BoxFit.fitWidth,
+              errorBuilder: (_, _, _) => Text(
+                AppStrings.resultadoEspectrogramaErro,
+                style: secundario,
+              ),
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.sm),

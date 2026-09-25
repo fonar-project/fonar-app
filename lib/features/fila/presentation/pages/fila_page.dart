@@ -6,7 +6,7 @@ import '../../../../app/app_estrutura.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/network/conexao.dart';
 import '../../../../design_system/breakpoints.dart';
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
@@ -54,8 +54,8 @@ class FilaPage extends ConsumerWidget {
               online: online,
               compacta: compacta,
             ),
-            _ => const Center(
-              child: CircularProgressIndicator(color: AppColors.roxoProfundo),
+            _ => Center(
+              child: CircularProgressIndicator(color: context.cores.acento),
             ),
           };
 
@@ -118,7 +118,7 @@ class _Lista extends StatelessWidget {
                 child: Text(
                   AppStrings.filaResumo(pendentes),
                   style: Theme.of(context).textTheme.bodySmall
-                      ?.copyWith(color: AppColors.secundarioSobreCreme),
+                      ?.copyWith(color: context.cores.secundario),
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -231,7 +231,7 @@ class _CartaoDoEnvio extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.lavandaClaro),
+        border: Border.all(color: context.cores.borda),
         borderRadius: AppRadius.bordaMedia,
       ),
       child: Column(
@@ -244,9 +244,7 @@ class _CartaoDoEnvio extends ConsumerWidget {
               item.amostras.length,
               '${AppStrings.data(item.criadoEm)}, ${AppStrings.hora(item.criadoEm)}',
             ),
-            style: textos.bodySmall?.copyWith(
-              color: AppColors.secundarioSobreCreme,
-            ),
+            style: textos.bodySmall?.copyWith(color: context.cores.secundario),
           ),
           const SizedBox(height: AppSpacing.md),
           AppSituacao(icone: icone, titulo: titulo, texto: texto),

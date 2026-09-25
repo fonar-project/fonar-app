@@ -7,6 +7,7 @@ import '../../../../app/router/trilhas.dart';
 import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
@@ -74,8 +75,8 @@ class ConsentimentoPage extends ConsumerWidget {
                 ),
               );
             } else if (!paciente.hasValue || !consentimento.hasValue) {
-              conteudo = const Center(
-                child: CircularProgressIndicator(color: AppColors.roxoProfundo),
+              conteudo = Center(
+                child: CircularProgressIndicator(color: context.cores.acento),
               );
             } else if (paciente.value case final encontrado?) {
               conteudo = _Rolagem(
@@ -316,9 +317,7 @@ class _FormularioState extends ConsumerState<_Formulario> {
         const SizedBox(height: AppSpacing.lg),
         Text(
           AppStrings.consentimentoMostreAoPaciente,
-          style: textos.bodySmall?.copyWith(
-            color: AppColors.secundarioSobreCreme,
-          ),
+          style: textos.bodySmall?.copyWith(color: context.cores.secundario),
         ),
         const SizedBox(height: AppSpacing.xs),
         const _Termo(),
@@ -387,7 +386,7 @@ class _FormularioState extends ConsumerState<_Formulario> {
         ),
         AppMensagemDeCampo(
           erro: estado.erroGeral,
-          corDoApoio: AppColors.secundarioSobreCreme,
+          corDoApoio: context.cores.secundario,
         ),
       ],
     );
@@ -405,8 +404,8 @@ class _Termo extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md + 2),
       decoration: BoxDecoration(
-        color: AppColors.lavandaSuave,
-        border: Border.all(color: AppColors.lavandaClaro),
+        color: context.cores.suave,
+        border: Border.all(color: context.cores.borda),
         borderRadius: AppRadius.bordaMedia,
       ),
       child: AppFundo(
