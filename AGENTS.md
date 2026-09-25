@@ -80,7 +80,7 @@ Estas não são preferência, são decisão fechada. Não proponha alternativa:
 - **Áudio de voz é dado pessoal sensível pela LGPD.** Captura fica bloqueada
   tecnicamente — no roteador — enquanto não houver consentimento registrado.
 - Stack: Flutter/Dart, Riverpod sem code generation, go_router, Dio, Drift,
-  fl_chart, record, just_audio. Backend Firebase + API Python no Cloud Run.
+  fl_chart, record, audioplayers. Backend Firebase + API Python no Cloud Run.
   Nenhum pacote novo sem justificativa explícita.
 - Estrutura: `lib/features/<funcionalidade>/` em data, domain e presentation.
   Widget não tem lógica de negócio. Texto de interface em pt-BR, centralizado

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/reprodutor_just_audio.dart';
+import '../data/reprodutor_audioplayers.dart';
 import '../domain/reprodutor.dart';
 
 /// O que está tocando na tela — uma gravação por vez.

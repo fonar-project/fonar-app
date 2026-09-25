@@ -23,7 +23,7 @@ import 'package:fonar_app/features/fila/domain/item_da_fila.dart';
 import 'package:fonar_app/features/historico/domain/evolucao_da_medida.dart';
 import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_local.dart';
 import 'package:fonar_app/features/pacientes/domain/paciente.dart';
-import 'package:fonar_app/features/reproducao/data/reprodutor_just_audio.dart';
+import 'package:fonar_app/features/reproducao/data/reprodutor_audioplayers.dart';
 import 'package:fonar_app/features/reproducao/domain/reprodutor.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 import 'package:go_router/go_router.dart';

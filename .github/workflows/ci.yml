@@ -5,6 +5,7 @@
 #   `flutter test` roda só Dart e nunca invoca o MSVC — quebra de compilação
 #   nativa passa pelos testes inteirinha, como já passou duas vezes (ATL
 #   faltando e `just_audio_windows` contra o MSVC do Visual Studio 2026).
+#   As duas estão resolvidas; o job fica porque é o único que compila nativo.
 #
 # A versão do Flutter é a mesma da máquina de referência documentada no README.
 # Se atualizar o Flutter do projeto, atualize os três lugares juntos: os dois
@@ -113,7 +114,13 @@ jobs:
 
   build-windows:
     name: Build nativo do Windows
-    runs-on: windows-2025
+    # Voltou para a imagem corrente em 24/09/2026. Ela traz o Visual Studio
+    # 2026 (MSVC 14.51), e é justamente disso que se precisa: o plugin que
+    # não compilava lá, o `just_audio_windows`, saiu do projeto — quem toca
+    # o WAV agora é o `audioplayers`, que pede C++20 e não usa o
+    # `<experimental/coroutine>`. Fixar a imagem escondia a regressão em vez
+    # de acusá-la.
+    runs-on: windows-latest
 
     steps:
       - name: Checkout

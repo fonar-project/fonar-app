@@ -11,7 +11,7 @@ import 'package:fonar_app/features/captura/domain/fonte_de_nivel.dart';
 import 'package:fonar_app/features/captura/domain/gravador.dart';
 import 'package:fonar_app/features/captura/presentation/afericao_controlador.dart';
 import 'package:fonar_app/features/captura/presentation/gravacao_controlador.dart';
-import 'package:fonar_app/features/reproducao/data/reprodutor_just_audio.dart';
+import 'package:fonar_app/features/reproducao/data/reprodutor_audioplayers.dart';
 import 'package:fonar_app/features/reproducao/domain/reprodutor.dart';
 import 'package:fonar_app/features/reproducao/presentation/reproducao_controlador.dart';
 

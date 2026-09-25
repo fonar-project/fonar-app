@@ -113,7 +113,7 @@ aqui.
 | Gradle | 9.3.1 (via wrapper, baixado sozinho no primeiro build) |
 | Android Gradle Plugin | 9.1.0 |
 | Kotlin | 2.4.0 |
-| Visual Studio | **Community 2022** 17.14.37710.0, com a carga de C++, o componente ATL e o Windows 10 SDK 10.0.26100.0 |
+| Visual Studio | Community 2022 17.14.37710.0, com a carga de C++, o componente ATL e o Windows 10 SDK 10.0.26100.0. É o que está na máquina de referência; a 2026 também serve desde 24/09/2026 |
 
 O projeto compila para `minSdk 24`, `targetSdk 36` e `compileSdk 36` — valores
 herdados do Flutter, não fixados à mão em `android/app/build.gradle.kts`.
@@ -125,15 +125,15 @@ Android Studio já resolve — não instale outro Java só por causa disto.
 
 ### Para build Windows: leia isto antes de tentar
 
-**Você precisa do Visual Studio Community 2022** — essa versão, não a mais
-recente — **com duas coisas marcadas:**
+**Você precisa do Visual Studio** — a Community serve, e qualquer versão
+corrente também — **com duas coisas marcadas:**
 
 - a carga de trabalho **"Desenvolvimento para desktop com C++"**
   (*Desktop development with C++*);
 - dentro dela, o componente **"ATL do C++ para as ferramentas de build v143
   mais recentes"** (*C++ ATL for latest v143 build tools*).
 
-Este é o passo que mais trava quem chega no projeto, por cinco motivos:
+Este é o passo que mais trava quem chega no projeto, por quatro motivos:
 
 1. **Não é o VS Code.** Visual Studio e Visual Studio Code são produtos
    diferentes, de nomes parecidos. Ter o VS Code instalado não ajuda em nada
@@ -153,37 +153,31 @@ Este é o passo que mais trava quem chega no projeto, por cinco motivos:
    sobre ATL, então não é óbvio o que marcar.
    No *Visual Studio Installer* → *Modificar* → aba **Componentes
    individuais**, busque por `ATL` e marque a opção de v143 mais recente.
-5. **Não use o Visual Studio 2026.** Explicado logo abaixo; é a armadilha nova
-   e a mais cara de descobrir sozinho.
-
 Se preferir o **Build Tools for Visual Studio**, a mesma cadeia de compilação
-sem a IDE, tem que ser o **Build Tools 2022** — com a mesma carga de C++ e o
-mesmo componente ATL. Atenção: o que a Microsoft oferece hoje na página de
-download é o **Build Tools 2026**, e esse quebra o build. Baixe pelo arquivo
-de versões anteriores, ou vá de Community 2022, que é o que está na máquina de
-referência.
+sem a IDE, serve igual — com a mesma carga de C++ e o mesmo componente ATL.
 
 Confirme com `flutter doctor -v`: a linha de Visual Studio precisa estar com
-`[√]` **e dizer "Community 2022"**.
+`[√]`.
 
-#### O Visual Studio 2026 quebra o build, e o Flutter escolhe sozinho
+> **Mudou em 24/09/2026.** Até essa data o projeto exigia o Community 2022,
+> especificamente, porque o `just_audio_windows` não compilava no MSVC 14.51
+> do Visual Studio 2026. Esse plugin saiu do projeto — quem toca as gravações
+> agora é o `audioplayers` — e a restrição de versão morreu junto. Se você
+> tinha removido a instalação de 2026 por causa do FONAR, pode trazê-la de
+> volta.
 
-O Build Tools do Visual Studio 2026 traz o MSVC 14.51, e ele **não compila o
-`just_audio_windows`**: o plugin inclui `<experimental/coroutine>`, um header
-obsoleto que a Microsoft transformou em erro nessa versão do compilador. O
-Visual Studio Community 2022 (MSVC 14.44) compila normalmente. O plugin é o que
-toca as gravações no Windows, então não dá para simplesmente tirar — está
-registrado como dívida técnica no `CLAUDE.md`.
+#### O Flutter escolhe sozinho qual Visual Studio usar
 
-E tem o agravante: **o Flutter escolhe sozinho a instalação mais recente do
-Visual Studio, e não oferece opção de trocar.** Não existe flag de linha de
-comando nem variável de ambiente para apontar qual usar. Quem tiver as duas
-instaladas vai ver o build quebrar pela 2026 mesmo tendo a 2022 completa do
-lado — e o erro não diz nada sobre escolha de toolchain.
+Vale saber, porque continua valendo: **o Flutter pega a instalação mais recente
+do Visual Studio e não oferece opção de trocar.** Não existe flag de linha de
+comando nem variável de ambiente para apontar qual usar. Com duas instalações
+na máquina, é sempre a mais nova que compila, e nenhuma mensagem de erro diz
+isso. Quando o build quebrar de um jeito que não faz sentido, o
+`flutter doctor -v` é o que revela qual instalação ele enxergou.
 
-A saída, nesse caso, é abrir o *Visual Studio Installer* e remover a
-instalação de 2026, ou ao menos a carga de C++ dela. Depois confira no
-`flutter doctor -v` qual instalação ele passou a enxergar.
+Hoje isso não derruba o build — foi problema enquanto o `just_audio_windows`
+existia aqui, e ele saiu. Fica o registro para o dia em que algum outro plugin
+implicar com uma versão de compilador.
 
 Nada disso aparece em `flutter test`: os testes rodam em Dart e nunca compilam
 código nativo. Quebra de build só aparece em `flutter build windows` — por isso
@@ -284,15 +278,15 @@ Existe porque **os testes não pegam quebra de compilação nativa, e nunca vão
 pegar**: `flutter test` roda Dart, no Ubuntu, sem chamar o MSVC uma vez
 sequer. A suíte inteira passa verde com o build do Windows em frangalhos — foi
 o que aconteceu com o ATL faltando e com o `just_audio_windows` contra o
-compilador do Visual Studio 2026, as duas armadilhas descritas nos
-pré-requisitos. Compilar de verdade, numa máquina Windows, é o único jeito de
-enxergar isso antes do usuário.
+compilador do Visual Studio 2026. Compilar de verdade, numa máquina Windows, é
+o único jeito de enxergar isso antes do usuário.
 
-A imagem `windows-latest` do GitHub traz hoje o Visual Studio 2022 com a carga
-de C++ e o ATL, que é a combinação de que o projeto precisa. Se um dia ela passar
-a trazer o 2026, este job quebra no `just_audio_windows` sem ninguém ter tocado
-no código — aí fixe a imagem em `windows-2025`. O passo `flutter doctor -v` do
-job está lá justamente para o log dizer qual Visual Studio foi usado.
+A imagem voltou a ser a `windows-latest` em 24/09/2026. Ela tinha sido fixada
+em `windows-2025` porque a corrente passou a trazer o Visual Studio 2026, que
+não compilava o `just_audio_windows`; com esse plugin fora do projeto, fixar a
+imagem só serviria para esconder regressão em vez de acusá-la — que é o motivo
+de o job existir. O passo `flutter doctor -v` está lá justamente para o log
+dizer qual Visual Studio foi usado.
 
 Ao subir a versão do Flutter, mude nos três lugares: na tabela de
 pré-requisitos e nos dois `flutter-version` do workflow, um por job. Se
