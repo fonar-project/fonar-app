@@ -40,6 +40,13 @@ abstract final class AppStrings {
   static const consentimentoTitulo = 'Consentimento';
   static const capturaTitulo = 'Gravação';
   static const analiseResultadoTitulo = 'Resultado da análise';
+
+  // Pílulas de situação no cabeçalho das telas de tarefa, no desktop.
+  static const situacaoApoioADecisao = 'Apoio à decisão — não é diagnóstico';
+  static const situacaoCapeV = 'Registro perceptivo — não é diagnóstico';
+  static const situacaoLaudo = 'Apoio à decisão — o laudo é do profissional';
+  static const situacaoConsentimentoRegistrado = 'Consentimento registrado';
+  static const situacaoFila = 'Gravado no aparelho — nada se perde sem conexão';
   static const historicoTitulo = 'Histórico';
   static const historicoDescricao =
       'Todas as avaliações feitas neste aparelho, da mais recente para a mais '

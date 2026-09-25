@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/trilhas.dart';
+import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_colors.dart';
 import '../../../../design_system/tokens/app_radius.dart';
@@ -71,49 +73,68 @@ class CapeVPage extends ConsumerWidget {
       ref.invalidate(capeVControladorProvider(analiseId));
     }
 
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, restricoes) {
-          final compacta =
-              Breakpoints.de(restricoes.maxWidth) == LarguraDeTela.compacta;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AppCabecalhoDeTarefa(
-                titulo: AppStrings.capeVTitulo,
-                aoVoltar: () => _voltar(context),
-                compacta: compacta,
-              ),
-              Expanded(
-                child: switch ((analise, estado)) {
-                  // A análise precisa ser deste paciente — ver `daPaciente`.
-                  (AsyncError(:final error), _)
-                      when error is AnaliseDeOutroPaciente =>
-                    AvisoDeOutroPaciente(aoVoltar: () => _voltar(context)),
-                  (AsyncError(), _) || (_, AsyncError()) => AppEstado.central(
-                    titulo: AppStrings.capeVErroCarregar,
-                    acao: AppBotao.secundario(
-                      rotulo: AppStrings.tentarNovamente,
-                      aoTocar: tentarDeNovo,
+    final nomeDoPaciente = ref.watch(pacienteProvider(pacienteId)).value?.nome;
+    return AppEstrutura(
+      destino: DestinoPrincipal.pacientes,
+      navegacaoInferior: false,
+      child: Scaffold(
+        body: LayoutBuilder(
+          builder: (context, restricoes) {
+            final largura = Breakpoints.de(restricoes.maxWidth);
+            final compacta = largura == LarguraDeTela.compacta;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AppCabecalhoDeTarefa(
+                  titulo: AppStrings.capeVTitulo,
+                  aoVoltar: () => _voltar(context),
+                  largura: largura,
+                  trilha: [
+                    ...Trilhas.doPaciente(
+                      context,
+                      pacienteId: pacienteId,
+                      nome: nomeDoPaciente,
                     ),
-                  ),
-                  (AsyncData(), AsyncData(:final value)) => _Formulario(
-                    pacienteId: pacienteId,
-                    analiseId: analiseId,
-                    estado: value,
-                    compacta: compacta,
-                    aoRegistrar: () => _voltar(context),
-                  ),
-                  _ => const Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.roxoProfundo,
+                    Trilhas.resultado(
+                      context,
+                      pacienteId: pacienteId,
+                      analiseId: analiseId,
                     ),
-                  ),
-                },
-              ),
-            ],
-          );
-        },
+                    ItemDaTrilha(AppStrings.capeVTitulo),
+                  ],
+                  situacao: AppStrings.situacaoCapeV,
+                ),
+                Expanded(
+                  child: switch ((analise, estado)) {
+                    // A análise precisa ser deste paciente — ver `daPaciente`.
+                    (AsyncError(:final error), _)
+                        when error is AnaliseDeOutroPaciente =>
+                      AvisoDeOutroPaciente(aoVoltar: () => _voltar(context)),
+                    (AsyncError(), _) || (_, AsyncError()) => AppEstado.central(
+                      titulo: AppStrings.capeVErroCarregar,
+                      acao: AppBotao.secundario(
+                        rotulo: AppStrings.tentarNovamente,
+                        aoTocar: tentarDeNovo,
+                      ),
+                    ),
+                    (AsyncData(), AsyncData(:final value)) => _Formulario(
+                      pacienteId: pacienteId,
+                      analiseId: analiseId,
+                      estado: value,
+                      compacta: compacta,
+                      aoRegistrar: () => _voltar(context),
+                    ),
+                    _ => const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.roxoProfundo,
+                      ),
+                    ),
+                  },
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

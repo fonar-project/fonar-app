@@ -70,8 +70,10 @@ enum DestinoPrincipal {
 /// Vale sem exceção, inclusive para as telas de andaime: a `TelaPlaceholder`
 /// recebe o `destino` e se embrulha sozinha.
 ///
-/// O motivo é que a maioria das telas NÃO tem navegação: gravação, revisão e
-/// CAPE-V ocupam a tela inteira, e o login vem antes de haver navegação. Com o
+/// O motivo é que as telas não têm todas a mesma navegação: as de tarefa —
+/// perfil, gravação, resultado, CAPE-V — ficam ao lado da barra lateral no
+/// desktop, como no protótipo, mas ocupam a tela inteira no celular
+/// ([navegacaoInferior] falso); o login vem antes de haver navegação. Com o
 /// roteador embrulhando, a lista de quem fica de fora vira uma lista de
 /// exceções espalhada pelas rotas, longe da tela que ela descreve. Aqui basta
 /// abrir a tela para saber a resposta.
@@ -80,36 +82,48 @@ enum DestinoPrincipal {
 /// documentação dizia o contrário. As duas convenções funcionam; ter as duas
 /// ao mesmo tempo é que não.
 class AppEstrutura extends StatelessWidget {
-  const AppEstrutura({required this.destino, required this.child, super.key});
+  const AppEstrutura({
+    required this.destino,
+    required this.child,
+    this.navegacaoInferior = true,
+    super.key,
+  });
 
   /// Qual destino marcar como ativo.
   final DestinoPrincipal destino;
 
   final Widget child;
 
+  /// Abas embaixo fora do desktop. Falso nas telas de tarefa: no celular elas
+  /// ocupam a tela inteira, com o próprio voltar, e [child] aparece sozinho.
+  final bool navegacaoInferior;
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, restricoes) {
-          if (Breakpoints.de(restricoes.maxWidth) == LarguraDeTela.expandida) {
-            return Row(
+    return LayoutBuilder(
+      builder: (context, restricoes) {
+        if (Breakpoints.de(restricoes.maxWidth) == LarguraDeTela.expandida) {
+          return Scaffold(
+            body: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _BarraLateral(ativo: destino),
                 Expanded(child: SafeArea(left: false, child: child)),
               ],
-            );
-          }
-          return Column(
+            ),
+          );
+        }
+        if (!navegacaoInferior) return child;
+        return Scaffold(
+          body: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(child: child),
               _BarraInferior(ativo: destino),
             ],
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

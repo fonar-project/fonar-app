@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/trilhas.dart';
+import '../../../../app/app_estrutura.dart';
 import '../../../../core/relogio.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_colors.dart';
@@ -58,48 +60,58 @@ class PacienteDetalhePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final paciente = ref.watch(pacienteProvider(pacienteId));
 
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, restricoes) {
-          final largura = Breakpoints.de(restricoes.maxWidth);
+    return AppEstrutura(
+      destino: DestinoPrincipal.pacientes,
+      navegacaoInferior: false,
+      child: Scaffold(
+        body: LayoutBuilder(
+          builder: (context, restricoes) {
+            final largura = Breakpoints.de(restricoes.maxWidth);
 
-          final Widget conteudo = switch (paciente) {
-            AsyncData(value: final p?) => _Perfil(
-              paciente: p,
-              largura: largura,
-            ),
-            AsyncData() => AppEstado.central(
-              titulo: AppStrings.perfilNaoEncontrado,
-              texto: AppStrings.perfilNaoEncontradoTexto,
-              acao: AppBotao.secundario(
-                rotulo: AppStrings.perfilVoltarParaLista,
-                aoTocar: () => context.goNamed(AppRoutes.pacientesNome),
+            final Widget conteudo = switch (paciente) {
+              AsyncData(value: final p?) => _Perfil(
+                paciente: p,
+                largura: largura,
               ),
-            ),
-            AsyncError() => AppEstado.central(
-              titulo: AppStrings.perfilErroCarregar,
-              acao: AppBotao.secundario(
-                rotulo: AppStrings.tentarNovamente,
-                aoTocar: () => ref.invalidate(pacientesProvider),
+              AsyncData() => AppEstado.central(
+                titulo: AppStrings.perfilNaoEncontrado,
+                texto: AppStrings.perfilNaoEncontradoTexto,
+                acao: AppBotao.secundario(
+                  rotulo: AppStrings.perfilVoltarParaLista,
+                  aoTocar: () => context.goNamed(AppRoutes.pacientesNome),
+                ),
               ),
-            ),
-            _ => const Center(
-              child: CircularProgressIndicator(color: AppColors.roxoProfundo),
-            ),
-          };
+              AsyncError() => AppEstado.central(
+                titulo: AppStrings.perfilErroCarregar,
+                acao: AppBotao.secundario(
+                  rotulo: AppStrings.tentarNovamente,
+                  aoTocar: () => ref.invalidate(pacientesProvider),
+                ),
+              ),
+              _ => const Center(
+                child: CircularProgressIndicator(color: AppColors.roxoProfundo),
+              ),
+            };
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AppCabecalhoDeTarefa(
-                titulo: AppStrings.pacienteDetalheTitulo,
-                aoVoltar: () => _voltar(context),
-                compacta: largura == LarguraDeTela.compacta,
-              ),
-              Expanded(child: conteudo),
-            ],
-          );
-        },
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AppCabecalhoDeTarefa(
+                  titulo: AppStrings.pacienteDetalheTitulo,
+                  aoVoltar: () => _voltar(context),
+                  largura: largura,
+                  trilha: [
+                    Trilhas.pacientes(context),
+                    ItemDaTrilha(
+                      paciente.value?.nome ?? AppStrings.pacienteDetalheTitulo,
+                    ),
+                  ],
+                ),
+                Expanded(child: conteudo),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

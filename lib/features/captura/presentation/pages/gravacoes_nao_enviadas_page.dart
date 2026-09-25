@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/trilhas.dart';
+import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_colors.dart';
 import '../../../../design_system/tokens/app_radius.dart';
@@ -47,83 +49,95 @@ class GravacoesNaoEnviadasPage extends ConsumerWidget {
     final paciente = ref.watch(pacienteProvider(pacienteId)).value;
     final textos = Theme.of(context).textTheme;
 
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, restricoes) {
-          final compacta =
-              Breakpoints.de(restricoes.maxWidth) == LarguraDeTela.compacta;
+    return AppEstrutura(
+      destino: DestinoPrincipal.pacientes,
+      navegacaoInferior: false,
+      child: Scaffold(
+        body: LayoutBuilder(
+          builder: (context, restricoes) {
+            final largura = Breakpoints.de(restricoes.maxWidth);
+            final compacta = largura == LarguraDeTela.compacta;
 
-          final Widget conteudo = switch (sessoes) {
-            AsyncData(value: final lista) when lista.isEmpty =>
-              AppEstado.central(
-                titulo: AppStrings.naoEnviadasVazia,
-                acao: AppBotao.secundario(
-                  rotulo: AppStrings.retiradaVoltarAoPaciente,
-                  aoTocar: () => _voltar(context),
+            final Widget conteudo = switch (sessoes) {
+              AsyncData(value: final lista) when lista.isEmpty =>
+                AppEstado.central(
+                  titulo: AppStrings.naoEnviadasVazia,
+                  acao: AppBotao.secundario(
+                    rotulo: AppStrings.retiradaVoltarAoPaciente,
+                    aoTocar: () => _voltar(context),
+                  ),
                 ),
-              ),
-            AsyncData(value: final lista) => SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: compacta ? AppSpacing.md : AppSpacing.xl,
-                vertical: AppSpacing.lg,
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 640),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (paciente != null)
+              AsyncData(value: final lista) => SingleChildScrollView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: compacta ? AppSpacing.md : AppSpacing.xl,
+                  vertical: AppSpacing.lg,
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 640),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (paciente != null)
+                          Text(
+                            AppStrings.consentimentoPaciente(paciente.nome),
+                            style: textos.titleMedium,
+                          ),
+                        const SizedBox(height: AppSpacing.xs),
                         Text(
-                          AppStrings.consentimentoPaciente(paciente.nome),
-                          style: textos.titleMedium,
+                          AppStrings.naoEnviadasExplicacao,
+                          style: textos.bodyMedium?.copyWith(
+                            color: AppColors.secundarioSobreCreme,
+                          ),
                         ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        AppStrings.naoEnviadasExplicacao,
-                        style: textos.bodyMedium?.copyWith(
-                          color: AppColors.secundarioSobreCreme,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      for (final sessao in lista) ...[
-                        _CartaoDaSessao(
-                          pacienteId: pacienteId,
-                          nomeDoPaciente: paciente?.nome ?? '',
-                          sessao: sessao,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
+                        const SizedBox(height: AppSpacing.lg),
+                        for (final sessao in lista) ...[
+                          _CartaoDaSessao(
+                            pacienteId: pacienteId,
+                            nomeDoPaciente: paciente?.nome ?? '',
+                            sessao: sessao,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            AsyncError() => AppEstado.central(
-              titulo: AppStrings.naoEnviadasErroCarregar,
-              acao: AppBotao.secundario(
-                rotulo: AppStrings.tentarNovamente,
-                aoTocar: () =>
-                    ref.invalidate(sessoesNaoEnviadasProvider(pacienteId)),
+              AsyncError() => AppEstado.central(
+                titulo: AppStrings.naoEnviadasErroCarregar,
+                acao: AppBotao.secundario(
+                  rotulo: AppStrings.tentarNovamente,
+                  aoTocar: () =>
+                      ref.invalidate(sessoesNaoEnviadasProvider(pacienteId)),
+                ),
               ),
-            ),
-            _ => const Center(
-              child: CircularProgressIndicator(color: AppColors.roxoProfundo),
-            ),
-          };
+              _ => const Center(
+                child: CircularProgressIndicator(color: AppColors.roxoProfundo),
+              ),
+            };
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AppCabecalhoDeTarefa(
-                titulo: AppStrings.naoEnviadasTitulo,
-                aoVoltar: () => _voltar(context),
-                compacta: compacta,
-              ),
-              Expanded(child: conteudo),
-            ],
-          );
-        },
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AppCabecalhoDeTarefa(
+                  titulo: AppStrings.naoEnviadasTitulo,
+                  aoVoltar: () => _voltar(context),
+                  largura: largura,
+                  trilha: [
+                    ...Trilhas.doPaciente(
+                      context,
+                      pacienteId: pacienteId,
+                      nome: paciente?.nome,
+                    ),
+                    ItemDaTrilha(AppStrings.naoEnviadasTitulo),
+                  ],
+                ),
+                Expanded(child: conteudo),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

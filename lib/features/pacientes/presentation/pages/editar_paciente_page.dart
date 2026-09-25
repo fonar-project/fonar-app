@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/trilhas.dart';
+import '../../../../app/app_estrutura.dart';
 import '../../../../app/router/saida_protegida.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_colors.dart';
@@ -36,63 +38,75 @@ class EditarPacientePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final paciente = ref.watch(pacienteProvider(pacienteId));
 
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, restricoes) {
-          final compacta =
-              Breakpoints.de(restricoes.maxWidth) == LarguraDeTela.compacta;
+    return AppEstrutura(
+      destino: DestinoPrincipal.pacientes,
+      navegacaoInferior: false,
+      child: Scaffold(
+        body: LayoutBuilder(
+          builder: (context, restricoes) {
+            final largura = Breakpoints.de(restricoes.maxWidth);
+            final compacta = largura == LarguraDeTela.compacta;
 
-          final Widget conteudo = switch (paciente) {
-            AsyncData(value: final p?) when p.exemplo => AppEstado.central(
-              titulo: AppStrings.edicaoExemplo,
-              acao: AppBotao.secundario(
-                rotulo: AppStrings.retiradaVoltarAoPaciente,
-                aoTocar: () => _voltar(context, pacienteId),
-              ),
-            ),
-            AsyncData(value: final p?) => SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: compacta ? AppSpacing.md : AppSpacing.xl,
-                vertical: AppSpacing.lg,
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 560),
-                  child: _Formulario(paciente: p),
+            final Widget conteudo = switch (paciente) {
+              AsyncData(value: final p?) when p.exemplo => AppEstado.central(
+                titulo: AppStrings.edicaoExemplo,
+                acao: AppBotao.secundario(
+                  rotulo: AppStrings.retiradaVoltarAoPaciente,
+                  aoTocar: () => _voltar(context, pacienteId),
                 ),
               ),
-            ),
-            AsyncData() => AppEstado.central(
-              titulo: AppStrings.consentimentoPacienteNaoEncontrado,
-              acao: AppBotao.secundario(
-                rotulo: AppStrings.consentimentoVoltarParaLista,
-                aoTocar: () => context.goNamed(AppRoutes.pacientesNome),
+              AsyncData(value: final p?) => SingleChildScrollView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: compacta ? AppSpacing.md : AppSpacing.xl,
+                  vertical: AppSpacing.lg,
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 560),
+                    child: _Formulario(paciente: p),
+                  ),
+                ),
               ),
-            ),
-            AsyncError() => AppEstado.central(
-              titulo: AppStrings.perfilErroCarregar,
-              acao: AppBotao.secundario(
-                rotulo: AppStrings.tentarNovamente,
-                aoTocar: () => ref.invalidate(pacientesProvider),
+              AsyncData() => AppEstado.central(
+                titulo: AppStrings.consentimentoPacienteNaoEncontrado,
+                acao: AppBotao.secundario(
+                  rotulo: AppStrings.consentimentoVoltarParaLista,
+                  aoTocar: () => context.goNamed(AppRoutes.pacientesNome),
+                ),
               ),
-            ),
-            _ => const Center(
-              child: CircularProgressIndicator(color: AppColors.roxoProfundo),
-            ),
-          };
+              AsyncError() => AppEstado.central(
+                titulo: AppStrings.perfilErroCarregar,
+                acao: AppBotao.secundario(
+                  rotulo: AppStrings.tentarNovamente,
+                  aoTocar: () => ref.invalidate(pacientesProvider),
+                ),
+              ),
+              _ => const Center(
+                child: CircularProgressIndicator(color: AppColors.roxoProfundo),
+              ),
+            };
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AppCabecalhoDeTarefa(
-                titulo: AppStrings.edicaoTitulo,
-                aoVoltar: () => _voltar(context, pacienteId),
-                compacta: compacta,
-              ),
-              Expanded(child: conteudo),
-            ],
-          );
-        },
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AppCabecalhoDeTarefa(
+                  titulo: AppStrings.edicaoTitulo,
+                  aoVoltar: () => _voltar(context, pacienteId),
+                  largura: largura,
+                  trilha: [
+                    ...Trilhas.doPaciente(
+                      context,
+                      pacienteId: pacienteId,
+                      nome: paciente.value?.nome,
+                    ),
+                    ItemDaTrilha(AppStrings.edicaoTitulo),
+                  ],
+                ),
+                Expanded(child: conteudo),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

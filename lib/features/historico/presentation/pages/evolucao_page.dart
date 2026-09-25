@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/trilhas.dart';
+import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_colors.dart';
 import '../../../../design_system/tokens/app_radius.dart';
@@ -61,54 +63,66 @@ class EvolucaoPage extends ConsumerWidget {
     final analises = ref.watch(analisesDoPacienteProvider(pacienteId));
     final paciente = ref.watch(pacienteProvider(pacienteId)).value;
 
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, restricoes) {
-          final compacta =
-              Breakpoints.de(restricoes.maxWidth) == LarguraDeTela.compacta;
+    return AppEstrutura(
+      destino: DestinoPrincipal.pacientes,
+      navegacaoInferior: false,
+      child: Scaffold(
+        body: LayoutBuilder(
+          builder: (context, restricoes) {
+            final largura = Breakpoints.de(restricoes.maxWidth);
+            final compacta = largura == LarguraDeTela.compacta;
 
-          final Widget conteudo = switch (analises) {
-            AsyncData(:final value) => switch (sessoesAnalisadas(value)) {
-              [] => AppEstado.central(
-                titulo: AppStrings.evolucaoVaziaTitulo,
-                texto: AppStrings.evolucaoVaziaTexto,
+            final Widget conteudo = switch (analises) {
+              AsyncData(:final value) => switch (sessoesAnalisadas(value)) {
+                [] => AppEstado.central(
+                  titulo: AppStrings.evolucaoVaziaTitulo,
+                  texto: AppStrings.evolucaoVaziaTexto,
+                  acao: AppBotao.secundario(
+                    rotulo: AppStrings.voltar,
+                    aoTocar: () => _voltar(context),
+                  ),
+                ),
+                final sessoes => _Evolucao(
+                  pacienteId: pacienteId,
+                  paciente: paciente,
+                  sessoes: sessoes,
+                  compacta: compacta,
+                ),
+              },
+              AsyncError() => AppEstado.central(
+                titulo: AppStrings.evolucaoErroCarregar,
                 acao: AppBotao.secundario(
-                  rotulo: AppStrings.voltar,
-                  aoTocar: () => _voltar(context),
+                  rotulo: AppStrings.tentarNovamente,
+                  aoTocar: () =>
+                      ref.invalidate(analisesDoPacienteProvider(pacienteId)),
                 ),
               ),
-              final sessoes => _Evolucao(
-                pacienteId: pacienteId,
-                paciente: paciente,
-                sessoes: sessoes,
-                compacta: compacta,
+              _ => const Center(
+                child: CircularProgressIndicator(color: AppColors.roxoProfundo),
               ),
-            },
-            AsyncError() => AppEstado.central(
-              titulo: AppStrings.evolucaoErroCarregar,
-              acao: AppBotao.secundario(
-                rotulo: AppStrings.tentarNovamente,
-                aoTocar: () =>
-                    ref.invalidate(analisesDoPacienteProvider(pacienteId)),
-              ),
-            ),
-            _ => const Center(
-              child: CircularProgressIndicator(color: AppColors.roxoProfundo),
-            ),
-          };
+            };
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AppCabecalhoDeTarefa(
-                titulo: AppStrings.evolucaoTitulo,
-                aoVoltar: () => _voltar(context),
-                compacta: compacta,
-              ),
-              Expanded(child: conteudo),
-            ],
-          );
-        },
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AppCabecalhoDeTarefa(
+                  titulo: AppStrings.evolucaoTitulo,
+                  aoVoltar: () => _voltar(context),
+                  largura: largura,
+                  trilha: [
+                    ...Trilhas.doPaciente(
+                      context,
+                      pacienteId: pacienteId,
+                      nome: paciente?.nome,
+                    ),
+                    ItemDaTrilha(AppStrings.evolucaoTitulo),
+                  ],
+                ),
+                Expanded(child: conteudo),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

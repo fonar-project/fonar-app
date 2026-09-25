@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/trilhas.dart';
+import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_colors.dart';
 import '../../../../design_system/tokens/app_radius.dart';
@@ -55,48 +57,61 @@ class CapturaPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final paciente = ref.watch(pacienteProvider(pacienteId)).value;
 
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, restricoes) {
-          final compacta =
-              Breakpoints.de(restricoes.maxWidth) == LarguraDeTela.compacta;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AppCabecalhoDeTarefa(
-                titulo: AppStrings.capturaTitulo,
-                aoVoltar: () => _voltar(context),
-                compacta: compacta,
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: compacta ? AppSpacing.md : AppSpacing.xl,
-                    vertical: AppSpacing.lg,
-                  ),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 640),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          if (paciente != null) ...[
-                            Text(
-                              AppStrings.consentimentoPaciente(paciente.nome),
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
+    return AppEstrutura(
+      destino: DestinoPrincipal.novaAvaliacao,
+      navegacaoInferior: false,
+      child: Scaffold(
+        body: LayoutBuilder(
+          builder: (context, restricoes) {
+            final largura = Breakpoints.de(restricoes.maxWidth);
+            final compacta = largura == LarguraDeTela.compacta;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AppCabecalhoDeTarefa(
+                  titulo: AppStrings.capturaTitulo,
+                  aoVoltar: () => _voltar(context),
+                  largura: largura,
+                  trilha: [
+                    ...Trilhas.doPaciente(
+                      context,
+                      pacienteId: pacienteId,
+                      nome: paciente?.nome,
+                    ),
+                    ItemDaTrilha(AppStrings.navNovaAvaliacao),
+                  ],
+                  situacao: AppStrings.situacaoConsentimentoRegistrado,
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: compacta ? AppSpacing.md : AppSpacing.xl,
+                      vertical: AppSpacing.lg,
+                    ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 640),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (paciente != null) ...[
+                              Text(
+                                AppStrings.consentimentoPaciente(paciente.nome),
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: AppSpacing.lg),
+                            ],
+                            _Afericao(pacienteId: pacienteId),
                           ],
-                          _Afericao(pacienteId: pacienteId),
-                        ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }

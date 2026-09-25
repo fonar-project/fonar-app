@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/trilhas.dart';
+import '../../../pacientes/data/repositorio_pacientes_local.dart';
+import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_colors.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
@@ -151,49 +154,70 @@ class _EspectrogramaPageState extends ConsumerState<EspectrogramaPage> {
     final chave = (pacienteId: widget.pacienteId, analiseId: widget.analiseId);
     final analise = ref.watch(analiseDoPacienteProvider(chave));
 
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, restricoes) {
-          final compacta =
-              Breakpoints.de(restricoes.maxWidth) == LarguraDeTela.compacta;
+    final nomeDoPaciente = ref
+        .watch(pacienteProvider(widget.pacienteId))
+        .value
+        ?.nome;
+    return AppEstrutura(
+      destino: DestinoPrincipal.pacientes,
+      navegacaoInferior: false,
+      child: Scaffold(
+        body: LayoutBuilder(
+          builder: (context, restricoes) {
+            final largura = Breakpoints.de(restricoes.maxWidth);
+            final compacta = largura == LarguraDeTela.compacta;
 
-          final Widget conteudo = switch (analise) {
-            AsyncData(value: ResultadoDaAnalise(:final espectrogramaUrl?)) =>
-              _visor(espectrogramaUrl, compacta: compacta),
-            AsyncData() => AppEstado.central(
-              titulo: AppStrings.resultadoEspectrogramaIndisponivel,
-              acao: AppBotao.secundario(
-                rotulo: AppStrings.voltar,
-                aoTocar: _voltar,
+            final Widget conteudo = switch (analise) {
+              AsyncData(value: ResultadoDaAnalise(:final espectrogramaUrl?)) =>
+                _visor(espectrogramaUrl, compacta: compacta),
+              AsyncData() => AppEstado.central(
+                titulo: AppStrings.resultadoEspectrogramaIndisponivel,
+                acao: AppBotao.secundario(
+                  rotulo: AppStrings.voltar,
+                  aoTocar: _voltar,
+                ),
               ),
-            ),
-            AsyncError(:final error) when error is AnaliseDeOutroPaciente =>
-              AvisoDeOutroPaciente(aoVoltar: _voltar),
-            AsyncError() => AppEstado.central(
-              titulo: AppStrings.resultadoErroCarregar,
-              acao: AppBotao.secundario(
-                rotulo: AppStrings.tentarNovamente,
-                aoTocar: () =>
-                    ref.invalidate(analiseProvider(widget.analiseId)),
+              AsyncError(:final error) when error is AnaliseDeOutroPaciente =>
+                AvisoDeOutroPaciente(aoVoltar: _voltar),
+              AsyncError() => AppEstado.central(
+                titulo: AppStrings.resultadoErroCarregar,
+                acao: AppBotao.secundario(
+                  rotulo: AppStrings.tentarNovamente,
+                  aoTocar: () =>
+                      ref.invalidate(analiseProvider(widget.analiseId)),
+                ),
               ),
-            ),
-            _ => const Center(
-              child: CircularProgressIndicator(color: AppColors.roxoProfundo),
-            ),
-          };
+              _ => const Center(
+                child: CircularProgressIndicator(color: AppColors.roxoProfundo),
+              ),
+            };
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AppCabecalhoDeTarefa(
-                titulo: AppStrings.resultadoEspectrogramaTitulo,
-                aoVoltar: _voltar,
-                compacta: compacta,
-              ),
-              Expanded(child: conteudo),
-            ],
-          );
-        },
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AppCabecalhoDeTarefa(
+                  titulo: AppStrings.resultadoEspectrogramaTitulo,
+                  aoVoltar: _voltar,
+                  largura: largura,
+                  trilha: [
+                    ...Trilhas.doPaciente(
+                      context,
+                      pacienteId: widget.pacienteId,
+                      nome: nomeDoPaciente,
+                    ),
+                    Trilhas.resultado(
+                      context,
+                      pacienteId: widget.pacienteId,
+                      analiseId: widget.analiseId,
+                    ),
+                    ItemDaTrilha(AppStrings.resultadoEspectrogramaTitulo),
+                  ],
+                ),
+                Expanded(child: conteudo),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
