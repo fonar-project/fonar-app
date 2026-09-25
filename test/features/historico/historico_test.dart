@@ -251,8 +251,12 @@ void main() {
 
     // `push`: o resultado vem por cima do histórico.
     expect(find.byType(AnaliseResultadoPage), findsOneWidget);
+    // O paciente certo, no cabeçalho do resultado.
     expect(
-      find.text(AppStrings.consentimentoPaciente('Ana de Teste')),
+      find.descendant(
+        of: find.byType(AnaliseResultadoPage),
+        matching: find.text('Ana de Teste'),
+      ),
       findsOneWidget,
     );
     await tester.tap(find.bySemanticsLabel(AppStrings.voltar).first);

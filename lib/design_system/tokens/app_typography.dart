@@ -102,6 +102,15 @@ abstract final class AppTypography {
     fontFeatures: [FontFeature.tabularFigures()],
   );
 
+  /// As medidas principais do resultado (AVQI e CPPS), em destaque.
+  static const medidaDestaque = TextStyle(
+    fontFamily: familia,
+    fontSize: 44,
+    height: 1.05,
+    fontWeight: FontWeight.w800,
+    fontFeatures: [FontFeature.tabularFigures()],
+  );
+
   /// Mesma medida, em linha de tabela ou card compacto.
   static const medidaCompacta = TextStyle(
     fontFamily: familia,

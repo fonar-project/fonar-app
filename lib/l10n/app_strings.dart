@@ -569,6 +569,9 @@ abstract final class AppStrings {
       '$tarefa: amostra com problema';
   static const resultadoAmostraSemMotivo = 'O servidor não detalhou o motivo.';
   static const resultadoMedidasTitulo = 'Medidas acústicas';
+  static const resultadoRodape =
+      'As faixas de referência vêm de um catálogo configurável (sexo, idade, '
+      'equipamento), ainda pendente de validação clínica.';
   static const resultadoEspectrogramaTitulo = 'Espectrograma';
   static const resultadoEspectrogramaIndisponivel =
       'Imagem ainda não disponível para esta análise.';
@@ -679,7 +682,7 @@ abstract final class AppStrings {
 
   // ------------------------------------------------------------ evolução --
   static const evolucaoTitulo = 'Evolução';
-  static const resultadoVerEvolucao = 'Ver evolução do paciente';
+  static const resultadoVerEvolucao = 'Ver evolução';
   static String evolucaoSessoes(int n, String primeira, String ultima) => n == 1
       ? '1 sessão analisada, em $primeira.'
       : '$n sessões analisadas, de $primeira a $ultima.';

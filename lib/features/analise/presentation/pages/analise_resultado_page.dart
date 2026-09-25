@@ -22,6 +22,7 @@ import '../../../cape_v/domain/avaliacao_cape_v.dart';
 import '../../../cape_v/presentation/apresentacao_cape_v.dart';
 import '../../../captura/domain/amostra.dart';
 import '../../../fila/presentation/fila_controlador.dart';
+import '../../../historico/domain/evolucao_da_medida.dart';
 import '../../../reproducao/presentation/widgets/player_de_amostra.dart';
 import '../../../pacientes/data/repositorio_pacientes_local.dart';
 import '../../../pacientes/domain/paciente.dart';
@@ -129,6 +130,7 @@ class AnaliseResultadoPage extends ConsumerWidget {
                   titulo: AppStrings.analiseResultadoTitulo,
                   aoVoltar: () => _voltar(context),
                   largura: largura,
+                  subtitulo: paciente?.nome,
                   trilha: [
                     ...Trilhas.doPaciente(
                       context,
@@ -162,6 +164,10 @@ class _Resultado extends ConsumerWidget {
   final Paciente? paciente;
   final bool compacta;
 
+  /// As medidas em destaque, como no protótipo: as duas que resumem a
+  /// qualidade vocal. As demais vêm menores, embaixo.
+  static const _principais = {MedidaAcustica.avqi, MedidaAcustica.cpps};
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final textos = Theme.of(context).textTheme;
@@ -172,140 +178,229 @@ class _Resultado extends ConsumerWidget {
       catalogo: ref.watch(catalogoDeReferenciasProvider),
     );
     final quando = resultado.realizadaEm;
-    final audios = ref.watch(amostrasDaAnaliseProvider(resultado.id));
+    final secundario = textos.bodySmall?.copyWith(
+      color: AppColors.secundarioSobreCreme,
+    );
+    final motivo = motivoComum(medidas);
+    final capeV = ref.watch(capeVDaAnaliseProvider(resultado.id)).value;
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(
-        horizontal: compacta ? AppSpacing.md : AppSpacing.xl,
-        vertical: AppSpacing.lg,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 960),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (resultado.exemplo) ...[
-                const AppSituacao(
-                  icone: NomeIcone.informacao,
-                  titulo: AppStrings.resultadoExemploTitulo,
-                  texto: AppStrings.resultadoExemploTexto,
-                ),
-                const SizedBox(height: AppSpacing.lg),
-              ],
-              if (paciente case final p?)
-                Text(
-                  AppStrings.consentimentoPaciente(p.nome),
-                  style: textos.titleMedium,
-                ),
-              if (quando != null) ...[
-                const SizedBox(height: AppSpacing.xxs),
-                Text(
-                  AppStrings.resultadoGravadoEm(
-                    AppStrings.data(quando),
-                    AppStrings.hora(quando),
-                  ),
-                  style: textos.bodySmall?.copyWith(
-                    color: AppColors.secundarioSobreCreme,
-                  ),
-                ),
-              ],
-              const SizedBox(height: AppSpacing.sm),
-              // Antes das medidas, não no rodapé: é a moldura em que elas
-              // devem ser lidas.
-              Text(
-                AppStrings.avisoApoioDecisao,
-                style: textos.bodySmall?.copyWith(
-                  color: AppColors.secundarioSobreCreme,
-                ),
+    final acoes = _Acoes(
+      pacienteId: pacienteId,
+      analiseId: resultado.id,
+      capeVRegistrada: capeV != null,
+    );
+
+    final corpo = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (resultado.exemplo) ...[
+          const AppSituacao(
+            icone: NomeIcone.informacao,
+            titulo: AppStrings.resultadoExemploTitulo,
+            texto: AppStrings.resultadoExemploTexto,
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
+        if (quando != null)
+          Text(
+            AppStrings.resultadoGravadoEm(
+              AppStrings.data(quando),
+              AppStrings.hora(quando),
+            ),
+            style: secundario,
+          ),
+        const SizedBox(height: AppSpacing.xxs),
+        // Antes das medidas, não no rodapé: é a moldura em que elas devem
+        // ser lidas.
+        Text(AppStrings.avisoApoioDecisao, style: secundario),
+        const SizedBox(height: AppSpacing.lg),
+        _Secao(titulo: AppStrings.resultadoMedidasTitulo),
+        if (motivo != null) ...[
+          AppSituacao(
+            icone: NomeIcone.semReferencia,
+            titulo: AppStrings.statusSemReferencia,
+            texto: explicarSemClassificacao(motivo),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
+        _GradeDeMedidas(
+          medidas: [
+            for (final m in medidas)
+              if (_principais.contains(m.medida)) m,
+          ],
+          motivoJaDito: motivo,
+          destaque: true,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _GradeDeMedidas(
+          medidas: [
+            for (final m in medidas)
+              if (!_principais.contains(m.medida)) m,
+          ],
+          motivoJaDito: motivo,
+          destaque: false,
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        _CartaoDaAmostra(
+          pacienteId: pacienteId,
+          resultado: resultado,
+          compacta: compacta,
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        _Secao(titulo: AppStrings.capeVSecaoTitulo),
+        _ResumoCapeV(avaliacao: capeV),
+        if (compacta) ...[
+          // No celular, só a ação principal fica presa embaixo; as outras
+          // fecham a página.
+          const SizedBox(height: AppSpacing.xl),
+          acoes.secundarias(ocupaLargura: true),
+        ],
+      ],
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(
+              horizontal: compacta ? AppSpacing.md : AppSpacing.xl,
+              vertical: AppSpacing.lg,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1040),
+                child: corpo,
               ),
-              if (resultado.qualidade.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.lg),
-                _Secao(titulo: AppStrings.resultadoQualidadeTitulo),
-                for (final MapEntry(key: tarefa, value: q)
-                    in resultado.qualidade.entries) ...[
-                  _QualidadeDaAmostra(tarefa: tarefa, qualidade: q),
-                  if (audios[tarefa] case final amostra?) ...[
-                    const SizedBox(height: AppSpacing.xs),
-                    PlayerDeAmostra(
-                      caminho: amostra.caminho,
-                      rotulo: _nomeDaTarefa(tarefa),
-                      duracaoConhecida: amostra.duracao,
-                    ),
-                  ],
-                  const SizedBox(height: AppSpacing.sm),
-                ],
-                if (audios.isEmpty)
-                  Text(
-                    AppStrings.resultadoAudioIndisponivel,
-                    style: textos.bodySmall?.copyWith(
-                      color: AppColors.secundarioSobreCreme,
-                    ),
-                  ),
-              ],
-              const SizedBox(height: AppSpacing.lg),
-              _Secao(titulo: AppStrings.resultadoMedidasTitulo),
-              if (motivoComum(medidas) case final motivo?) ...[
-                AppSituacao(
-                  icone: NomeIcone.semReferencia,
-                  titulo: AppStrings.statusSemReferencia,
-                  texto: explicarSemClassificacao(motivo),
-                ),
-                const SizedBox(height: AppSpacing.md),
-              ],
-              _GradeDeMedidas(
-                medidas: medidas,
-                motivoJaDito: motivoComum(medidas),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              // A medida de hoje ganha sentido ao lado das anteriores.
-              Align(
-                alignment: Alignment.centerLeft,
-                child: AppBotao.secundario(
-                  rotulo: AppStrings.resultadoVerEvolucao,
-                  icone: NomeIcone.avancar,
-                  // `push`: o voltar da evolução traz de volta a este
-                  // resultado.
-                  aoTocar: () => context.pushNamed(
-                    AppRoutes.evolucaoNome,
-                    pathParameters: {AppRoutes.paramPacienteId: pacienteId},
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              _Secao(titulo: AppStrings.capeVSecaoTitulo),
-              _ResumoCapeV(pacienteId: pacienteId, analiseId: resultado.id),
-              const SizedBox(height: AppSpacing.xl),
-              _Secao(titulo: AppStrings.resultadoEspectrogramaTitulo),
-              _Espectrograma(
-                url: resultado.espectrogramaUrl,
-                pacienteId: pacienteId,
-                analiseId: resultado.id,
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              // Por último: o laudo é o passo que fecha a sessão, depois de
-              // medidas, CAPE-V e espectrograma revistos.
-              _Secao(titulo: AppStrings.laudoTitulo),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: AppBotao.primario(
-                  rotulo: AppStrings.resultadoPrepararLaudo,
-                  icone: NomeIcone.avancar,
-                  aoTocar: () => context.goNamed(
-                    AppRoutes.laudoNome,
-                    pathParameters: {
-                      AppRoutes.paramPacienteId: pacienteId,
-                      AppRoutes.paramAnaliseId: resultado.id,
-                    },
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
-      ),
+        DecoratedBox(
+          decoration: const BoxDecoration(
+            border: Border(top: BorderSide(color: AppColors.lavandaClaro)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: compacta ? AppSpacing.md : AppSpacing.xl,
+                vertical: AppSpacing.md,
+              ),
+              child: compacta
+                  ? acoes.principal(ocupaLargura: true)
+                  : Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: AppSpacing.md,
+                      runSpacing: AppSpacing.sm,
+                      children: [
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 440),
+                          child: Text(
+                            AppStrings.resultadoRodape,
+                            style: secundario,
+                          ),
+                        ),
+                        Wrap(
+                          spacing: AppSpacing.sm,
+                          runSpacing: AppSpacing.xs,
+                          children: [
+                            acoes.secundarias(ocupaLargura: false),
+                            acoes.principal(ocupaLargura: false),
+                          ],
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+        ),
+      ],
     );
   }
+}
+
+/// Os próximos passos depois de ler o resultado. O principal é registrar a
+/// CAPE-V; registrada, é preparar o laudo — o passo que fecha a sessão.
+class _Acoes {
+  const _Acoes({
+    required this.pacienteId,
+    required this.analiseId,
+    required this.capeVRegistrada,
+  });
+
+  final String pacienteId;
+  final String analiseId;
+  final bool capeVRegistrada;
+
+  Map<String, String> get _params => {
+    AppRoutes.paramPacienteId: pacienteId,
+    AppRoutes.paramAnaliseId: analiseId,
+  };
+
+  AppBotao _capeV(BuildContext context, {required bool primario}) => AppBotao(
+    variante: primario ? VarianteBotao.primario : VarianteBotao.secundario,
+    rotulo: capeVRegistrada
+        ? AppStrings.capeVEditar
+        : AppStrings.capeVRegistrar,
+    icone: NomeIcone.avancar,
+    aoTocar: () =>
+        context.goNamed(AppRoutes.capeVNome, pathParameters: _params),
+  );
+
+  AppBotao _laudo(BuildContext context, {required bool primario}) => AppBotao(
+    variante: primario ? VarianteBotao.primario : VarianteBotao.secundario,
+    rotulo: AppStrings.resultadoPrepararLaudo,
+    icone: NomeIcone.avancar,
+    aoTocar: () =>
+        context.goNamed(AppRoutes.laudoNome, pathParameters: _params),
+  );
+
+  Widget principal({required bool ocupaLargura}) => Builder(
+    builder: (context) {
+      final botao = capeVRegistrada
+          ? _laudo(context, primario: true)
+          : _capeV(context, primario: true);
+      return ocupaLargura
+          ? SizedBox(width: double.infinity, child: botao)
+          : botao;
+    },
+  );
+
+  Widget secundarias({required bool ocupaLargura}) => Builder(
+    builder: (context) {
+      final botoes = [
+        // A medida de hoje ganha sentido ao lado das anteriores. `push`: o
+        // voltar da evolução traz de volta a este resultado.
+        AppBotao.secundario(
+          rotulo: AppStrings.resultadoVerEvolucao,
+          icone: NomeIcone.avancar,
+          aoTocar: () => context.pushNamed(
+            AppRoutes.evolucaoNome,
+            pathParameters: {AppRoutes.paramPacienteId: pacienteId},
+          ),
+        ),
+        capeVRegistrada
+            ? _capeV(context, primario: false)
+            : _laudo(context, primario: false),
+      ];
+      if (ocupaLargura) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final (i, b) in botoes.indexed) ...[
+              if (i > 0) const SizedBox(height: AppSpacing.xs),
+              b,
+            ],
+          ],
+        );
+      }
+      return Wrap(
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.xs,
+        children: botoes,
+      );
+    },
+  );
 }
 
 class _Secao extends StatelessWidget {
@@ -321,6 +416,97 @@ class _Secao extends StatelessWidget {
       child: Text(titulo, style: Theme.of(context).textTheme.titleLarge),
     ),
   );
+}
+
+/// A amostra junto do espectrograma, como no protótipo: o que se ouve ao
+/// lado do que o servidor desenhou dela.
+class _CartaoDaAmostra extends ConsumerWidget {
+  const _CartaoDaAmostra({
+    required this.pacienteId,
+    required this.resultado,
+    required this.compacta,
+  });
+
+  final String pacienteId;
+  final ResultadoDaAnalise resultado;
+  final bool compacta;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final textos = Theme.of(context).textTheme;
+    final audios = ref.watch(amostrasDaAnaliseProvider(resultado.id));
+    final secundario = textos.bodySmall?.copyWith(
+      color: AppColors.secundarioSobreCreme,
+    );
+
+    final amostras = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _Secao(titulo: AppStrings.resultadoQualidadeTitulo),
+        for (final MapEntry(key: tarefa, value: q)
+            in resultado.qualidade.entries) ...[
+          _QualidadeDaAmostra(tarefa: tarefa, qualidade: q),
+          if (audios[tarefa] case final amostra?) ...[
+            const SizedBox(height: AppSpacing.xs),
+            PlayerDeAmostra(
+              caminho: amostra.caminho,
+              rotulo: _nomeDaTarefa(tarefa),
+              duracaoConhecida: amostra.duracao,
+            ),
+          ],
+          const SizedBox(height: AppSpacing.sm),
+        ],
+        if (audios.isEmpty)
+          Text(AppStrings.resultadoAudioIndisponivel, style: secundario),
+      ],
+    );
+    final espectrograma = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _Secao(titulo: AppStrings.resultadoEspectrogramaTitulo),
+        _Espectrograma(
+          url: resultado.espectrogramaUrl,
+          pacienteId: pacienteId,
+          analiseId: resultado.id,
+        ),
+      ],
+    );
+    final temQualidade = resultado.qualidade.isNotEmpty;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.branco,
+        border: Border.all(color: AppColors.lavandaClaro),
+        borderRadius: AppRadius.bordaMedia,
+      ),
+      child: LayoutBuilder(
+        builder: (context, restricoes) {
+          // Lado a lado quando cabe; senão, um embaixo do outro.
+          if (temQualidade && restricoes.maxWidth >= 760) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(flex: 2, child: amostras),
+                const SizedBox(width: AppSpacing.lg),
+                Expanded(flex: 3, child: espectrograma),
+              ],
+            );
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (temQualidade) ...[
+                amostras,
+                const SizedBox(height: AppSpacing.md),
+              ],
+              espectrograma,
+            ],
+          );
+        },
+      ),
+    );
+  }
 }
 
 class _QualidadeDaAmostra extends StatelessWidget {
@@ -352,9 +538,16 @@ String _nomeDaTarefa(TarefaDeGravacao tarefa) => switch (tarefa) {
 
 /// Cartões de medida em uma, duas ou três colunas, conforme a largura.
 class _GradeDeMedidas extends StatelessWidget {
-  const _GradeDeMedidas({required this.medidas, this.motivoJaDito});
+  const _GradeDeMedidas({
+    required this.medidas,
+    required this.destaque,
+    this.motivoJaDito,
+  });
 
   final List<MedidaLida> medidas;
+
+  /// As principais: duas por linha, número grande.
+  final bool destaque;
 
   /// Motivo já explicado acima da grade, que os cartões não repetem.
   final SemClassificacaoPorque? motivoJaDito;
@@ -363,11 +556,13 @@ class _GradeDeMedidas extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, restricoes) {
-        final colunas = switch (restricoes.maxWidth) {
-          >= 880 => 3,
-          >= 520 => 2,
-          _ => 1,
-        };
+        final colunas = destaque
+            ? (restricoes.maxWidth >= 520 ? 2 : 1)
+            : switch (restricoes.maxWidth) {
+                >= 880 => 4,
+                >= 320 => 2,
+                _ => 1,
+              };
         const vao = AppSpacing.md;
         final largura = (restricoes.maxWidth - vao * (colunas - 1)) / colunas;
         return Wrap(
@@ -377,7 +572,11 @@ class _GradeDeMedidas extends StatelessWidget {
             for (final m in medidas)
               SizedBox(
                 width: largura,
-                child: _CartaoDaMedida(lida: m, motivoJaDito: motivoJaDito),
+                child: _CartaoDaMedida(
+                  lida: m,
+                  motivoJaDito: motivoJaDito,
+                  destaque: destaque,
+                ),
               ),
           ],
         );
@@ -387,10 +586,15 @@ class _GradeDeMedidas extends StatelessWidget {
 }
 
 class _CartaoDaMedida extends StatelessWidget {
-  const _CartaoDaMedida({required this.lida, this.motivoJaDito});
+  const _CartaoDaMedida({
+    required this.lida,
+    required this.destaque,
+    this.motivoJaDito,
+  });
 
   final MedidaLida lida;
   final SemClassificacaoPorque? motivoJaDito;
+  final bool destaque;
 
   @override
   Widget build(BuildContext context) {
@@ -408,7 +612,7 @@ class _CartaoDaMedida extends StatelessWidget {
         : explicarSemClassificacao(motivo);
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(destaque ? AppSpacing.lg : AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.branco,
         border: Border.all(color: AppColors.lavandaClaro),
@@ -433,9 +637,10 @@ class _CartaoDaMedida extends StatelessWidget {
                       : medida.formatar(valor),
                   style: valor == null
                       ? textos.titleMedium
-                      : AppTypography.medida.copyWith(
-                          color: AppColors.cinzaChumbo,
-                        ),
+                      : (destaque
+                                ? AppTypography.medidaDestaque
+                                : AppTypography.medida)
+                            .copyWith(color: AppColors.cinzaChumbo),
                 ),
                 if (valor != null && medida.unidade.isNotEmpty)
                   Text(medida.unidade, style: textos.bodyMedium),
@@ -486,62 +691,46 @@ class _CartaoDaMedida extends StatelessWidget {
 /// Fica na mesma tela das medidas porque é lida junto delas — a avaliação
 /// perceptiva do profissional ao lado do que o servidor mediu —, mas nunca
 /// misturada a elas: são coisas de natureza diferente.
-class _ResumoCapeV extends ConsumerWidget {
-  const _ResumoCapeV({required this.pacienteId, required this.analiseId});
+class _ResumoCapeV extends StatelessWidget {
+  const _ResumoCapeV({required this.avaliacao});
 
-  final String pacienteId;
-  final String analiseId;
+  final AvaliacaoCapeV? avaliacao;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
-    final avaliacao = ref.watch(capeVDaAnaliseProvider(analiseId)).value;
     final secundario = textos.bodyMedium?.copyWith(
       color: AppColors.secundarioSobreCreme,
     );
-    void abrir() => context.goNamed(
-      AppRoutes.capeVNome,
-      pathParameters: {
-        AppRoutes.paramPacienteId: pacienteId,
-        AppRoutes.paramAnaliseId: analiseId,
-      },
-    );
-
+    final avaliacao = this.avaliacao;
+    // Registrar ou editar fica nas ações da tela — ver `_Acoes`.
+    if (avaliacao == null) {
+      return Text(AppStrings.capeVAindaNao, style: secundario);
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (avaliacao == null)
-          Text(AppStrings.capeVAindaNao, style: secundario)
-        else ...[
-          Text(
-            AppStrings.capeVRegistradaEm(
-              AppStrings.data(avaliacao.registradaEm),
-              AppStrings.hora(avaliacao.registradaEm),
-            ),
-            style: secundario,
+        Text(
+          AppStrings.capeVRegistradaEm(
+            AppStrings.data(avaliacao.registradaEm),
+            AppStrings.hora(avaliacao.registradaEm),
           ),
-          const SizedBox(height: AppSpacing.xs),
-          for (final p in ParametroCapeV.values)
-            if (avaliacao.notas[p] case final nota?)
-              Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.xxs),
-                child: Text(
-                  '${p.nome}: ${resumirNota(p, nota)}',
-                  style: textos.bodyMedium,
-                ),
-              ),
-          if (avaliacao.comentarios.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.xs),
-            Text(avaliacao.comentarios, style: secundario),
-          ],
-        ],
-        const SizedBox(height: AppSpacing.sm),
-        AppBotao.secundario(
-          rotulo: avaliacao == null
-              ? AppStrings.capeVRegistrar
-              : AppStrings.capeVEditar,
-          aoTocar: abrir,
+          style: secundario,
         ),
+        const SizedBox(height: AppSpacing.xs),
+        for (final p in ParametroCapeV.values)
+          if (avaliacao.notas[p] case final nota?)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xxs),
+              child: Text(
+                '${p.nome}: ${resumirNota(p, nota)}',
+                style: textos.bodyMedium,
+              ),
+            ),
+        if (avaliacao.comentarios.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(avaliacao.comentarios, style: secundario),
+        ],
       ],
     );
   }
