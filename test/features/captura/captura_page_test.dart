@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fonar_app/core/network/conexao.dart';
@@ -115,23 +116,41 @@ Future<void> _medir(
   await tester.pumpAndSettle();
 }
 
-/// O motivo escrito embaixo de "Iniciar gravação".
-Finder _motivo(String texto) => find.text(texto);
+/// A etapa, como o leitor de tela a lê: "Vogal /a/, pendente".
+Finder _etapa(String nome, String situacao) =>
+    find.bySemanticsLabel('$nome, $situacao');
 
 void main() {
   for (final (nome, tamanho) in [
     ('celular', _celular),
     ('desktop', _desktop),
   ]) {
-    testWidgets('$nome explica a aferição e não deixa gravar antes dela', (
+    testWidgets('$nome começa pela aferição e não deixa gravar antes dela', (
       tester,
     ) async {
+      final semantica = tester.ensureSemantics();
       await _abrir(tester, tamanho: tamanho);
 
-      expect(find.text('Paciente: Ana de Teste'), findsOneWidget);
+      expect(find.text('Ana de Teste'), findsOneWidget);
+      expect(
+        find.text(
+          AppStrings.etapaDe(1, 3, AppStrings.etapaRuidoNome).toUpperCase(),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text(AppStrings.instrucaoRuidoPronto), findsOneWidget);
       expect(find.text(AppStrings.afericaoExplicacao), findsOneWidget);
-      expect(_motivo(AppStrings.capturaBloqueadaSemAfericao), findsOneWidget);
+      expect(
+        _etapa(AppStrings.etapaRuidoCurta, AppStrings.etapaEmAndamento),
+        findsOneWidget,
+      );
+      // Antes da aferição, as tarefas não se escolhem nem se gravam.
+      await tester.tap(find.text(AppStrings.tarefaVogalCurta));
+      await tester.pumpAndSettle();
+      expect(find.text(AppStrings.instrucaoRuidoPronto), findsOneWidget);
+      expect(find.text(AppStrings.capturaIniciarGravacao), findsNothing);
       expect(tester.takeException(), isNull);
+      semantica.dispose();
     });
 
     testWidgets('$nome não estoura com o texto do sistema em 200%', (
@@ -158,7 +177,7 @@ void main() {
     // Leituras em 100 e 200 ms: a última é a segunda da lista.
     await tester.pump(const Duration(milliseconds: 250));
 
-    expect(find.text(AppStrings.afericaoMedindo), findsOneWidget);
+    expect(find.text(AppStrings.instrucaoRuidoMedindo), findsOneWidget);
     expect(find.byType(MedidorDeNivel), findsOneWidget);
     expect(find.text('−64 dBFS'), findsOneWidget);
     // Zona de VOZ não se aplica ao ruído da sala.
@@ -180,9 +199,20 @@ void main() {
     expect(find.byType(MedidorDeNivel), findsNothing);
     expect(fonte.aberturas, 1);
     expect(fonte.fechamentos, greaterThanOrEqualTo(1));
-    // Liberada, a gravação dá lugar às tarefas.
-    expect(find.text(AppStrings.tarefasTitulo), findsOneWidget);
-    expect(find.text(AppStrings.capturaIniciarGravacao), findsNothing);
+    expect(find.text(AppStrings.instrucaoRuidoOk), findsOneWidget);
+
+    // Liberada: "Continuar" leva à primeira tarefa.
+    await tester.tap(find.text(AppStrings.capturaContinuar));
+    await tester.pumpAndSettle();
+    expect(
+      find.text(
+        AppStrings.etapaDe(2, 3, AppStrings.tarefaVogalTitulo).toUpperCase(),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text(AppStrings.instrucaoVogalPronto), findsOneWidget);
+    expect(find.text(AppStrings.instrucaoProvisoria), findsOneWidget);
+    expect(find.text(AppStrings.capturaIniciarGravacao), findsOneWidget);
   });
 
   testWidgets('microfone mudo bloqueia a gravação e diz o que fazer', (
@@ -194,7 +224,12 @@ void main() {
 
     expect(find.text(AppStrings.afericaoMudo), findsOneWidget);
     expect(find.text(AppStrings.afericaoMudoTexto), findsOneWidget);
-    expect(_motivo(AppStrings.capturaBloqueadaMicrofone), findsOneWidget);
+    expect(find.text(AppStrings.capturaBloqueadaMicrofone), findsOneWidget);
+    // Silêncio absoluto é falha: não há como seguir para as tarefas.
+    expect(find.text(AppStrings.capturaContinuar), findsNothing);
+    await tester.tap(find.text(AppStrings.tarefaVogalCurta));
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.capturaIniciarGravacao), findsNothing);
   });
 
   testWidgets('sala barulhenta avisa com o nível e o limite', (tester) async {
@@ -207,6 +242,24 @@ void main() {
       find.text(AppStrings.afericaoRuidoAltoTexto('−40 dBFS', '−50 dBFS')),
       findsOneWidget,
     );
+    // Avisa, mas não bloqueia: quem decide é o profissional.
+    expect(find.text(AppStrings.capturaContinuar), findsOneWidget);
+    expect(find.text(AppStrings.capturaBloqueadaMicrofone), findsNothing);
+  });
+
+  testWidgets('no desktop, Espaço mede o ruído', (tester) async {
+    final fonte = await _abrir(tester, tamanho: _desktop);
+    expect(find.text(AppStrings.capturaAtalhos), findsOneWidget);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.space);
+    await tester.pump();
+    await tester.pump(
+      AfericaoDeRuido.duracao + const Duration(milliseconds: 200),
+    );
+    await tester.pumpAndSettle();
+
+    expect(fonte.aberturas, 1);
+    expect(find.text(AppStrings.afericaoSemRestricao), findsOneWidget);
   });
 
   testWidgets('medir de novo depois de corrigir a sala', (tester) async {
@@ -352,6 +405,8 @@ void main() {
 
       expect(find.text(AppStrings.afericaoSemRestricao), findsWidgets);
       expect(find.text(AppStrings.afericaoLiberandoMicrofone), findsWidgets);
+      // Com o microfone ainda preso, a gravação também espera.
+      expect(find.text(AppStrings.capturaContinuar), findsNothing);
       await tester.tap(find.text(AppStrings.afericaoMedirDeNovo));
       await tester.pump();
       expect(fonte.aberturas, 1);

@@ -38,7 +38,7 @@ abstract final class AppStrings {
   static const pacientesTitulo = 'Pacientes';
   static const pacienteDetalheTitulo = 'Paciente';
   static const consentimentoTitulo = 'Consentimento';
-  static const capturaTitulo = 'Gravação';
+  static const capturaTitulo = 'Nova avaliação';
   static const analiseResultadoTitulo = 'Resultado da análise';
 
   // Pílulas de situação no cabeçalho das telas de tarefa, no desktop.
@@ -304,7 +304,6 @@ abstract final class AppStrings {
   static const afericaoMicrofoneDemorandoTexto =
       'Medir de novo e gravar ficam travados até ele ser liberado. Se '
       'continuar assim, saia desta tela e entre de novo.';
-  static const afericaoMedindo = 'Medindo… mantenha silêncio.';
   static const afericaoEsperaGravacao =
       'Termine a gravação em andamento para medir de novo.';
 
@@ -348,12 +347,62 @@ abstract final class AppStrings {
 
   static const capturaIniciarGravacao = 'Iniciar gravação';
   static const capturaBloqueadaMicrofone =
-      'Bloqueada: o microfone não está captando som.';
-  static const capturaBloqueadaSemAfericao =
-      'Meça o ruído ambiente antes de gravar.';
+      'A gravação fica bloqueada até o microfone captar som.';
 
-  // --------------------------------------------------- gravação das tarefas --
-  static const tarefasTitulo = 'Tarefas';
+  // --------------------------------------------------- gravação guiada --
+  // Uma etapa por vez, como no protótipo: o ruído da sala e depois cada
+  // tarefa, com a instrução grande para o paciente ler de longe.
+  static String etapaDe(int numero, int total, String nome) =>
+      'Etapa $numero de $total — $nome';
+  static const etapaConcluida = 'concluída';
+  static const etapaEmAndamento = 'em andamento';
+  static const etapaPendente = 'pendente';
+  static const etapaRuidoCurta = 'Ruído';
+  static const etapaRuidoNome = 'Aferição de ruído';
+  static const tarefaVogalCurta = 'Vogal /a/';
+  static const tarefaFalaCurta = 'Fala';
+
+  static const instrucaoRuidoPronto =
+      'Vamos medir o ruído da sala. Fique em silêncio por alguns segundos.';
+  static const instrucaoRuidoMedindo = 'Medindo o ruído da sala…';
+  static const instrucaoRuidoOk = 'Ambiente adequado para gravar.';
+  static const instrucaoRuidoAlto = 'A sala está ruidosa.';
+  static const instrucaoRuidoMudo = 'O microfone não está captando som.';
+  static const instrucaoRuidoSemMicrofone =
+      'Não foi possível usar o microfone.';
+
+  // TODO(clínico): instruções PROVISÓRIAS, escritas para o fluxo funcionar.
+  // As tarefas, a ordem e o texto dito ao paciente são do protocolo clínico e
+  // precisam de revisão da orientação.
+  static const instrucaoVogalPronto =
+      'Respire fundo e sustente o som “aaaa” em tom confortável.';
+  static const instrucaoVogalGravando = 'Continue… sustente o “aaaa”.';
+  static const instrucaoFalaPronto =
+      'Fale de forma encadeada, como o profissional orientar.';
+  static const instrucaoFalaGravando = 'Continue falando…';
+  static const instrucaoProvisoria =
+      'Instrução provisória — a validar com a orientação clínica.';
+  static const instrucaoConferindo = 'Conferindo a gravação…';
+  static const instrucaoAmostraBoa = 'Boa! Amostra registrada.';
+  static const instrucaoAmostraRessalva = 'Amostra registrada, com ressalva.';
+  static const instrucaoAmostraRecusada =
+      'Essa gravação não serviu. Vamos gravar de novo.';
+
+  static const gravandoRotulo = 'Gravando';
+  static const capturaContinuar = 'Continuar';
+  static const capturaProximaEtapa = 'Próxima etapa';
+  static const capturaConcluirERevisar = 'Concluir e revisar';
+  static const capturaRegravar = 'Regravar';
+  static const capturaAtalhos = 'Espaço inicia e para · R regrava';
+  static const capturaEsperaTerminar =
+      'Termine a gravação em andamento para mudar de etapa.';
+
+  static const revisaoTitulo = 'Revisão das amostras';
+  static const revisaoInstrucao =
+      'Tudo gravado. Ouça as amostras antes de enviar.';
+  static String revisaoResumo(int gravadas, int total) =>
+      '$gravadas de $total tarefas gravadas.';
+  static const revisaoVoltar = 'Voltar à gravação';
 
   // ------------------------------------------------ gravações não enviadas --
   static const naoEnviadasTitulo = 'Gravações não enviadas';
@@ -395,23 +444,11 @@ abstract final class AppStrings {
       'Começada às $hora. Já gravadas: $gravadas de $total tarefas — '
       'continuam valendo. Regravar uma tarefa substitui a gravação dela.';
 
-  // TODO(clínico): instruções PROVISÓRIAS, escritas para o fluxo funcionar.
-  // As tarefas, a ordem e o texto dito ao paciente são do protocolo clínico e
-  // precisam de revisão da orientação.
   static const tarefaVogalTitulo = 'Vogal sustentada /a/';
-  static const tarefaVogalInstrucao =
-      'Peça ao paciente para sustentar a vogal /a/, em altura e intensidade '
-      'confortáveis, pelo tempo que conseguir. (instrução provisória)';
   static const tarefaFalaTitulo = 'Fala encadeada';
-  static const tarefaFalaInstrucao =
-      'Peça ao paciente para falar de forma encadeada, conforme o protocolo '
-      'da clínica. (instrução provisória)';
 
-  static const tarefaGravar = 'Gravar';
-  static const tarefaGravarDeNovo = 'Gravar de novo';
   static const tarefaParar = 'Parar';
   static String tarefaGravando(String duracao) => 'Gravando… $duracao';
-  static const tarefaConferindo = 'Conferindo o arquivo gravado…';
   static const tarefaOutraEmAndamento =
       'Termine a gravação em andamento para gravar esta.';
 

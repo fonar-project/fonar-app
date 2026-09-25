@@ -13,7 +13,7 @@ import 'package:fonar_app/features/captura/domain/gravador.dart';
 import 'package:fonar_app/features/captura/domain/retomada.dart';
 import 'package:fonar_app/features/captura/domain/verificacao_da_amostra.dart';
 import 'package:fonar_app/features/captura/presentation/gravacao_controlador.dart';
-import 'package:fonar_app/features/captura/presentation/widgets/tarefas_de_gravacao.dart';
+import 'package:fonar_app/features/captura/presentation/widgets/gravacao_guiada.dart';
 import 'package:fonar_app/features/fila/data/repositorio_fila_local.dart';
 import 'package:fonar_app/features/fila/domain/item_da_fila.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
@@ -370,11 +370,8 @@ void main() {
           ],
           child: MaterialApp(
             theme: AppTheme.claro,
-            home: const Scaffold(
-              body: SingleChildScrollView(
-                child: TarefasDeGravacao(pacienteId: 'p1'),
-              ),
-            ),
+            // O aviso aparece em qualquer etapa — aqui, na do ruído.
+            home: const Scaffold(body: GravacaoGuiada(pacienteId: 'p1')),
           ),
         ),
       );

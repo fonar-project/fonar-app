@@ -37,7 +37,9 @@ O caminho de uma avaliação, na ordem em que o profissional passa por ele:
    absoluto é tratado como microfone mudo, nunca como sala silenciosa.
 5. **Grava as tarefas** (US05) — vogal sustentada e fala encadeada —, com cada
    WAV conferido depois de gravado. Dá para **ouvir** cada gravação (US13).
-   Voltar à gravação no mesmo dia **retoma a sessão** (US16).
+   Voltar à gravação no mesmo dia **retoma a sessão** (US16). A gravação é
+   **guiada, uma etapa por vez** (US26): instrução grande para o paciente,
+   revisão das amostras antes de enviar e, no desktop, Espaço e R como atalhos.
 6. **Manda para a análise** pela **fila** (US06), que funciona sem conexão e
    sobe quando a rede voltar. Sessões que ficaram paradas no aparelho aparecem
    no perfil para enviar ou descartar (US19).

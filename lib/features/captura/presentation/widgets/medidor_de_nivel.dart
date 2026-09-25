@@ -105,9 +105,12 @@ class MedidorDeNivel extends StatelessWidget {
                       ),
                       const SizedBox(width: AppSpacing.xxs),
                     ],
-                    Text(
-                      rotuloDaZona,
-                      style: textos.titleSmall?.copyWith(color: corDoTexto),
+                    // Flexible: em 200% no celular, o rótulo quebra linha.
+                    Flexible(
+                      child: Text(
+                        rotuloDaZona,
+                        style: textos.titleSmall?.copyWith(color: corDoTexto),
+                      ),
                     ),
                   ],
                 ),
