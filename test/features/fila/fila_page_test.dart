@@ -190,6 +190,14 @@ void main() {
     expect(find.text('destino /pacientes'), findsOneWidget);
   });
 
+  testWidgets('no desktop, o cabeçalho lembra que nada se perde', (
+    tester,
+  ) async {
+    await _abrir(tester, tamanho: const Size(1440, 900));
+
+    expect(find.text(AppStrings.situacaoFila), findsOneWidget);
+  });
+
   testWidgets('cada envio diz a situação por escrito', (tester) async {
     await _abrir(tester, itens: _variados);
 

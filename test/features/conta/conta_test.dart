@@ -247,6 +247,16 @@ void main() {
       expect(find.byType(FilaPage), findsOneWidget);
     });
 
+    testWidgets('faixas de referência: diz que o catálogo está vazio e '
+        'por quê', (tester) async {
+      await _abrir(tester);
+
+      expect(find.text(AppStrings.contaFaixasTitulo), findsOneWidget);
+      expect(find.text(AppStrings.contaFaixasPendente), findsOneWidget);
+      expect(find.text(AppStrings.contaFaixasVazio), findsOneWidget);
+      expect(find.text(AppStrings.contaFaixasSoLeitura), findsOneWidget);
+    });
+
     testWidgets('fila vazia: sem atalho', (tester) async {
       await _abrir(tester);
 

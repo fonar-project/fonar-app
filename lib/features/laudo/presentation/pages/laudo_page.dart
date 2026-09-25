@@ -345,20 +345,15 @@ class _LaudoState extends ConsumerState<_Laudo> {
       );
     }
 
+    // Como no protótipo: a folha à esquerda, onde o olho começa, e o que se
+    // preenche ao lado dela.
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(
-          width: 460,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            child: painel,
-          ),
-        ),
         Expanded(
           child: DecoratedBox(
             decoration: const BoxDecoration(
-              border: Border(left: BorderSide(color: AppColors.lavandaClaro)),
+              border: Border(right: BorderSide(color: AppColors.lavandaClaro)),
             ),
             child: Semantics(
               label: AppStrings.laudoPreviaTitulo,
@@ -367,13 +362,20 @@ class _LaudoState extends ConsumerState<_Laudo> {
             ),
           ),
         ),
+        SizedBox(
+          width: 460,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: painel,
+          ),
+        ),
       ],
     );
   }
 }
 
-/// Conferência, conclusão e ações — a coluna da esquerda no desktop, a tela
-/// inteira no celular.
+/// Conferência, conclusão e ações — a coluna ao lado da folha no desktop, a
+/// tela inteira no celular.
 class _Painel extends StatelessWidget {
   const _Painel({
     required this.pacienteId,
@@ -416,6 +418,12 @@ class _Painel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(AppStrings.avisoApoioDecisao, style: secundario),
+        // No lugar da folha, fora do desktop: o que o PDF vai ter vem antes
+        // do que falta para gerá-lo, como no protótipo.
+        if (resumo case final resumo?) ...[
+          const SizedBox(height: AppSpacing.lg),
+          resumo,
+        ],
         const SizedBox(height: AppSpacing.lg),
         _Titulo(AppStrings.laudoConferenciaTitulo),
         for (final MapEntry(key: item, value: situacao)
@@ -490,10 +498,6 @@ class _Painel extends StatelessWidget {
               titulo: AppStrings.laudoErroSaida,
             ),
           ],
-        ],
-        if (resumo case final resumo?) ...[
-          const SizedBox(height: AppSpacing.xl),
-          resumo,
         ],
       ],
     );

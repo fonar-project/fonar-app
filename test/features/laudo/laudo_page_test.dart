@@ -424,6 +424,11 @@ void main() {
       expect(find.text('prévia A4'), findsOneWidget);
       expect(find.text(AppStrings.laudoResumoTitulo), findsNothing);
       expect(m.previas.funcoes, hasLength(1));
+      // A folha à esquerda, como no protótipo; o que se preenche ao lado.
+      expect(
+        tester.getCenter(find.text('prévia A4')).dx,
+        lessThan(tester.getCenter(find.byType(TextField)).dx),
+      );
 
       // Digitando: a prévia fica como estava — nada de remontar o A4 a cada
       // tecla.

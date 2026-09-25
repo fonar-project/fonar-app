@@ -382,6 +382,20 @@ void main() {
     });
   });
 
+  testWidgets('desktop: sessões ao lado do gráfico; mostrar ao paciente no '
+      'cabeçalho', (tester) async {
+    await _abrir(tester, tamanho: const Size(1440, 900));
+
+    final grafico = tester.getRect(find.byType(LineChart));
+    final sessoes = tester.getRect(find.text(AppStrings.evolucaoSessoesTitulo));
+    expect(sessoes.left, greaterThan(grafico.right));
+    expect(sessoes.top, lessThan(grafico.bottom));
+    // Uma vez só: no cabeçalho, não repetido no corpo.
+    final botao = find.text(AppStrings.evolucaoMostrarAoPaciente);
+    expect(botao, findsOneWidget);
+    expect(tester.getRect(botao).top, lessThan(80));
+  });
+
   testWidgets('resultado leva à evolução', (tester) async {
     final roteador = await _abrir(tester);
     roteador.goNamed(

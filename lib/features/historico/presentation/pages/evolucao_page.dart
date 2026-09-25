@@ -87,6 +87,7 @@ class EvolucaoPage extends ConsumerWidget {
                   paciente: paciente,
                   sessoes: sessoes,
                   compacta: compacta,
+                  expandida: largura == LarguraDeTela.expandida,
                 ),
               },
               AsyncError() => AppEstado.central(
@@ -109,6 +110,7 @@ class EvolucaoPage extends ConsumerWidget {
                   titulo: AppStrings.evolucaoTitulo,
                   aoVoltar: () => _voltar(context),
                   largura: largura,
+                  subtitulo: paciente?.nome,
                   trilha: [
                     ...Trilhas.doPaciente(
                       context,
@@ -116,6 +118,13 @@ class EvolucaoPage extends ConsumerWidget {
                       nome: paciente?.nome,
                     ),
                     ItemDaTrilha(AppStrings.evolucaoTitulo),
+                  ],
+                  // No desktop a ação sobe para o cabeçalho, como no
+                  // protótipo; nas outras larguras, fica no corpo.
+                  acoes: [
+                    if (analises.value case final v?
+                        when sessoesAnalisadas(v).isNotEmpty)
+                      _MostrarAoPaciente(pacienteId: pacienteId),
                   ],
                 ),
                 Expanded(child: conteudo),
@@ -134,12 +143,17 @@ class _Evolucao extends ConsumerWidget {
     required this.paciente,
     required this.sessoes,
     required this.compacta,
+    required this.expandida,
   });
 
   final String pacienteId;
   final Paciente? paciente;
   final List<ResultadoDaAnalise> sessoes;
   final bool compacta;
+
+  /// Desktop: gráfico e sessões lado a lado, e "mostrar ao paciente" no
+  /// cabeçalho.
+  final bool expandida;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -186,12 +200,6 @@ class _Evolucao extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.lg),
       ],
-      if (paciente case final p?)
-        Text(
-          AppStrings.consentimentoPaciente(p.nome),
-          style: textos.titleMedium,
-        ),
-      const SizedBox(height: AppSpacing.xxs),
       Text(
         AppStrings.evolucaoSessoes(
           sessoes.length,
@@ -295,14 +303,7 @@ class _Evolucao extends ConsumerWidget {
 
     final mostrarAoPaciente = Align(
       alignment: Alignment.centerLeft,
-      child: AppBotao.secundario(
-        rotulo: AppStrings.evolucaoMostrarAoPaciente,
-        icone: NomeIcone.virarParaPaciente,
-        aoTocar: () => context.goNamed(
-          AppRoutes.modoPacienteNome,
-          pathParameters: {AppRoutes.paramPacienteId: pacienteId},
-        ),
-      ),
+      child: _MostrarAoPaciente(pacienteId: pacienteId),
     );
 
     final listaDeSessoes = [
@@ -335,6 +336,47 @@ class _Evolucao extends ConsumerWidget {
           mostrarStatus: motivo == null,
         ),
     ];
+
+    if (expandida && !baixa) {
+      // Como no protótipo: o gráfico à esquerda, as sessões à direita, cada
+      // coluna rolando por conta própria.
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            flex: 3,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ...abertura,
+                  const SizedBox(height: AppSpacing.lg),
+                  seletor,
+                  const SizedBox(height: AppSpacing.lg),
+                  cartao,
+                ],
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 400,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(
+                0,
+                AppSpacing.xl,
+                AppSpacing.xl,
+                AppSpacing.xl,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: listaDeSessoes,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
 
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(
@@ -374,6 +416,23 @@ class _Evolucao extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Abre o modo paciente: o gráfico em tela cheia, para virar o aparelho.
+class _MostrarAoPaciente extends StatelessWidget {
+  const _MostrarAoPaciente({required this.pacienteId});
+
+  final String pacienteId;
+
+  @override
+  Widget build(BuildContext context) => AppBotao.secundario(
+    rotulo: AppStrings.evolucaoMostrarAoPaciente,
+    icone: NomeIcone.virarParaPaciente,
+    aoTocar: () => context.goNamed(
+      AppRoutes.modoPacienteNome,
+      pathParameters: {AppRoutes.paramPacienteId: pacienteId},
+    ),
+  );
 }
 
 /// As duas últimas sessões com valor, lado a lado — e, só se houver limiar de

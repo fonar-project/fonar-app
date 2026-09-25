@@ -11,10 +11,12 @@ import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_cabecalho_de_secao.dart';
+import '../../../../design_system/widgets/app_cabecalho_de_tarefa.dart';
 import '../../../../design_system/widgets/app_campo_texto.dart';
 import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../../analise/data/catalogo_de_referencias_vazio.dart';
 import '../../../auth/data/profissional_atual.dart';
 import '../../../fila/presentation/fila_controlador.dart';
 import '../../domain/dados_do_profissional.dart';
@@ -59,6 +61,8 @@ class ContaPage extends ConsumerWidget {
                           _SeusDados(),
                           SizedBox(height: AppSpacing.xl),
                           _NesteAparelho(),
+                          SizedBox(height: AppSpacing.xl),
+                          _FaixasDeReferencia(),
                           SizedBox(height: AppSpacing.xl),
                           _Sobre(),
                           SizedBox(height: AppSpacing.xl),
@@ -306,6 +310,52 @@ int _pendentes(WidgetRef ref) =>
         ?.where((item) => item.pendente)
         .length ??
     0;
+
+// ------------------------------------------------- faixas de referência --
+
+/// De onde vem a classificação das medidas, e por que hoje não há nenhuma.
+/// Só leitura: o catálogo não se edita no aparelho.
+class _FaixasDeReferencia extends ConsumerWidget {
+  const _FaixasDeReferencia();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final textos = Theme.of(context).textTheme;
+    final vazio =
+        ref.watch(catalogoDeReferenciasProvider) is CatalogoDeReferenciasVazio;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _Titulo(AppStrings.contaFaixasTitulo),
+        _Cartao(
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: AppPilulaDeSituacao(
+                texto: vazio
+                    ? AppStrings.contaFaixasPendente
+                    : AppStrings.contaFaixasEmUso,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(AppStrings.contaFaixasTexto, style: textos.bodyMedium),
+            if (vazio) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(AppStrings.contaFaixasVazio, style: textos.bodyMedium),
+            ],
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              AppStrings.contaFaixasSoLeitura,
+              style: textos.bodySmall?.copyWith(
+                color: AppColors.secundarioSobreCreme,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
 
 // ---------------------------------------------------------------- sobre --
 

@@ -65,6 +65,7 @@ class FilaPage extends ConsumerWidget {
               AppCabecalhoDeSecao(
                 titulo: AppStrings.filaTitulo,
                 largura: largura,
+                situacao: AppStrings.situacaoFila,
               ),
               Expanded(child: conteudo),
             ],

@@ -964,6 +964,17 @@ abstract final class AppStrings {
   };
   static const contaVerFila = 'Ver fila';
 
+  static const contaFaixasTitulo = 'Faixas de referência';
+  static const contaFaixasPendente = 'Validação clínica pendente';
+  static const contaFaixasEmUso = 'Catálogo em uso';
+  static const contaFaixasTexto =
+      'As faixas que classificam cada medida vêm de um catálogo que varia com '
+      'sexo, idade e equipamento de captação. Sem faixa válida para o perfil '
+      'do paciente, a medida aparece com o valor e sem classificação.';
+  static const contaFaixasVazio =
+      'Hoje o catálogo está vazio: nenhuma faixa foi validada por profissional '
+      'da área, e nenhuma medida é classificada.';
+  static const contaFaixasSoLeitura = 'O catálogo não se edita neste aparelho.';
   static const contaSobre = 'Sobre o FONAR';
   static const contaSobreTexto =
       'Ferramenta de apoio à decisão para avaliação vocal. O FONAR não emite '
