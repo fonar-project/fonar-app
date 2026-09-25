@@ -40,6 +40,10 @@ import '../cape_v_controlador.dart';
 /// É registro do julgamento do profissional — a tela não sugere nota, não
 /// pré-marca nada e não comenta o que foi marcado.
 ///
+/// TODO(clínico): o protótipo põe "leve", "moderado" e "severo" sob a régua.
+/// Onde cada âncora fica na linha, e com que termo, é do protocolo — até a
+/// orientação dizer, a régua só tem os números.
+///
 /// TODO(clínico): o número aparece enquanto se marca. Na folha de papel
 /// quem avalia não vê o número, e vê-lo pode influenciar a marcação. Se a
 /// orientação preferir escondê-lo durante a avaliação, o ajuste é no
