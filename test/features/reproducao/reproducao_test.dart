@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
-import 'package:fonar_app/features/reproducao/data/reprodutor_just_audio.dart';
+import 'package:fonar_app/features/reproducao/data/reprodutor_audioplayers.dart';
 import 'package:fonar_app/features/reproducao/domain/reprodutor.dart';
 import 'package:fonar_app/features/reproducao/presentation/reproducao_controlador.dart';
 import 'package:fonar_app/features/reproducao/presentation/widgets/player_de_amostra.dart';

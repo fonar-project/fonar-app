@@ -85,27 +85,38 @@ Nunca invente referência bibliográfica nem altere os valores.
 ## Stack
 Flutter + Dart. Estado com Riverpod (sem code generation). Rotas com
 go_router. HTTP com Dio. Persistência local e fila de sincronização com
-Drift. Gráficos com fl_chart. Áudio: record para captura, just_audio para
+Drift. Gráficos com fl_chart. Áudio: record para captura, audioplayers para
 reprodução. Ícones com vector_graphics_compiler.
 Backend: Firebase (auth e dados) + API Python no Cloud Run (análise).
 
-### Dívida técnica conhecida — `just_audio_windows` e um header obsoleto
-O `just_audio_windows` inclui `<experimental/coroutine>`, header que a
-Microsoft marcou como obsoleto e, a partir do MSVC 14.51 (Build Tools do
-Visual Studio 2026), transformou em erro de compilação. **O build do Windows
-só fecha com o Visual Studio Community 2022** (MSVC 14.44), e está aí a
-dependência: não é preferência de ferramenta, é o único compilador que aceita
-o plugin. Os pré-requisitos completos estão no README.
+### Reprodução de áudio — por que é o `audioplayers` (dívida encerrada)
+Até 24/09/2026 a reprodução era `just_audio` + `just_audio_windows`. O plugin
+de Windows inclui `<experimental/coroutine>`, header que a Microsoft marcou
+como obsoleto e, no MSVC 14.51 (Visual Studio 2026), transformou em erro de
+compilação (STL1011). O build do Windows só fechava com o Visual Studio
+Community 2022, e o CI teve de ser fixado numa imagem antiga. **Isso acabou**:
+o `audioplayers` pede C++20 e não usa o header. O README não exige mais o
+Community 2022 e o CI voltou para `windows-latest`.
 
-Quando a Microsoft remover o header de vez, o plugin para de compilar e não
-adianta trocar de versão do Visual Studio. A saída será trocar a implementação
-de reprodução no Windows — e a alternativa óbvia, o `just_audio_media_kit`,
-embute a libmpv, que é GPL e está proibida dentro do executável pela regra
-de processamento de áudio acima. Reproduzir não é analisar: a troca mexe só
-em quem toca o WAV, nunca em quem mede.
+O critério da escolha não foi a facilidade. O `just_audio_windows_plus` era
+drop-in e não custava nenhuma linha de Dart, mas tinha 11 dias de publicação,
+2 likes e mantenedor único — o mesmo perfil do plugin que nos deixou na mão.
+O `audioplayers_windows` é endossado no pubspec do próprio `audioplayers`
+(`default_package`), mantido pela organização que mantém o pacote principal.
 
-Enquanto isso, o job de `flutter build windows` no CI é o que acusa a quebra.
-Teste nenhum pega: os 624 rodam no Ubuntu e não compilam código nativo.
+**A regra que tornou a troca barata, e que vale manter:** a reprodução está
+atrás da interface `Reprodutor` (`features/reproducao/domain/reprodutor.dart`),
+e um único arquivo a implementa. Trocar de pacote custou esse arquivo; tela e
+controlador não souberam de nada. Nenhuma tela deve importar pacote de áudio
+direto.
+
+O `just_audio_media_kit` continua proibido: embute a libmpv, que é GPL, e a
+regra de processamento de áudio acima barra GPL dentro do executável.
+Reproduzir não é analisar — a troca mexe só em quem toca o WAV, nunca em quem
+mede —, mas a restrição de licença vale para o executável inteiro.
+
+O job de `flutter build windows` no CI segue sendo o único que compila código
+nativo. Teste nenhum pega: os 624 rodam no Ubuntu.
 
 ## Offline
 A fila de sincronização vale para AS DUAS plataformas. Queda de conexão em

@@ -96,17 +96,31 @@ dependencies:
   pdf: ^3.13.1
   printing: ^5.15.1
 
-  # Ouvir as gravações (US13). O `just_audio` é o que a stack do projeto já
-  # prevê (CLAUDE.md). Só REPRODUZ o arquivo: não analisa nem desenha nada —
-  # toda medida continua no servidor.
+  # Ouvir as gravações (US13). Só REPRODUZ o arquivo: não analisa nem desenha
+  # nada — toda medida continua no servidor. Licença MIT.
   #
-  # Ele não cobre o Windows sozinho, e Android e Windows precisam das mesmas
-  # funções. O `just_audio_windows` é a implementação para Windows pelo
-  # reprodutor do próprio sistema, licença MIT. A outra opção, o
-  # `just_audio_media_kit`, embute a libmpv — e trazer GPL para dentro do
-  # executável é justamente o que o CLAUDE.md proíbe.
-  just_audio: ^0.10.6
-  just_audio_windows: ^0.2.3
+  # SUBSTITUIU o `just_audio` + `just_audio_windows` em 24/09/2026. Motivo: o
+  # `just_audio` não cobre o Windows sozinho, e a implementação de Windows que
+  # existia, o `just_audio_windows`, inclui `<experimental/coroutine>` — header
+  # que o MSVC 14.51 (Visual Studio 2026) rejeita com STL1011. Como as imagens
+  # do GitHub Actions passaram a trazer o VS 2026, o build do Windows parou de
+  # fechar. A issue no upstream está aberta e sem correção.
+  #
+  # O `audioplayers` é federado pela PRÓPRIA organização que o mantém: o
+  # `audioplayers_windows` é endossado no pubspec dele (`default_package`),
+  # não é plugin de terceiro pendurado à parte. Foi esse o critério de
+  # escolha. O candidato mais direto, `just_audio_windows_plus`, é drop-in e
+  # resolveria sem mexer em código Dart, mas tinha 11 dias de publicação e 2
+  # likes — e o que nos trouxe até aqui foi justamente depender de um plugin
+  # federado pequeno, de mantenedor único, que ficou sem manutenção.
+  #
+  # O `just_audio_media_kit` segue barrado: embute a libmpv, que é GPL, e
+  # trazer GPL para dentro do executável é o que o CLAUDE.md proíbe.
+  #
+  # A troca custou UM arquivo — `reproducao/data/reprodutor_audioplayers.dart`
+  # — porque a reprodução está atrás da interface `Reprodutor`. O contrato não
+  # mudou: tela e controlador não souberam da troca.
+  audioplayers: ^6.8.1
 
   # O token de autenticação no cofre do sistema (US18): cifrado com chave do
   # Keystore no Android e com chave no Gerenciador de Credenciais no Windows.
