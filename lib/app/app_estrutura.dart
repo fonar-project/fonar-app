@@ -6,6 +6,7 @@ import '../core/network/conexao.dart';
 import '../design_system/breakpoints.dart';
 import '../design_system/tokens/app_colors.dart';
 import '../design_system/tokens/app_spacing.dart';
+import '../design_system/widgets/app_fundo.dart';
 import '../design_system/widgets/app_indicador_conexao.dart';
 import '../design_system/widgets/app_toque.dart';
 import '../features/auth/data/profissional_atual.dart';
@@ -67,8 +68,7 @@ enum DestinoPrincipal {
 ///
 /// Quem decide ter navegação principal é a tela, no seu próprio `build` — não
 /// o roteador por `ShellRoute` nem por `AppEstrutura` em volta do `builder`.
-/// Vale sem exceção, inclusive para as telas de andaime: a `TelaPlaceholder`
-/// recebe o `destino` e se embrulha sozinha.
+/// Vale sem exceção.
 ///
 /// O motivo é que a maioria das telas NÃO tem navegação: gravação, revisão e
 /// CAPE-V ocupam a tela inteira, e o login vem antes de haver navegação. Com o
@@ -76,9 +76,12 @@ enum DestinoPrincipal {
 /// exceções espalhada pelas rotas, longe da tela que ela descreve. Aqui basta
 /// abrir a tela para saber a resposta.
 ///
-/// O roteador estava embrulhando as três telas de andaime enquanto esta
-/// documentação dizia o contrário. As duas convenções funcionam; ter as duas
-/// ao mesmo tempo é que não.
+/// Houve um tempo em que o roteador embrulhava as telas de andaime enquanto
+/// esta documentação dizia o contrário. As duas convenções funcionam; ter as
+/// duas ao mesmo tempo é que não. As telas de andaime acabaram — a última
+/// saiu com o histórico (US23), e a `TelaPlaceholder` foi removida em
+/// 25/09/2026. O que segura a convenção agora é `app_estrutura_test.dart`,
+/// exercitando o roteador de verdade.
 class AppEstrutura extends StatelessWidget {
   const AppEstrutura({required this.destino, required this.child, super.key});
 
@@ -241,7 +244,7 @@ class _ItemLateral extends StatelessWidget {
       // Azul some sobre o roxo; o anel aqui é creme.
       corDoFoco: creme,
       corDoHover: creme.withValues(alpha: 0.08),
-      child: Container(
+      conteudo: (context) => Container(
         constraints: const BoxConstraints(
           minHeight: AppSpacing.alvoDeToqueMinimo,
         ),
@@ -307,7 +310,7 @@ class _ItemInferior extends StatelessWidget {
     return AppToque(
       aoTocar: () => context.goNamed(destino.rota),
       selecionado: ativo,
-      child: Container(
+      conteudo: (context) => Container(
         constraints: const BoxConstraints(
           minHeight: AppSpacing.alvoDeToqueMinimo + AppSpacing.xs,
         ),
@@ -333,9 +336,10 @@ class _ItemInferior extends StatelessWidget {
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: ativo
                   ? AppColors.roxoProfundo
-                  // A barra inferior é creme, não lavanda: o token escuro aqui
-                  // seria o do fundo errado.
-                  : AppColors.secundarioSobreCreme,
+                  // Pelo fundo, não fixo: a barra é creme em repouso, mas o
+                  // véu de hover do `AppToque` a escurece, e ali o token de
+                  // creme reprova em AA.
+                  : AppFundo.secundarioDe(context),
               fontWeight: ativo ? FontWeight.w800 : FontWeight.w600,
             ),
           ),

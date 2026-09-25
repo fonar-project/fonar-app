@@ -48,10 +48,7 @@ Future<Set<TarefaDeGravacao>> _semArquivo(
 
 /// O que está acontecendo com as sessões na tela.
 class EstadoDaLimpeza {
-  const EstadoDaLimpeza({this.confirmando, this.ocupada, this.erro});
-
-  /// A sessão cujo descarte espera confirmação.
-  final String? confirmando;
+  const EstadoDaLimpeza({this.ocupada, this.erro});
 
   /// A sessão sendo descartada ou posta na fila agora.
   final String? ocupada;
@@ -69,18 +66,13 @@ class LimpezaControlador extends Notifier<EstadoDaLimpeza> {
   @override
   EstadoDaLimpeza build() => const EstadoDaLimpeza();
 
-  /// Primeiro toque em "Descartar": pede confirmação, na própria sessão.
-  void pedirDescarte(String sessaoId) {
-    if (state.ocupada != null) return;
-    state = EstadoDaLimpeza(confirmando: sessaoId);
-  }
-
-  void manter() {
-    if (state.ocupada != null) return;
-    state = const EstadoDaLimpeza();
-  }
-
   /// Apaga os arquivos e o registro da sessão. Devolve `true` se apagou.
+  ///
+  /// Quem pergunta é a TELA, com o diálogo do design system (`appConfirmar`):
+  /// até 25/09/2026 a confirmação era um estado daqui (`confirmando`), e o
+  /// controlador só descartava a sessão que estivesse nesse estado. A
+  /// pergunta passou a ser uma só no aplicativo inteiro — ver
+  /// `design_system/widgets/app_confirmacao.dart`.
   ///
   /// Os arquivos saem ANTES do registro: se um arquivo não sair, o registro
   /// fica, e a sessão continua na lista para tentar de novo — em vez de um
@@ -91,9 +83,7 @@ class LimpezaControlador extends Notifier<EstadoDaLimpeza> {
   /// de apagar qualquer arquivo. A chave estrangeira do banco protegia o
   /// registro, mas não o WAV, que saía antes (revisão de 24/09).
   Future<bool> descartar(SessaoNaoEnviada sessao) async {
-    if (state.ocupada != null || state.confirmando != sessao.sessaoId) {
-      return false;
-    }
+    if (state.ocupada != null) return false;
     state = EstadoDaLimpeza(ocupada: sessao.sessaoId);
     // Guardado antes das esperas: o que foi apagado precisa sumir da lista
     // mesmo com a tela fechada no meio.

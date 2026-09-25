@@ -13,6 +13,7 @@ import 'package:fonar_app/features/consentimento/domain/repositorio_consentiment
 import 'package:fonar_app/features/fila/data/envio_de_analise_api.dart';
 import 'package:fonar_app/features/fila/data/repositorio_fila_local.dart';
 import 'package:fonar_app/features/fila/domain/item_da_fila.dart';
+import 'package:fonar_app/l10n/app_strings.dart';
 import 'package:fonar_app/features/fila/domain/repositorio_fila.dart';
 import 'package:fonar_app/features/fila/presentation/fila_controlador.dart';
 
@@ -575,6 +576,77 @@ void main() {
 
     await Future<void>.delayed(const Duration(milliseconds: 80));
     expect(leiturasDoRelogio, lessThan(5));
+  });
+
+  // Achado 8.1 da revisão de 24/09: o WAV que sumiu virava `FalhaDesconhecida`
+  // e a fila reenviava a cada 30 minutos, para sempre, um envio impossível.
+  group('gravação que sumiu do aparelho', () {
+    ItemDaFila item() => ItemDaFila(
+      id: 'envio-s',
+      pacienteId: 'p1',
+      nomeDoPaciente: 'Ana de Teste',
+      sessaoId: 's',
+      amostras: [_amostra],
+      criadoEm: DateTime(2026, 9, 23),
+    );
+
+    test('o envio para antes da rede, com falha própria', () async {
+      // Dio sem `baseUrl`: se a conferência deixasse passar, o erro seria
+      // outro, e o teste não confundiria os dois.
+      final envio = EnvioDeAnaliseApi(Dio(), existe: (_) async => false);
+
+      await expectLater(
+        envio.enviar(item()),
+        throwsA(isA<GravacaoNaoEncontrada>()),
+      );
+    });
+
+    test('a falha leva a recusado, não a nova tentativa', () {
+      expect(
+        PoliticaDeReenvio.depoisDe(const GravacaoNaoEncontrada()),
+        SituacaoDoEnvio.recusado,
+      );
+      // O contraste com o caso passageiro, que é o que estava acontecendo.
+      expect(
+        PoliticaDeReenvio.depoisDe(const FalhaDesconhecida()),
+        SituacaoDoEnvio.aguardandoNovaTentativa,
+      );
+    });
+
+    test('recusado não é tentado sozinho', () {
+      final recusado = item().copiar(situacao: SituacaoDoEnvio.recusado);
+      expect(recusado.prontoEm(DateTime(2027)), isFalse);
+    });
+
+    test('a mensagem diz o que aconteceu e o que fazer', () {
+      const falha = GravacaoNaoEncontrada();
+      expect(falha.mensagem, AppStrings.erroGravacaoNaoEncontrada);
+      expect(falha.mensagem, contains('não está mais neste aparelho'));
+      expect(falha.mensagem, contains('Grave a sessão de novo'));
+      // A mensagem antiga da fila afirmava o contrário do que acontece aqui.
+      expect(
+        AppStrings.filaRecusadoTexto(falha.mensagem),
+        isNot(contains('continua guardada')),
+      );
+    });
+
+    test('confere todas as gravações da sessão, e para na primeira que '
+        'faltar', () async {
+      final conferidos = <String>[];
+      final envio = EnvioDeAnaliseApi(
+        Dio(),
+        existe: (caminho) async {
+          conferidos.add(caminho);
+          return false;
+        },
+      );
+
+      await expectLater(
+        envio.enviar(item()),
+        throwsA(isA<GravacaoNaoEncontrada>()),
+      );
+      expect(conferidos, [_amostra.caminho]);
+    });
   });
 
   test('envio com cancelamento já pedido não chega à rede', () async {

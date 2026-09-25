@@ -189,7 +189,9 @@ class _Opcao extends StatelessWidget {
           : AppToque(
               aoTocar: aoTocar!,
               raio: AppRadius.bordaPilula,
-              child: conteudo,
+              // A pílula usa creme sobre roxo ou chumbo sobre creme, nenhum
+              // dos dois do par que depende do fundo.
+              conteudo: (_) => conteudo,
             ),
     );
   }

@@ -13,6 +13,7 @@ import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_campo_texto.dart';
 import '../../../../design_system/widgets/app_estado.dart';
 import '../../../../design_system/widgets/app_icone.dart';
+import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../design_system/widgets/app_indicador_conexao.dart';
 import '../../../../l10n/app_strings.dart';
 import '../login_controlador.dart';
@@ -52,9 +53,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (entrou && mounted) context.goNamed(AppRoutes.pacientesNome);
   }
 
-  void _esqueciSenha() => ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text(AppStrings.loginRecuperacaoIndisponivel)),
-  );
+  /// Tocou em "Esqueci a senha": o aviso fica na tela até sair dela.
+  ///
+  /// Era o único `SnackBar` do aplicativo (achado 5.4 da revisão de 24/09).
+  /// Ele flutuava por cima do conteúdo, sumia sozinho — quem lê devagar perde
+  /// o aviso, e é ele que explica por que nada aconteceu — e vinha com a cor
+  /// escura do Material, fora da paleta. Todo aviso desta tela e das outras é
+  /// um `AppSituacao` no fluxo da página; este passou a ser também.
+  var _recuperacaoPedida = false;
 
   @override
   Widget build(BuildContext context) {
@@ -153,7 +159,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             const SizedBox(height: AppSpacing.xs),
             Center(
               child: TextButton(
-                onPressed: _esqueciSenha,
+                onPressed: () => setState(() => _recuperacaoPedida = true),
                 style:
                     TextButton.styleFrom(
                       foregroundColor: AppColors.roxoProfundo,
@@ -178,6 +184,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 child: const Text(AppStrings.loginEsqueciSenha),
               ),
             ),
+            if (_recuperacaoPedida) ...[
+              const SizedBox(height: AppSpacing.sm),
+              // `liveRegion`: o aviso aparece por causa de um toque, e quem
+              // não vê a tela precisa ouvir que apareceu.
+              Semantics(
+                liveRegion: true,
+                child: const AppSituacao(
+                  icone: NomeIcone.informacao,
+                  titulo: AppStrings.loginRecuperacaoIndisponivel,
+                  texto: AppStrings.loginRecuperacaoIndisponivelTexto,
+                ),
+              ),
+            ],
           ],
         ],
       ),

@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fonar_app/core/network/conexao.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/features/captura/data/fonte_de_nivel_record.dart';
+import 'package:fonar_app/features/captura/domain/ajuste_de_configuracao.dart';
 import 'package:fonar_app/features/captura/domain/afericao_de_ruido.dart';
 import 'package:fonar_app/features/captura/domain/fonte_de_nivel.dart';
 import 'package:fonar_app/features/captura/presentation/afericao_controlador.dart';
@@ -148,6 +149,28 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text(AppStrings.afericaoMudo), findsOneWidget);
     });
+
+    // O teste acima fixa o nível em menos infinito para chegar em "microfone
+    // mudo", e com isso o medidor só mostra "Sem sinal" — o rótulo mais
+    // curto. Este passa um nível de verdade, para o medidor aparecer com o
+    // rótulo longo DENTRO da página, com a margem dela.
+    testWidgets('$nome medindo, em 200%, com nível de verdade', (tester) async {
+      await _abrir(tester, tamanho: tamanho, escala: 2);
+
+      final botao = find.text(AppStrings.afericaoMedir);
+      await tester.ensureVisible(botao);
+      await tester.tap(botao);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 250));
+
+      expect(find.byType(MedidorDeNivel), findsOneWidget);
+      expect(find.text(AppStrings.medidorAmbiente), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      await tester.pump(AfericaoDeRuido.duracao);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
   }
 
   testWidgets('durante a medição mostra o medidor ao vivo', (tester) async {
@@ -270,13 +293,30 @@ void main() {
   });
 
   group('MedidorDeNivel', () {
-    Future<void> medidor(WidgetTester tester, double? dbfs) =>
-        tester.pumpWidget(
-          MaterialApp(
-            theme: AppTheme.claro,
-            home: Scaffold(body: MedidorDeNivel(dbfs: dbfs)),
+    Future<void> medidor(
+      WidgetTester tester,
+      double? dbfs, {
+      bool ambiente = false,
+      Size tamanho = const Size(800, 600),
+      double escala = 1,
+    }) async {
+      tester.view.physicalSize = tamanho;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      if (escala != 1) {
+        tester.platformDispatcher.textScaleFactorTestValue = escala;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      }
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.claro,
+          home: Scaffold(
+            body: MedidorDeNivel(dbfs: dbfs, ambiente: ambiente),
           ),
-        );
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
 
     testWidgets('saturação vem escrita e com ícone, não só em vermelho', (
       tester,
@@ -335,6 +375,45 @@ void main() {
       );
       semantica.dispose();
     });
+
+    // Achado 6 da revisão de 24/09: o teste de 200% fixava o nível em menos
+    // infinito — "Sem sinal", o único rótulo curto o bastante para caber — e
+    // este grupo rodava sempre em 800x600 e 1,0x. Nenhum dos dois via
+    // "Sinal adequado" em 390px ampliado, que é o caso que estourava.
+    //
+    // A matriz cobre TODOS os rótulos nas duas larguras-alvo e nas três
+    // escalas. O rótulo é o que muda de tamanho; o número em dBFS tem
+    // largura quase fixa e a barra é elástica.
+    for (final (rotulo, dbfs, ambiente) in [
+      (AppStrings.medidorSemSinal, double.negativeInfinity, false),
+      (AppStrings.medidorBaixo, -50.0, false),
+      (AppStrings.medidorAdequado, -20.0, false),
+      (AppStrings.medidorAlto, -6.0, false),
+      // Leva ícone de alerta além do texto: é o rótulo com menos espaço.
+      (AppStrings.medidorSaturando, -0.2, false),
+      (AppStrings.medidorAmbiente, -20.0, true),
+    ]) {
+      for (final (nomeDaLargura, tamanho) in [
+        ('celular', _celular),
+        ('desktop', _desktop),
+      ]) {
+        for (final escala in [1.0, 1.5, 2.0]) {
+          testWidgets('"$rotulo" cabe em $nomeDaLargura a '
+              '${(escala * 100).round()}%', (tester) async {
+            await medidor(
+              tester,
+              dbfs,
+              ambiente: ambiente,
+              tamanho: tamanho,
+              escala: escala,
+            );
+
+            expect(find.text(rotulo), findsOneWidget);
+            expect(tester.takeException(), isNull);
+          });
+        }
+      }
+    }
   });
 
   group('microfone da aferição ainda fechando', () {

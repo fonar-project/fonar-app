@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../reproducao/presentation/reproducao_controlador.dart';
 import '../data/fonte_de_nivel_record.dart';
+import '../domain/ajuste_de_configuracao.dart';
 import '../domain/afericao_de_ruido.dart';
 import '../domain/fonte_de_nivel.dart';
 

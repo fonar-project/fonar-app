@@ -9,6 +9,7 @@ import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_cabecalho_de_tarefa.dart';
+import '../../../../design_system/widgets/app_confirmacao.dart';
 import '../../../../design_system/widgets/app_estado.dart';
 import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
@@ -23,8 +24,9 @@ import '../gravacoes_nao_enviadas_controlador.dart';
 /// As sessões de um paciente que ficaram no aparelho sem ir para a análise.
 ///
 /// Voz de paciente não fica esquecida no disco: aqui o profissional ouve,
-/// manda para a análise a sessão completa, ou descarta. Descartar pede
-/// confirmação na própria sessão — apaga áudio de paciente, e não se desfaz.
+/// manda para a análise a sessão completa, ou descarta. Descartar pergunta
+/// antes, no diálogo do design system (`appConfirmar`) — apaga áudio de
+/// paciente, e não se desfaz.
 class GravacoesNaoEnviadasPage extends ConsumerWidget {
   const GravacoesNaoEnviadasPage({required this.pacienteId, super.key});
 
@@ -148,7 +150,6 @@ class _CartaoDaSessao extends ConsumerWidget {
       limpezaControladorProvider(pacienteId).notifier,
     );
     final ocupada = estado.ocupada != null;
-    final confirmando = estado.confirmando == sessao.sessaoId;
     final erro = estado.erro?.sessaoId == sessao.sessaoId
         ? estado.erro!.mensagem
         : null;
@@ -202,59 +203,49 @@ class _CartaoDaSessao extends ConsumerWidget {
                 ),
             ],
           const SizedBox(height: AppSpacing.md),
-          if (confirmando) ...[
-            AppSituacao(
-              icone: NomeIcone.alerta,
-              titulo: AppStrings.naoEnviadasConfirmar(sessao.amostras.length),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.xs,
-              children: [
-                AppBotao.secundario(
-                  rotulo: AppStrings.naoEnviadasManter,
-                  aoTocar: ocupada ? null : controlador.manter,
-                  motivoDesabilitado: AppStrings.naoEnviadasDescartando,
-                ),
-                AppBotao.secundario(
-                  rotulo: AppStrings.naoEnviadasDescartarDeVez,
-                  aoTocar: ocupada ? null : () => controlador.descartar(sessao),
-                  motivoDesabilitado: AppStrings.naoEnviadasDescartando,
-                ),
-              ],
-            ),
-          ] else
-            Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.xs,
-              children: [
-                AppBotao.secundario(
-                  rotulo: AppStrings.naoEnviadasEnviar,
-                  icone: NomeIcone.avancar,
-                  aoTocar: sessao.completa && comConsentimento && !ocupada
-                      ? () => controlador.enviar(
-                          sessao,
-                          nomeDoPaciente: nomeDoPaciente,
-                        )
-                      : null,
-                  motivoDesabilitado: sessao.semArquivo.isNotEmpty
-                      ? AppStrings.naoEnviadasFaltaArquivo
-                      : !sessao.completa
-                      ? AppStrings.naoEnviadasIncompleta
-                      : !comConsentimento
-                      ? AppStrings.naoEnviadasSemConsentimento
-                      : AppStrings.naoEnviadasOcupada,
-                ),
-                AppBotao.secundario(
-                  rotulo: AppStrings.naoEnviadasDescartar,
-                  aoTocar: ocupada
-                      ? null
-                      : () => controlador.pedirDescarte(sessao.sessaoId),
-                  motivoDesabilitado: AppStrings.naoEnviadasOcupada,
-                ),
-              ],
-            ),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.xs,
+            children: [
+              AppBotao.secundario(
+                rotulo: AppStrings.naoEnviadasEnviar,
+                icone: NomeIcone.avancar,
+                aoTocar: sessao.completa && comConsentimento && !ocupada
+                    ? () => controlador.enviar(
+                        sessao,
+                        nomeDoPaciente: nomeDoPaciente,
+                      )
+                    : null,
+                motivoDesabilitado: sessao.semArquivo.isNotEmpty
+                    ? AppStrings.naoEnviadasFaltaArquivo
+                    : !sessao.completa
+                    ? AppStrings.naoEnviadasIncompleta
+                    : !comConsentimento
+                    ? AppStrings.naoEnviadasSemConsentimento
+                    : AppStrings.naoEnviadasOcupada,
+              ),
+              AppBotao.secundario(
+                rotulo: estado.ocupada == sessao.sessaoId
+                    ? AppStrings.naoEnviadasDescartando
+                    : AppStrings.naoEnviadasDescartar,
+                aoTocar: ocupada
+                    ? null
+                    : () async {
+                        final confirmou = await appConfirmar(
+                          context,
+                          titulo: AppStrings.naoEnviadasDescartarTitulo(
+                            sessao.amostras.length,
+                          ),
+                          texto: AppStrings.naoEnviadasDescartarTexto,
+                          confirmar: AppStrings.naoEnviadasDescartarDeVez,
+                          cancelar: AppStrings.naoEnviadasManter,
+                        );
+                        if (confirmou) await controlador.descartar(sessao);
+                      },
+                motivoDesabilitado: AppStrings.naoEnviadasOcupada,
+              ),
+            ],
+          ),
           if (erro != null) ...[
             const SizedBox(height: AppSpacing.sm),
             AppSituacao(icone: NomeIcone.alerta, titulo: erro),

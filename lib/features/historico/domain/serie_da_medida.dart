@@ -43,7 +43,7 @@ List<PontoDaSerie> serieDe(
     PontoDaSerie(
       analiseId: sessao.id,
       realizadaEm: sessao.realizadaEm!,
-      valor: sessao.medidas.where((m) => m.medida == medida).firstOrNull?.valor,
+      valor: sessao.valorDe(medida),
     ),
 ];
 

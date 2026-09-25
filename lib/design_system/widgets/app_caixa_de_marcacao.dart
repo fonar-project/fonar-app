@@ -93,7 +93,9 @@ class AppCaixaDeMarcacao extends StatelessWidget {
                 : AppToque(
                     aoTocar: () => aoMudar!(!marcada),
                     raio: AppRadius.bordaPequena,
-                    child: linha,
+                    // `linha` não tem cor que dependa do fundo; se algum dia
+                    // tiver, ela precisa ser montada aqui dentro.
+                    conteudo: (_) => linha,
                   ),
           ),
         ),

@@ -22,7 +22,11 @@ import 'package:fonar_app/features/historico/presentation/pages/evolucao_page.da
 import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_local.dart';
 import 'package:fonar_app/features/pacientes/domain/novo_paciente.dart';
 import 'package:fonar_app/features/pacientes/domain/paciente.dart';
+import 'package:fonar_app/design_system/tokens/app_colors.dart';
+import 'package:fonar_app/design_system/widgets/app_toque.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
+
+import '../../apoio/hover.dart';
 
 class _Repositorio implements RepositorioAnalises {
   _Repositorio(this.sessoes, {this.falha = false});
@@ -398,5 +402,28 @@ void main() {
 
     await _tocar(tester, find.bySemanticsLabel(AppStrings.voltar).first);
     expect(find.byType(AnaliseResultadoPage), findsOneWidget);
+  });
+
+  // Achado da revisão de 24/09: com o cursor na linha da sessão, o véu de
+  // hover escurecia o fundo e "Não calculada" continuava com o tom de creme —
+  // 4,35:1, abaixo de AA. Ver `app_colors_test.dart`.
+  testWidgets('a linha da sessão troca o tom do texto secundário no hover', (
+    tester,
+  ) async {
+    await _abrir(tester);
+    await _tocar(tester, find.text('CPPS').first);
+
+    const naoCalculada = AppStrings.resultadoNaoCalculada;
+    expect(corDoTexto(tester, naoCalculada), AppColors.secundarioSobreCreme);
+
+    await passarOMouse(
+      tester,
+      find.ancestor(
+        of: find.text(naoCalculada),
+        matching: find.byType(AppToque),
+      ),
+    );
+
+    expect(corDoTexto(tester, naoCalculada), AppColors.secundarioSobreLavanda);
   });
 }

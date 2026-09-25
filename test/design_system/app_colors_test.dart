@@ -120,6 +120,33 @@ void main() {
       }
     });
 
+    test('o véu de hover derruba o token de creme, e o escuro aguenta', () {
+      // Achado da revisão de 24/09: o `AppToque` pinta um véu por cima da
+      // superfície durante o hover, e o texto secundário continuava com o tom
+      // de creme. 5,00:1 em repouso, 4,35:1 com o cursor em cima — reprova
+      // justamente enquanto o profissional está lendo aquela linha.
+      final comVeu = Color.alphaBlend(AppColors.roxoVeu, AppColors.creme);
+      expect(
+        contraste(AppColors.secundarioSobreCreme, comVeu),
+        lessThan(4.5),
+        reason: 'é por isso que o AppToque declara FundoDeTexto.lavanda',
+      );
+      expect(
+        contraste(AppColors.secundarioSobreLavanda, comVeu),
+        greaterThanOrEqualTo(4.5),
+      );
+
+      // A lista de pacientes usa `lavandaSuave` como véu, não o roxo.
+      final comVeuLavanda = Color.alphaBlend(
+        AppColors.lavandaSuave,
+        AppColors.creme,
+      );
+      expect(
+        contraste(AppColors.secundarioSobreLavanda, comVeuLavanda),
+        greaterThanOrEqualTo(4.5),
+      );
+    });
+
     test('anel de foco se destaca do fundo', () {
       // 3:1 é o mínimo WCAG para indicador de interface (critério 1.4.11).
       expect(

@@ -135,6 +135,9 @@ abstract final class PoliticaDeReenvio {
     NaoAutorizado() || CredencialInvalida() => SituacaoDoEnvio.aguardandoLogin,
     FalhaDeValidacao() ||
     Proibido() ||
-    NaoEncontrado() => SituacaoDoEnvio.recusado,
+    NaoEncontrado() ||
+    // O arquivo não volta sozinho: reenviar a cada 30 minutos só repetiria a
+    // mesma falha até alguém olhar.
+    GravacaoNaoEncontrada() => SituacaoDoEnvio.recusado,
   };
 }

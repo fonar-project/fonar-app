@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,9 +30,15 @@ final envioDeAnaliseProvider = Provider<EnvioDeAnalise>(
 /// envio que deu certo se perde com frequência, e a fila tenta de novo. Sem
 /// a chave, cada nova tentativa criaria uma análise a mais do mesmo áudio.
 class EnvioDeAnaliseApi implements EnvioDeAnalise {
-  const EnvioDeAnaliseApi(this._dio);
+  const EnvioDeAnaliseApi(this._dio, {this.existe = _existeNoDisco});
 
   final Dio _dio;
+
+  /// O arquivo está no disco? Parâmetro para o teste poder responder sem
+  /// disco; em produção é sempre [_existeNoDisco].
+  final Future<bool> Function(String caminho) existe;
+
+  static Future<bool> _existeNoDisco(String caminho) => File(caminho).exists();
 
   @override
   Future<String> enviar(ItemDaFila item, {Cancelamento? cancelamento}) async {
@@ -41,6 +48,16 @@ class EnvioDeAnaliseApi implements EnvioDeAnalise {
     unawaited(cancelamento?.quandoPedido.then((_) => interromper.cancel()));
     try {
       if (cancelamento?.pedido ?? false) throw const EnvioCancelado();
+      // Conferido ANTES de montar o corpo. Sem isto, o arquivo que sumiu vira
+      // uma exceção de sistema de arquivos, o tratamento genérico lá embaixo
+      // a traduz em `FalhaDesconhecida`, e a fila reenvia a cada 30 minutos
+      // para sempre um envio que nunca vai poder acontecer.
+      for (final amostra in item.amostras) {
+        if (!await existe(amostra.caminho)) {
+          // O caminho vai só para o log — `causa` nunca é exibida.
+          throw GravacaoNaoEncontrada(causa: amostra.caminho);
+        }
+      }
       final corpo = FormData.fromMap({
         'paciente_id': item.pacienteId,
         'sessao_id': item.sessaoId,
@@ -69,8 +86,12 @@ class EnvioDeAnaliseApi implements EnvioDeAnalise {
       throw falha is AppException ? falha : FalhaDesconhecida(causa: e);
     } on AppException {
       rethrow;
+    } on FileSystemException catch (e) {
+      // O arquivo sumiu ENTRE a conferência e a leitura, ou está ilegível. A
+      // conclusão é a mesma da conferência: sem o WAV não há o que enviar, e
+      // tentar de novo não o traz de volta.
+      throw GravacaoNaoEncontrada(causa: e);
     } catch (e) {
-      // Arquivo apagado ou ilegível no disco, por exemplo.
       throw FalhaDesconhecida(causa: e);
     }
   }

@@ -105,9 +105,15 @@ class MedidorDeNivel extends StatelessWidget {
                       ),
                       const SizedBox(width: AppSpacing.xxs),
                     ],
-                    Text(
-                      rotuloDaZona,
-                      style: textos.titleSmall?.copyWith(color: corDoTexto),
+                    // Flexible, como no AppStatusMedida e no _ChipTendencia: o
+                    // ícone tem tamanho fixo, o rótulo não. Em 390px com o
+                    // texto do sistema ampliado "Sinal adequado" passava da
+                    // largura e estourava a linha; agora quebra.
+                    Flexible(
+                      child: Text(
+                        rotuloDaZona,
+                        style: textos.titleSmall?.copyWith(color: corDoTexto),
+                      ),
                     ),
                   ],
                 ),

@@ -365,8 +365,11 @@ abstract final class AppStrings {
   static const naoEnviadasSemConsentimento =
       'Sem consentimento em vigor: registre um novo para enviar.';
   static const naoEnviadasDescartar = 'Descartar';
-  static String naoEnviadasConfirmar(int n) =>
-      'Descartar ${n == 1 ? 'a gravação' : 'as $n gravações'} desta sessão? '
+
+  /// Título e texto do diálogo de confirmação — ver `appConfirmar`.
+  static String naoEnviadasDescartarTitulo(int n) =>
+      'Descartar ${n == 1 ? 'a gravação' : 'as $n gravações'} desta sessão?';
+  static const naoEnviadasDescartarTexto =
       'O áudio é apagado deste aparelho, e não dá para desfazer.';
   static const naoEnviadasDescartarDeVez = 'Descartar de vez';
   static const naoEnviadasManter = 'Manter';
@@ -494,8 +497,8 @@ abstract final class AppStrings {
       'Entre novamente para o envio continuar. A gravação continua guardada.';
   static const filaRecusado = 'A análise recusou o envio';
   static String filaRecusadoTexto(String motivo) =>
-      '$motivo A gravação continua guardada neste aparelho. Se tentar de novo '
-      'não resolver, avise o suporte.';
+      '$motivo Tentar de novo costuma repetir a recusa; se repetir, avise o '
+      'suporte.';
   static const filaEnviado = 'Enviado';
   static const filaEnviadoTexto = 'A análise foi recebida pelo servidor.';
   static const filaTentarAgora = 'Tentar agora';
@@ -819,6 +822,16 @@ abstract final class AppStrings {
 
   static const laudoGerar = 'Gerar laudo';
   static const laudoGerando = 'Gerando…';
+
+  /// Gerar de novo substitui o PDF anterior, e é o mesmo botão — por isso
+  /// pergunta antes. Ver `appConfirmar`.
+  static const laudoSubstituirTitulo = 'Substituir o laudo já gerado?';
+  static const laudoSubstituirTexto =
+      'O PDF que está guardado é apagado, e um novo é gerado no lugar dele. '
+      'Não dá para voltar ao anterior. Se o laudo de antes já foi entregue, '
+      'salve o arquivo antes de gerar de novo.';
+  static const laudoSubstituir = 'Gerar de novo';
+  static const laudoManterOAtual = 'Manter o atual';
   static const laudoGerarBloqueado =
       'Resolva os itens pendentes da conferência para gerar.';
   static String laudoGeradoEm(String data, String hora) =>
@@ -1022,7 +1035,10 @@ abstract final class AppStrings {
 
   /// TODO(auth): remover quando a recuperação de senha do Firebase existir.
   static const loginRecuperacaoIndisponivel =
-      'Recuperação de senha ainda não disponível nesta versão (placeholder).';
+      'Recuperação de senha ainda não disponível';
+  static const loginRecuperacaoIndisponivelTexto =
+      'Nesta versão o aplicativo ainda não envia o e-mail de redefinição '
+      '(placeholder). O login aceita qualquer e-mail e senha.';
 
   static const loginOfflineComCacheTitulo =
       'Sem conexão — dados locais disponíveis';
@@ -1044,10 +1060,6 @@ abstract final class AppStrings {
       'Ferramenta de apoio à decisão — não substitui a avaliação do '
       'profissional.';
 
-  // ----------------------------------------------------------- placeholder --
-  /// TODO: remover junto com [TelaPlaceholder] quando as telas reais existirem.
-  static const telaEmConstrucao = 'Tela ainda não implementada.';
-
   // ---------------------------------------------------------------- erros --
   // Mensagens voltadas ao fonoaudiólogo: dizem o que aconteceu e o que fazer,
   // sem jargão de rede e sem código de status.
@@ -1065,6 +1077,9 @@ abstract final class AppStrings {
   static const erroServidor =
       'Houve uma falha no servidor. Tente novamente em alguns instantes.';
   static const erroEnvioCancelado = 'O envio foi cancelado.';
+  static const erroGravacaoNaoEncontrada =
+      'O arquivo da gravação não está mais neste aparelho, e sem ele a '
+      'análise não pode ser feita. Grave a sessão de novo.';
   static const erroDesconhecido =
       'Algo não saiu como esperado. Tente novamente.';
 }

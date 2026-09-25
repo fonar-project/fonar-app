@@ -12,6 +12,7 @@ import '../../../../design_system/tokens/app_typography.dart';
 import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_cabecalho_de_secao.dart';
 import '../../../../design_system/widgets/app_estado.dart';
+import '../../../../design_system/widgets/app_fundo.dart';
 import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../design_system/widgets/app_toque.dart';
@@ -267,45 +268,12 @@ class _Linha extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
-    final secundario = textos.bodySmall?.copyWith(
-      color: AppColors.secundarioSobreCreme,
-    );
     final analise = entrada.analise;
     final quando = switch (analise.realizadaEm) {
       final d? => '${AppStrings.data(d)}, ${AppStrings.hora(d)}',
       null => AppStrings.historicoSemData,
     };
-    final avqi = analise.medidas
-        .where((m) => m.medida == MedidaAcustica.avqi)
-        .firstOrNull
-        ?.valor;
-
-    final Widget direita = switch (analise.situacao) {
-      SituacaoDaAnalise.processando => Text(
-        AppStrings.historicoProcessando,
-        style: secundario,
-      ),
-      SituacaoDaAnalise.falhou => Text(
-        AppStrings.historicoFalhou,
-        style: secundario,
-      ),
-      SituacaoDaAnalise.concluida when avqi == null => Text(
-        AppStrings.historicoAvqiNaoCalculado,
-        style: secundario,
-      ),
-      SituacaoDaAnalise.concluida => Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(MedidaAcustica.avqi.nome, style: secundario),
-          Text(
-            MedidaAcustica.avqi.formatar(avqi!),
-            style: AppTypography.medidaCompacta.copyWith(
-              color: AppColors.cinzaChumbo,
-            ),
-          ),
-        ],
-      ),
-    };
+    final avqi = analise.valorDe(MedidaAcustica.avqi);
 
     return Semantics(
       button: true,
@@ -319,58 +287,93 @@ class _Linha extends StatelessWidget {
             AppRoutes.paramAnaliseId: analise.id,
           },
         ),
-        child: Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.lavandaClaro),
-            borderRadius: AppRadius.bordaMedia,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(entrada.paciente.nome, style: textos.titleSmall),
-                    Text(quando, style: secundario),
-                    if (entrada.temLaudo) ...[
-                      const SizedBox(height: AppSpacing.xxs),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const AppIcone(
-                            nome: NomeIcone.confirmacao,
-                            cor: AppColors.roxoProfundo,
-                            tamanho: 16,
-                          ),
-                          const SizedBox(width: AppSpacing.xxs),
-                          Flexible(
-                            child: Text(
-                              AppStrings.historicoLaudoGerado,
-                              style: secundario,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
+        // O texto secundário é montado AQUI DENTRO, com o `context` do
+        // fechamento: o véu de hover do `AppToque` escurece o creme, e o tom
+        // claro do par reprova em AA sobre ele. Montado lá fora, viria com a
+        // cor de repouso e o hover não teria como corrigi-la.
+        conteudo: (context) {
+          final secundario = textos.bodySmall?.copyWith(
+            color: AppFundo.secundarioDe(context),
+          );
+          final Widget direita = switch (analise.situacao) {
+            SituacaoDaAnalise.processando => Text(
+              AppStrings.historicoProcessando,
+              style: secundario,
+            ),
+            SituacaoDaAnalise.falhou => Text(
+              AppStrings.historicoFalhou,
+              style: secundario,
+            ),
+            SituacaoDaAnalise.concluida when avqi == null => Text(
+              AppStrings.historicoAvqiNaoCalculado,
+              style: secundario,
+            ),
+            SituacaoDaAnalise.concluida => Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(MedidaAcustica.avqi.nome, style: secundario),
+                Text(
+                  MedidaAcustica.avqi.formatar(avqi!),
+                  style: AppTypography.medidaCompacta.copyWith(
+                    color: AppColors.cinzaChumbo,
+                  ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              // Encostado à direita, com teto: "Em análise no servidor" quebra
-              // em linhas em vez de empurrar o nome para fora.
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 150),
-                child: direita,
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              const AppIcone(
-                nome: NomeIcone.avancar,
-                cor: AppColors.roxoProfundo,
-              ),
-            ],
-          ),
-        ),
+              ],
+            ),
+          };
+          return Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColors.lavandaClaro),
+              borderRadius: AppRadius.bordaMedia,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(entrada.paciente.nome, style: textos.titleSmall),
+                      Text(quando, style: secundario),
+                      if (entrada.temLaudo) ...[
+                        const SizedBox(height: AppSpacing.xxs),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const AppIcone(
+                              nome: NomeIcone.confirmacao,
+                              cor: AppColors.roxoProfundo,
+                              tamanho: 16,
+                            ),
+                            const SizedBox(width: AppSpacing.xxs),
+                            Flexible(
+                              child: Text(
+                                AppStrings.historicoLaudoGerado,
+                                style: secundario,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                // Encostado à direita, com teto: "Em análise no servidor" quebra
+                // em linhas em vez de empurrar o nome para fora.
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 150),
+                  child: direita,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                const AppIcone(
+                  nome: NomeIcone.avancar,
+                  cor: AppColors.roxoProfundo,
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

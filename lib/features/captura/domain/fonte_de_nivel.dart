@@ -1,3 +1,5 @@
+import 'ajuste_de_configuracao.dart';
+
 /// De onde vem o nível do microfone.
 ///
 /// Contrato para que a regra da aferição e a tela possam ser testadas sem
@@ -25,15 +27,4 @@ abstract interface class FonteDeNivel {
   /// É a verificação do que de fato saiu, e não do que foi pedido — regra da
   /// captura no CLAUDE.md.
   AjusteDeConfiguracao? get ajuste;
-}
-
-/// A configuração que o aparelho usou no lugar da pedida.
-class AjusteDeConfiguracao {
-  const AjusteDeConfiguracao({
-    required this.taxaDeAmostragem,
-    required this.canais,
-  });
-
-  final int taxaDeAmostragem;
-  final int canais;
 }

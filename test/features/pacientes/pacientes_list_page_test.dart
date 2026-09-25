@@ -10,7 +10,10 @@ import 'package:fonar_app/features/historico/domain/evolucao_da_medida.dart';
 import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_local.dart';
 import 'package:fonar_app/features/pacientes/domain/paciente.dart';
 import 'package:fonar_app/features/pacientes/presentation/pages/pacientes_list_page.dart';
+import 'package:fonar_app/design_system/widgets/app_toque.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
+
+import '../../apoio/hover.dart';
 
 const _celular = Size(390, 844);
 const _desktop = Size(1440, 900);
@@ -129,6 +132,56 @@ void main() {
       ) async {
         await _abrir(tester, tamanho: tamanho);
         expect(find.text(AppStrings.pacientesNotaTendencia), findsOneWidget);
+      });
+
+      // Achado da revisão de 24/09: com o cursor na linha, o véu de hover
+      // escurecia o fundo e o texto secundário continuava com o tom de creme
+      // — 4,35:1, abaixo de AA. Ver `app_colors_test.dart`.
+      testWidgets('$nome: texto secundário troca de tom no hover', (
+        tester,
+      ) async {
+        await _abrir(tester, tamanho: tamanho);
+
+        expect(corDoTexto(tester, 'rouquidão'), AppColors.secundarioSobreCreme);
+
+        // A linha do paciente, não o primeiro `AppToque` da tela: no desktop
+        // a navegação lateral também é feita deles.
+        await passarOMouse(
+          tester,
+          find.ancestor(
+            of: find.text('rouquidão'),
+            matching: find.byType(AppToque),
+          ),
+        );
+
+        expect(
+          corDoTexto(tester, 'rouquidão'),
+          AppColors.secundarioSobreLavanda,
+        );
+      });
+
+      testWidgets('$nome: o chip de tendência também troca de tom', (
+        tester,
+      ) async {
+        await _abrir(tester, tamanho: tamanho);
+
+        // A Clara é a terceira: "sem comparação", o único estado do chip que
+        // usa o par de tokens.
+        final semComparacao = find.text(AppStrings.tendenciaSemComparacao);
+        expect(
+          corDoTexto(tester, AppStrings.tendenciaSemComparacao),
+          AppColors.secundarioSobreCreme,
+        );
+
+        await passarOMouse(
+          tester,
+          find.ancestor(of: semComparacao, matching: find.byType(AppToque)),
+        );
+
+        expect(
+          corDoTexto(tester, AppStrings.tendenciaSemComparacao),
+          AppColors.secundarioSobreLavanda,
+        );
       });
     }
 

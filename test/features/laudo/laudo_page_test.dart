@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -304,6 +304,72 @@ void main() {
     await _escrever(tester, 'Segunda versão.');
 
     expect(find.text(AppStrings.laudoTextoMudou), findsOneWidget);
+  });
+
+  // Achado 5.2 da revisão de 24/09: gerar de novo sobrescrevia o PDF anterior
+  // sem perguntar nada. O laudo tem UMA versão só (ver `PENDENCIAS.md`), então
+  // substituir é destrutivo — e usa o mesmo diálogo do resto do aplicativo.
+  group('gerar de novo substitui o anterior', () {
+    testWidgets('a primeira geração não pergunta nada', (tester) async {
+      final m = await _abrir(tester, capeV: _capeV);
+      await _escrever(tester, 'Primeira versão.');
+
+      await _tocar(tester, find.text(AppStrings.laudoGerar));
+
+      expect(find.text(AppStrings.laudoSubstituirTitulo), findsNothing);
+      expect(m.gerador.conteudos, hasLength(1));
+    });
+
+    testWidgets('a segunda pergunta, e "Manter o atual" não substitui', (
+      tester,
+    ) async {
+      final m = await _abrir(tester, capeV: _capeV);
+      await _escrever(tester, 'Primeira versão.');
+      await _tocar(tester, find.text(AppStrings.laudoGerar));
+      await _escrever(tester, 'Segunda versão.');
+
+      await _tocar(tester, find.text(AppStrings.laudoGerar));
+      expect(find.text(AppStrings.laudoSubstituirTitulo), findsOneWidget);
+      expect(find.text(AppStrings.laudoSubstituirTexto), findsOneWidget);
+
+      await _tocar(tester, find.text(AppStrings.laudoManterOAtual));
+
+      expect(m.gerador.conteudos, hasLength(1));
+      expect((await m.laudos.daAnalise('an-1'))?.conclusao, 'Primeira versão.');
+      // O aviso continua: a conclusão na tela ainda não está no PDF.
+      expect(find.text(AppStrings.laudoTextoMudou), findsOneWidget);
+    });
+
+    testWidgets('Esc também mantém o laudo atual', (tester) async {
+      final m = await _abrir(tester, capeV: _capeV);
+      await _escrever(tester, 'Primeira versão.');
+      await _tocar(tester, find.text(AppStrings.laudoGerar));
+      await _escrever(tester, 'Segunda versão.');
+
+      await _tocar(tester, find.text(AppStrings.laudoGerar));
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.laudoSubstituirTitulo), findsNothing);
+      expect(m.gerador.conteudos, hasLength(1));
+    });
+
+    testWidgets('confirmado, o PDF novo toma o lugar do anterior', (
+      tester,
+    ) async {
+      final m = await _abrir(tester, capeV: _capeV);
+      await _escrever(tester, 'Primeira versão.');
+      await _tocar(tester, find.text(AppStrings.laudoGerar));
+      await _escrever(tester, 'Segunda versão.');
+
+      await _tocar(tester, find.text(AppStrings.laudoGerar));
+      await _tocar(tester, find.text(AppStrings.laudoSubstituir));
+
+      expect(m.gerador.conteudos, hasLength(2));
+      expect(m.gerador.conteudos.last.conclusao, 'Segunda versão.');
+      expect((await m.laudos.daAnalise('an-1'))?.conclusao, 'Segunda versão.');
+      expect(find.text(AppStrings.laudoTextoMudou), findsNothing);
+    });
   });
 
   testWidgets('laudo já gerado volta com a conclusão e as ações', (
