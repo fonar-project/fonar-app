@@ -1,12 +1,20 @@
-/// Contrato de permissão de microfone. Mesmo contrato nas duas plataformas.
+/// RISCO ALTO — Windows: a captura pode falhar EM SILÊNCIO, com áudio mudo.
 ///
-/// Sem implementação ainda — esqueleto. A implementação provavelmente vai se
-/// apoiar em `record` (`AudioRecorder.hasPermission()`), que já resolve o
-/// pedido nativo no Android.
+/// Arquivo de documentação, sem código. Ele existe porque este é o modo de
+/// falhar mais caro do projeto, e porque o que o contém está espalhado por
+/// vários arquivos da captura — o texto junta tudo num lugar e aponta para
+/// cada um. Os arquivos de `features/captura/` referenciam este caminho.
 ///
-/// ---------------------------------------------------------------------------
-/// TODO(RISCO ALTO — Windows): falha silenciosa com áudio mudo.
-/// ---------------------------------------------------------------------------
+/// Não há contrato de permissão aqui. Houve um esqueleto
+/// (`abstract interface class MicrophonePermission`), removido em 25/09/2026:
+/// nunca teve implementação e o aplicativo nunca o chamou. Quem pergunta a
+/// permissão é o próprio pacote de captura, `AudioRecorder.hasPermission()`,
+/// por trás de `FonteDeNivel.pedirPermissao` e `Gravador.pedirPermissao` —
+/// e, no Android, ele já resolve o pedido nativo. Uma camada a mais só
+/// escondia isso.
+///
+/// ## O modo de falha
+///
 /// No Windows NÃO EXISTE declaração de permissão de microfone para um
 /// executável Win32 desempacotado, que é o que `flutter build windows` gera.
 /// `windows/runner/runner.exe.manifest` declara apenas DPI e compatibilidade
@@ -28,40 +36,45 @@
 /// paciente já foi embora. A coleta não é repetível. É perda de dado clínico,
 /// não um bug de interface.
 ///
-/// Por isso, o módulo de captura OBRIGATORIAMENTE precisará:
+/// ## O que o aplicativo faz, e onde
 ///
-///  1. Verificar amplitude durante a aferição de ruído ambiente, ANTES de
-///     liberar a gravação de fato. A aferição já lê amplitude em tempo real
-///     (única exceção permitida ao processamento local) — é o ponto natural
-///     para essa checagem, e ela custa zero.
-///  2. Tratar silêncio absoluto como FALHA, não como "sala silenciosa".
-///     Ruído ambiente real nunca é exatamente zero: um piso de amplitude
-///     idêntico a zero por alguns segundos significa microfone mudo, não
-///     acústica boa. Definir o limiar empiricamente.
-///  3. Avisar explicitamente e BLOQUEAR a gravação, com texto que diga o que
-///     fazer — no Windows, o caminho das configurações de privacidade.
-///     Nunca deixar seguir com um aviso discreto.
-///  4. Verificar o que de fato saiu, e não confiar na configuração pedida.
-///     Vale para taxa de amostragem, canais e profundidade de bits também.
+/// 1. **Verifica amplitude na aferição de ruído, antes de liberar a gravação.**
+///    `features/captura/domain/afericao_de_ruido.dart` e `nivel_de_audio.dart`
+///    (`microfoneMudo`): exige um mínimo de leituras válidas e uma variação
+///    mínima entre elas — leitura parada no mesmo valor é microfone entregando
+///    número fixo, não sala silenciosa.
+/// 2. **Trata silêncio absoluto como FALHA, nunca como sala silenciosa.** Na
+///    aferição, por (1). Na gravação, duas vezes: pelas leituras e pelos
+///    BYTES do arquivo que saiu
+///    (`VerificacaoDaAmostra.audioTodoEmZero`) — comparação de byte com zero,
+///    não análise acústica. A segunda existe porque a primeira vem do plugin:
+///    se ele informar amplitude plausível enquanto escreve zeros no disco, só
+///    o arquivo denuncia.
+/// 3. **Avisa e BLOQUEIA**, com texto que diz o que fazer — no Windows, o
+///    caminho das configurações de privacidade: `l10n/app_strings.dart`
+///    (`afericaoMudo`, `problemaSemSinal`) e a tela de gravação. A gravação
+///    não abre sem aferição liberada.
+/// 4. **Confere o que de fato saiu, e não a configuração pedida.** Taxa e
+///    canais: pelo `setOnConfigChanged` nas DUAS capturas
+///    (`FonteDeNivel.ajuste` e `Gravador.ajuste`) e pelo cabeçalho do WAV.
+///    Formato e profundidade de bits: só pelo cabeçalho, porque o `record`
+///    não tem parâmetro de bits nem avisa sobre ela — ver
+///    `ConfiguracaoDeCaptura.bitsPorAmostra`.
 ///
 /// Ver a regra de captura no CLAUDE.md: "VERIFICAR empiricamente o que saiu,
 /// não confiar na configuração solicitada".
 ///
-/// SITUAÇÃO (US04): os itens 1 a 3 estão na aferição de ruído —
-/// `features/captura/domain/afericao_de_ruido.dart` e a tela de gravação. O
-/// limiar de silêncio ainda é valor de partida, NÃO definido empiricamente.
-/// O item 4 está pela metade: a troca de taxa e de canais pelo aparelho é
-/// detectada e mostrada; conferir o cabeçalho do WAV gravado fica para a
-/// gravação das tarefas. Nada disso foi verificado em aparelho real ainda.
-abstract interface class MicrophonePermission {
-  /// Já temos permissão, sem perguntar nada ao usuário?
-  Future<bool> temPermissao();
-
-  /// Pede a permissão ao sistema. No Windows tende a ser no-op: não há diálogo
-  /// a exibir, o resultado depende das configurações de privacidade.
-  Future<bool> solicitar();
-
-  /// Permissão negada de forma permanente — o app não consegue mais exibir o
-  /// diálogo e o usuário precisa ir às configurações do sistema.
-  Future<bool> negadaPermanentemente();
-}
+/// ## O que continua em aberto
+///
+/// - O LIMIAR de silêncio e as zonas do medidor são valores de partida, não
+///   definidos empiricamente (`LimitesDeNivel`, `AfericaoDeRuido`).
+/// - Nada disso foi exercitado com microfone de verdade: o ambiente em que o
+///   código foi escrito não tem um. Em especial, não se sabe se o
+///   `setOnConfigChanged` dispara, nem qual valor chega com o microfone
+///   bloqueado pela privacidade do Windows.
+/// - Desligar ganho automático, supressão de ruído e cancelamento de eco é
+///   PEDIDO, e nada confirma que a plataforma obedeceu — o cabeçalho do WAV
+///   cobre formato, não processamento.
+///
+/// As três estão no `PENDENCIAS.md`, em "Verificar em aparelho real".
+library;

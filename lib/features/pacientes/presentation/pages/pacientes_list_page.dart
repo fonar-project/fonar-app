@@ -12,6 +12,7 @@ import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/tokens/app_typography.dart';
 import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_estado.dart';
+import '../../../../design_system/widgets/app_fundo.dart';
 import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_indicador_conexao.dart';
 import '../../../../design_system/widgets/app_toque.dart';
@@ -492,7 +493,7 @@ class _LinhaTabela extends StatelessWidget {
     return AppToque(
       aoTocar: () => _abrir(context, paciente),
       corDoHover: context.cores.suave,
-      child: Container(
+      conteudo: (context) => Container(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         decoration: BoxDecoration(
           border: Border(bottom: BorderSide(color: context.cores.borda)),
@@ -505,8 +506,10 @@ class _LinhaTabela extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 paciente.queixa,
+                // Pelo fundo: a linha é clicável, e o hover dela pinta
+                // `lavandaSuave` por cima do creme.
                 style: textos.bodySmall?.copyWith(
-                  color: context.cores.secundario,
+                  color: AppFundo.secundarioDe(context),
                 ),
               ),
             ],
@@ -564,66 +567,71 @@ class _Card extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
-    final secundario = textos.bodySmall?.copyWith(
-      color: context.cores.secundario,
-    );
 
     return AppToque(
       aoTocar: () => _abrir(context, paciente),
       raio: AppRadius.bordaMedia,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(14, 13, 10, 13),
-        decoration: BoxDecoration(
-          border: Border.all(color: context.cores.borda),
-          borderRadius: AppRadius.bordaMedia,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(paciente.nome, style: textos.titleMedium),
-                      Text(paciente.queixa, style: secundario),
-                    ],
+      // O texto secundário é montado AQUI DENTRO, com o `context` do
+      // fechamento: o véu de hover do `AppToque` escurece o creme, e o tom
+      // claro do par reprova em AA sobre ele.
+      conteudo: (context) {
+        final secundario = textos.bodySmall?.copyWith(
+          color: AppFundo.secundarioDe(context),
+        );
+        return Container(
+          padding: const EdgeInsets.fromLTRB(14, 13, 10, 13),
+          decoration: BoxDecoration(
+            border: Border.all(color: context.cores.borda),
+            borderRadius: AppRadius.bordaMedia,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(paciente.nome, style: textos.titleMedium),
+                        Text(paciente.queixa, style: secundario),
+                      ],
+                    ),
                   ),
-                ),
-                AppIcone(
-                  nome: NomeIcone.avancar,
-                  cor: context.cores.acento,
-                  tamanho: 22,
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            // Wrap, não Row: com fonte ampliada pelo sistema, a data e o chip
-            // não cabem lado a lado em 390 px, e cortar texto clínico não é
-            // opção.
-            Wrap(
-              spacing: AppSpacing.xs,
-              runSpacing: AppSpacing.xxs,
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Text(
-                  paciente.ultimaSessao == null
-                      ? AppStrings.pacientesNenhumaSessao
-                      : AppStrings.pacientesUltimaSessao(
-                          AppStrings.data(paciente.ultimaSessao!),
-                        ),
-                  style: secundario?.copyWith(
-                    fontFeatures: const [FontFeature.tabularFigures()],
+                  AppIcone(
+                    nome: NomeIcone.avancar,
+                    cor: context.cores.acento,
+                    tamanho: 22,
                   ),
-                ),
-                _ChipTendencia(direcao: paciente.direcaoAvqi, compacto: true),
-              ],
-            ),
-          ],
-        ),
-      ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              // Wrap, não Row: com fonte ampliada pelo sistema, a data e o chip
+              // não cabem lado a lado em 390 px, e cortar texto clínico não é
+              // opção.
+              Wrap(
+                spacing: AppSpacing.xs,
+                runSpacing: AppSpacing.xxs,
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    paciente.ultimaSessao == null
+                        ? AppStrings.pacientesNenhumaSessao
+                        : AppStrings.pacientesUltimaSessao(
+                            AppStrings.data(paciente.ultimaSessao!),
+                          ),
+                    style: secundario?.copyWith(
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                  _ChipTendencia(direcao: paciente.direcaoAvqi, compacto: true),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -680,7 +688,12 @@ class _ChipTendencia extends StatelessWidget {
     };
 
     final comparavel = icone != null;
-    final cor = comparavel ? context.cores.texto : context.cores.secundario;
+    // Pelo fundo: o chip fica dentro da linha e do cartão, os dois clicáveis,
+    // e o véu de hover escurece o creme atrás dele. O `build` do chip roda
+    // abaixo do `AppToque`, então este `context` já vê a declaração.
+    final cor = comparavel
+        ? context.cores.texto
+        : AppFundo.secundarioDe(context);
 
     return Semantics(
       label: AppStrings.pacientesTendencia(texto),

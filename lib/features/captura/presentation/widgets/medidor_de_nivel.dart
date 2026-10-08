@@ -105,7 +105,10 @@ class MedidorDeNivel extends StatelessWidget {
                       ),
                       const SizedBox(width: AppSpacing.xxs),
                     ],
-                    // Flexible: em 200% no celular, o rótulo quebra linha.
+                    // Flexible, como no AppStatusMedida e no _ChipTendencia: o
+                    // ícone tem tamanho fixo, o rótulo não. Em 390px com o
+                    // texto do sistema ampliado "Sinal adequado" passava da
+                    // largura e estourava a linha; agora quebra.
                     Flexible(
                       child: Text(
                         rotuloDaZona,

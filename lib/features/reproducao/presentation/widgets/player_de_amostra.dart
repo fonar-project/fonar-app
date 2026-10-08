@@ -97,7 +97,10 @@ class PlayerDeAmostra extends ConsumerWidget {
                           raio: BorderRadius.circular(
                             AppSpacing.alvoDeToqueMinimo,
                           ),
-                          child: _Botao(tocando: tocando, livre: true),
+                          // O botão é roxo sobre creme, sem cor que dependa
+                          // do fundo.
+                          conteudo: (_) =>
+                              _Botao(tocando: tocando, livre: true),
                         )
                       : const _Botao(tocando: false, livre: false),
                 ),

@@ -81,6 +81,23 @@ final class EnvioCancelado extends AppException {
   const EnvioCancelado({super.causa}) : super(AppStrings.erroEnvioCancelado);
 }
 
+/// O arquivo WAV da gravação não está mais no aparelho.
+///
+/// NÃO é falha de rede nem recusa do servidor: a requisição nem chega a sair.
+/// Existe como tipo próprio porque a conclusão é o oposto da de um erro
+/// passageiro — tentar de novo nunca vai trazer o arquivo de volta, e antes
+/// disto o caso caía em [FalhaDesconhecida], que faz a fila reenviar a cada
+/// 30 minutos para sempre.
+///
+/// Como isso acontece: o `PENDENCIAS.md` registra que um WAV pode ficar sem
+/// registro (ou o registro sem WAV) se apagar um arquivo falhar no meio de uma
+/// regravação ou de um descarte. O aparelho também pode ter sido limpo por
+/// fora do aplicativo.
+final class GravacaoNaoEncontrada extends AppException {
+  const GravacaoNaoEncontrada({super.causa})
+    : super(AppStrings.erroGravacaoNaoEncontrada);
+}
+
 /// Não soubemos classificar. Se aparecer com frequência no log, virou caso
 /// conhecido e merece um tipo próprio.
 final class FalhaDesconhecida extends AppException {

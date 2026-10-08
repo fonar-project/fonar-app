@@ -9,6 +9,7 @@ import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
+import '../../../../design_system/widgets/app_fundo.dart';
 import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../design_system/widgets/app_toque.dart';
@@ -18,7 +19,7 @@ import '../../../reproducao/presentation/widgets/player_de_amostra.dart';
 import '../../data/configuracao_de_captura.dart';
 import '../../domain/afericao_de_ruido.dart';
 import '../../domain/amostra.dart';
-import '../../domain/fonte_de_nivel.dart';
+import '../../domain/ajuste_de_configuracao.dart';
 import '../../domain/verificacao_da_amostra.dart';
 import '../afericao_controlador.dart';
 import '../gravacao_controlador.dart';
@@ -1007,83 +1008,89 @@ class _Etapa extends StatelessWidget {
         ? AppStrings.etapaConcluida
         : AppStrings.etapaPendente;
     final destaque = atual || concluida;
-    final marca = Container(
-      width: 28,
-      height: 28,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: atual ? context.cores.primaria : null,
-        border: Border.all(
-          color: destaque ? context.cores.acento : context.cores.borda,
-          width: 1.5,
-        ),
-      ),
-      child: concluida
-          ? AppIcone(
-              nome: NomeIcone.confirmacao,
-              cor: context.cores.acento,
-              tamanho: 16,
-            )
-          : Text(
-              '$numero',
-              style: textos.labelSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: atual
-                    ? context.cores.sobrePrimaria
-                    : context.cores.secundario,
-              ),
-            ),
-    );
-    final conteudo = Semantics(
-      label: '$nome, $situacao',
-      selected: atual,
-      button: aoTocar != null,
-      child: ExcludeSemantics(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              marca,
-              const SizedBox(width: AppSpacing.xs),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    nome,
-                    style: textos.labelSmall?.copyWith(
-                      fontSize: 14,
-                      fontWeight: atual ? FontWeight.w700 : FontWeight.w600,
-                      color: atual
-                          ? context.cores.texto
-                          : context.cores.secundario,
-                    ),
-                  ),
-                  if (!compacta)
-                    Text(
-                      situacao,
-                      style: textos.bodySmall?.copyWith(
-                        fontSize: 12,
-                        color: context.cores.secundario,
-                      ),
-                    ),
-                ],
-              ),
-            ],
+    Widget marca(BuildContext context) {
+      return Container(
+        width: 28,
+        height: 28,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: atual ? context.cores.primaria : null,
+          border: Border.all(
+            color: destaque ? context.cores.acento : context.cores.borda,
+            width: 1.5,
           ),
         ),
-      ),
-    );
+        child: concluida
+            ? AppIcone(
+                nome: NomeIcone.confirmacao,
+                cor: context.cores.acento,
+                tamanho: 16,
+              )
+            : Text(
+                '$numero',
+                style: textos.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: atual
+                      ? context.cores.sobrePrimaria
+                      : AppFundo.secundarioDe(context),
+                ),
+              ),
+      );
+    }
+
+    Widget conteudo(BuildContext context) {
+      return Semantics(
+        label: '$nome, $situacao',
+        selected: atual,
+        button: aoTocar != null,
+        child: ExcludeSemantics(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                marca(context),
+                const SizedBox(width: AppSpacing.xs),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      nome,
+                      style: textos.labelSmall?.copyWith(
+                        fontSize: 14,
+                        fontWeight: atual ? FontWeight.w700 : FontWeight.w600,
+                        color: atual
+                            ? context.cores.texto
+                            : AppFundo.secundarioDe(context),
+                      ),
+                    ),
+                    if (!compacta)
+                      Text(
+                        situacao,
+                        style: textos.bodySmall?.copyWith(
+                          fontSize: 12,
+                          color: AppFundo.secundarioDe(context),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     if (aoTocar case final tocar?) {
       return AppToque(
         aoTocar: tocar,
         raio: AppRadius.bordaPequena,
-        child: conteudo,
+        conteudo: conteudo,
       );
     }
-    return conteudo;
+    return conteudo(context);
   }
 }
 

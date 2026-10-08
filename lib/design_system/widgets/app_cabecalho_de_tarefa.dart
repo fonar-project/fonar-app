@@ -7,6 +7,7 @@ import '../breakpoints.dart';
 import '../tokens/app_cores.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_spacing.dart';
+import 'app_fundo.dart';
 import 'app_icone.dart';
 import 'app_indicador_conexao.dart';
 import 'app_toque.dart';
@@ -94,7 +95,7 @@ class AppCabecalhoDeTarefa extends ConsumerWidget {
                 child: AppToque(
                   aoTocar: aoVoltar,
                   raio: AppRadius.bordaPequena,
-                  child: SizedBox.square(
+                  conteudo: (context) => SizedBox.square(
                     dimension: AppSpacing.alvoDeToqueMinimo,
                     child: Center(
                       child: AppIcone(
@@ -230,16 +231,21 @@ class _Trilha extends StatelessWidget {
                 child: AppToque(
                   aoTocar: tocar,
                   raio: AppRadius.bordaPequena,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Text(
-                      passo.rotulo,
-                      style: base?.copyWith(
-                        decoration: TextDecoration.underline,
-                        decorationColor: context.cores.secundario,
+                  // Tom pelo fundo: o véu de hover escurece atrás do link.
+                  conteudo: (context) {
+                    final cor = AppFundo.secundarioDe(context);
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Text(
+                        passo.rotulo,
+                        style: base?.copyWith(
+                          color: cor,
+                          decoration: TextDecoration.underline,
+                          decorationColor: cor,
+                        ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
               )
             else

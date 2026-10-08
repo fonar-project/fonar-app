@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'ajuste_de_configuracao.dart';
 import 'amostra.dart';
 
 /// Grava uma tarefa em WAV e devolve o arquivo para conferência.
@@ -19,6 +20,17 @@ abstract interface class Gravador {
   /// Para, se estiver gravando, e apaga o que foi gravado. Seguro de chamar
   /// sem ter iniciado.
   Future<void> descartar();
+
+  /// O que o aparelho mudou da configuração pedida nesta gravação, ou `null`
+  /// se aceitou tudo — ou se não avisou. Só faz sentido depois de [iniciar].
+  ///
+  /// A aferição já pergunta isto (`FonteDeNivel.ajuste`), mas a resposta dela
+  /// não vale aqui: são duas capturas diferentes, abertas em momentos
+  /// diferentes, e o aparelho pode aceitar a primeira e ajustar a segunda.
+  /// O cabeçalho do WAV continua sendo a evidência principal; esta é a
+  /// segunda, para o caso de o gravador escrever no cabeçalho o que foi
+  /// PEDIDO em vez do que usou.
+  AjusteDeConfiguracao? get ajuste;
 }
 
 /// Onde as amostras ficam no aparelho, e a leitura de volta do que foi

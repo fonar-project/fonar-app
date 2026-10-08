@@ -306,10 +306,13 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
       final cabecalho = lido == null ? null : lerCabecalhoWav(lido.inicio);
       final problemas = VerificacaoDaAmostra.verificar(
         cabecalho: cabecalho,
+        inicioDoArquivo: lido?.inicio,
         tamanhoDoArquivo: lido?.tamanho ?? 0,
         leituras: leituras,
         taxaPedida: ConfiguracaoDeCaptura.taxaDeAmostragem,
         canaisPedidos: ConfiguracaoDeCaptura.canais,
+        bitsPedidos: ConfiguracaoDeCaptura.bitsPorAmostra,
+        ajuste: _gravador.ajuste,
       );
       if (problemas.any((p) => p.invalida)) {
         // Descartada: o arquivo sai, a amostra anterior (se houver) fica.

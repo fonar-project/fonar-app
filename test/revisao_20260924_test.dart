@@ -17,6 +17,7 @@ import 'package:fonar_app/features/conta/presentation/conta_controlador.dart';
 import 'package:fonar_app/features/captura/presentation/gravacao_controlador.dart';
 import 'package:fonar_app/features/captura/data/gravador_record.dart';
 import 'package:fonar_app/features/captura/data/repositorio_amostras_local.dart';
+import 'package:fonar_app/features/captura/domain/ajuste_de_configuracao.dart';
 import 'package:fonar_app/features/captura/domain/amostra.dart';
 import 'package:fonar_app/features/captura/domain/gravador.dart';
 import 'package:fonar_app/features/captura/domain/sessao_nao_enviada.dart';
@@ -98,6 +99,8 @@ class DiscoComFalha extends Arquivos {
 }
 
 class GravadorFalso implements Gravador {
+  @override
+  AjusteDeConfiguracao? get ajuste => null;
   final niveis = StreamController<double>.broadcast();
   @override
   Future<bool> pedirPermissao() async => true;
@@ -174,7 +177,6 @@ void main() {
         sessaoId: 's',
         amostras: {for (final a in amostras) a.tarefa: a},
       );
-      ctrl.pedirDescarte('s');
       expect(await ctrl.descartar(sessao), isFalse);
       expect(disco.apagados, isNotEmpty);
       expect(await ctrl.enviar(sessao, nomeDoPaciente: 'Paciente'), isFalse);
@@ -405,7 +407,6 @@ void main() {
       addTearDown(c.dispose);
       c.listen(limpezaControladorProvider('p'), (_, _) {});
       final ctrl = c.read(limpezaControladorProvider('p').notifier);
-      ctrl.pedirDescarte('s');
       await ctrl.descartar(sessaoAntiga);
       expect(arquivos.apagados, isEmpty);
     },

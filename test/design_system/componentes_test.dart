@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/design_system/tokens/app_movimento.dart';
 import 'package:fonar_app/design_system/tokens/app_colors.dart';
 import 'package:fonar_app/design_system/widgets/app_botao.dart';
 import 'package:fonar_app/design_system/widgets/app_campo_texto.dart';
+import 'package:fonar_app/design_system/widgets/app_confirmacao.dart';
 import 'package:fonar_app/design_system/widgets/app_estado.dart';
 import 'package:fonar_app/design_system/widgets/app_fundo.dart';
 import 'package:fonar_app/design_system/widgets/app_icone.dart';
@@ -500,6 +502,134 @@ void main() {
           expect(cores.where(reservadas.contains), isEmpty);
         }
       }
+    });
+  });
+
+  // O padrão único de confirmação destrutiva do aplicativo — a justificativa
+  // de por que é este, e não a pergunta embutida na tela, está na
+  // documentação de `appConfirmar`. Estes testes são as garantias que
+  // sustentam a escolha; as telas herdam todas elas de graça.
+  group('appConfirmar', () {
+    Future<bool?> abrir(WidgetTester tester) async {
+      bool? resposta;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.claro,
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => AppBotao.primario(
+                rotulo: 'Abrir',
+                aoTocar: () async => resposta = await appConfirmar(
+                  context,
+                  titulo: 'Apagar?',
+                  texto: 'Não dá para desfazer.',
+                  confirmar: 'Apagar',
+                  cancelar: 'Manter',
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Abrir'));
+      await tester.pumpAndSettle();
+      expect(find.text('Apagar?'), findsOneWidget);
+      return resposta;
+    }
+
+    testWidgets('Esc responde cancelar', (tester) async {
+      await abrir(tester);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Apagar?'), findsNothing);
+    });
+
+    testWidgets('tocar fora responde cancelar', (tester) async {
+      await abrir(tester);
+
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Apagar?'), findsNothing);
+    });
+
+    testWidgets('o caminho seguro é o primário, e vem primeiro', (
+      tester,
+    ) async {
+      await abrir(tester);
+
+      final botoes = tester
+          .widgetList<AppBotao>(find.byType(AppBotao))
+          // O primeiro é o "Abrir" da tela de trás.
+          .skip(1)
+          .toList();
+      expect(botoes.map((b) => b.rotulo), ['Manter', 'Apagar']);
+      expect(
+        tester.getTopLeft(find.text('Manter')).dy,
+        lessThan(tester.getTopLeft(find.text('Apagar')).dy),
+      );
+    });
+
+    // Achado 5.5 da revisão de 24/09: a confirmação lia
+    // `MediaQuery.disableAnimationsOf` direto, em vez de passar pelo
+    // `AppMovimento`. O comportamento é o mesmo; o teste é o que garante que
+    // continua sendo, agora pelo token.
+    testWidgets('com movimento reduzido, abre sem transição', (tester) async {
+      var abriu = false;
+      await tester.pumpWidget(
+        _telaSemMovimento(
+          Builder(
+            builder: (context) => AppBotao.primario(
+              rotulo: 'Abrir',
+              aoTocar: () async {
+                abriu = true;
+                await appConfirmar(
+                  context,
+                  titulo: 'Apagar?',
+                  texto: 'Não dá para desfazer.',
+                  confirmar: 'Apagar',
+                  cancelar: 'Manter',
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Abrir'));
+      // Um único `pump`, sem deixar tempo passar: com transição, o diálogo
+      // ainda estaria transparente e o título não estaria pintado.
+      await tester.pump();
+
+      expect(abriu, isTrue);
+      expect(find.text('Apagar?'), findsOneWidget);
+      final fade = tester.widget<FadeTransition>(
+        find.byType(FadeTransition).last,
+      );
+      expect(fade.opacity.value, 1.0);
+    });
+
+    testWidgets('sem a preferência, a transição existe', (tester) async {
+      await abrir(tester);
+      // O contrapeso do teste de cima: se a transição fosse sempre zero, ele
+      // passaria de graça — e a abertura aqui precisou de `pumpAndSettle`.
+      expect(AppMovimento.rapida, isNot(Duration.zero));
+      final fade = tester.widget<FadeTransition>(
+        find.byType(FadeTransition).last,
+      );
+      expect(fade.opacity.value, 1.0);
+    });
+
+    testWidgets('o diálogo é uma rota, e se anuncia com o próprio título', (
+      tester,
+    ) async {
+      final semantica = tester.ensureSemantics();
+      await abrir(tester);
+
+      expect(find.bySemanticsLabel('Apagar?'), findsWidgets);
+      semantica.dispose();
     });
   });
 }

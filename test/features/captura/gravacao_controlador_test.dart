@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fonar_app/features/captura/data/fonte_de_nivel_record.dart';
 import 'package:fonar_app/features/captura/data/gravador_record.dart';
 import 'package:fonar_app/features/captura/data/repositorio_amostras_local.dart';
+import 'package:fonar_app/features/captura/domain/ajuste_de_configuracao.dart';
 import 'package:fonar_app/features/captura/domain/amostra.dart';
 import 'package:fonar_app/features/captura/domain/fonte_de_nivel.dart';
 import 'package:fonar_app/features/captura/domain/gravador.dart';
@@ -22,6 +23,8 @@ import '../../apoio/repositorios_em_memoria.dart';
 
 /// Gravador cujo fluxo de nível o teste controla.
 class _Gravador implements Gravador {
+  @override
+  AjusteDeConfiguracao? get ajuste => null;
   final niveis = StreamController<double>();
   var inicios = 0;
   var descartes = 0;

@@ -8,8 +8,10 @@ import 'package:record/record.dart';
 /// requisito que justifica o app nativo em vez de web.
 ///
 /// Pedir não garante receber. O que o aparelho de fato usou é conferido pelo
-/// `setOnConfigChanged` do recorder (ver `FonteDeNivelRecord.ajuste`) e, na
-/// gravação, precisa ser conferido de novo no cabeçalho do WAV que saiu.
+/// `setOnConfigChanged` do recorder — nas DUAS capturas, a da aferição
+/// (`FonteDeNivelRecord.ajuste`) e a da gravação (`GravadorRecord.ajuste`) —
+/// e, na gravação, conferido de novo no cabeçalho do WAV que saiu
+/// (`VerificacaoDaAmostra`).
 ///
 /// TODO(backend): taxa e canais combinados com quem mantém a API de análise.
 /// 44,1 kHz mono é o formato usual de gravação para análise acústica de voz,
@@ -24,6 +26,22 @@ abstract final class ConfiguracaoDeCaptura {
   /// O mesmo PCM de 16 bits, sem cabeçalho — para a aferição, em que só o
   /// nível interessa e nada é salvo.
   static const formatoDaAfericao = AudioEncoder.pcm16bits;
+
+  /// Profundidade de bits que estes dois formatos implicam.
+  ///
+  /// **É SUPOSIÇÃO, e é a mais frágil das três.** O `RecordConfig` do
+  /// `record` tem `sampleRate` e `numChannels`, mas NÃO tem parâmetro de
+  /// profundidade de bits: ela vem embutida na escolha do encoder — `wav` e
+  /// `pcm16bits` valem 16 —, e o `setOnConfigChanged` também não fala dela.
+  /// Ou seja: taxa e canais podem ser pedidos e o aparelho avisa quando muda;
+  /// os bits nunca são pedidos e ninguém avisa.
+  ///
+  /// Por isso este número não é usado para configurar nada — ele existe para
+  /// ser CONFERIDO. A única evidência de que saíram 16 bits é o cabeçalho do
+  /// WAV gravado, e é daqui que a conferência tira o valor esperado
+  /// (`VerificacaoDaAmostra.verificar`, parâmetro `bitsPedidos`). Trocar o
+  /// encoder obriga a trocar este número no mesmo commit.
+  static const bitsPorAmostra = 16;
 
   static RecordConfig para(AudioEncoder formato) => RecordConfig(
     encoder: formato,

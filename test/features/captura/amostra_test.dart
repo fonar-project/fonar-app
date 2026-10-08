@@ -15,10 +15,12 @@ List<ProblemaNaAmostra> _verificar(
   int? tamanho,
 }) => VerificacaoDaAmostra.verificar(
   cabecalho: lerCabecalhoWav(arquivo),
+  inicioDoArquivo: arquivo,
   tamanhoDoArquivo: tamanho ?? arquivo.length,
   leituras: leituras ?? _voz,
   taxaPedida: 44100,
   canaisPedidos: 1,
+  bitsPedidos: 16,
 );
 
 void main() {
@@ -73,10 +75,12 @@ void main() {
     test('arquivo ilegível invalida', () {
       final p = VerificacaoDaAmostra.verificar(
         cabecalho: null,
+        inicioDoArquivo: null,
         tamanhoDoArquivo: 0,
         leituras: _voz,
         taxaPedida: 44100,
         canaisPedidos: 1,
+        bitsPedidos: 16,
       );
       expect(p, [ProblemaNaAmostra.arquivoIlegivel]);
       expect(p.single.invalida, isTrue);
@@ -144,6 +148,81 @@ void main() {
       );
       expect(p, [ProblemaNaAmostra.formatoAjustado]);
       expect(ProblemaNaAmostra.formatoAjustado.invalida, isFalse);
+    });
+  });
+
+  // Achado 7.1 da revisão de 24/09: o silêncio era conferido só pelas
+  // leituras que o PLUGIN entrega. A falha silenciosa do Windows pode
+  // entregar amplitude plausível e gravar zeros.
+  group('silêncio conferido no arquivo', () {
+    test('invalida mesmo com o medidor vendo sinal a gravação toda', () {
+      final p = _verificar(
+        wavDeTeste(duracao: const Duration(seconds: 3), audioZerado: true),
+        leituras: _voz,
+      );
+
+      expect(p, contains(ProblemaNaAmostra.semSinal));
+      expect(ProblemaNaAmostra.semSinal.invalida, isTrue);
+    });
+
+    test('arquivo com bytes de áudio passa', () {
+      expect(
+        _verificar(wavDeTeste(duracao: const Duration(seconds: 3))),
+        isEmpty,
+      );
+    });
+
+    test('um byte diferente de zero na janela já basta para não acusar', () {
+      final arquivo = wavDeTeste(
+        duracao: const Duration(seconds: 3),
+        audioZerado: true,
+      );
+      final cabecalho = lerCabecalhoWav(arquivo)!;
+      arquivo[cabecalho.inicioDoAudio + 1000] = 7;
+
+      expect(_verificar(arquivo), isEmpty);
+    });
+
+    test('janela curta demais para julgar não acusa', () {
+      final arquivo = wavDeTeste(
+        duracao: const Duration(seconds: 3),
+        audioZerado: true,
+      );
+      final cabecalho = lerCabecalhoWav(arquivo)!;
+      // Janela que alcança o áudio, mas com menos bytes que o mínimo: não se
+      // sabe se é o driver mudo ou o primeiro buffer ainda vazio.
+      final janela = Uint8List.sublistView(
+        arquivo,
+        0,
+        cabecalho.inicioDoAudio +
+            VerificacaoDaAmostra.bytesMinimosParaJulgarSilencio -
+            1,
+      );
+
+      expect(VerificacaoDaAmostra.audioTodoEmZero(janela, cabecalho), isFalse);
+    });
+
+    test('janela que não alcança o áudio não acusa', () {
+      final arquivo = wavDeTeste(
+        duracao: const Duration(seconds: 3),
+        audioZerado: true,
+      );
+      final cabecalho = lerCabecalhoWav(arquivo)!;
+      final janela = Uint8List.sublistView(arquivo, 0, cabecalho.inicioDoAudio);
+
+      expect(VerificacaoDaAmostra.audioTodoEmZero(janela, cabecalho), isFalse);
+    });
+
+    test('a janela de 4 KB do gravador é o bastante para acusar', () {
+      final arquivo = wavDeTeste(
+        duracao: const Duration(seconds: 3),
+        audioZerado: true,
+      );
+      final cabecalho = lerCabecalhoWav(arquivo)!;
+      // O mesmo tamanho que `ArquivosDeAmostraLocais` lê do disco.
+      final janela = Uint8List.sublistView(arquivo, 0, 4096);
+
+      expect(VerificacaoDaAmostra.audioTodoEmZero(janela, cabecalho), isTrue);
     });
   });
 }

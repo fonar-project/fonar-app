@@ -71,6 +71,17 @@ class ResultadoDaAnalise {
   /// Dado de desenvolvimento, fictício. A tela avisa, para que nenhuma
   /// captura de tela o faça passar por resultado de verdade.
   final bool exemplo;
+
+  /// O valor de [medida] nesta análise, ou `null` se o servidor não a
+  /// calculou — ou não a mandou.
+  ///
+  /// Só LÊ o que chegou pronto do servidor; não há conta nenhuma aqui. Existe
+  /// para a busca na lista não ser reescrita em cada tela: até 25/09/2026 o
+  /// mesmo `where(...).firstOrNull?.valor` aparecia em três lugares, e cada
+  /// cópia era uma chance de tratar a medida ausente diferente da medida
+  /// sem valor.
+  double? valorDe(MedidaAcustica medida) =>
+      medidas.where((m) => m.medida == medida).firstOrNull?.valor;
 }
 
 /// A análise pedida não é do paciente em que se está.

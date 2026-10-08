@@ -15,6 +15,7 @@ import '../../../../design_system/widgets/app_campo_texto.dart';
 import '../../../../design_system/widgets/app_escala_visual.dart';
 import '../../../../design_system/widgets/app_escolha_unica.dart';
 import '../../../../design_system/widgets/app_estado.dart';
+import '../../../../design_system/widgets/app_fundo.dart';
 import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_mensagem_de_campo.dart';
 import '../../../../design_system/widgets/app_toque.dart';
@@ -530,80 +531,83 @@ class _ParametroCompacto extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
-    final secundario = textos.bodySmall?.copyWith(
-      color: context.cores.secundario,
-    );
     final valor = nota.valor;
     final resumo = valor == null
         ? AppStrings.capeVNaoMarcado
         : resumirNota(parametro, nota);
 
-    final conteudo = Padding(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.end,
-            spacing: AppSpacing.sm,
-            children: [
-              Text(parametro.nome, style: textos.titleMedium),
-              if (valor == null)
-                Text(AppStrings.capeVNaoMarcado, style: secundario)
-              else
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      '$valor',
-                      style: AppTypography.medidaCompacta.copyWith(
-                        color: context.cores.texto,
+    Widget conteudo(BuildContext context) {
+      // Tom pelo fundo: o véu de hover do `AppToque` escurece o cartão.
+      final secundario = textos.bodySmall?.copyWith(
+        color: AppFundo.secundarioDe(context),
+      );
+      return Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.end,
+              spacing: AppSpacing.sm,
+              children: [
+                Text(parametro.nome, style: textos.titleMedium),
+                if (valor == null)
+                  Text(AppStrings.capeVNaoMarcado, style: secundario)
+                else
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        '$valor',
+                        style: AppTypography.medidaCompacta.copyWith(
+                          color: context.cores.texto,
+                        ),
                       ),
-                    ),
-                    Text(' /100', style: secundario),
-                  ],
-                ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          SizedBox(
-            height: 14,
-            child: CustomPaint(
-              painter: _LinhaCompacta(valor: valor, cores: context.cores),
+                      Text(' /100', style: secundario),
+                    ],
+                  ),
+              ],
             ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: AppSpacing.sm,
-            children: [
-              if (valor != null && nota.temDesvio)
-                Text(
-                  resumo.split(' · ').skip(1).join(' · '),
-                  style: secundario,
-                ),
-              Text(
-                '${AppStrings.capeVAbrirEscala} ›',
-                style: textos.labelLarge?.copyWith(
-                  color: context.cores.acento,
-                  decoration: TextDecoration.underline,
-                  decorationColor: context.cores.acento,
-                ),
+            const SizedBox(height: AppSpacing.sm),
+            SizedBox(
+              height: 14,
+              child: CustomPaint(
+                painter: _LinhaCompacta(valor: valor, cores: context.cores),
               ),
-            ],
-          ),
-          if (problema case final p?)
-            AppMensagemDeCampo(
-              erro: mensagemDoProblema(p),
-              corDoApoio: context.cores.secundario,
             ),
-        ],
-      ),
-    );
+            const SizedBox(height: AppSpacing.sm),
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: AppSpacing.sm,
+              children: [
+                if (valor != null && nota.temDesvio)
+                  Text(
+                    resumo.split(' · ').skip(1).join(' · '),
+                    style: secundario,
+                  ),
+                Text(
+                  '${AppStrings.capeVAbrirEscala} ›',
+                  style: textos.labelLarge?.copyWith(
+                    color: context.cores.acento,
+                    decoration: TextDecoration.underline,
+                    decorationColor: context.cores.acento,
+                  ),
+                ),
+              ],
+            ),
+            if (problema case final p?)
+              AppMensagemDeCampo(
+                erro: mensagemDoProblema(p),
+                corDoApoio: context.cores.secundario,
+              ),
+          ],
+        ),
+      );
+    }
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -617,11 +621,11 @@ class _ParametroCompacto extends StatelessWidget {
         button: true,
         child: ExcludeSemantics(
           child: aoAbrir == null
-              ? conteudo
+              ? conteudo(context)
               : AppToque(
                   aoTocar: aoAbrir!,
                   raio: AppRadius.bordaMedia,
-                  child: conteudo,
+                  conteudo: conteudo,
                 ),
         ),
       ),
@@ -728,7 +732,7 @@ class _EscalaEmTelaCheiaState extends ConsumerState<_EscalaEmTelaCheia> {
                           child: AppToque(
                             aoTocar: concluir,
                             raio: AppRadius.bordaPequena,
-                            child: SizedBox.square(
+                            conteudo: (context) => SizedBox.square(
                               dimension: AppSpacing.alvoDeToqueMinimo,
                               child: Center(
                                 child: AppIcone(
