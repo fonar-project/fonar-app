@@ -89,6 +89,24 @@ Drift. Gráficos com fl_chart. Áudio: record para captura, audioplayers para
 reprodução. Ícones com vector_graphics_compiler.
 Backend: Firebase (auth e dados) + API Python no Cloud Run (análise).
 
+### Autenticação — Firebase pela API REST, sem `firebase_auth` (US32)
+O plugin `firebase_auth` declara o Windows "só para desenvolvimento, produção
+não suportada". Como as duas plataformas têm as mesmas funcionalidades, o
+login fala com o Identity Toolkit e o Secure Token pela API REST, com o Dio
+(`lib/core/auth/`). A chave Web API entra por
+`--dart-define=FONAR_FIREBASE_API_KEY`; sem ela, roda o login de EXEMPLO,
+avisado na tela — e o build `--release` sem a chave se recusa a abrir
+(`main.dart`).
+
+- A credencial (token de acesso, de renovação e uid, juntos) fica no cofre
+  (`CofreDeCredencial`). A `FonteDeToken` renova ANTES de vencer: a requisição
+  recusada não se repete, porque o corpo do envio é um WAV em multipart.
+- A sessão é a conta (`sessaoProvider`, `ContaAutenticada`). O roteador manda
+  para a entrada quem não tem sessão, sem `refreshListenable` de propósito
+  (ver o comentário em `app_router.dart`).
+- Cada envio da fila leva o uid de quem gravou e só sobe na sessão dele.
+- Não diga se um e-mail tem conta: a redefinição de senha responde igual.
+
 ### Reprodução de áudio — por que é o `audioplayers` (dívida encerrada)
 Até 24/09/2026 a reprodução era `just_audio` + `just_audio_windows`. O plugin
 de Windows inclui `<experimental/coroutine>`, header que a Microsoft marcou
@@ -116,7 +134,7 @@ Reproduzir não é analisar — a troca mexe só em quem toca o WAV, nunca em qu
 mede —, mas a restrição de licença vale para o executável inteiro.
 
 O job de `flutter build windows` no CI segue sendo o único que compila código
-nativo. Teste nenhum pega: os 624 rodam no Ubuntu.
+nativo. Teste nenhum pega: os 842 rodam no Ubuntu.
 
 ## Offline
 A fila de sincronização vale para AS DUAS plataformas. Queda de conexão em
@@ -132,6 +150,19 @@ Paleta:
 - `#6E6787` secundário sobre CREME (5,00:1)
 - `#5A5472` secundário sobre LAVANDA (4,86:1) — o `#6E6787` sobre lavanda dá
   só 3,62:1 e reprova para texto pequeno. Use o token certo para cada fundo.
+
+Tema escuro (US30, paleta aprovada em 25/09/2026): derivado da marca, sem
+matiz novo. Fundo `#17131F`, cartão `#211B2B`, texto `#F1E9DC`, secundário
+`#A198B3`. O roxo profundo, que no claro faz botão, texto e barra lateral, no
+escuro se divide em três: botão `#6A2F93`, acento (link, ícone, gráfico)
+`#D2B0EC`, barra lateral `#260838`. Estados ficam mais claros para passar no
+fundo escuro. O profissional escolhe na Conta: do sistema (padrão), claro ou
+escuro. O laudo em PDF sai sempre em papel branco.
+
+Nenhum widget usa `AppColors` direto: as cores entram pelo tema, por PAPEL —
+`context.cores.fundo`, `.texto`, `.primaria`, `.acento` (ver
+`design_system/tokens/app_cores.dart`). Cor nova entra lá, com os dois
+valores, e o contraste dos dois temas é conferido em `app_colors_test.dart`.
 
 Verde, amarelo e vermelho são reservados EXCLUSIVAMENTE para status de
 normalidade de medida e saturação de áudio. Nunca como decoração.
@@ -152,6 +183,19 @@ Respeitar `prefers-reduced-motion`: sem transição decorativa, sem animação d
 entrada. Exceção proposital — o VU meter continua respondendo ao nível de
 áudio, porque é feedback clínico e não decoração; reduza a suavização,
 mantenha a resposta.
+
+Fora do movimento reduzido, o movimento é FUNCIONAL (US31): diz o que mudou,
+nunca enfeita. Curto (≤ 250 ms), sem quique, zoom ou parallax, e na troca de
+conteúdo só o novo entra — o antigo sai na hora, para nunca haver dois
+estados (e um valor velho) na tela ao mesmo tempo. Tudo passa pelos tokens e
+componentes de `design_system/tokens/app_movimento.dart` (`AppTrocaAnimada`,
+`AppRevelar`, `AppTamanhoAnimado`), que já zeram com movimento reduzido.
+
+Ação presa no rodapé só quando cabe: `AppAreaComAcoes` decide pela altura
+(já na escala de texto); em tela baixa — celular deitado, texto em 200% —
+tudo rola junto. A matriz de layout (`test/app/matriz_de_layout_test.dart`)
+varre toda rota do celular pequeno (360×640) ao Full HD, e uma vez com
+movimento reduzido.
 
 ## Ícones
 19 SVG em `assets/icons/`, 24x24, `currentColor`, sem width/height fixos.
@@ -182,22 +226,24 @@ Todo dado exibido em desenvolvimento é placeholder e deve ser identificável
 como tal.
 
 ## Estado atual
-O fluxo da avaliação existe de ponta a ponta no aparelho (US00 a US24 — lista
+O fluxo da avaliação existe de ponta a ponta no aparelho (US00 a US32 — lista
 e resumo no README): cadastro, consentimento e retirada, aferição, gravação,
 fila, resultado, CAPE-V, evolução, laudo em PDF, com os dados num banco local
 (Drift, `lib/core/banco/`).
 
-Ainda é PLACEHOLDER, e identificado como tal: o login (aceita qualquer
-e-mail e senha), a API de análise e os resultados (de exemplo, avisados na
-tela), e os pacientes "de Exemplo", que aparecem por cima do banco sem serem
-gravados nele. O catálogo de faixas de referência está vazio de propósito:
+O login é o Firebase Authentication de verdade quando o build recebe a chave
+(US32). Ainda é PLACEHOLDER, e identificado como tal: o login sem a chave
+(aceita qualquer e-mail e senha, e a tela avisa), a API de análise e os
+resultados (de exemplo, avisados na tela), e os pacientes "de Exemplo", que
+aparecem por cima do banco sem serem gravados nele. O catálogo de faixas de referência está vazio de propósito:
 nenhuma medida é classificada.
 
 O que falta e de quem depende está em `PENDENCIAS.md` — ao resolver um item,
 apague a linha de lá e o `TODO` do código, no mesmo commit.
 
-O token de autenticação fica no cofre do sistema (`TokenStorageSeguro`), e o
-backup automático do Android está desligado de propósito — não reativar.
+A credencial do Firebase fica no cofre do sistema (`TokenStorageSeguro`, via
+`CofreDeCredencial`), e o backup automático do Android está desligado de
+propósito — não reativar.
 
 ## Git
 Branch: `nome/USxx-featureImplementada` — ex.: `felipe/US04-medidorDeNivel`

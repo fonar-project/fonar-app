@@ -29,8 +29,10 @@ import 'package:fonar_app/features/pacientes/domain/novo_paciente.dart';
 import 'package:fonar_app/features/pacientes/domain/paciente.dart';
 import 'package:fonar_app/features/pacientes/presentation/pages/paciente_detalhe_page.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
+import 'package:fonar_app/features/auth/data/sessao.dart';
 
 import '../../apoio/repositorios_em_memoria.dart';
+import '../../apoio/sessao_de_teste.dart';
 
 class _Consentimentos implements RepositorioConsentimento {
   _Consentimentos({required this.tem});
@@ -141,6 +143,7 @@ Future<GoRouter> _abrir(
   final container = ProviderContainer(
     retry: (_, _) => null,
     overrides: [
+      sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
       // Sem rede: a fila guarda e não envia.
       conexaoOnlineProvider.overrideWithValue(false),
       relogioProvider.overrideWithValue(() => DateTime(2026, 9, 23)),

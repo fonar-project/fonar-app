@@ -11,14 +11,22 @@ import 'package:fonar_app/core/network/conexao.dart';
 import 'package:fonar_app/core/offline/pacientes_em_cache.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/design_system/tokens/app_colors.dart';
-import 'package:fonar_app/features/auth/data/repositorio_autenticacao_placeholder.dart';
+import 'package:fonar_app/features/auth/data/repositorio_autenticacao_firebase.dart';
+import 'package:fonar_app/features/auth/domain/conta_autenticada.dart';
 import 'package:fonar_app/features/auth/domain/repositorio_autenticacao.dart';
 import 'package:fonar_app/features/auth/presentation/pages/login_page.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 
+import '../../apoio/sessao_de_teste.dart';
+
 /// Repositório controlável pelo teste.
 class _RepositorioFalso implements RepositorioAutenticacao {
-  _RepositorioFalso({this.erro, this.espera});
+  _RepositorioFalso({
+    this.erro,
+    this.espera,
+    this.guardada = contaDeTeste,
+    this.erroDaRedefinicao,
+  });
 
   /// Lançado em [entrar], se preenchido.
   final AppException? erro;
@@ -26,14 +34,37 @@ class _RepositorioFalso implements RepositorioAutenticacao {
   /// Segura a autenticação até o teste completar, para observar "Entrando…".
   final Completer<void>? espera;
 
+  /// A conta do modo offline.
+  final ContaAutenticada? guardada;
+
+  /// Lançado em [pedirRedefinicaoDeSenha], se preenchido.
+  final AppException? erroDaRedefinicao;
+
   int chamadas = 0;
+  final redefinicoes = <String>[];
 
   @override
-  Future<void> entrar({required String email, required String senha}) async {
+  Future<ContaAutenticada> entrar({
+    required String email,
+    required String senha,
+  }) async {
     chamadas++;
     await espera?.future;
     if (erro case final erro?) throw erro;
+    return contaDeTeste;
   }
+
+  @override
+  Future<ContaAutenticada?> contaGuardada() async => guardada;
+
+  @override
+  Future<void> pedirRedefinicaoDeSenha(String email) async {
+    redefinicoes.add(email);
+    if (erroDaRedefinicao case final erro?) throw erro;
+  }
+
+  @override
+  Future<void> sair() async {}
 }
 
 const _celular = Size(390, 844);
@@ -46,6 +77,7 @@ Future<void> _abrir(
   int pacientesEmCache = 0,
   RepositorioAutenticacao? repositorio,
   Size tamanho = _celular,
+  bool deExemplo = false,
 }) async {
   tester.view.physicalSize = tamanho;
   tester.view.devicePixelRatio = 1;
@@ -75,6 +107,7 @@ Future<void> _abrir(
         repositorioAutenticacaoProvider.overrideWithValue(
           repositorio ?? _RepositorioFalso(),
         ),
+        loginDeExemploProvider.overrideWithValue(deExemplo),
       ],
       child: MaterialApp.router(theme: AppTheme.claro, routerConfig: roteador),
     ),
@@ -104,22 +137,29 @@ void main() {
 
     // Achado 5.4 da revisão de 24/09: este aviso era o único `SnackBar` do
     // aplicativo — flutuava, sumia sozinho e vinha fora da paleta.
-    testWidgets('"Esqueci a senha" avisa na própria tela, e o aviso fica', (
+    testWidgets('"Esqueci a senha" pede o e-mail e avisa na própria tela', (
       tester,
     ) async {
-      await _abrir(tester);
+      final repositorio = _RepositorioFalso();
+      await _abrir(tester, repositorio: repositorio);
+      await tester.enterText(
+        find.byType(TextField).first,
+        ' fono@exemplo.com ',
+      );
 
-      expect(find.text(AppStrings.loginRecuperacaoIndisponivel), findsNothing);
+      expect(find.text(AppStrings.loginRecuperacaoEnviadaTitulo), findsNothing);
 
       await tester.tap(find.text(AppStrings.loginEsqueciSenha));
       await tester.pumpAndSettle();
 
+      expect(repositorio.redefinicoes, ['fono@exemplo.com']);
       expect(
-        find.text(AppStrings.loginRecuperacaoIndisponivel),
+        find.text(AppStrings.loginRecuperacaoEnviadaTitulo),
         findsOneWidget,
       );
+      // A mesma resposta exista ou não a conta: não diz quem usa o FONAR.
       expect(
-        find.text(AppStrings.loginRecuperacaoIndisponivelTexto),
+        find.text(AppStrings.loginRecuperacaoEnviadaTexto),
         findsOneWidget,
       );
       expect(find.byType(SnackBar), findsNothing);
@@ -128,9 +168,72 @@ void main() {
       await tester.pump(const Duration(seconds: 30));
       await tester.pumpAndSettle();
       expect(
+        find.text(AppStrings.loginRecuperacaoEnviadaTitulo),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('"Esqueci a senha" sem e-mail diz o que preencher', (
+      tester,
+    ) async {
+      final repositorio = _RepositorioFalso();
+      await _abrir(tester, repositorio: repositorio);
+
+      await tester.tap(find.text(AppStrings.loginEsqueciSenha));
+      await tester.pumpAndSettle();
+
+      expect(repositorio.redefinicoes, isEmpty);
+      expect(
+        find.text(AppStrings.loginRecuperacaoInformeEmail),
+        findsOneWidget,
+      );
+      expect(find.text(AppStrings.loginRecuperacaoEnviadaTitulo), findsNothing);
+    });
+
+    testWidgets('"Esqueci a senha" com e-mail mal formado diz para conferir', (
+      tester,
+    ) async {
+      await _abrir(
+        tester,
+        repositorio: _RepositorioFalso(
+          erroDaRedefinicao: const CredencialInvalida(),
+        ),
+      );
+      await tester.enterText(find.byType(TextField).first, 'fono@');
+
+      await tester.tap(find.text(AppStrings.loginEsqueciSenha));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(AppStrings.loginRecuperacaoEmailInvalido),
+        findsOneWidget,
+      );
+      expect(find.text(AppStrings.loginRecuperacaoEnviadaTitulo), findsNothing);
+    });
+
+    testWidgets('login de exemplo: avisa, e a recuperação diz que não existe', (
+      tester,
+    ) async {
+      final repositorio = _RepositorioFalso();
+      await _abrir(tester, repositorio: repositorio, deExemplo: true);
+      expect(find.text(AppStrings.loginExemploTitulo), findsOneWidget);
+      await tester.enterText(find.byType(TextField).first, 'fono@exemplo.com');
+
+      await tester.tap(find.text(AppStrings.loginEsqueciSenha));
+      await tester.pumpAndSettle();
+
+      expect(repositorio.redefinicoes, isEmpty);
+      expect(
         find.text(AppStrings.loginRecuperacaoIndisponivel),
         findsOneWidget,
       );
+    });
+
+    testWidgets('com a chave do Firebase, nada de aviso de exemplo', (
+      tester,
+    ) async {
+      await _abrir(tester);
+      expect(find.text(AppStrings.loginExemploTitulo), findsNothing);
     });
 
     testWidgets('campos vazios não chegam ao servidor', (tester) async {
@@ -363,13 +466,42 @@ void main() {
         pacientesEmCache: 5,
         tamanho: const Size(360, 640),
       );
+      // A conta guardada vem do cofre, sem pressa.
+      await tester.pumpAndSettle();
 
       expect(find.text(AppStrings.loginOfflineComCacheTitulo), findsOneWidget);
       expect(find.text(AppStrings.loginEsqueciSenha), findsNothing);
 
+      // Diz com que conta entra: a da última entrada com senha.
+      expect(
+        find.text(AppStrings.loginOfflineComo(contaDeTeste.email)),
+        findsOneWidget,
+      );
+
       await tester.tap(find.text(AppStrings.loginEntrarOffline));
       await tester.pumpAndSettle();
       expect(find.text(_telaDePacientes), findsOneWidget);
+    });
+
+    testWidgets('sem entrada com senha anterior, o modo offline não abre', (
+      tester,
+    ) async {
+      // Quem saiu da conta apagou a credencial: sem ela, o offline entraria
+      // sem saber em nome de quem.
+      await _abrir(
+        tester,
+        online: false,
+        pacientesEmCache: 5,
+        repositorio: _RepositorioFalso(guardada: null),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.loginEntrarOffline), findsNothing);
+      expect(find.text(AppStrings.loginOfflineIndisponivel), findsOneWidget);
+      expect(find.text(AppStrings.loginOfflineSemContaTexto), findsOneWidget);
+      await tester.tap(find.text(AppStrings.loginOfflineIndisponivel));
+      await tester.pumpAndSettle();
+      expect(find.text(_telaDePacientes), findsNothing);
     });
 
     testWidgets('sem pacientes no aparelho, não há como entrar', (

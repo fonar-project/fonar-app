@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/network/conexao.dart';
 import '../breakpoints.dart';
-import '../tokens/app_colors.dart';
+import '../tokens/app_cores.dart';
 import '../tokens/app_spacing.dart';
+import 'app_cabecalho_de_tarefa.dart';
 import 'app_indicador_conexao.dart';
 
 /// Cabeçalho das telas com navegação principal — cadastro, fila —: o título
@@ -20,10 +21,16 @@ class AppCabecalhoDeSecao extends ConsumerWidget {
   const AppCabecalhoDeSecao({
     required this.titulo,
     required this.largura,
+    this.situacao,
     super.key,
   });
 
   final String titulo;
+
+  /// No desktop, uma pílula à direita com a situação da tela — ex.: a fila
+  /// lembrando que nada se perde sem conexão. Nas outras larguras o lugar é
+  /// do indicador de conexão, e a tela diz o mesmo no corpo, se precisar.
+  final String? situacao;
 
   /// Faixa de largura da área em que o cabeçalho está.
   final LarguraDeTela largura;
@@ -41,8 +48,8 @@ class AppCabecalhoDeSecao extends ConsumerWidget {
     );
 
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.lavandaClaro)),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: context.cores.borda)),
       ),
       child: SafeArea(
         bottom: false,
@@ -56,7 +63,21 @@ class AppCabecalhoDeSecao extends ConsumerWidget {
           ),
           alignment: Alignment.centerLeft,
           child: largura == LarguraDeTela.expandida
-              ? texto
+              ? (situacao == null
+                    ? texto
+                    : SizedBox(
+                        width: double.infinity,
+                        child: Wrap(
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: AppSpacing.md,
+                          runSpacing: AppSpacing.xs,
+                          children: [
+                            texto,
+                            AppPilulaDeSituacao(texto: situacao!),
+                          ],
+                        ),
+                      ))
               // Wrap, não Row: com o texto do sistema ampliado, título e
               // indicador não cabem lado a lado em 390 px e o indicador desce.
               // A largura toda é para o `spaceBetween` levar o indicador à

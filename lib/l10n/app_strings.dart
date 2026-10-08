@@ -38,8 +38,15 @@ abstract final class AppStrings {
   static const pacientesTitulo = 'Pacientes';
   static const pacienteDetalheTitulo = 'Paciente';
   static const consentimentoTitulo = 'Consentimento';
-  static const capturaTitulo = 'Gravação';
+  static const capturaTitulo = 'Nova avaliação';
   static const analiseResultadoTitulo = 'Resultado da análise';
+
+  // Pílulas de situação no cabeçalho das telas de tarefa, no desktop.
+  static const situacaoApoioADecisao = 'Apoio à decisão — não é diagnóstico';
+  static const situacaoCapeV = 'Registro perceptivo — não é diagnóstico';
+  static const situacaoLaudo = 'Apoio à decisão — o laudo é do profissional';
+  static const situacaoConsentimentoRegistrado = 'Consentimento registrado';
+  static const situacaoFila = 'Gravado no aparelho — nada se perde sem conexão';
   static const historicoTitulo = 'Histórico';
   static const historicoDescricao =
       'Todas as avaliações feitas neste aparelho, da mais recente para a mais '
@@ -297,7 +304,6 @@ abstract final class AppStrings {
   static const afericaoMicrofoneDemorandoTexto =
       'Medir de novo e gravar ficam travados até ele ser liberado. Se '
       'continuar assim, saia desta tela e entre de novo.';
-  static const afericaoMedindo = 'Medindo… mantenha silêncio.';
   static const afericaoEsperaGravacao =
       'Termine a gravação em andamento para medir de novo.';
 
@@ -341,12 +347,62 @@ abstract final class AppStrings {
 
   static const capturaIniciarGravacao = 'Iniciar gravação';
   static const capturaBloqueadaMicrofone =
-      'Bloqueada: o microfone não está captando som.';
-  static const capturaBloqueadaSemAfericao =
-      'Meça o ruído ambiente antes de gravar.';
+      'A gravação fica bloqueada até o microfone captar som.';
 
-  // --------------------------------------------------- gravação das tarefas --
-  static const tarefasTitulo = 'Tarefas';
+  // --------------------------------------------------- gravação guiada --
+  // Uma etapa por vez, como no protótipo: o ruído da sala e depois cada
+  // tarefa, com a instrução grande para o paciente ler de longe.
+  static String etapaDe(int numero, int total, String nome) =>
+      'Etapa $numero de $total — $nome';
+  static const etapaConcluida = 'concluída';
+  static const etapaEmAndamento = 'em andamento';
+  static const etapaPendente = 'pendente';
+  static const etapaRuidoCurta = 'Ruído';
+  static const etapaRuidoNome = 'Aferição de ruído';
+  static const tarefaVogalCurta = 'Vogal /a/';
+  static const tarefaFalaCurta = 'Fala';
+
+  static const instrucaoRuidoPronto =
+      'Vamos medir o ruído da sala. Fique em silêncio por alguns segundos.';
+  static const instrucaoRuidoMedindo = 'Medindo o ruído da sala…';
+  static const instrucaoRuidoOk = 'Ambiente adequado para gravar.';
+  static const instrucaoRuidoAlto = 'A sala está ruidosa.';
+  static const instrucaoRuidoMudo = 'O microfone não está captando som.';
+  static const instrucaoRuidoSemMicrofone =
+      'Não foi possível usar o microfone.';
+
+  // TODO(clínico): instruções PROVISÓRIAS, escritas para o fluxo funcionar.
+  // As tarefas, a ordem e o texto dito ao paciente são do protocolo clínico e
+  // precisam de revisão da orientação.
+  static const instrucaoVogalPronto =
+      'Respire fundo e sustente o som “aaaa” em tom confortável.';
+  static const instrucaoVogalGravando = 'Continue… sustente o “aaaa”.';
+  static const instrucaoFalaPronto =
+      'Fale de forma encadeada, como o profissional orientar.';
+  static const instrucaoFalaGravando = 'Continue falando…';
+  static const instrucaoProvisoria =
+      'Instrução provisória — a validar com a orientação clínica.';
+  static const instrucaoConferindo = 'Conferindo a gravação…';
+  static const instrucaoAmostraBoa = 'Boa! Amostra registrada.';
+  static const instrucaoAmostraRessalva = 'Amostra registrada, com ressalva.';
+  static const instrucaoAmostraRecusada =
+      'Essa gravação não serviu. Vamos gravar de novo.';
+
+  static const gravandoRotulo = 'Gravando';
+  static const capturaContinuar = 'Continuar';
+  static const capturaProximaEtapa = 'Próxima etapa';
+  static const capturaConcluirERevisar = 'Concluir e revisar';
+  static const capturaRegravar = 'Regravar';
+  static const capturaAtalhos = 'Espaço inicia e para · R regrava';
+  static const capturaEsperaTerminar =
+      'Termine a gravação em andamento para mudar de etapa.';
+
+  static const revisaoTitulo = 'Revisão das amostras';
+  static const revisaoInstrucao =
+      'Tudo gravado. Ouça as amostras antes de enviar.';
+  static String revisaoResumo(int gravadas, int total) =>
+      '$gravadas de $total tarefas gravadas.';
+  static const revisaoVoltar = 'Voltar à gravação';
 
   // ------------------------------------------------ gravações não enviadas --
   static const naoEnviadasTitulo = 'Gravações não enviadas';
@@ -391,23 +447,11 @@ abstract final class AppStrings {
       'Começada às $hora. Já gravadas: $gravadas de $total tarefas — '
       'continuam valendo. Regravar uma tarefa substitui a gravação dela.';
 
-  // TODO(clínico): instruções PROVISÓRIAS, escritas para o fluxo funcionar.
-  // As tarefas, a ordem e o texto dito ao paciente são do protocolo clínico e
-  // precisam de revisão da orientação.
   static const tarefaVogalTitulo = 'Vogal sustentada /a/';
-  static const tarefaVogalInstrucao =
-      'Peça ao paciente para sustentar a vogal /a/, em altura e intensidade '
-      'confortáveis, pelo tempo que conseguir. (instrução provisória)';
   static const tarefaFalaTitulo = 'Fala encadeada';
-  static const tarefaFalaInstrucao =
-      'Peça ao paciente para falar de forma encadeada, conforme o protocolo '
-      'da clínica. (instrução provisória)';
 
-  static const tarefaGravar = 'Gravar';
-  static const tarefaGravarDeNovo = 'Gravar de novo';
   static const tarefaParar = 'Parar';
   static String tarefaGravando(String duracao) => 'Gravando… $duracao';
-  static const tarefaConferindo = 'Conferindo o arquivo gravado…';
   static const tarefaOutraEmAndamento =
       'Termine a gravação em andamento para gravar esta.';
 
@@ -495,6 +539,13 @@ abstract final class AppStrings {
   static const filaSessaoExpirada = 'Sessão expirada';
   static const filaSessaoExpiradaTexto =
       'Entre novamente para o envio continuar. A gravação continua guardada.';
+  static const filaEntrarDeNovo = 'Entrar de novo';
+  static const filaEntrarExigeConexao =
+      'Entrar com a senha exige conexão. A gravação continua guardada.';
+  static const filaDeOutraConta = 'Gravado por outra conta';
+  static const filaDeOutraContaTexto =
+      'Sobe quando quem gravou entrar neste aparelho. A gravação continua '
+      'guardada.';
   static const filaRecusado = 'A análise recusou o envio';
   static String filaRecusadoTexto(String motivo) =>
       '$motivo Tentar de novo costuma repetir a recusa; se repetir, avise o '
@@ -528,6 +579,9 @@ abstract final class AppStrings {
       '$tarefa: amostra com problema';
   static const resultadoAmostraSemMotivo = 'O servidor não detalhou o motivo.';
   static const resultadoMedidasTitulo = 'Medidas acústicas';
+  static const resultadoRodape =
+      'As faixas de referência vêm de um catálogo configurável (sexo, idade, '
+      'equipamento), ainda pendente de validação clínica.';
   static const resultadoEspectrogramaTitulo = 'Espectrograma';
   static const resultadoEspectrogramaIndisponivel =
       'Imagem ainda não disponível para esta análise.';
@@ -620,6 +674,13 @@ abstract final class AppStrings {
   static const capeVLoudnessAcima = 'Mais forte';
   static const capeVComentarios = 'Comentários (opcional)';
   static const capeVRegistrar = 'Registrar CAPE-V';
+  static const capeVAmostra = 'Amostra';
+  static const capeVAbrirEscala = 'Abrir escala';
+  static String capeVParametroDe(int n, int total) => 'CAPE-V · $n de $total';
+  static const capeVAnterior = 'Anterior';
+  static const capeVProximo = 'Próximo';
+  static const capeVConcluir = 'Concluir';
+  static const capeVGireAparelho = 'Gire o aparelho para a escala ficar maior.';
   static const capeVRegistrando = 'Registrando…';
   static const capeVMarque = 'Marque na linha. Se não houver desvio, marque 0.';
   static const capeVEscolhaConsistencia =
@@ -638,7 +699,7 @@ abstract final class AppStrings {
 
   // ------------------------------------------------------------ evolução --
   static const evolucaoTitulo = 'Evolução';
-  static const resultadoVerEvolucao = 'Ver evolução do paciente';
+  static const resultadoVerEvolucao = 'Ver evolução';
   static String evolucaoSessoes(int n, String primeira, String ultima) => n == 1
       ? '1 sessão analisada, em $primeira.'
       : '$n sessões analisadas, de $primeira a $ultima.';
@@ -813,6 +874,10 @@ abstract final class AppStrings {
   static const laudoItemConclusao = 'Conclusão do profissional';
   static const laudoItemConclusaoFalta = 'Escreva a conclusão abaixo.';
 
+  static const laudoItemAssinatura = 'Seu nome e registro';
+  static const laudoItemAssinaturaFalta =
+      'Vão na assinatura do laudo. Preencha na Conta.';
+  static const laudoIrParaConta = 'Preencher na Conta';
   static const laudoIrParaConsentimento = 'Registrar consentimento';
   static const laudoIrParaCapeV = 'Registrar CAPE-V';
 
@@ -923,6 +988,24 @@ abstract final class AppStrings {
   };
   static const contaVerFila = 'Ver fila';
 
+  static const contaAparencia = 'Aparência';
+  static const contaTema = 'Tema';
+  static const contaTemaSistema = 'Do sistema';
+  static const contaTemaClaro = 'Claro';
+  static const contaTemaEscuro = 'Escuro';
+  static const contaTemaApoio =
+      'Vale para este aparelho. O laudo em PDF sai sempre em papel branco.';
+  static const contaFaixasTitulo = 'Faixas de referência';
+  static const contaFaixasPendente = 'Validação clínica pendente';
+  static const contaFaixasEmUso = 'Catálogo em uso';
+  static const contaFaixasTexto =
+      'As faixas que classificam cada medida vêm de um catálogo que varia com '
+      'sexo, idade e equipamento de captação. Sem faixa válida para o perfil '
+      'do paciente, a medida aparece com o valor e sem classificação.';
+  static const contaFaixasVazio =
+      'Hoje o catálogo está vazio: nenhuma faixa foi validada por profissional '
+      'da área, e nenhuma medida é classificada.';
+  static const contaFaixasSoLeitura = 'O catálogo não se edita neste aparelho.';
   static const contaSobre = 'Sobre o FONAR';
   static const contaSobreTexto =
       'Ferramenta de apoio à decisão para avaliação vocal. O FONAR não emite '
@@ -934,13 +1017,13 @@ abstract final class AppStrings {
   static String contaVersao(String versao) => 'Versão: $versao';
   static const contaLicencas = 'Licenças de software';
 
+  /// Barra lateral, enquanto o perfil da conta está vazio (US32).
+  static const contaPerfilIncompleto = 'Preencha nome e registro na Conta';
   static const contaSair = 'Sair da conta';
   static const contaSairPergunta = 'Sair da conta neste aparelho?';
 
   // TODO(jurídico): o que fica no aparelho depois de sair — hoje pacientes,
   // gravações e fila continuam guardados.
-  // TODO(auth): "quando você entrar de novo" só é verdade de fato quando cada
-  // envio levar o id de quem gravou; ver `Sessao`.
   static const contaSairTexto =
       'Pacientes, gravações e laudos continuam guardados neste aparelho.';
   static String contaSairComFila(int n) => n == 1
@@ -1033,12 +1116,28 @@ abstract final class AppStrings {
       'Entrar com e-mail e senha exige conexão.';
   static const loginEsqueciSenha = 'Esqueci a senha';
 
-  /// TODO(auth): remover quando a recuperação de senha do Firebase existir.
+  static const loginRecuperacaoInformeEmail =
+      'Informe acima o e-mail da conta para receber o link de redefinição.';
+  static const loginRecuperacaoEmailInvalido =
+      'Confira o e-mail: ele não parece um endereço válido.';
+  static const loginRecuperacaoEnviadaTitulo = 'Confira seu e-mail';
+
+  /// Igual com ou sem conta para o e-mail: dizer "não há conta" seria dizer
+  /// a qualquer um quem usa o FONAR.
+  static const loginRecuperacaoEnviadaTexto =
+      'Se houver uma conta FONAR com este e-mail, o link para criar uma senha '
+      'nova chega em alguns minutos. Confira também a caixa de spam.';
   static const loginRecuperacaoIndisponivel =
-      'Recuperação de senha ainda não disponível';
+      'Recuperação de senha indisponível no login de exemplo';
   static const loginRecuperacaoIndisponivelTexto =
-      'Nesta versão o aplicativo ainda não envia o e-mail de redefinição '
-      '(placeholder). O login aceita qualquer e-mail e senha.';
+      'Sem a chave do Firebase, o aplicativo não envia e-mail de '
+      'redefinição.';
+
+  /// PLACEHOLDER — o build sem a chave do Firebase.
+  static const loginExemploTitulo = 'Login de exemplo';
+  static const loginExemploTexto =
+      'Este build não recebeu a chave do Firebase: o login aceita qualquer '
+      'e-mail e senha. Serve só para desenvolvimento.';
 
   static const loginOfflineComCacheTitulo =
       'Sem conexão — dados locais disponíveis';
@@ -1047,6 +1146,11 @@ abstract final class AppStrings {
       '${pacientes == 1 ? 'paciente salvo' : 'pacientes salvos'}. Dá para '
       'gravar e revisar; o envio para análise aguarda a conexão voltar.';
   static const loginEntrarOffline = 'Entrar em modo offline';
+  static String loginOfflineComo(String email) => 'Entra como $email.';
+  static const loginOfflineSemContaTexto =
+      'O modo offline entra com a conta da última entrada com senha neste '
+      'aparelho, e ainda não houve nenhuma. Conecte-se e entre uma vez para '
+      'habilitá-lo.';
 
   static const loginOfflineSemCacheTitulo = 'Sem conexão e sem dados locais';
   static const loginOfflineSemCacheTexto =
@@ -1071,6 +1175,11 @@ abstract final class AppStrings {
       'Sua sessão expirou. Entre novamente para continuar.';
   static const erroCredencialInvalida =
       'E-mail ou senha incorretos. Confira e tente novamente.';
+  static const erroMuitasTentativas =
+      'Muitas tentativas seguidas. Por segurança, esta conta ficou pausada '
+      'por alguns minutos. Aguarde e tente de novo, ou redefina a senha.';
+  static const erroContaDesativada =
+      'Esta conta foi desativada. Fale com o responsável pelo FONAR.';
   static const erroProibido = 'Você não tem acesso a este recurso.';
   static const erroNaoEncontrado = 'Não encontramos o que você procurava.';
   static const erroValidacao = 'Confira os dados informados e tente novamente.';

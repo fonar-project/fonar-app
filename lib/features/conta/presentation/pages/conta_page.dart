@@ -6,17 +6,23 @@ import '../../../../app/app_estrutura.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../design_system/breakpoints.dart';
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_cabecalho_de_secao.dart';
+import '../../../../design_system/widgets/app_cabecalho_de_tarefa.dart';
 import '../../../../design_system/widgets/app_confirmacao.dart';
 import '../../../../design_system/widgets/app_campo_texto.dart';
+import '../../../../design_system/widgets/app_escolha_unica.dart';
 import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../../analise/data/catalogo_de_referencias_vazio.dart';
 import '../../../auth/data/profissional_atual.dart';
+import '../../../auth/data/sessao.dart';
+import '../../data/preferencia_de_tema_local.dart';
+import '../../domain/tema_escolhido.dart';
 import '../../../fila/presentation/fila_controlador.dart';
 import '../../domain/dados_do_profissional.dart';
 import '../conta_controlador.dart';
@@ -61,6 +67,10 @@ class ContaPage extends ConsumerWidget {
                           SizedBox(height: AppSpacing.xl),
                           _NesteAparelho(),
                           SizedBox(height: AppSpacing.xl),
+                          _FaixasDeReferencia(),
+                          SizedBox(height: AppSpacing.xl),
+                          _Aparencia(),
+                          SizedBox(height: AppSpacing.xl),
                           _Sobre(),
                           SizedBox(height: AppSpacing.xl),
                           _Sair(),
@@ -102,8 +112,8 @@ class _Cartao extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(AppSpacing.md),
     decoration: BoxDecoration(
-      color: AppColors.branco,
-      border: Border.all(color: AppColors.lavandaClaro),
+      color: context.cores.cartao,
+      border: Border.all(color: context.cores.borda),
       borderRadius: AppRadius.bordaMedia,
     ),
     child: Column(
@@ -161,11 +171,18 @@ class _SeusDadosState extends ConsumerState<_SeusDados> {
 
   @override
   Widget build(BuildContext context) {
+    // O perfil vem do banco e pode chegar depois de a tela abrir: o campo
+    // que o profissional não mexeu acompanha; o que ele mexeu fica.
+    ref.listen(profissionalAtualProvider, (antes, depois) {
+      if (antes == null) return;
+      if (_nome.text == antes.nome) _nome.text = depois.nome;
+      if (_registro.text == antes.registro) _registro.text = depois.registro;
+    });
     final estado = ref.watch(contaControladorProvider);
     final profissional = ref.watch(profissionalAtualProvider);
     final textos = Theme.of(context).textTheme;
     final secundario = textos.bodySmall?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
     final mudou =
         _nome.text != profissional.nome ||
@@ -217,9 +234,7 @@ class _SeusDadosState extends ConsumerState<_SeusDados> {
             children: [
               Text(
                 AppStrings.contaCampoEmail,
-                style: textos.labelSmall?.copyWith(
-                  color: AppColors.cinzaChumbo,
-                ),
+                style: textos.labelSmall?.copyWith(color: context.cores.texto),
               ),
               const SizedBox(height: AppSpacing.xxs),
               Text(profissional.email, style: textos.bodyMedium),
@@ -300,13 +315,108 @@ class _NesteAparelho extends ConsumerWidget {
   }
 }
 
-int _pendentes(WidgetRef ref) =>
-    ref
-        .watch(filaControladorProvider)
-        .value
-        ?.where((item) => item.pendente)
-        .length ??
-    0;
+/// Os envios pendentes DESTA conta: são os que pausam ao sair e voltam a
+/// subir quando ela entrar de novo. Os de outra conta no aparelho esperam
+/// por ela, e não mudam com esta saída.
+int _pendentes(WidgetRef ref) {
+  final uid = ref.watch(sessaoProvider)?.uid ?? '';
+  return ref
+          .watch(filaControladorProvider)
+          .value
+          ?.where((item) => item.pendente && item.deQuem(uid))
+          .length ??
+      0;
+}
+
+// ------------------------------------------------------------ aparência --
+
+/// Claro, escuro ou o do sistema. Vale para este aparelho, na hora.
+class _Aparencia extends ConsumerWidget {
+  const _Aparencia();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final escolhido =
+        ref.watch(temaEscolhidoProvider).value ?? TemaEscolhido.sistema;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _Titulo(AppStrings.contaAparencia),
+        _Cartao(
+          children: [
+            AppEscolhaUnica<TemaEscolhido>(
+              rotulo: AppStrings.contaTema,
+              opcoes: const [
+                AppOpcao(
+                  valor: TemaEscolhido.sistema,
+                  rotulo: AppStrings.contaTemaSistema,
+                ),
+                AppOpcao(
+                  valor: TemaEscolhido.claro,
+                  rotulo: AppStrings.contaTemaClaro,
+                ),
+                AppOpcao(
+                  valor: TemaEscolhido.escuro,
+                  rotulo: AppStrings.contaTemaEscuro,
+                ),
+              ],
+              selecionado: escolhido,
+              aoEscolher: (tema) =>
+                  ref.read(temaEscolhidoProvider.notifier).escolher(tema),
+              apoio: AppStrings.contaTemaApoio,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// ------------------------------------------------- faixas de referência --
+
+/// De onde vem a classificação das medidas, e por que hoje não há nenhuma.
+/// Só leitura: o catálogo não se edita no aparelho.
+class _FaixasDeReferencia extends ConsumerWidget {
+  const _FaixasDeReferencia();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final textos = Theme.of(context).textTheme;
+    final vazio =
+        ref.watch(catalogoDeReferenciasProvider) is CatalogoDeReferenciasVazio;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _Titulo(AppStrings.contaFaixasTitulo),
+        _Cartao(
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: AppPilulaDeSituacao(
+                texto: vazio
+                    ? AppStrings.contaFaixasPendente
+                    : AppStrings.contaFaixasEmUso,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(AppStrings.contaFaixasTexto, style: textos.bodyMedium),
+            if (vazio) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(AppStrings.contaFaixasVazio, style: textos.bodyMedium),
+            ],
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              AppStrings.contaFaixasSoLeitura,
+              style: textos.bodySmall?.copyWith(
+                color: context.cores.secundario,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
 
 // ---------------------------------------------------------------- sobre --
 
@@ -317,7 +427,7 @@ class _Sobre extends StatelessWidget {
   Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
     final secundario = textos.bodySmall?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

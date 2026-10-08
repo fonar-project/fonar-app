@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../tokens/app_colors.dart';
+import '../tokens/app_cores.dart';
 import '../tokens/app_spacing.dart';
 import 'app_icone.dart';
 
@@ -34,7 +34,7 @@ class AppSituacao extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppIcone(nome: icone, cor: AppColors.roxoProfundo, tamanho: 28),
+          AppIcone(nome: icone, cor: context.cores.acento, tamanho: 28),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
@@ -46,7 +46,7 @@ class AppSituacao extends StatelessWidget {
                   Text(
                     texto,
                     style: textos.bodyMedium?.copyWith(
-                      color: AppColors.secundarioSobreCreme,
+                      color: context.cores.secundario,
                     ),
                   ),
                 ],

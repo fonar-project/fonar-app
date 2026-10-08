@@ -6,7 +6,7 @@ import '../../../../app/router/app_routes.dart';
 import '../../../../core/network/conexao.dart';
 import '../../../../core/offline/pacientes_em_cache.dart';
 import '../../../../design_system/breakpoints.dart';
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
@@ -16,6 +16,8 @@ import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../design_system/widgets/app_indicador_conexao.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../data/repositorio_autenticacao_firebase.dart';
+import '../../domain/conta_autenticada.dart';
 import '../login_controlador.dart';
 
 /// Tela 00 — entrada do profissional.
@@ -53,14 +55,30 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (entrou && mounted) context.goNamed(AppRoutes.pacientesNome);
   }
 
-  /// Tocou em "Esqueci a senha": o aviso fica na tela até sair dela.
+  /// Tocou em "Esqueci a senha": o resultado fica na tela até sair dela.
   ///
   /// Era o único `SnackBar` do aplicativo (achado 5.4 da revisão de 24/09).
   /// Ele flutuava por cima do conteúdo, sumia sozinho — quem lê devagar perde
-  /// o aviso, e é ele que explica por que nada aconteceu — e vinha com a cor
-  /// escura do Material, fora da paleta. Todo aviso desta tela e das outras é
-  /// um `AppSituacao` no fluxo da página; este passou a ser também.
+  /// o aviso, e é ele que explica o que aconteceu — e vinha com a cor escura
+  /// do Material, fora da paleta. Todo aviso desta tela e das outras é um
+  /// `AppSituacao` no fluxo da página; este passou a ser também.
   var _recuperacaoPedida = false;
+  String? _erroDaRecuperacao;
+
+  Future<void> _recuperar() async {
+    if (ref.read(loginDeExemploProvider)) {
+      setState(() => _recuperacaoPedida = true);
+      return;
+    }
+    final erro = await ref
+        .read(redefinicaoDeSenhaProvider.notifier)
+        .pedir(_email.text);
+    if (!mounted) return;
+    setState(() {
+      _recuperacaoPedida = true;
+      _erroDaRecuperacao = erro;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,6 +103,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     // Enquanto o banco não respondeu, conta como nenhum: entrar offline só
     // fica disponível quando se sabe que há com quem trabalhar.
     final pacientesEmCache = ref.watch(pacientesEmCacheProvider).value ?? 0;
+    // Idem: enquanto o cofre não respondeu, nenhuma conta para o offline.
+    final contaGuardada = ref.watch(contaGuardadaProvider).value;
+    final deExemplo = ref.watch(loginDeExemploProvider);
+    final pedido = ref.watch(redefinicaoDeSenhaProvider);
     final textos = Theme.of(context).textTheme;
 
     return AutofillGroup(
@@ -99,13 +121,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             ),
             const SizedBox(height: AppSpacing.md),
           ],
+          if (deExemplo) ...[
+            const AppSituacao(
+              icone: NomeIcone.informacao,
+              titulo: AppStrings.loginExemploTitulo,
+              texto: AppStrings.loginExemploTexto,
+            ),
+            const SizedBox(height: AppSpacing.md),
+          ],
           // Sem conexão, o aviso vem ANTES dos campos, não depois como no
           // protótipo. Offline, ele é a única coisa acionável da tela; embaixo
           // do formulário desabilitado ele caía abaixo da dobra num celular de
           // 844 px — justamente o botão que o profissional precisa no
           // consultório sem sinal.
           if (!online) ...[
-            _avisoOffline(pacientesEmCache),
+            _avisoOffline(pacientesEmCache, contaGuardada),
             const SizedBox(height: AppSpacing.lg),
           ],
           AppCampoTexto(
@@ -159,10 +189,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             const SizedBox(height: AppSpacing.xs),
             Center(
               child: TextButton(
-                onPressed: () => setState(() => _recuperacaoPedida = true),
+                onPressed: pedido == PedidoDeRedefinicao.enviando
+                    ? null
+                    : _recuperar,
                 style:
                     TextButton.styleFrom(
-                      foregroundColor: AppColors.roxoProfundo,
+                      foregroundColor: context.cores.acento,
                       minimumSize: const Size(0, AppSpacing.alvoDeToqueMinimo),
                       textStyle: textos.labelSmall?.copyWith(
                         decoration: TextDecoration.underline,
@@ -172,7 +204,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       // navega por teclado. Mesmo anel dos outros controles.
                       side: WidgetStateProperty.resolveWith(
                         (estados) => estados.contains(WidgetState.focused)
-                            ? const BorderSide(color: AppColors.foco, width: 3)
+                            ? BorderSide(color: context.cores.foco, width: 3)
                             : BorderSide.none,
                       ),
                       shape: const WidgetStatePropertyAll(
@@ -186,16 +218,25 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             ),
             if (_recuperacaoPedida) ...[
               const SizedBox(height: AppSpacing.sm),
-              // `liveRegion`: o aviso aparece por causa de um toque, e quem
-              // não vê a tela precisa ouvir que apareceu.
-              Semantics(
-                liveRegion: true,
-                child: const AppSituacao(
-                  icone: NomeIcone.informacao,
-                  titulo: AppStrings.loginRecuperacaoIndisponivel,
-                  texto: AppStrings.loginRecuperacaoIndisponivelTexto,
+              if (_erroDaRecuperacao case final erro?)
+                _ErroGeral(mensagem: erro)
+              else
+                // `liveRegion`: o aviso aparece por causa de um toque, e quem
+                // não vê a tela precisa ouvir que apareceu.
+                Semantics(
+                  liveRegion: true,
+                  child: deExemplo
+                      ? const AppSituacao(
+                          icone: NomeIcone.informacao,
+                          titulo: AppStrings.loginRecuperacaoIndisponivel,
+                          texto: AppStrings.loginRecuperacaoIndisponivelTexto,
+                        )
+                      : const AppSituacao(
+                          icone: NomeIcone.informacao,
+                          titulo: AppStrings.loginRecuperacaoEnviadaTitulo,
+                          texto: AppStrings.loginRecuperacaoEnviadaTexto,
+                        ),
                 ),
-              ),
             ],
           ],
         ],
@@ -204,13 +245,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 }
 
-/// O que dá para fazer sem conexão, conforme haja pacientes no aparelho.
-Widget _avisoOffline(int pacientesEmCache) {
+/// O que dá para fazer sem conexão, conforme haja pacientes no aparelho e
+/// uma entrada com senha anterior com que entrar.
+Widget _avisoOffline(int pacientesEmCache, ContaAutenticada? conta) {
   if (pacientesEmCache > 0) {
     return AppEstado.faixa(
       titulo: AppStrings.loginOfflineComCacheTitulo,
       texto: AppStrings.loginOfflineComCacheTexto(pacientesEmCache),
-      acao: const _BotaoEntrarOffline(),
+      // Sem conta guardada, o motivo vai no botão desabilitado, como abaixo.
+      acao: conta == null
+          ? const AppBotao.secundario(
+              rotulo: AppStrings.loginOfflineIndisponivel,
+              aoTocar: null,
+              motivoDesabilitado: AppStrings.loginOfflineSemContaTexto,
+              ocupaLargura: true,
+            )
+          : _BotaoEntrarOffline(conta: conta),
     );
   }
   // A explicação vai como motivo do botão desabilitado, não como `texto` do
@@ -227,20 +277,37 @@ Widget _avisoOffline(int pacientesEmCache) {
   );
 }
 
-// TODO(auth): modo offline precisa de uma sessão anterior guardada no
-// aparelho, e o roteador precisa saber que a sessão é offline. Hoje só navega —
-// não há redirect de autenticação para contornar.
+/// Entra com a conta da última entrada com senha — a credencial guardada no
+/// cofre. Quem saiu da conta apagou a credencial: o modo offline some junto.
 class _BotaoEntrarOffline extends ConsumerWidget {
-  const _BotaoEntrarOffline();
+  const _BotaoEntrarOffline({required this.conta});
+
+  final ContaAutenticada conta;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => AppBotao.secundario(
-    rotulo: AppStrings.loginEntrarOffline,
-    aoTocar: () {
-      ref.read(loginControladorProvider.notifier).entrarOffline();
-      context.goNamed(AppRoutes.pacientesNome);
-    },
-    ocupaLargura: true,
+  Widget build(BuildContext context, WidgetRef ref) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      AppBotao.secundario(
+        rotulo: AppStrings.loginEntrarOffline,
+        aoTocar: () async {
+          final entrou = await ref
+              .read(loginControladorProvider.notifier)
+              .entrarOffline();
+          if (entrou && context.mounted) {
+            context.goNamed(AppRoutes.pacientesNome);
+          }
+        },
+        ocupaLargura: true,
+      ),
+      const SizedBox(height: AppSpacing.xxs),
+      Text(
+        AppStrings.loginOfflineComo(conta.email),
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
+    ],
   );
 }
 
@@ -258,7 +325,7 @@ class _LayoutExpandido extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
-    const creme = AppColors.creme;
+    final creme = context.cores.sobrePrimaria;
     final cremeSuave = creme.withValues(alpha: 0.85);
 
     return Row(
@@ -266,7 +333,7 @@ class _LayoutExpandido extends StatelessWidget {
       children: [
         Container(
           width: _larguraDoPainel,
-          color: AppColors.roxoProfundo,
+          color: context.cores.lateral,
           // Rola quando não couber: com o texto do sistema em 200%, marca,
           // subtítulo e descrição passam da altura de uma janela de 900 px.
           // Alinhado à esquerda, como antes — `Center` o centralizaria na
@@ -359,7 +426,7 @@ class _LayoutCompacto extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ColoredBox(
-          color: AppColors.roxoProfundo,
+          color: context.cores.lateral,
           child: SafeArea(
             bottom: false,
             child: Padding(
@@ -387,7 +454,9 @@ class _LayoutCompacto extends StatelessWidget {
                       Text(
                         AppStrings.loginSubtitulo,
                         style: textos.bodySmall?.copyWith(
-                          color: AppColors.creme.withValues(alpha: 0.85),
+                          color: context.cores.sobrePrimaria.withValues(
+                            alpha: 0.85,
+                          ),
                         ),
                       ),
                     ],
@@ -443,7 +512,7 @@ class _Marca extends StatelessWidget {
         style: Theme.of(context).textTheme.displaySmall?.copyWith(
           fontSize: tamanho,
           letterSpacing: tamanho * 0.05,
-          color: AppColors.creme,
+          color: context.cores.sobrePrimaria,
         ),
       ),
     );
@@ -459,7 +528,7 @@ class _AvisoApoioDecisao extends StatelessWidget {
       AppStrings.avisoApoioDecisao,
       textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.bodySmall
-          ?.copyWith(color: AppColors.secundarioSobreCreme),
+          ?.copyWith(color: context.cores.secundario),
     );
   }
 }
@@ -478,9 +547,9 @@ class _ErroGeral extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const AppIcone(
+            AppIcone(
               nome: NomeIcone.alerta,
-              cor: AppColors.erro,
+              cor: context.cores.erro,
               tamanho: 16,
             ),
             const SizedBox(width: AppSpacing.xxs + 2),
@@ -488,7 +557,7 @@ class _ErroGeral extends StatelessWidget {
               child: Text(
                 mensagem,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.erro,
+                  color: context.cores.erro,
                   fontWeight: FontWeight.w600,
                 ),
               ),

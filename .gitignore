@@ -46,3 +46,7 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Chave do Firebase e URL da API por ambiente (--dart-define-from-file).
+# Ver "Conectar ao Firebase" no README.
+dart_defines.json

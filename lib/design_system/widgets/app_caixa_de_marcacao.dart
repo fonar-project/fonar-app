@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../tokens/app_colors.dart';
+import '../tokens/app_cores.dart';
+import '../tokens/app_movimento.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_spacing.dart';
 import 'app_fundo.dart';
@@ -40,9 +41,9 @@ class AppCaixaDeMarcacao extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final borda = switch ((marcada, _temErro)) {
-      (true, _) => AppColors.roxoProfundo,
-      (false, true) => AppColors.erro,
-      (false, false) => AppColors.cinzaChumbo,
+      (true, _) => context.cores.primaria,
+      (false, true) => context.cores.erro,
+      (false, false) => context.cores.bordaDeCampo,
     };
 
     // Altura mínima de alvo de toque, com respiro vertical pequeno: o texto de
@@ -56,18 +57,21 @@ class AppCaixaDeMarcacao extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
+          // Marcar muda a cor com transição curta, como o hover dos botões.
+          AnimatedContainer(
+            duration: AppMovimento.duracao(context, AppMovimento.rapida),
+            curve: AppMovimento.curva,
             width: _aresta,
             height: _aresta,
             decoration: BoxDecoration(
-              color: marcada ? AppColors.roxoProfundo : null,
+              color: marcada ? context.cores.primaria : null,
               border: Border.all(color: borda, width: 1.5),
               borderRadius: AppRadius.bordaPequena,
             ),
             child: marcada
-                ? const AppIcone(
+                ? AppIcone(
                     nome: NomeIcone.confirmacao,
-                    cor: AppColors.creme,
+                    cor: context.cores.sobrePrimaria,
                     tamanho: 18,
                   )
                 : null,

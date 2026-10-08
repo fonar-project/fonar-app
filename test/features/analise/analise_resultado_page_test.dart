@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fonar_app/core/error/app_exception.dart';
 import 'package:fonar_app/core/network/conexao.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
+import 'package:fonar_app/design_system/widgets/app_botao.dart';
 import 'package:fonar_app/design_system/widgets/app_status_medida.dart';
 import 'package:fonar_app/features/analise/data/catalogo_de_referencias_vazio.dart';
 import 'package:fonar_app/features/analise/data/repositorio_analises_placeholder.dart';
@@ -382,6 +383,79 @@ void main() {
     expect(find.text('${AppStrings.capeVGrauGeral}: 0'), findsOneWidget);
     expect(find.text('Comentário (teste).'), findsOneWidget);
     expect(find.text(AppStrings.capeVEditar), findsOneWidget);
+  });
+
+  testWidgets('AVQI e CPPS em destaque, antes e maiores que as demais', (
+    tester,
+  ) async {
+    await _abrir(tester);
+
+    double tamanho(String texto) =>
+        tester.widget<Text>(find.text(texto)).style!.fontSize!;
+    final avqi = tester.getTopLeft(find.text('3,12'));
+    final cpps = tester.getTopLeft(find.text('12,4'));
+    final f0 = tester.getTopLeft(find.text('212'));
+    // As duas principais lado a lado, as demais embaixo.
+    expect(avqi.dy, cpps.dy);
+    expect(f0.dy, greaterThan(avqi.dy));
+    expect(tamanho('3,12'), greaterThan(tamanho('212')));
+    expect(tamanho('12,4'), tamanho('3,12'));
+  });
+
+  group('ações', () {
+    AppBotao botao(WidgetTester tester, String rotulo) =>
+        tester.widget<AppBotao>(
+          find.ancestor(of: find.text(rotulo), matching: find.byType(AppBotao)),
+        );
+
+    testWidgets('sem CAPE-V, o passo principal é registrá-la', (tester) async {
+      await _abrir(tester);
+
+      expect(
+        botao(tester, AppStrings.capeVRegistrar).variante,
+        VarianteBotao.primario,
+      );
+      expect(
+        botao(tester, AppStrings.resultadoPrepararLaudo).variante,
+        VarianteBotao.secundario,
+      );
+      expect(find.text(AppStrings.resultadoVerEvolucao), findsOneWidget);
+      expect(find.text(AppStrings.resultadoRodape), findsOneWidget);
+    });
+
+    testWidgets('com CAPE-V, o passo principal é o laudo', (tester) async {
+      await _abrir(
+        tester,
+        capeV: AvaliacaoCapeV(
+          analiseId: 'an-1',
+          pacienteId: 'p1',
+          registradaEm: DateTime(2026, 9, 23, 11, 15),
+          comentarios: '',
+          notas: {
+            for (final p in ParametroCapeV.values) p: const NotaCapeV(valor: 0),
+          },
+        ),
+      );
+
+      expect(
+        botao(tester, AppStrings.resultadoPrepararLaudo).variante,
+        VarianteBotao.primario,
+      );
+      expect(
+        botao(tester, AppStrings.capeVEditar).variante,
+        VarianteBotao.secundario,
+      );
+    });
+
+    testWidgets('no celular, o principal fica preso embaixo', (tester) async {
+      await _abrir(tester, tamanho: const Size(390, 844));
+
+      final principal = tester.getRect(find.text(AppStrings.capeVRegistrar));
+      expect(principal.bottom, greaterThan(844 - 80));
+      // As outras ações existem, no fim da página.
+      expect(find.text(AppStrings.resultadoVerEvolucao), findsOneWidget);
+      expect(find.text(AppStrings.resultadoPrepararLaudo), findsOneWidget);
+    });
   });
 
   for (final (nome, tamanho) in [

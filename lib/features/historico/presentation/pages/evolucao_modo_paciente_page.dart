@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../design_system/breakpoints.dart';
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/tokens/app_typography.dart';
 import '../../../../design_system/widgets/app_botao.dart';
@@ -85,8 +85,8 @@ class EvolucaoModoPacientePage extends ConsumerWidget {
                 titulo: AppStrings.evolucaoErroCarregar,
                 acao: sair,
               ),
-              _ => const Center(
-                child: CircularProgressIndicator(color: AppColors.roxoProfundo),
+              _ => Center(
+                child: CircularProgressIndicator(color: context.cores.acento),
               ),
             };
           },
@@ -161,9 +161,7 @@ class _ParaOPaciente extends ConsumerWidget {
       if (!baixa) ...[medidaEUnidade, const SizedBox(height: AppSpacing.xs)],
       Text(
         AppStrings.modoPacienteExplicacao,
-        style: textos.bodyLarge?.copyWith(
-          color: AppColors.secundarioSobreCreme,
-        ),
+        style: textos.bodyLarge?.copyWith(color: context.cores.secundario),
       ),
     ];
 
@@ -173,9 +171,7 @@ class _ParaOPaciente extends ConsumerWidget {
         if (exemplo)
           Text(
             AppStrings.resultadoExemploTitulo,
-            style: textos.bodyMedium?.copyWith(
-              color: AppColors.secundarioSobreCreme,
-            ),
+            style: textos.bodyMedium?.copyWith(color: context.cores.secundario),
           ),
         const SizedBox(height: AppSpacing.sm),
       ],
@@ -190,9 +186,7 @@ class _ParaOPaciente extends ConsumerWidget {
         const SizedBox(height: AppSpacing.sm),
         Text(
           AppStrings.evolucaoFaixaLegenda(medida.descreverFaixa(faixa)),
-          style: textos.bodyMedium?.copyWith(
-            color: AppColors.secundarioSobreCreme,
-          ),
+          style: textos.bodyMedium?.copyWith(color: context.cores.secundario),
         ),
       ],
     ];
@@ -233,7 +227,7 @@ class _ParaOPaciente extends ConsumerWidget {
                           Text(
                             AppStrings.data(ponto.realizadaEm),
                             style: textos.bodyLarge?.copyWith(
-                              color: AppColors.secundarioSobreCreme,
+                              color: context.cores.secundario,
                               fontFeatures: const [
                                 FontFeature.tabularFigures(),
                               ],
@@ -250,7 +244,7 @@ class _ParaOPaciente extends ConsumerWidget {
                             style: ponto.valor == null
                                 ? textos.titleMedium
                                 : AppTypography.medida.copyWith(
-                                    color: AppColors.cinzaChumbo,
+                                    color: context.cores.texto,
                                   ),
                           ),
                         ],

@@ -48,11 +48,14 @@ ResultadoDosDados validarDados({
   );
 }
 
-/// Onde os dados do profissional ficam, e como sair da conta.
+/// Onde os dados do profissional ficam.
+///
+/// Sair da conta não é daqui: é da autenticação (`RepositorioAutenticacao`).
 abstract interface class RepositorioDaConta {
-  /// Lança só `AppException`.
-  Future<void> salvar(Profissional profissional);
+  /// O nome e o registro guardados para a conta [uid], ou `null` se ela
+  /// nunca os preencheu neste aparelho.
+  Future<Profissional?> perfil(String uid);
 
-  /// Encerra a sessão neste aparelho.
-  Future<void> sair();
+  /// Lança só `AppException`.
+  Future<void> salvar(String uid, Profissional profissional);
 }

@@ -81,6 +81,10 @@ class Envios extends Table {
   DateTimeColumn get proximaTentativa => dateTime().nullable()();
   TextColumn get ultimaFalha => text().nullable()();
   TextColumn get analiseId => text().nullable()();
+
+  /// O id da conta (Firebase) de quem gravou. O envio só sobe na sessão
+  /// dela. Vazio nos envios de antes da US32, do login de exemplo.
+  TextColumn get profissionalId => text().nullable()();
 }
 
 /// Cada gravação conferida e guardada. O WAV fica no disco; aqui, onde ele
@@ -168,4 +172,17 @@ class Laudos extends Table {
 
   @override
   Set<Column<Object>> get primaryKey => {analiseId};
+}
+
+/// Preferências deste aparelho, como chave e valor — hoje, só o tema (US30).
+///
+/// Ficam no aparelho, não na conta: consultório com luz forte e casa à noite
+/// pedem escolhas diferentes do mesmo profissional.
+@DataClassName('LinhaDePreferencia')
+class Preferencias extends Table {
+  TextColumn get chave => text()();
+  TextColumn get valor => text()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {chave};
 }

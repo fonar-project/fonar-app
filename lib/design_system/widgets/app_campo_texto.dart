@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../tokens/app_colors.dart';
+import '../tokens/app_cores.dart';
 import '../tokens/app_spacing.dart';
 import 'app_fundo.dart';
 import 'app_mensagem_de_campo.dart';
@@ -104,8 +105,8 @@ class AppCampoTexto extends StatelessWidget {
     // em AA. Ver `app_colors_test.dart`.
     final fundoDaTela = AppFundo.de(context);
     final fundoDaCaixa = habilitado ? fundoDaTela : FundoDeTexto.lavanda;
-    final corSecundaria = AppColors.secundarioSobre(fundoDaTela);
-    final corDoRotulo = habilitado ? AppColors.cinzaChumbo : corSecundaria;
+    final corSecundaria = context.cores.secundarioSobre(fundoDaTela);
+    final corDoRotulo = habilitado ? context.cores.texto : corSecundaria;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,10 +147,10 @@ class AppCampoTexto extends StatelessWidget {
                 decoration: InputDecoration(
                   hintText: dica,
                   hintStyle: tema.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.secundarioSobre(fundoDaCaixa),
+                    color: context.cores.secundarioSobre(fundoDaCaixa),
                   ),
                   filled: !habilitado,
-                  fillColor: AppColors.lavandaSuave,
+                  fillColor: context.cores.suave,
                   // A mensagem de erro é desenhada abaixo, com ícone — não
                   // pelo `errorText` do Material, que é só texto vermelho.
                   // Aqui fica apenas a borda. O foco continua azul mesmo com

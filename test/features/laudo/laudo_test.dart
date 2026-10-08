@@ -83,6 +83,7 @@ void main() {
         resultado: _resultado(),
         capeV: _capeV,
         conclusao: 'Texto do profissional.',
+        temAssinatura: true,
       );
       expect(c.itens.values.toSet(), {SituacaoDoItem.ok});
       expect(c.podeGerar, isTrue);
@@ -94,6 +95,7 @@ void main() {
         resultado: _resultado(),
         capeV: _capeV,
         conclusao: '   \n ',
+        temAssinatura: true,
       );
       expect(c.itens[ItemDaConferencia.conclusao], SituacaoDoItem.pendente);
       expect(c.podeGerar, isFalse);
@@ -106,6 +108,7 @@ void main() {
           resultado: _resultado(),
           capeV: _capeV,
           conclusao: 'x',
+          temAssinatura: true,
         ).podeGerar,
         isFalse,
       );
@@ -115,9 +118,22 @@ void main() {
           resultado: _resultado(situacao: SituacaoDaAnalise.processando),
           capeV: _capeV,
           conclusao: 'x',
+          temAssinatura: true,
         ).podeGerar,
         isFalse,
       );
+    });
+
+    test('sem nome ou registro de quem assina, não gera', () {
+      final c = conferirLaudo(
+        temConsentimento: true,
+        resultado: _resultado(),
+        capeV: _capeV,
+        conclusao: 'x',
+        temAssinatura: false,
+      );
+      expect(c.itens[ItemDaConferencia.assinatura], SituacaoDoItem.pendente);
+      expect(c.podeGerar, isFalse);
     });
 
     test('sem CAPE-V e com amostra ruim: avisa, mas gera', () {
@@ -126,6 +142,7 @@ void main() {
         resultado: _resultado(amostraRuim: true),
         capeV: null,
         conclusao: 'x',
+        temAssinatura: true,
       );
       expect(c.itens[ItemDaConferencia.capeV], SituacaoDoItem.aviso);
       expect(

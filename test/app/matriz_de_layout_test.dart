@@ -50,6 +50,7 @@ import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/features/auth/data/sessao.dart';
 
 import '../apoio/banco_em_memoria.dart';
+import '../apoio/sessao_de_teste.dart';
 
 const _p = AppRoutes.paramPacienteId;
 const _a = AppRoutes.paramAnaliseId;
@@ -83,12 +84,15 @@ final _rotas = <(String, Map<String, String>)>[
 ];
 
 /// Os dois alvos de design do projeto, o celular deitado (espectrograma e
-/// gráfico de evolução) e a janela estreita de desktop.
+/// gráfico de evolução), a janela estreita de desktop — e as duas pontas: o
+/// celular pequeno, comum entre os Android de entrada, e o monitor Full HD.
 const _larguras = <(String, Size)>[
+  ('360x640', Size(360, 640)),
   ('390x844', Size(390, 844)),
   ('844x390 deitado', Size(844, 390)),
   ('1024x768', Size(1024, 768)),
   ('1440x900', Size(1440, 900)),
+  ('1920x1080', Size(1920, 1080)),
 ];
 
 /// Escalas de texto do sistema. 200% é o teto do Android e do Windows.
@@ -106,65 +110,75 @@ Future<void> _desenhar(WidgetTester tester) async {
 }
 
 void main() {
-  for (final (nomeDaLargura, tamanho) in _larguras) {
-    for (final escala in _escalas) {
-      testWidgets('$nomeDaLargura @ ${(escala * 100).round()}%', (
-        tester,
-      ) async {
-        tester.view.physicalSize = tamanho;
-        tester.view.devicePixelRatio = 1;
-        tester.platformDispatcher.textScaleFactorTestValue = escala;
-        addTearDown(tester.view.reset);
-        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+  final passadas = [
+    for (final (nome, tamanho) in _larguras)
+      for (final escala in _escalas) (nome, tamanho, escala, false),
+    // Uma passada inteira com o sistema pedindo menos movimento: é onde as
+    // animações viram duração zero, e duração zero tem armadilhas próprias
+    // (o `AnimatedSize` quebrava o layout) — ver `AppMovimento`.
+    ('390x844 sem movimento', const Size(390, 844), 1.0, true),
+  ];
+  for (final (nomeDaLargura, tamanho, escala, semMovimento) in passadas) {
+    testWidgets('$nomeDaLargura @ ${(escala * 100).round()}%', (tester) async {
+      tester.view.physicalSize = tamanho;
+      tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = escala;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
-        final container = ProviderContainer(
-          retry: (_, _) => null,
-          overrides: [
-            bancoDeTeste(),
-            conexaoOnlineProvider.overrideWithValue(true),
-            // Sessão aberta: não muda o roteamento — o redirect de
-            // autenticação ainda não existe (TODO(auth) em `app_router.dart`)
-            // —, mas é o estado em que as telas são usadas de verdade: com a
-            // sessão fechada a fila fica pausada e a tela dela mostra outra
-            // coisa. Quando o redirect existir, é isto que impede a varredura
-            // de virar 18 visitas ao login.
-            sessaoAbertaProvider.overrideWith(() => Sessao(true)),
-          ],
-        );
-        addTearDown(container.dispose);
-        final roteador = container.read(routerProvider);
+      final container = ProviderContainer(
+        retry: (_, _) => null,
+        overrides: [
+          bancoDeTeste(),
+          conexaoOnlineProvider.overrideWithValue(true),
+          // Sessão aberta: sem ela, o redirect de autenticação leva toda
+          // rota à entrada, e a varredura viraria 18 visitas ao login.
+          sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
+        ],
+      );
+      addTearDown(container.dispose);
+      final roteador = container.read(routerProvider);
 
-        await tester.pumpWidget(
-          UncontrolledProviderScope(
-            container: container,
-            child: MaterialApp.router(
-              theme: AppTheme.claro,
-              routerConfig: roteador,
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            theme: AppTheme.claro,
+            routerConfig: roteador,
+            builder: (context, filho) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(disableAnimations: semMovimento),
+              child: filho!,
             ),
           ),
-        );
+        ),
+      );
+      await _desenhar(tester);
+      tester.takeException();
+
+      final estouros = <String>[];
+      final desviadas = <String>[];
+      final sessao = container.read(sessaoProvider.notifier);
+      for (final (nome, params) in _rotas) {
+        // A entrada é o contrário: só existe sem sessão.
+        final naEntrada = nome == AppRoutes.loginNome;
+        if (naEntrada) sessao.encerrar();
+        roteador.goNamed(nome, pathParameters: params);
         await _desenhar(tester);
-        tester.takeException();
+        if (naEntrada) sessao.abrir(contaDeTeste);
 
-        final estouros = <String>[];
-        final desviadas = <String>[];
-        for (final (nome, params) in _rotas) {
-          roteador.goNamed(nome, pathParameters: params);
-          await _desenhar(tester);
+        final erro = tester.takeException();
+        if (erro != null) estouros.add('$nome: $erro');
 
-          final erro = tester.takeException();
-          if (erro != null) estouros.add('$nome: $erro');
+        final onde = roteador.state.name;
+        if (onde != nome) desviadas.add('$nome -> ${onde ?? '(sem nome)'}');
+      }
 
-          final onde = roteador.state.name;
-          if (onde != nome) desviadas.add('$nome -> ${onde ?? '(sem nome)'}');
-        }
-
-        // Primeiro o desvio: varredura que não chegou na tela não diz nada
-        // sobre o layout dela, e o erro precisa apontar para isso, não para
-        // "nenhum estouro".
-        expect(desviadas, isEmpty, reason: desviadas.join('\n'));
-        expect(estouros, isEmpty, reason: estouros.join('\n'));
-      });
-    }
+      // Primeiro o desvio: varredura que não chegou na tela não diz nada
+      // sobre o layout dela, e o erro precisa apontar para isso, não para
+      // "nenhum estouro".
+      expect(desviadas, isEmpty, reason: desviadas.join('\n'));
+      expect(estouros, isEmpty, reason: estouros.join('\n'));
+    });
   }
 }

@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/trilhas.dart';
+import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
+import '../../../../design_system/tokens/app_movimento.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/tokens/app_typography.dart';
@@ -62,54 +65,82 @@ class EvolucaoPage extends ConsumerWidget {
     final analises = ref.watch(analisesDoPacienteProvider(pacienteId));
     final paciente = ref.watch(pacienteProvider(pacienteId)).value;
 
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, restricoes) {
-          final compacta =
-              Breakpoints.de(restricoes.maxWidth) == LarguraDeTela.compacta;
+    return AppEstrutura(
+      destino: DestinoPrincipal.pacientes,
+      navegacaoInferior: false,
+      child: Scaffold(
+        body: LayoutBuilder(
+          builder: (context, restricoes) {
+            final largura = Breakpoints.de(restricoes.maxWidth);
+            final compacta = largura == LarguraDeTela.compacta;
 
-          final Widget conteudo = switch (analises) {
-            AsyncData(:final value) => switch (sessoesAnalisadas(value)) {
-              [] => AppEstado.central(
-                titulo: AppStrings.evolucaoVaziaTitulo,
-                texto: AppStrings.evolucaoVaziaTexto,
+            final Widget conteudo = switch (analises) {
+              AsyncData(:final value) => switch (sessoesAnalisadas(value)) {
+                [] => AppEstado.central(
+                  titulo: AppStrings.evolucaoVaziaTitulo,
+                  texto: AppStrings.evolucaoVaziaTexto,
+                  acao: AppBotao.secundario(
+                    rotulo: AppStrings.voltar,
+                    aoTocar: () => _voltar(context),
+                  ),
+                ),
+                final sessoes => _Evolucao(
+                  pacienteId: pacienteId,
+                  paciente: paciente,
+                  sessoes: sessoes,
+                  compacta: compacta,
+                  expandida: largura == LarguraDeTela.expandida,
+                ),
+              },
+              AsyncError() => AppEstado.central(
+                titulo: AppStrings.evolucaoErroCarregar,
                 acao: AppBotao.secundario(
-                  rotulo: AppStrings.voltar,
-                  aoTocar: () => _voltar(context),
+                  rotulo: AppStrings.tentarNovamente,
+                  aoTocar: () =>
+                      ref.invalidate(analisesDoPacienteProvider(pacienteId)),
                 ),
               ),
-              final sessoes => _Evolucao(
-                pacienteId: pacienteId,
-                paciente: paciente,
-                sessoes: sessoes,
-                compacta: compacta,
+              _ => Center(
+                child: CircularProgressIndicator(color: context.cores.acento),
               ),
-            },
-            AsyncError() => AppEstado.central(
-              titulo: AppStrings.evolucaoErroCarregar,
-              acao: AppBotao.secundario(
-                rotulo: AppStrings.tentarNovamente,
-                aoTocar: () =>
-                    ref.invalidate(analisesDoPacienteProvider(pacienteId)),
-              ),
-            ),
-            _ => const Center(
-              child: CircularProgressIndicator(color: AppColors.roxoProfundo),
-            ),
-          };
+            };
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AppCabecalhoDeTarefa(
-                titulo: AppStrings.evolucaoTitulo,
-                aoVoltar: () => _voltar(context),
-                compacta: compacta,
-              ),
-              Expanded(child: conteudo),
-            ],
-          );
-        },
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AppCabecalhoDeTarefa(
+                  titulo: AppStrings.evolucaoTitulo,
+                  aoVoltar: () => _voltar(context),
+                  largura: largura,
+                  subtitulo: paciente?.nome,
+                  trilha: [
+                    ...Trilhas.doPaciente(
+                      context,
+                      pacienteId: pacienteId,
+                      nome: paciente?.nome,
+                    ),
+                    ItemDaTrilha(AppStrings.evolucaoTitulo),
+                  ],
+                  // No desktop a ação sobe para o cabeçalho, como no
+                  // protótipo; nas outras larguras, fica no corpo.
+                  acoes: [
+                    if (analises.value case final v?
+                        when sessoesAnalisadas(v).isNotEmpty)
+                      _MostrarAoPaciente(pacienteId: pacienteId),
+                  ],
+                ),
+                Expanded(
+                  // Carregando → pronto (ou erro): o conteúdo novo entra.
+                  child: AppTrocaAnimada(
+                    chave: conteudo.runtimeType,
+                    preencher: true,
+                    child: conteudo,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -121,6 +152,7 @@ class _Evolucao extends ConsumerWidget {
     required this.paciente,
     required this.sessoes,
     required this.compacta,
+    required this.expandida,
   });
 
   final String pacienteId;
@@ -128,11 +160,15 @@ class _Evolucao extends ConsumerWidget {
   final List<ResultadoDaAnalise> sessoes;
   final bool compacta;
 
+  /// Desktop: gráfico e sessões lado a lado, e "mostrar ao paciente" no
+  /// cabeçalho.
+  final bool expandida;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final textos = Theme.of(context).textTheme;
     final secundario = textos.bodySmall?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
     final medida = ref.watch(medidaDaEvolucaoProvider(pacienteId));
     final serie = serieDe(medida, sessoes);
@@ -173,12 +209,6 @@ class _Evolucao extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.lg),
       ],
-      if (paciente case final p?)
-        Text(
-          AppStrings.consentimentoPaciente(p.nome),
-          style: textos.titleMedium,
-        ),
-      const SizedBox(height: AppSpacing.xxs),
       Text(
         AppStrings.evolucaoSessoes(
           sessoes.length,
@@ -202,17 +232,22 @@ class _Evolucao extends ConsumerWidget {
           ref.read(medidaDaEvolucaoProvider(pacienteId).notifier).escolher(m),
     );
 
-    final comparacaoDasUltimas = _Comparacao(
-      medida: medida,
-      comparacao: comparacao,
-      valores: serie.where((p) => p.valor != null).length,
+    // Trocando de medida, os números da comparação entram de novo — a
+    // mesma caixa com valores de outra medida não pode parecer a anterior.
+    final comparacaoDasUltimas = AppTrocaAnimada(
+      chave: medida,
+      child: _Comparacao(
+        medida: medida,
+        comparacao: comparacao,
+        valores: serie.where((p) => p.valor != null).length,
+      ),
     );
 
     final cartao = Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.branco,
-        border: Border.all(color: AppColors.lavandaClaro),
+        color: context.cores.cartao,
+        border: Border.all(color: context.cores.borda),
         borderRadius: AppRadius.bordaMedia,
       ),
       child: Column(
@@ -235,9 +270,9 @@ class _Evolucao extends ConsumerWidget {
             const SizedBox(height: AppSpacing.xxs),
             Row(
               children: [
-                const AppIcone(
+                AppIcone(
                   nome: NomeIcone.informacao,
-                  cor: AppColors.secundarioSobreCreme,
+                  cor: context.cores.secundario,
                   tamanho: 16,
                 ),
                 const SizedBox(width: AppSpacing.xxs),
@@ -282,14 +317,7 @@ class _Evolucao extends ConsumerWidget {
 
     final mostrarAoPaciente = Align(
       alignment: Alignment.centerLeft,
-      child: AppBotao.secundario(
-        rotulo: AppStrings.evolucaoMostrarAoPaciente,
-        icone: NomeIcone.virarParaPaciente,
-        aoTocar: () => context.goNamed(
-          AppRoutes.modoPacienteNome,
-          pathParameters: {AppRoutes.paramPacienteId: pacienteId},
-        ),
-      ),
+      child: _MostrarAoPaciente(pacienteId: pacienteId),
     );
 
     final listaDeSessoes = [
@@ -322,6 +350,47 @@ class _Evolucao extends ConsumerWidget {
           mostrarStatus: motivo == null,
         ),
     ];
+
+    if (expandida && !baixa) {
+      // Como no protótipo: o gráfico à esquerda, as sessões à direita, cada
+      // coluna rolando por conta própria.
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            flex: 3,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ...abertura,
+                  const SizedBox(height: AppSpacing.lg),
+                  seletor,
+                  const SizedBox(height: AppSpacing.lg),
+                  cartao,
+                ],
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 400,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(
+                0,
+                AppSpacing.xl,
+                AppSpacing.xl,
+                AppSpacing.xl,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: listaDeSessoes,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
 
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(
@@ -363,6 +432,23 @@ class _Evolucao extends ConsumerWidget {
   }
 }
 
+/// Abre o modo paciente: o gráfico em tela cheia, para virar o aparelho.
+class _MostrarAoPaciente extends StatelessWidget {
+  const _MostrarAoPaciente({required this.pacienteId});
+
+  final String pacienteId;
+
+  @override
+  Widget build(BuildContext context) => AppBotao.secundario(
+    rotulo: AppStrings.evolucaoMostrarAoPaciente,
+    icone: NomeIcone.virarParaPaciente,
+    aoTocar: () => context.goNamed(
+      AppRoutes.modoPacienteNome,
+      pathParameters: {AppRoutes.paramPacienteId: pacienteId},
+    ),
+  );
+}
+
 /// As duas últimas sessões com valor, lado a lado — e, só se houver limiar de
 /// mudança validado, a frase sobre para onde a medida foi.
 class _Comparacao extends StatelessWidget {
@@ -382,7 +468,7 @@ class _Comparacao extends StatelessWidget {
   Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
     final secundario = textos.bodySmall?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
     final comparacao = this.comparacao;
     if (comparacao == null) {
@@ -423,7 +509,7 @@ class _Comparacao extends StatelessWidget {
                   DirecaoDaMedida.desceu => NomeIcone.tendenciaDesce,
                   _ => NomeIcone.tendenciaEstavel,
                 },
-                cor: AppColors.cinzaChumbo,
+                cor: context.cores.texto,
                 tamanho: 20,
               ),
               const SizedBox(width: AppSpacing.xs),
@@ -474,7 +560,7 @@ class _ValorDaSessao extends StatelessWidget {
           Text(
             rotulo,
             style: AppTypography.overline.copyWith(
-              color: AppColors.secundarioSobreCreme,
+              color: context.cores.secundario,
             ),
           ),
           Wrap(
@@ -484,7 +570,7 @@ class _ValorDaSessao extends StatelessWidget {
               Text(
                 medida.formatar(ponto.valor!),
                 style: AppTypography.medidaCompacta.copyWith(
-                  color: AppColors.cinzaChumbo,
+                  color: context.cores.texto,
                 ),
               ),
               if (medida.unidade.isNotEmpty)
@@ -494,7 +580,7 @@ class _ValorDaSessao extends StatelessWidget {
           Text(
             AppStrings.data(ponto.realizadaEm),
             style: textos.bodySmall?.copyWith(
-              color: AppColors.secundarioSobreCreme,
+              color: context.cores.secundario,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
@@ -531,8 +617,8 @@ class _LinhaDaSessao extends StatelessWidget {
     final data = AppStrings.data(sessao.realizadaEm!);
 
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.lavandaClaro)),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: context.cores.borda)),
       ),
       child: Semantics(
         hint: AppStrings.evolucaoAbrirSessao(data),
@@ -592,9 +678,9 @@ class _LinhaDaSessao extends StatelessWidget {
                     ],
                   ),
                 ),
-                const AppIcone(
+                AppIcone(
                   nome: NomeIcone.avancar,
-                  cor: AppColors.roxoProfundo,
+                  cor: context.cores.acento,
                   tamanho: 22,
                 ),
               ],

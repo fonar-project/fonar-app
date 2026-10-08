@@ -6,7 +6,8 @@ import '../../../../app/app_estrutura.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/network/conexao.dart';
 import '../../../../design_system/breakpoints.dart';
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
+import '../../../../design_system/tokens/app_movimento.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
@@ -15,6 +16,7 @@ import '../../../../design_system/widgets/app_estado.dart';
 import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../../auth/data/sessao.dart';
 import '../../domain/item_da_fila.dart';
 import '../fila_controlador.dart';
 
@@ -54,8 +56,8 @@ class FilaPage extends ConsumerWidget {
               online: online,
               compacta: compacta,
             ),
-            _ => const Center(
-              child: CircularProgressIndicator(color: AppColors.roxoProfundo),
+            _ => Center(
+              child: CircularProgressIndicator(color: context.cores.acento),
             ),
           };
 
@@ -65,8 +67,16 @@ class FilaPage extends ConsumerWidget {
               AppCabecalhoDeSecao(
                 titulo: AppStrings.filaTitulo,
                 largura: largura,
+                situacao: AppStrings.situacaoFila,
               ),
-              Expanded(child: conteudo),
+              Expanded(
+                // Carregando → pronto (ou erro): o conteúdo novo entra.
+                child: AppTrocaAnimada(
+                  chave: conteudo.runtimeType,
+                  preencher: true,
+                  child: conteudo,
+                ),
+              ),
             ],
           );
         },
@@ -117,7 +127,7 @@ class _Lista extends StatelessWidget {
                 child: Text(
                   AppStrings.filaResumo(pendentes),
                   style: Theme.of(context).textTheme.bodySmall
-                      ?.copyWith(color: AppColors.secundarioSobreCreme),
+                      ?.copyWith(color: context.cores.secundario),
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -145,8 +155,16 @@ class _CartaoDoEnvio extends ConsumerWidget {
     void tentar() =>
         ref.read(filaControladorProvider.notifier).tentarAgora(item.id);
     final motivo = item.ultimaFalha ?? '';
+    // Gravado por outra conta neste aparelho: não sobe nesta sessão.
+    final deOutraConta =
+        item.pendente && !item.deQuem(ref.watch(sessaoProvider)?.uid ?? '');
 
     final (icone, titulo, texto) = switch (item.situacao) {
+      _ when deOutraConta => (
+        NomeIcone.passoPendente,
+        AppStrings.filaDeOutraConta,
+        AppStrings.filaDeOutraContaTexto,
+      ),
       SituacaoDoEnvio.naFila when !online => (
         NomeIcone.passoPendente,
         AppStrings.filaAguardandoConexao,
@@ -197,12 +215,21 @@ class _CartaoDoEnvio extends ConsumerWidget {
       ),
     };
 
-    // TODO(auth): com o Firebase Auth, "sessão expirada" deve levar ao login
-    // e a fila deve retomar sozinha depois de entrar. Hoje só oferece tentar
-    // de novo, que falha igual enquanto a sessão não for renovada.
     final Widget? acao = switch (item.situacao) {
+      _ when deOutraConta => null,
+      // Tentar de novo falharia igual: o Firebase não renova mais a sessão.
+      // Entrar de novo, com a senha, devolve o envio à fila sozinho.
+      SituacaoDoEnvio.aguardandoLogin => AppBotao.secundario(
+        rotulo: AppStrings.filaEntrarDeNovo,
+        aoTocar: online
+            ? () {
+                ref.read(sessaoProvider.notifier).encerrar();
+                context.goNamed(AppRoutes.loginNome);
+              }
+            : null,
+        motivoDesabilitado: AppStrings.filaEntrarExigeConexao,
+      ),
       SituacaoDoEnvio.aguardandoNovaTentativa ||
-      SituacaoDoEnvio.aguardandoLogin ||
       SituacaoDoEnvio.recusado ||
       // Sem consentimento novo, a conferência de antes do envio para de novo.
       SituacaoDoEnvio.semConsentimento => AppBotao.secundario(
@@ -230,7 +257,7 @@ class _CartaoDoEnvio extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.lavandaClaro),
+        border: Border.all(color: context.cores.borda),
         borderRadius: AppRadius.bordaMedia,
       ),
       child: Column(
@@ -243,9 +270,7 @@ class _CartaoDoEnvio extends ConsumerWidget {
               item.amostras.length,
               '${AppStrings.data(item.criadoEm)}, ${AppStrings.hora(item.criadoEm)}',
             ),
-            style: textos.bodySmall?.copyWith(
-              color: AppColors.secundarioSobreCreme,
-            ),
+            style: textos.bodySmall?.copyWith(color: context.cores.secundario),
           ),
           const SizedBox(height: AppSpacing.md),
           AppSituacao(icone: icone, titulo: titulo, texto: texto),

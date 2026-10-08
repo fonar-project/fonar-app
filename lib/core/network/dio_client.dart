@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../auth/fonte_de_token.dart';
 import '../config/app_config.dart';
-import '../storage/token_storage.dart';
 import 'interceptors/auth_interceptor.dart';
 import 'interceptors/error_interceptor.dart';
 
@@ -28,12 +28,10 @@ final dioProvider = Provider<Dio>((ref) {
   // Em `onRequest` os interceptors rodam na ordem da lista: o auth injeta o
   // token antes de a requisição sair.
   //
-  // Em `onError` também: por isso o auth vem primeiro e ainda vê o
-  // `DioException` cru, com `statusCode` legível, para decidir sobre o 401. O
-  // error vem por último e é quem traduz tudo para AppException — depois dele
-  // o status já não é o que interessa.
+  // O error vem por último e é quem traduz tudo para AppException — inclusive
+  // a falha do auth quando não há token que sirva.
   dio.interceptors.addAll([
-    AuthInterceptor(ref.watch(tokenStorageProvider)),
+    AuthInterceptor(ref.watch(fonteDeTokenProvider)),
     const ErrorInterceptor(),
   ]);
 

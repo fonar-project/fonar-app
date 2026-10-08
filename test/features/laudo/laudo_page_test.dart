@@ -31,8 +31,12 @@ import 'package:fonar_app/features/laudo/presentation/pages/laudo_page.dart';
 import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_local.dart';
 import 'package:fonar_app/features/pacientes/domain/paciente.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
+import 'package:fonar_app/features/auth/data/sessao.dart';
+import 'package:fonar_app/features/conta/presentation/pages/conta_page.dart';
+import 'package:fonar_app/features/conta/data/repositorio_da_conta_local.dart';
 
 import '../../apoio/repositorios_em_memoria.dart';
+import '../../apoio/sessao_de_teste.dart';
 
 class _Analises implements RepositorioAnalises {
   _Analises({this.falha = false, this.dono = 'p1'});
@@ -152,6 +156,7 @@ Future<_Montagem> _abrir(
   bool falhaAoCarregar = false,
   String donoDaAnalise = 'p1',
   bool semCadastro = false,
+  bool semPerfil = false,
   _Saida? saida,
   _Gerador? gerador,
   Size tamanho = const Size(390, 2000),
@@ -176,6 +181,10 @@ Future<_Montagem> _abrir(
   final container = ProviderContainer(
     retry: (_, _) => null,
     overrides: [
+      sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
+      repositorioDaContaProvider.overrideWithValue(
+        PerfilEmMemoria(vazio: semPerfil),
+      ),
       conexaoOnlineProvider.overrideWithValue(true),
       relogioProvider.overrideWithValue(() => DateTime(2026, 7, 2, 11, 5)),
       repositorioAnalisesProvider.overrideWithValue(
@@ -404,6 +413,18 @@ void main() {
     expect(find.byType(ConsentimentoPage), findsOneWidget);
   });
 
+  testWidgets('sem nome e registro de quem assina: pendente, com o caminho '
+      'para a Conta', (tester) async {
+    await _abrir(tester, semPerfil: true, capeV: _capeV);
+    await _escrever(tester, 'Conclusão.');
+
+    expect(find.text(AppStrings.laudoItemAssinaturaFalta), findsOneWidget);
+    expect(_habilitado(tester, AppStrings.laudoGerar), isFalse);
+
+    await _tocar(tester, find.text(AppStrings.laudoIrParaConta));
+    expect(find.byType(ContaPage), findsOneWidget);
+  });
+
   testWidgets('sem CAPE-V: avisa, deixa gerar e leva à escala', (tester) async {
     await _abrir(tester);
     await _escrever(tester, 'Conclusão.');
@@ -490,6 +511,11 @@ void main() {
       expect(find.text('prévia A4'), findsOneWidget);
       expect(find.text(AppStrings.laudoResumoTitulo), findsNothing);
       expect(m.previas.funcoes, hasLength(1));
+      // A folha à esquerda, como no protótipo; o que se preenche ao lado.
+      expect(
+        tester.getCenter(find.text('prévia A4')).dx,
+        lessThan(tester.getCenter(find.byType(TextField)).dx),
+      );
 
       // Digitando: a prévia fica como estava — nada de remontar o A4 a cada
       // tecla.

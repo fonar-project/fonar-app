@@ -6,8 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/trilhas.dart';
+import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
+import '../../../../design_system/tokens/app_movimento.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
@@ -89,63 +92,83 @@ class LaudoPage extends ConsumerWidget {
       ref.invalidate(consentimentoProvider(pacienteId));
     }
 
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, restricoes) {
-          final largura = Breakpoints.de(restricoes.maxWidth);
+    return AppEstrutura(
+      destino: DestinoPrincipal.pacientes,
+      navegacaoInferior: false,
+      child: Scaffold(
+        body: LayoutBuilder(
+          builder: (context, restricoes) {
+            final largura = Breakpoints.de(restricoes.maxWidth);
 
-          final Widget conteudo;
-          if (analise.error is AnaliseDeOutroPaciente) {
-            conteudo = AvisoDeOutroPaciente(aoVoltar: () => _voltar(context));
-          } else if (cargas.any((a) => a.hasError)) {
-            conteudo = AppEstado.central(
-              titulo: AppStrings.laudoErroCarregar,
-              acao: AppBotao.secundario(
-                rotulo: AppStrings.tentarNovamente,
-                aoTocar: tentarDeNovo,
-              ),
-            );
-          } else if (cargas.every((a) => a.hasValue)) {
-            if (paciente.requireValue case final cadastro?) {
-              conteudo = _Laudo(
-                pacienteId: pacienteId,
-                resultado: analise.requireValue,
-                estado: laudo.requireValue,
-                capeV: capeV.value,
-                temConsentimento: consentimento.value != null,
-                paciente: cadastro,
-                largura: largura,
-              );
-            } else {
-              // Carregou, e o paciente não está neste aparelho: diferente de
-              // "ainda carregando" e de "falhou ao carregar".
+            final Widget conteudo;
+            if (analise.error is AnaliseDeOutroPaciente) {
+              conteudo = AvisoDeOutroPaciente(aoVoltar: () => _voltar(context));
+            } else if (cargas.any((a) => a.hasError)) {
               conteudo = AppEstado.central(
-                titulo: AppStrings.laudoSemPaciente,
-                texto: AppStrings.laudoSemPacienteTexto,
+                titulo: AppStrings.laudoErroCarregar,
                 acao: AppBotao.secundario(
-                  rotulo: AppStrings.voltar,
-                  aoTocar: () => _voltar(context),
+                  rotulo: AppStrings.tentarNovamente,
+                  aoTocar: tentarDeNovo,
                 ),
               );
+            } else if (cargas.every((a) => a.hasValue)) {
+              if (paciente.requireValue case final cadastro?) {
+                conteudo = _Laudo(
+                  pacienteId: pacienteId,
+                  resultado: analise.requireValue,
+                  estado: laudo.requireValue,
+                  capeV: capeV.value,
+                  temConsentimento: consentimento.value != null,
+                  paciente: cadastro,
+                  largura: largura,
+                );
+              } else {
+                // Carregou, e o paciente não está neste aparelho: diferente de
+                // "ainda carregando" e de "falhou ao carregar".
+                conteudo = AppEstado.central(
+                  titulo: AppStrings.laudoSemPaciente,
+                  texto: AppStrings.laudoSemPacienteTexto,
+                  acao: AppBotao.secundario(
+                    rotulo: AppStrings.voltar,
+                    aoTocar: () => _voltar(context),
+                  ),
+                );
+              }
+            } else {
+              conteudo = Center(
+                child: CircularProgressIndicator(color: context.cores.acento),
+              );
             }
-          } else {
-            conteudo = const Center(
-              child: CircularProgressIndicator(color: AppColors.roxoProfundo),
-            );
-          }
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AppCabecalhoDeTarefa(
-                titulo: AppStrings.laudoTitulo,
-                aoVoltar: () => _voltar(context),
-                compacta: largura == LarguraDeTela.compacta,
-              ),
-              Expanded(child: conteudo),
-            ],
-          );
-        },
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AppCabecalhoDeTarefa(
+                  titulo: AppStrings.laudoTitulo,
+                  aoVoltar: () => _voltar(context),
+                  largura: largura,
+                  trilha: [
+                    ...Trilhas.doPaciente(
+                      context,
+                      pacienteId: pacienteId,
+                      nome: paciente.value?.nome,
+                    ),
+                    ItemDaTrilha(AppStrings.laudoTitulo),
+                  ],
+                  situacao: AppStrings.situacaoLaudo,
+                ),
+                Expanded(
+                  // Carregando → pronto (ou erro): o conteúdo novo entra.
+                  child: AppTrocaAnimada(
+                    chave: conteudo.runtimeType,
+                    preencher: true,
+                    child: conteudo,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -307,6 +330,7 @@ class _LaudoState extends ConsumerState<_Laudo> {
       resultado: widget.resultado,
       capeV: widget.capeV,
       conclusao: _conclusao.text,
+      temAssinatura: ref.watch(profissionalAtualProvider).completo,
     );
     final expandida = widget.largura == LarguraDeTela.expandida;
 
@@ -345,20 +369,15 @@ class _LaudoState extends ConsumerState<_Laudo> {
       );
     }
 
+    // Como no protótipo: a folha à esquerda, onde o olho começa, e o que se
+    // preenche ao lado dela.
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(
-          width: 460,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            child: painel,
-          ),
-        ),
         Expanded(
           child: DecoratedBox(
-            decoration: const BoxDecoration(
-              border: Border(left: BorderSide(color: AppColors.lavandaClaro)),
+            decoration: BoxDecoration(
+              border: Border(right: BorderSide(color: context.cores.borda)),
             ),
             child: Semantics(
               label: AppStrings.laudoPreviaTitulo,
@@ -367,13 +386,20 @@ class _LaudoState extends ConsumerState<_Laudo> {
             ),
           ),
         ),
+        SizedBox(
+          width: 460,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: painel,
+          ),
+        ),
       ],
     );
   }
 }
 
-/// Conferência, conclusão e ações — a coluna da esquerda no desktop, a tela
-/// inteira no celular.
+/// Conferência, conclusão e ações — a coluna ao lado da folha no desktop, a
+/// tela inteira no celular.
 class _Painel extends StatelessWidget {
   const _Painel({
     required this.pacienteId,
@@ -407,7 +433,7 @@ class _Painel extends StatelessWidget {
   Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
     final secundario = textos.bodySmall?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
     final laudo = estado.laudo;
     final mudou = laudo != null && laudo.conclusao != conclusao.text.trim();
@@ -416,6 +442,12 @@ class _Painel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(AppStrings.avisoApoioDecisao, style: secundario),
+        // No lugar da folha, fora do desktop: o que o PDF vai ter vem antes
+        // do que falta para gerá-lo, como no protótipo.
+        if (resumo case final resumo?) ...[
+          const SizedBox(height: AppSpacing.lg),
+          resumo,
+        ],
         const SizedBox(height: AppSpacing.lg),
         _Titulo(AppStrings.laudoConferenciaTitulo),
         for (final MapEntry(key: item, value: situacao)
@@ -446,55 +478,64 @@ class _Painel extends StatelessWidget {
               : AppStrings.laudoGerarBloqueado,
           ocupaLargura: true,
         ),
-        if (estado.falhou) ...[
-          const SizedBox(height: AppSpacing.sm),
-          const AppSituacao(
-            icone: NomeIcone.alerta,
-            titulo: AppStrings.laudoErroGerar,
-          ),
-        ],
-        if (laudo != null) ...[
-          const SizedBox(height: AppSpacing.md),
-          Semantics(
-            liveRegion: true,
+        AppRevelar(
+          visivel: estado.falhou,
+          child: const Padding(
+            padding: EdgeInsets.only(top: AppSpacing.sm),
             child: AppSituacao(
-              icone: NomeIcone.confirmacao,
-              titulo: AppStrings.laudoGeradoEm(
-                AppStrings.data(laudo.geradoEm),
-                AppStrings.hora(laudo.geradoEm),
-              ),
-              texto: mudou ? AppStrings.laudoTextoMudou : null,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children: [
-              AppBotao.secundario(
-                rotulo: AppStrings.laudoCompartilhar,
-                aoTocar: saindo ? null : aoCompartilhar,
-                motivoDesabilitado: AppStrings.laudoGerando,
-              ),
-              AppBotao.secundario(
-                rotulo: AppStrings.laudoImprimir,
-                aoTocar: saindo ? null : aoImprimir,
-                motivoDesabilitado: AppStrings.laudoGerando,
-              ),
-            ],
-          ),
-          if (falhouSaida) ...[
-            const SizedBox(height: AppSpacing.sm),
-            const AppSituacao(
               icone: NomeIcone.alerta,
-              titulo: AppStrings.laudoErroSaida,
+              titulo: AppStrings.laudoErroGerar,
             ),
-          ],
-        ],
-        if (resumo case final resumo?) ...[
-          const SizedBox(height: AppSpacing.xl),
-          resumo,
-        ],
+          ),
+        ),
+        // O laudo gerado aparece acompanhando a altura, com as ações de
+        // compartilhar e imprimir — ver `AppRevelar`.
+        AppRevelar(
+          visivel: laudo != null,
+          child: laudo == null
+              ? const SizedBox.shrink()
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: AppSpacing.md),
+                    Semantics(
+                      liveRegion: true,
+                      child: AppSituacao(
+                        icone: NomeIcone.confirmacao,
+                        titulo: AppStrings.laudoGeradoEm(
+                          AppStrings.data(laudo.geradoEm),
+                          AppStrings.hora(laudo.geradoEm),
+                        ),
+                        texto: mudou ? AppStrings.laudoTextoMudou : null,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Wrap(
+                      spacing: AppSpacing.sm,
+                      runSpacing: AppSpacing.sm,
+                      children: [
+                        AppBotao.secundario(
+                          rotulo: AppStrings.laudoCompartilhar,
+                          aoTocar: saindo ? null : aoCompartilhar,
+                          motivoDesabilitado: AppStrings.laudoGerando,
+                        ),
+                        AppBotao.secundario(
+                          rotulo: AppStrings.laudoImprimir,
+                          aoTocar: saindo ? null : aoImprimir,
+                          motivoDesabilitado: AppStrings.laudoGerando,
+                        ),
+                      ],
+                    ),
+                    if (falhouSaida) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      const AppSituacao(
+                        icone: NomeIcone.alerta,
+                        titulo: AppStrings.laudoErroSaida,
+                      ),
+                    ],
+                  ],
+                ),
+        ),
       ],
     );
   }
@@ -534,7 +575,7 @@ class _ItemDaConferencia extends StatelessWidget {
   Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
     final secundario = textos.bodySmall?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
     final (nome, explicacao) = switch (item) {
       ItemDaConferencia.consentimento => (
@@ -556,6 +597,10 @@ class _ItemDaConferencia extends StatelessWidget {
       ItemDaConferencia.conclusao => (
         AppStrings.laudoItemConclusao,
         AppStrings.laudoItemConclusaoFalta,
+      ),
+      ItemDaConferencia.assinatura => (
+        AppStrings.laudoItemAssinatura,
+        AppStrings.laudoItemAssinaturaFalta,
       ),
     };
     // Sem verde, amarelo ou vermelho: são reservados a status de medida e
@@ -585,6 +630,11 @@ class _ItemDaConferencia extends StatelessWidget {
             pathParameters: {AppRoutes.paramPacienteId: pacienteId},
           ),
         ),
+      (ItemDaConferencia.assinatura, SituacaoDoItem.pendente) =>
+        AppBotao.secundario(
+          rotulo: AppStrings.laudoIrParaConta,
+          aoTocar: () => context.pushNamed(AppRoutes.contaNome),
+        ),
       (ItemDaConferencia.capeV, SituacaoDoItem.aviso) => AppBotao.secundario(
         rotulo: AppStrings.laudoIrParaCapeV,
         aoTocar: () => context.pushNamed(
@@ -608,8 +658,8 @@ class _ItemDaConferencia extends StatelessWidget {
             child: AppIcone(
               nome: icone,
               cor: situacao == SituacaoDoItem.ok
-                  ? AppColors.roxoProfundo
-                  : AppColors.cinzaChumbo,
+                  ? context.cores.acento
+                  : context.cores.texto,
               tamanho: 20,
             ),
           ),
@@ -652,7 +702,7 @@ class _Resumo extends StatelessWidget {
   Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
     final secundario = textos.bodyMedium?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
     final quando = conteudo.realizadaEm;
     final conclusao = conteudo.conclusao;
@@ -665,8 +715,8 @@ class _Resumo extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.branco,
-        border: Border.all(color: AppColors.lavandaClaro),
+        color: context.cores.cartao,
+        border: Border.all(color: context.cores.borda),
         borderRadius: AppRadius.bordaMedia,
       ),
       child: Column(

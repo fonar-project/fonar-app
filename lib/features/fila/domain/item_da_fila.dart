@@ -44,6 +44,7 @@ class ItemDaFila {
     this.proximaTentativa,
     this.ultimaFalha,
     this.analiseId,
+    this.profissionalId,
   });
 
   /// Também é a chave de idempotência do envio: repetir o envio de um item
@@ -66,6 +67,17 @@ class ItemDaFila {
 
   /// Mensagem da última falha, pronta para exibição.
   final String? ultimaFalha;
+
+  /// O id da conta de quem gravou. A fila só envia na sessão dessa conta:
+  /// a gravação de uma profissional nunca sobe com a credencial de outra
+  /// que entrou depois no mesmo aparelho.
+  ///
+  /// `null` nos envios de antes da US32, gravados com o login de exemplo:
+  /// sobem com quem entrar.
+  final String? profissionalId;
+
+  /// É de [uid] — ou não é de ninguém, e sobe com quem entrar?
+  bool deQuem(String uid) => profissionalId == null || profissionalId == uid;
 
   /// Preenchido quando [SituacaoDoEnvio.enviado].
   final String? analiseId;
@@ -101,6 +113,7 @@ class ItemDaFila {
         : this.proximaTentativa,
     ultimaFalha: ultimaFalha != null ? ultimaFalha() : this.ultimaFalha,
     analiseId: analiseId ?? this.analiseId,
+    profissionalId: profissionalId,
   );
 }
 
@@ -131,8 +144,11 @@ abstract final class PoliticaDeReenvio {
     TempoEsgotado() ||
     FalhaNoServidor() ||
     EnvioCancelado() ||
+    MuitasTentativas() ||
     FalhaDesconhecida() => SituacaoDoEnvio.aguardandoNovaTentativa,
-    NaoAutorizado() || CredencialInvalida() => SituacaoDoEnvio.aguardandoLogin,
+    NaoAutorizado() ||
+    CredencialInvalida() ||
+    ContaDesativada() => SituacaoDoEnvio.aguardandoLogin,
     FalhaDeValidacao() ||
     Proibido() ||
     NaoEncontrado() ||

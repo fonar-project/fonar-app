@@ -1,25 +1,56 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import '../../../core/auth/credencial.dart';
+import '../../../core/error/app_exception.dart';
+import '../domain/conta_autenticada.dart';
 import '../domain/repositorio_autenticacao.dart';
 
-/// TODO(auth): trocar pelo repositório do Firebase Auth.
-final repositorioAutenticacaoProvider = Provider<RepositorioAutenticacao>(
-  (ref) => const RepositorioAutenticacaoPlaceholder(),
-);
-
-/// PLACEHOLDER — aceita qualquer e-mail e senha.
+/// PLACEHOLDER — o login de exemplo, para quando o build não recebeu a chave
+/// do Firebase. Aceita qualquer e-mail e senha, e a tela de entrada diz isso.
 ///
-/// Existe só para a tela de login ser navegável enquanto o Firebase Auth não
-/// está configurado. Nenhum build distribuível pode sair com esta classe
-/// ligada no [repositorioAutenticacaoProvider].
-///
-/// A espera imita o tempo de ida e volta de uma autenticação real, para o
-/// estado "Entrando…" aparecer durante o desenvolvimento em vez de ser
-/// testado só no dia em que o backend subir.
+/// Cada e-mail vira uma conta "de exemplo" diferente, para que a fila e o
+/// perfil se comportem como com o Firebase: o que um gravou não sobe na
+/// sessão do outro.
 class RepositorioAutenticacaoPlaceholder implements RepositorioAutenticacao {
-  const RepositorioAutenticacaoPlaceholder();
+  const RepositorioAutenticacaoPlaceholder(this._cofre);
+
+  final CofreDeCredencial _cofre;
+
+  static String uidDe(String email) => 'exemplo:${email.toLowerCase()}';
 
   @override
-  Future<void> entrar({required String email, required String senha}) =>
-      Future.delayed(const Duration(milliseconds: 900));
+  Future<ContaAutenticada> entrar({
+    required String email,
+    required String senha,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 900));
+    final conta = ContaAutenticada(uid: uidDe(email), email: email);
+    // Sem token nenhum: a API de análise também é de exemplo. Guardada só
+    // para o modo offline saber quem entrou por último.
+    await _cofre.guardar(
+      Credencial(
+        uid: conta.uid,
+        email: email,
+        idToken: '',
+        refreshToken: '',
+        expiraEm: DateTime.utc(9999),
+      ),
+    );
+    return conta;
+  }
+
+  @override
+  Future<ContaAutenticada?> contaGuardada() async {
+    final credencial = await _cofre.ler();
+    if (credencial == null) return null;
+    return ContaAutenticada(uid: credencial.uid, email: credencial.email);
+  }
+
+  /// Não envia e-mail nenhum, e não finge que mandou. A tela de entrada nem
+  /// chega a chamar: com o login de exemplo, ela explica que a recuperação
+  /// não existe (`loginDeExemploProvider`).
+  @override
+  Future<void> pedirRedefinicaoDeSenha(String email) async =>
+      throw const FalhaDesconhecida(causa: 'login de exemplo não envia e-mail');
+
+  @override
+  Future<void> sair() => _cofre.apagar();
 }

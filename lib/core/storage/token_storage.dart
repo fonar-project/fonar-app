@@ -3,10 +3,11 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../error/app_exception.dart';
 
-/// Guarda o token de autenticação.
+/// Guarda a credencial de autenticação, como texto.
 ///
-/// Abstração proposital: a origem do token vai ser o Firebase Auth, e o
-/// `AuthInterceptor` não precisa saber disso.
+/// Desde a US32 o que vai aqui é a credencial do Firebase inteira — tokens e
+/// id da conta, em JSON —, e quem a lê e escreve é o `CofreDeCredencial`.
+/// Aqui só se cuida de onde ela fica.
 abstract interface class TokenStorage {
   /// O token guardado, ou `null` — nunca guardado, apagado, ou ilegível.
   Future<String?> lerToken();
@@ -26,9 +27,9 @@ abstract interface class TokenStorage {
 /// dado de saúde. Nada aqui depende de sistema operacional — o pacote escolhe
 /// o cofre de cada um.
 ///
-/// TODO(auth): com o Firebase Auth, avaliar se o token precisa mesmo ficar
-/// guardado aqui ou se basta pedir ao Firebase a cada requisição
-/// (`getIdToken`), que já cuida da própria sessão.
+/// Precisa ficar guardada: sem o SDK do Firebase (ver `FirebaseAuthRest`),
+/// é o token de renovação daqui que mantém a sessão entre uma abertura do
+/// app e outra, e que deixa o modo offline saber quem entrou por último.
 class TokenStorageSeguro implements TokenStorage {
   const TokenStorageSeguro(this._cofre);
 

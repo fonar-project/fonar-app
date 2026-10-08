@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/trilhas.dart';
+import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
+import '../../../../design_system/tokens/app_movimento.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_cabecalho_de_tarefa.dart';
@@ -40,78 +43,97 @@ class RetiradaConsentimentoPage extends ConsumerWidget {
     final paciente = ref.watch(pacienteProvider(pacienteId));
     final consentimento = ref.watch(consentimentoProvider(pacienteId));
 
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, restricoes) {
-          final compacta =
-              Breakpoints.de(restricoes.maxWidth) == LarguraDeTela.compacta;
+    return AppEstrutura(
+      destino: DestinoPrincipal.pacientes,
+      navegacaoInferior: false,
+      child: Scaffold(
+        body: LayoutBuilder(
+          builder: (context, restricoes) {
+            final largura = Breakpoints.de(restricoes.maxWidth);
+            final compacta = largura == LarguraDeTela.compacta;
 
-          final Widget conteudo;
-          if (paciente.hasError || consentimento.hasError) {
-            conteudo = AppEstado.central(
-              titulo: AppStrings.consentimentoErroCarregar,
-              acao: AppBotao.secundario(
-                rotulo: AppStrings.tentarNovamente,
-                aoTocar: () {
-                  ref.invalidate(pacienteProvider(pacienteId));
-                  ref.invalidate(consentimentoProvider(pacienteId));
-                },
-              ),
-            );
-          } else if (!paciente.hasValue || !consentimento.hasValue) {
-            conteudo = const Center(
-              child: CircularProgressIndicator(color: AppColors.roxoProfundo),
-            );
-          } else if (paciente.value case final encontrado?) {
-            conteudo = switch (consentimento.value) {
-              final vigente? => SingleChildScrollView(
-                padding: EdgeInsets.symmetric(
-                  horizontal: compacta ? AppSpacing.md : AppSpacing.xl,
-                  vertical: AppSpacing.lg,
+            final Widget conteudo;
+            if (paciente.hasError || consentimento.hasError) {
+              conteudo = AppEstado.central(
+                titulo: AppStrings.consentimentoErroCarregar,
+                acao: AppBotao.secundario(
+                  rotulo: AppStrings.tentarNovamente,
+                  aoTocar: () {
+                    ref.invalidate(pacienteProvider(pacienteId));
+                    ref.invalidate(consentimentoProvider(pacienteId));
+                  },
                 ),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 640),
-                    child: _Formulario(
-                      paciente: encontrado,
-                      consentimento: vigente,
+              );
+            } else if (!paciente.hasValue || !consentimento.hasValue) {
+              conteudo = Center(
+                child: CircularProgressIndicator(color: context.cores.acento),
+              );
+            } else if (paciente.value case final encontrado?) {
+              conteudo = switch (consentimento.value) {
+                final vigente? => SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: compacta ? AppSpacing.md : AppSpacing.xl,
+                    vertical: AppSpacing.lg,
+                  ),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 640),
+                      child: _Formulario(
+                        paciente: encontrado,
+                        consentimento: vigente,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              // Já retirado, ou nunca registrado: não há o que retirar.
-              null => AppEstado.central(
-                titulo: AppStrings.retiradaNadaARetirar,
-                acao: AppBotao.secundario(
-                  rotulo: AppStrings.retiradaVoltarAoPaciente,
-                  aoTocar: () => _irParaPaciente(context, pacienteId),
+                // Já retirado, ou nunca registrado: não há o que retirar.
+                null => AppEstado.central(
+                  titulo: AppStrings.retiradaNadaARetirar,
+                  acao: AppBotao.secundario(
+                    rotulo: AppStrings.retiradaVoltarAoPaciente,
+                    aoTocar: () => _irParaPaciente(context, pacienteId),
+                  ),
                 ),
-              ),
-            };
-          } else {
-            conteudo = AppEstado.central(
-              titulo: AppStrings.consentimentoPacienteNaoEncontrado,
-              acao: AppBotao.secundario(
-                rotulo: AppStrings.consentimentoVoltarParaLista,
-                aoTocar: () => context.goNamed(AppRoutes.pacientesNome),
-              ),
-            );
-          }
+              };
+            } else {
+              conteudo = AppEstado.central(
+                titulo: AppStrings.consentimentoPacienteNaoEncontrado,
+                acao: AppBotao.secundario(
+                  rotulo: AppStrings.consentimentoVoltarParaLista,
+                  aoTocar: () => context.goNamed(AppRoutes.pacientesNome),
+                ),
+              );
+            }
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AppCabecalhoDeTarefa(
-                titulo: AppStrings.retiradaTitulo,
-                aoVoltar: () => context.canPop()
-                    ? context.pop()
-                    : _irParaPaciente(context, pacienteId),
-                compacta: compacta,
-              ),
-              Expanded(child: conteudo),
-            ],
-          );
-        },
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AppCabecalhoDeTarefa(
+                  titulo: AppStrings.retiradaTitulo,
+                  aoVoltar: () => context.canPop()
+                      ? context.pop()
+                      : _irParaPaciente(context, pacienteId),
+                  largura: largura,
+                  trilha: [
+                    ...Trilhas.doPaciente(
+                      context,
+                      pacienteId: pacienteId,
+                      nome: paciente.value?.nome,
+                    ),
+                    ItemDaTrilha(AppStrings.retiradaTitulo),
+                  ],
+                ),
+                Expanded(
+                  // Carregando → pronto (ou erro): o conteúdo novo entra.
+                  child: AppTrocaAnimada(
+                    chave: conteudo.runtimeType,
+                    preencher: true,
+                    child: conteudo,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -275,7 +297,7 @@ class _FormularioState extends ConsumerState<_Formulario> {
         ),
         AppMensagemDeCampo(
           erro: estado.erroGeral,
-          corDoApoio: AppColors.secundarioSobreCreme,
+          corDoApoio: context.cores.secundario,
         ),
       ],
     );

@@ -4,13 +4,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fonar_app/app/app_estrutura.dart';
 import 'package:fonar_app/app/router/app_router.dart';
 import 'package:fonar_app/app/router/app_routes.dart';
+import 'package:fonar_app/core/network/conexao.dart';
+import 'package:fonar_app/core/storage/token_storage.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/design_system/tokens/app_colors.dart';
+import 'package:fonar_app/design_system/widgets/app_cabecalho_de_tarefa.dart';
 import 'package:fonar_app/design_system/widgets/app_toque.dart';
+import 'package:fonar_app/features/auth/data/sessao.dart';
+import 'package:fonar_app/features/pacientes/presentation/pages/pacientes_list_page.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 
 import '../apoio/banco_em_memoria.dart';
 import '../apoio/hover.dart';
+import '../apoio/repositorios_em_memoria.dart';
+import '../apoio/sessao_de_teste.dart';
 
 const _desktop = Size(1440, 900);
 
@@ -32,7 +39,12 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
 
-      final container = ProviderContainer(overrides: [bancoDeTeste()]);
+      final container = ProviderContainer(
+        overrides: [
+          bancoDeTeste(),
+          sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
+        ],
+      );
       addTearDown(container.dispose);
       final roteador = container.read(routerProvider);
 
@@ -64,7 +76,8 @@ void main() {
       }
 
       // E o outro lado: a maioria das telas não tem navegação principal, e o
-      // login vem antes de haver navegação.
+      // login vem antes de haver navegação — e só existe sem sessão.
+      container.read(sessaoProvider.notifier).encerrar();
       roteador.goNamed(AppRoutes.loginNome);
       await tester.pumpAndSettle();
 
@@ -109,6 +122,66 @@ void main() {
       );
 
       expect(corDoTexto(tester, inativo), AppColors.secundarioSobreLavanda);
+    });
+  });
+
+  // Como no protótipo: no desktop as telas de tarefa ficam ao lado da barra
+  // lateral, com a trilha no lugar do voltar; no celular, tela inteira.
+  group('telas de tarefa', () {
+    Future<void> abrirPerfil(WidgetTester tester, Size tamanho) async {
+      tester.view.physicalSize = tamanho;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final container = ProviderContainer(
+        overrides: [
+          bancoDeTeste(),
+          conexaoOnlineProvider.overrideWithValue(true),
+          sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
+          tokenStorageProvider.overrideWithValue(TokenStorageEmMemoria()),
+        ],
+      );
+      addTearDown(container.dispose);
+      final roteador = container.read(routerProvider);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            theme: AppTheme.claro,
+            routerConfig: roteador,
+          ),
+        ),
+      );
+      roteador.goNamed(
+        AppRoutes.pacienteDetalheNome,
+        pathParameters: {AppRoutes.paramPacienteId: 'exemplo-a'},
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('desktop: barra lateral e trilha, sem voltar', (tester) async {
+      await abrirPerfil(tester, _desktop);
+
+      expect(find.byType(AppEstrutura), findsOneWidget);
+      for (final destino in DestinoPrincipal.values) {
+        expect(find.text(destino.rotulo), findsWidgets, reason: destino.name);
+      }
+      expect(find.bySemanticsLabel(AppStrings.voltar), findsNothing);
+
+      // O primeiro passo da trilha leva à lista.
+      final trilha = find.descendant(
+        of: find.byType(AppCabecalhoDeTarefa),
+        matching: find.text(AppStrings.navPacientes),
+      );
+      await tester.tap(trilha);
+      await tester.pumpAndSettle();
+      expect(find.byType(PacientesListPage), findsOneWidget);
+    });
+
+    testWidgets('celular: tela inteira, com voltar e sem abas', (tester) async {
+      await abrirPerfil(tester, const Size(390, 844));
+
+      expect(find.bySemanticsLabel(AppStrings.voltar), findsOneWidget);
+      expect(find.text(AppStrings.navFilaCurto), findsNothing);
     });
   });
 }

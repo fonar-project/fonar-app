@@ -15,10 +15,13 @@ import 'package:fonar_app/core/network/conexao.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/features/auth/data/profissional_atual.dart';
 import 'package:fonar_app/features/auth/data/sessao.dart';
+import 'package:fonar_app/features/auth/domain/repositorio_autenticacao.dart';
+import 'package:fonar_app/features/auth/domain/conta_autenticada.dart';
+import 'package:fonar_app/features/auth/data/repositorio_autenticacao_firebase.dart';
 import 'package:fonar_app/features/auth/domain/profissional.dart';
 import 'package:fonar_app/features/auth/presentation/pages/login_page.dart';
 import 'package:fonar_app/features/captura/domain/amostra.dart';
-import 'package:fonar_app/features/conta/data/repositorio_da_conta_placeholder.dart';
+import 'package:fonar_app/features/conta/data/repositorio_da_conta_local.dart';
 import 'package:fonar_app/features/conta/domain/dados_do_profissional.dart';
 import 'package:fonar_app/features/conta/presentation/conta_controlador.dart';
 import 'package:fonar_app/features/conta/presentation/pages/conta_page.dart';
@@ -27,22 +30,44 @@ import 'package:fonar_app/features/fila/domain/item_da_fila.dart';
 import 'package:fonar_app/features/fila/presentation/pages/fila_page.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 
+import '../../apoio/banco_em_memoria.dart';
 import '../../apoio/repositorios_em_memoria.dart';
+import '../../apoio/sessao_de_teste.dart';
 
-class _Conta implements RepositorioDaConta {
-  _Conta({this.falha = false});
+const _perfil = Profissional(nome: 'Fon.ª Teste', registro: 'CRFa 0-00000');
+
+/// O perfil e a autenticação ao mesmo tempo: a Conta salva num e sai pelo
+/// outro.
+class _Conta implements RepositorioDaConta, RepositorioAutenticacao {
+  _Conta({this.falha = false, this.guardado = _perfil});
   final bool falha;
-  final salvos = <Profissional>[];
+  final Profissional? guardado;
+  final salvos = <(String, Profissional)>[];
   var saiu = false;
 
   @override
-  Future<void> salvar(Profissional profissional) async {
+  Future<Profissional?> perfil(String uid) async => guardado;
+
+  @override
+  Future<void> salvar(String uid, Profissional profissional) async {
     if (falha) throw const FalhaDeConexao();
-    salvos.add(profissional);
+    salvos.add((uid, profissional));
   }
 
   @override
   Future<void> sair() async => saiu = true;
+
+  @override
+  Future<ContaAutenticada> entrar({
+    required String email,
+    required String senha,
+  }) async => contaDeTeste;
+
+  @override
+  Future<ContaAutenticada?> contaGuardada() async => saiu ? null : contaDeTeste;
+
+  @override
+  Future<void> pedirRedefinicaoDeSenha(String email) async {}
 }
 
 ItemDaFila _envio(String id) => ItemDaFila(
@@ -92,8 +117,11 @@ Future<(GoRouter, _Conta, ProviderContainer)> _abrir(
     overrides: [
       // Sem rede: a fila não tenta enviar, e os envios ficam pendentes.
       conexaoOnlineProvider.overrideWithValue(false),
+      bancoDeTeste(),
       repositorioFilaProvider.overrideWithValue(fila),
       repositorioDaContaProvider.overrideWithValue(c),
+      repositorioAutenticacaoProvider.overrideWithValue(c),
+      sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
     ],
   );
   addTearDown(container.dispose);
@@ -121,6 +149,9 @@ Finder _campo(String rotulo) => find.descendant(
   of: find.ancestor(of: find.text(rotulo), matching: find.byType(Column)).first,
   matching: find.byType(TextField),
 );
+
+String _texto(WidgetTester tester, String rotulo) =>
+    tester.widget<TextField>(_campo(rotulo)).controller!.text;
 
 bool _habilitado(WidgetTester tester, String rotulo) {
   final botao = find.ancestor(
@@ -177,9 +208,34 @@ void main() {
 
       expect(find.byType(ContaPage), findsOneWidget);
       expect(find.byType(AppEstrutura), findsOneWidget);
-      expect(find.text('profissional@exemplo.invalid'), findsOneWidget);
+      expect(find.text(contaDeTeste.email), findsOneWidget);
+      expect(_texto(tester, AppStrings.contaCampoNome), _perfil.nome);
       expect(_habilitado(tester, AppStrings.contaSalvar), isFalse);
       expect(find.text(AppStrings.contaNadaMudou), findsOneWidget);
+    });
+
+    testWidgets('primeira entrada no aparelho: perfil vazio, e a barra lateral '
+        'mostra o e-mail e pede os dados', (tester) async {
+      final (_, conta, _) = await _abrir(
+        tester,
+        conta: _Conta(guardado: null),
+        tamanho: const Size(1440, 1200),
+      );
+
+      expect(_texto(tester, AppStrings.contaCampoNome), isEmpty);
+      expect(_texto(tester, AppStrings.contaCampoRegistro), isEmpty);
+      expect(find.text(AppStrings.contaPerfilIncompleto), findsOneWidget);
+      // O e-mail no lugar do nome, na barra lateral e nos dados da conta.
+      expect(find.text(contaDeTeste.email), findsNWidgets(2));
+
+      await tester.enterText(_campo(AppStrings.contaCampoNome), 'Ana Souza');
+      await tester.enterText(_campo(AppStrings.contaCampoRegistro), 'CRFa 1');
+      await tester.pumpAndSettle();
+      await _tocar(tester, find.text(AppStrings.contaSalvar));
+
+      expect(conta.salvos.single.$2.nome, 'Ana Souza');
+      expect(find.text(AppStrings.contaPerfilIncompleto), findsNothing);
+      expect(find.text('Ana Souza'), findsWidgets);
     });
 
     testWidgets('nome em branco: erro no campo, com o que fazer', (
@@ -216,7 +272,9 @@ void main() {
       await _tocar(tester, find.text(AppStrings.contaSalvar));
 
       expect(find.text(AppStrings.contaSalvo), findsOneWidget);
-      expect(conta.salvos.single.registro, 'CRFa 2-12345');
+      expect(conta.salvos.single.$2.registro, 'CRFa 2-12345');
+      // Guardado na conta de quem está com a sessão aberta.
+      expect(conta.salvos.single.$1, contaDeTeste.uid);
       expect(
         container.read(profissionalAtualProvider).registro,
         'CRFa 2-12345',
@@ -246,6 +304,16 @@ void main() {
       expect(find.text(AppStrings.contaEnviosPendentes(2)), findsOneWidget);
       await _tocar(tester, find.text(AppStrings.contaVerFila));
       expect(find.byType(FilaPage), findsOneWidget);
+    });
+
+    testWidgets('faixas de referência: diz que o catálogo está vazio e '
+        'por quê', (tester) async {
+      await _abrir(tester);
+
+      expect(find.text(AppStrings.contaFaixasTitulo), findsOneWidget);
+      expect(find.text(AppStrings.contaFaixasPendente), findsOneWidget);
+      expect(find.text(AppStrings.contaFaixasVazio), findsOneWidget);
+      expect(find.text(AppStrings.contaFaixasSoLeitura), findsOneWidget);
     });
 
     testWidgets('fila vazia: sem atalho', (tester) async {
@@ -305,7 +373,7 @@ void main() {
         tester,
       ) async {
         final (_, conta, container) = await _abrir(tester);
-        container.read(sessaoAbertaProvider.notifier).abrir();
+        container.read(sessaoProvider.notifier).abrir(contaDeTeste);
         container
             .read(profissionalAtualProvider.notifier)
             .definir(const Profissional(nome: 'Da sessão', registro: 'X'));
@@ -346,12 +414,15 @@ void main() {
   test('sair com a tela já fechada: sem erro, e a sessão encerra', () async {
     // Achado da revisão de 23/09: o `ref` descartado fazia `sair` devolver
     // falso com o token já limpo.
-    final conta = _ContaLenta();
+    final conta = _SaidaLenta();
     final container = ProviderContainer(
-      overrides: [repositorioDaContaProvider.overrideWithValue(conta)],
+      overrides: [
+        repositorioAutenticacaoProvider.overrideWithValue(conta),
+        repositorioDaContaProvider.overrideWithValue(_Conta()),
+      ],
     );
     addTearDown(container.dispose);
-    container.read(sessaoAbertaProvider.notifier).abrir();
+    container.read(sessaoProvider.notifier).abrir(contaDeTeste);
     container
         .read(profissionalAtualProvider.notifier)
         .definir(const Profissional(nome: 'Da sessão', registro: 'X'));
@@ -368,11 +439,8 @@ void main() {
   });
 }
 
-class _ContaLenta implements RepositorioDaConta {
+class _SaidaLenta extends AutenticacaoFalsa {
   final espera = Completer<void>();
-
-  @override
-  Future<void> salvar(Profissional profissional) async {}
 
   @override
   Future<void> sair() => espera.future;

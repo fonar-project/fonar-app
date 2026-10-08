@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../core/network/conexao.dart';
 import '../design_system/breakpoints.dart';
-import '../design_system/tokens/app_colors.dart';
+import '../design_system/tokens/app_cores.dart';
 import '../design_system/tokens/app_spacing.dart';
 import '../design_system/widgets/app_fundo.dart';
 import '../design_system/widgets/app_indicador_conexao.dart';
@@ -70,8 +70,10 @@ enum DestinoPrincipal {
 /// o roteador por `ShellRoute` nem por `AppEstrutura` em volta do `builder`.
 /// Vale sem exceção.
 ///
-/// O motivo é que a maioria das telas NÃO tem navegação: gravação, revisão e
-/// CAPE-V ocupam a tela inteira, e o login vem antes de haver navegação. Com o
+/// O motivo é que as telas não têm todas a mesma navegação: as de tarefa —
+/// perfil, gravação, resultado, CAPE-V — ficam ao lado da barra lateral no
+/// desktop, como no protótipo, mas ocupam a tela inteira no celular
+/// ([navegacaoInferior] falso); o login vem antes de haver navegação. Com o
 /// roteador embrulhando, a lista de quem fica de fora vira uma lista de
 /// exceções espalhada pelas rotas, longe da tela que ela descreve. Aqui basta
 /// abrir a tela para saber a resposta.
@@ -83,36 +85,48 @@ enum DestinoPrincipal {
 /// 25/09/2026. O que segura a convenção agora é `app_estrutura_test.dart`,
 /// exercitando o roteador de verdade.
 class AppEstrutura extends StatelessWidget {
-  const AppEstrutura({required this.destino, required this.child, super.key});
+  const AppEstrutura({
+    required this.destino,
+    required this.child,
+    this.navegacaoInferior = true,
+    super.key,
+  });
 
   /// Qual destino marcar como ativo.
   final DestinoPrincipal destino;
 
   final Widget child;
 
+  /// Abas embaixo fora do desktop. Falso nas telas de tarefa: no celular elas
+  /// ocupam a tela inteira, com o próprio voltar, e [child] aparece sozinho.
+  final bool navegacaoInferior;
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, restricoes) {
-          if (Breakpoints.de(restricoes.maxWidth) == LarguraDeTela.expandida) {
-            return Row(
+    return LayoutBuilder(
+      builder: (context, restricoes) {
+        if (Breakpoints.de(restricoes.maxWidth) == LarguraDeTela.expandida) {
+          return Scaffold(
+            body: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _BarraLateral(ativo: destino),
                 Expanded(child: SafeArea(left: false, child: child)),
               ],
-            );
-          }
-          return Column(
+            ),
+          );
+        }
+        if (!navegacaoInferior) return child;
+        return Scaffold(
+          body: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(child: child),
               _BarraInferior(ativo: destino),
             ],
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -124,19 +138,18 @@ class _BarraLateral extends ConsumerWidget {
 
   static const _largura = 222.0;
   static const _margem = 22.0;
-  static final _divisoria = Divider(
-    color: AppColors.creme.withValues(alpha: 0.18),
-  );
+  static Widget _divisoria(BuildContext context) =>
+      Divider(color: context.cores.sobrePrimaria.withValues(alpha: 0.18));
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final textos = Theme.of(context).textTheme;
     final profissional = ref.watch(profissionalAtualProvider);
-    const creme = AppColors.creme;
+    final creme = context.cores.sobrePrimaria;
 
     return Container(
       width: _largura,
-      color: AppColors.roxoProfundo,
+      color: context.cores.lateral,
       child: SafeArea(
         right: false,
         // Rola quando não cabe. Com o texto do sistema em 200% os quatro
@@ -184,12 +197,12 @@ class _BarraLateral extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    _divisoria,
+                    _divisoria(context),
                     const SizedBox(height: AppSpacing.sm),
                     for (final destino in DestinoPrincipal.values)
                       _ItemLateral(destino: destino, ativo: destino == ativo),
                     const Spacer(),
-                    _divisoria,
+                    _divisoria(context),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         _margem,
@@ -206,11 +219,13 @@ class _BarraLateral extends ConsumerWidget {
                           ),
                           const SizedBox(height: AppSpacing.xs),
                           Text(
-                            profissional.nome,
+                            profissional.identificacao,
                             style: textos.labelSmall?.copyWith(color: creme),
                           ),
                           Text(
-                            profissional.registro,
+                            profissional.completo
+                                ? profissional.registro
+                                : AppStrings.contaPerfilIncompleto,
                             style: textos.bodySmall?.copyWith(
                               color: creme.withValues(alpha: 0.75),
                             ),
@@ -237,7 +252,7 @@ class _ItemLateral extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const creme = AppColors.creme;
+    final creme = context.cores.sobrePrimaria;
     return AppToque(
       aoTocar: () => context.goNamed(destino.rota),
       selecionado: ativo,
@@ -280,9 +295,9 @@ class _BarraInferior extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: AppColors.creme,
-        border: Border(top: BorderSide(color: AppColors.lavandaClaro)),
+      decoration: BoxDecoration(
+        color: context.cores.fundo,
+        border: Border(top: BorderSide(color: context.cores.borda)),
       ),
       child: SafeArea(
         top: false,
@@ -320,7 +335,7 @@ class _ItemInferior extends StatelessWidget {
           // Traço em cima da aba ativa, além do peso e da cor do texto.
           border: Border(
             top: BorderSide(
-              color: ativo ? AppColors.roxoProfundo : Colors.transparent,
+              color: ativo ? context.cores.acento : Colors.transparent,
               width: 3,
             ),
           ),
@@ -335,10 +350,10 @@ class _ItemInferior extends StatelessWidget {
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: ativo
-                  ? AppColors.roxoProfundo
-                  // Pelo fundo, não fixo: a barra é creme em repouso, mas o
-                  // véu de hover do `AppToque` a escurece, e ali o token de
-                  // creme reprova em AA.
+                  ? context.cores.acento
+                  // Pelo fundo, não fixo: a barra é a cor de fundo em
+                  // repouso, mas o véu de hover do `AppToque` a escurece, e
+                  // ali o tom comum reprova em AA.
                   : AppFundo.secundarioDe(context),
               fontWeight: ativo ? FontWeight.w800 : FontWeight.w600,
             ),

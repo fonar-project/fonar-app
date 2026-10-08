@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 
-/// Tokens de cor do FONAR.
+/// A paleta do FONAR: os valores, nos dois temas.
+///
+/// Widgets não usam estas constantes direto: leem a cor pelo papel, do tema —
+/// `context.cores.texto`, `context.cores.primaria` —, em `AppCores`. Assim a
+/// mesma tela serve ao claro e ao escuro. A exceção é o PDF do laudo, que sai
+/// sempre em papel branco.
 ///
 /// A paleta é fechada: quatro cores de marca mais um conjunto pequeno de
 /// derivados. **Nunca introduza cor nova** — se algo precisa de um tom que não
@@ -85,6 +90,54 @@ abstract final class AppColors {
   /// que a tela já pinta de roxo. A landing page usa um anel roxo translúcido;
   /// no aplicativo, com botão roxo sobre cabeçalho roxo, esse anel sumiria.
   static const foco = Color(0xFF0B57D0);
+
+  // ------------------------------------------------------ tema escuro --
+  // Proposta aprovada em 25/09/2026. Derivada da marca, sem matiz novo: o
+  // fundo é o chumbo escurecido, o texto é o creme levemente apagado. O roxo
+  // profundo, que no claro faz botão, texto e barra lateral ao mesmo tempo,
+  // some sobre fundo escuro — aqui ele se divide em três tons, um por papel.
+  //
+  // Nenhuma tela usa estas constantes direto: elas entram pelo tema, em
+  // `AppCores.escuro`. Contrastes conferidos em `app_colors_test.dart`.
+
+  static const escuroFundo = Color(0xFF17131F);
+  static const escuroCartao = Color(0xFF211B2B);
+  static const escuroSuave = Color(0xFF2B2438);
+
+  /// Preenchimento lavanda (botão desabilitado). O secundário passa em AA.
+  static const escuroLavanda = Color(0xFF362E45);
+
+  /// Borda e divisória. Decorativa, como a lavanda no claro.
+  static const escuroBorda = Color(0xFF40374F);
+
+  static const escuroTexto = Color(0xFFF1E9DC);
+
+  /// Um só secundário basta no escuro: passa em AA sobre os três fundos e
+  /// sobre a lavanda.
+  static const escuroSecundario = Color(0xFFA198B3);
+
+  /// Fundo do botão primário, com [escuroTexto] por cima.
+  static const escuroPrimaria = Color(0xFF6A2F93);
+  static const escuroPrimariaHover = Color(0xFF7A3CA6);
+  static const escuroPrimariaPressionada = Color(0xFF57217A);
+
+  /// Link, ícone, borda do botão secundário, linha do gráfico.
+  static const escuroAcento = Color(0xFFD2B0EC);
+
+  /// Barra lateral e painel do login.
+  static const escuroLateral = Color(0xFF260838);
+
+  /// Acento a 12%.
+  static const escuroVeu = Color(0x1FD2B0EC);
+
+  static const escuroSucesso = Color(0xFF7DD39B);
+  static const escuroAtencao = Color(0xFFE7B550);
+  static const escuroErro = Color(0xFFF2A19A);
+
+  /// Conteúdo sobre o vermelho de erro, que no escuro é claro.
+  static const escuroSobreErro = Color(0xFF2A0A0A);
+
+  static const escuroFoco = Color(0xFFA8C7FA);
 
   /// Semente do Material 3. O restante do esquema é derivado dela, mas os
   /// componentes do design system usam os tokens acima diretamente: o

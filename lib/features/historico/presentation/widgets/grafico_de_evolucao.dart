@@ -3,7 +3,8 @@ import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
+import '../../../../design_system/tokens/app_movimento.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../../analise/domain/faixa_de_referencia.dart';
 import '../../../analise/presentation/apresentacao_da_medida.dart';
@@ -63,16 +64,14 @@ class GraficoDeEvolucao extends StatelessWidget {
     if (comValor.isEmpty) {
       return Text(
         AppStrings.evolucaoNenhumValor,
-        style: textos.bodyMedium?.copyWith(
-          color: AppColors.secundarioSobreCreme,
-        ),
+        style: textos.bodyMedium?.copyWith(color: context.cores.secundario),
       );
     }
 
     final escala = MediaQuery.textScalerOf(context);
     final estiloDoEixo = (grande ? textos.bodyMedium : textos.bodySmall)
         ?.copyWith(
-          color: AppColors.secundarioSobreCreme,
+          color: context.cores.secundario,
           fontFeatures: const [FontFeature.tabularFigures()],
         );
 
@@ -106,6 +105,7 @@ class GraficoDeEvolucao extends StatelessWidget {
               );
               return LineChart(
                 _dados(
+                  cores: context.cores,
                   eixoX: eixoX,
                   eixoY: eixoY,
                   rotulos: rotulos,
@@ -113,7 +113,10 @@ class GraficoDeEvolucao extends StatelessWidget {
                   reservaEsquerda: reservaEsquerda,
                   reservaEmbaixo: reservaEmbaixo,
                 ),
-                duration: Duration.zero,
+                // Trocando de medida, a linha vai de uma para a outra em vez
+                // de saltar — o olho acompanha. Zero com movimento reduzido.
+                duration: AppMovimento.duracao(context, AppMovimento.media),
+                curve: AppMovimento.curva,
               );
             },
           ),
@@ -123,6 +126,7 @@ class GraficoDeEvolucao extends StatelessWidget {
   }
 
   LineChartData _dados({
+    required AppCores cores,
     required _EixoDoTempo eixoX,
     required _EixoDoValor eixoY,
     required Map<int, String> rotulos,
@@ -144,13 +148,13 @@ class GraficoDeEvolucao extends StatelessWidget {
         drawVerticalLine: false,
         horizontalInterval: eixoY.passo,
         getDrawingHorizontalLine: (_) =>
-            const FlLine(color: AppColors.lavandaClaro, strokeWidth: 1),
+            FlLine(color: cores.borda, strokeWidth: 1),
       ),
       borderData: FlBorderData(
         show: true,
-        border: const Border(
-          left: BorderSide(color: AppColors.lavandaClaro),
-          bottom: BorderSide(color: AppColors.lavandaClaro),
+        border: Border(
+          left: BorderSide(color: cores.borda),
+          bottom: BorderSide(color: cores.borda),
         ),
       ),
       rangeAnnotations: RangeAnnotations(
@@ -159,7 +163,7 @@ class GraficoDeEvolucao extends StatelessWidget {
             HorizontalRangeAnnotation(
               y1: faixa.minimo ?? eixoY.minimo,
               y2: faixa.maximo ?? eixoY.maximo,
-              color: AppColors.roxoVeu,
+              color: cores.veu,
             ),
         ],
       ),
@@ -209,15 +213,15 @@ class GraficoDeEvolucao extends StatelessWidget {
               else
                 FlSpot.nullSpot,
           ],
-          color: AppColors.roxoProfundo,
+          color: cores.acento,
           barWidth: grande ? 4 : 2.5,
           isStrokeCapRound: true,
           dotData: FlDotData(
             getDotPainter: (_, _, _, _) => FlDotCirclePainter(
               radius: grande ? 6 : 4.5,
-              color: AppColors.roxoProfundo,
+              color: cores.acento,
               strokeWidth: 2,
-              strokeColor: AppColors.branco,
+              strokeColor: cores.cartao,
             ),
           ),
         ),

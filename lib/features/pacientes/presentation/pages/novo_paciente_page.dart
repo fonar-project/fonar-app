@@ -6,7 +6,7 @@ import '../../../../app/app_estrutura.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../app/router/saida_protegida.dart';
 import '../../../../design_system/breakpoints.dart';
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_cabecalho_de_secao.dart';
@@ -139,9 +139,7 @@ class _NovoPacientePageState extends ConsumerState<NovoPacientePage> {
       children: [
         Text(
           AppStrings.cadastroDescricao,
-          style: textos.bodyMedium?.copyWith(
-            color: AppColors.secundarioSobreCreme,
-          ),
+          style: textos.bodyMedium?.copyWith(color: context.cores.secundario),
         ),
         const SizedBox(height: AppSpacing.lg),
         CamposDoPaciente(
@@ -163,9 +161,7 @@ class _NovoPacientePageState extends ConsumerState<NovoPacientePage> {
         const SizedBox(height: AppSpacing.lg),
         Text(
           AppStrings.cadastroSalvoNoAparelho,
-          style: textos.bodySmall?.copyWith(
-            color: AppColors.secundarioSobreCreme,
-          ),
+          style: textos.bodySmall?.copyWith(color: context.cores.secundario),
         ),
         if (estado.duplicado case final existente?) ...[
           const SizedBox(height: AppSpacing.md),
@@ -192,7 +188,7 @@ class _NovoPacientePageState extends ConsumerState<NovoPacientePage> {
         // Falha que não é de um campo: o aparelho não conseguiu salvar.
         AppMensagemDeCampo(
           erro: estado.erroGeral,
-          corDoApoio: AppColors.secundarioSobreCreme,
+          corDoApoio: context.cores.secundario,
         ),
       ],
     );

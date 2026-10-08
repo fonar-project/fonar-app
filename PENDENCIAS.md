@@ -21,6 +21,7 @@ houver, no mesmo commit.
 | Termos da CAPE-V em português (parâmetros, consistência, sentido do desvio, pontas da escala). | 08 | `cape_v/domain/avaliacao_cape_v.dart`, `l10n/app_strings.dart` |
 | CAPE-V: exigir o sentido do desvio em pitch e loudness (decisão de implementação). | 08 | `cape_v/domain/avaliacao_cape_v.dart` |
 | CAPE-V: esconder o número enquanto se marca, como na folha de papel? | 08 | `cape_v/presentation/pages/cape_v_page.dart` |
+| CAPE-V: âncoras "leve", "moderado" e "severo" sob a régua, como no protótipo — onde ficam na linha e com que termos. Até lá a régua só tem os números. | 28 | `cape_v/presentation/pages/cape_v_page.dart` |
 | **Limiar de mudança de cada medida** — quanto uma diferença entre sessões precisa ter para contar como mudança. Até lá a evolução mostra os valores lado a lado e não diz que a medida subiu, desceu ou ficou estável. | 09 | `historico/data/limiares_de_mudanca_indefinidos.dart` |
 | "Melhorando" / "piorando" na tendência do AVQI (lista) e na evolução. | 01, 09 | `l10n/app_strings.dart` |
 | Laudo: quais itens da conferência **impedem** gerar e quais só avisam (hoje impedem consentimento, análise concluída e conclusão escrita; CAPE-V e amostra com problema só avisam). | 10 | `laudo/domain/laudo.dart` |
@@ -33,7 +34,8 @@ houver, no mesmo commit.
 | Pendência | US | Onde |
 |---|---|---|
 | **Texto do termo de consentimento** — provisório, marcado na tela. Ao trocar, mudar também a versão do termo. | 03 | `l10n/app_strings.dart`, `consentimento/data/repositorio_consentimento_placeholder.dart` |
-| **Desbloqueio sem conexão não confere a senha** — a mesma regra do "entrar em modo offline" do login, que também não confere. Com o Firebase, conferir sem rede por uma credencial local (PIN do app ou biometria do aparelho)? E o modo offline do login, idem. | 24 | `auth/presentation/desbloqueio_controlador.dart` |
+| **Desbloqueio sem conexão não confere a senha** — a mesma regra do "entrar em modo offline" do login, que também não confere (desde a US32 ele entra só na conta da última entrada com senha, e some quando ela sai). Conferir sem rede por uma credencial local (PIN do app ou biometria do aparelho)? E o modo offline do login, idem. | 24, 32 | `auth/presentation/desbloqueio_controlador.dart` |
+| **Aparelho compartilhado por mais de um profissional**: pacientes, gravações, laudos e a fila são do aparelho, não da conta — quem entra vê o que outra pessoa cadastrou. Desde a US32 a fila só ENVIA o que é de quem entrou, mas a lista mostra todos ("Gravado por outra conta"). Separar por conta, ou é um aparelho por profissional? | 32 | `fila/presentation/pages/fila_page.dart`, `core/banco/tabelas.dart` |
 | Quando o responsável legal é obrigatório, e se o registro precisa de mais dados dele. | 03 | `consentimento/domain/consentimento.dart` |
 | **Sessão de outro dia que ficou pela metade**: desde a US19 o perfil avisa e o profissional ouve, envia ou descarta. Falta decidir se o app apaga sozinho depois de um tempo, e quanto. | 16, 19 | `captura/domain/sessao_nao_enviada.dart` |
 | **Depois da retirada do consentimento**: gravações, análises e laudos anteriores continuam no aparelho — apagar? Os envios que estavam na fila param e só sobem se o profissional pedir depois de um consentimento novo — o consentimento novo cobre gravação anterior? O laudo de sessão anterior também fica bloqueado (a conferência exige consentimento em vigor) — é o certo? | 15 | `consentimento/domain/consentimento.dart` (`RetiradaDeConsentimento`) |
@@ -52,6 +54,7 @@ houver, no mesmo commit.
 | Quando o aparelho troca taxa ou canais: bloqueia ou só avisa? (hoje só avisa) | 04, 05 | `captura/presentation/pages/captura_page.dart`, `captura/domain/verificacao_da_amostra.dart` |
 | Unidade de cada medida (shimmer em % ou dB?). Se a API mandar a unidade, ela prevalece. | 07 | `analise/presentation/apresentacao_da_medida.dart` |
 | Contrato de erro da API, para marcar campos recusados. | — | `core/error/app_exception.dart` |
+| **A API confere o token do Firebase** (`Authorization: Bearer <idToken>`, o Admin SDK verifica) e responde 401 quando não vale. O app renova o token antes de vencer e não repete a requisição recusada — 401 vira "Entrar de novo" na fila. | 32 | `core/network/interceptors/auth_interceptor.dart` |
 
 ## Equipe (produto e implementação)
 
@@ -65,8 +68,8 @@ houver, no mesmo commit.
 | Retomar a sessão: só se retoma a do **mesmo dia** (decisão de implementação — a voz muda de um dia para o outro, e a análise combina as tarefas). É isso que define uma consulta? | 16 | `captura/domain/retomada.dart` |
 | Cadastro: queixa obrigatória e "salvar leva ao consentimento" foram decisões sem o protótipo. | 02 | `pacientes/presentation/pages/novo_paciente_page.dart` |
 | Paciente duplicado: o aviso compara nome e nascimento só com os pacientes **deste aparelho**. Com o Firebase, comparar também com os da conta. | 21 | `pacientes/domain/duplicidade.dart` |
-| "Sessão expirada" na fila deve levar ao login (depende do Firebase Auth). | 06 | `fila/presentation/pages/fila_page.dart` |
-| **Cada envio da fila levar o id de quem gravou** (uid do Firebase) e só subir na sessão dessa pessoa. Hoje sair pausa a fila e entrar de novo a retoma, mas o placeholder não distingue quem entrou. | 11 | `auth/data/sessao.dart` |
+| **Quem cria as contas dos profissionais?** O app não tem cadastro de conta: hoje elas nascem no console do Firebase (ver README, "Conectar ao Firebase"). Auto-cadastro com aprovação, convite, ou só pelo console? | 32 | — |
+| **Nome e registro do profissional só no aparelho**, um por conta: quem usa dois aparelhos preenche nos dois. Sobem com a sincronização. | 32 | `conta/data/repositorio_da_conta_local.dart` |
 | Espectrograma no laudo: depende do contrato do resultado com a imagem. | 10 | `laudo/presentation/pdf_do_laudo.dart` |
 | Se a API exigir o token para servir a imagem do espectrograma, os cabeçalhos entram num lugar só. | 17 | `analise/data/imagem_do_servidor.dart` |
 | Ouvir a análise gravada em OUTRO aparelho: hoje só toca o que ainda está neste (achado pelo envio da fila). Precisa da API servir o áudio. | 13 | `fila/presentation/fila_controlador.dart` (`amostrasDaAnaliseProvider`) |
@@ -93,7 +96,8 @@ rede simulados.
 | **Banco local no Android e no Windows**: cadastrar, fechar o app de verdade e abrir de novo — o paciente, o consentimento e a fila continuam lá? O arquivo fica na área privada (`getApplicationSupportDirectory`), e não em "Documentos". | 14 | `core/banco/banco_local.dart` |
 | O build baixa o SQLite pronto (conferido por SHA-256) na primeira compilação de cada plataforma: precisa de rede nessa hora. | 14 | `pubspec.yaml` (`drift_flutter`) |
 | Espectrograma em tela cheia: girar o celular, pinça e arrastar no Android; roda do mouse, arrastar e teclado (setas, + e −) no Windows. | 17 | `analise/presentation/pages/espectrograma_page.dart` |
-| **Token no cofre do sistema**: guardar, fechar o app e abrir de novo no Android e no Windows. E, no Android, confirmar que o backup automático está mesmo desligado (Configurações → Sistema → Backup não lista o FONAR). | 18 | `core/storage/token_storage.dart`, `AndroidManifest.xml` |
+| **Credencial no cofre do sistema**: entrar, fechar o app e abrir de novo no Android e no Windows — o modo offline oferece a conta? E, no Android, confirmar que o backup automático está mesmo desligado (Configurações → Sistema → Backup não lista o FONAR). | 18, 32 | `core/storage/token_storage.dart`, `AndroidManifest.xml` |
+| **Login com o Firebase de verdade**, com a chave do projeto: entrar; errar a senha; errar várias vezes (a conta pausa); "Esqueci a senha" — o e-mail chega, em português? Deixar a fila enviando por mais de uma hora: o token é renovado sem pedir a senha? Trocar a senha no console com o app aberto: a fila passa a pedir "Entrar de novo"? Nada disso rodou contra o Firebase: os testes simulam as respostas da API REST. | 32 | `core/auth/firebase_auth_rest.dart`, `core/auth/fonte_de_token.dart` |
 | **Bloqueio por inatividade**: deixar o app em segundo plano mais de 5 minutos e voltar — bloqueia na hora? No Windows, digitar conta como uso? | 24 | `auth/presentation/widgets/vigia_de_inatividade.dart` |
 | Ouvir as gravações no **Android**. No Windows já foi conferido em 24/09/2026, com o `audioplayers` tocando um WAV da área privada do app. | 13 | `reproducao/data/reprodutor_audioplayers.dart` |
 | Falha no meio da reprodução (desconectar o fone, arquivo corrompido depois do cabeçalho): o player sai de "tocando" e mostra a falha? Os testes simulam o erro; o caminho real, o `eventStream` do `audioplayers` levando o erro a `falhas`, não foi exercitado. | 13 | `reproducao/data/reprodutor_audioplayers.dart` |
@@ -101,7 +105,7 @@ rede simulados.
 
 ## Já existiam antes da US02
 
-Continuam valendo, com `TODO` no código: autenticação com Firebase (redirect
-de login, sessão, modo offline — e, desde a US11, o perfil do profissional e
-o sair da conta),
-recuperação e troca de senha, tema escuro, tela de erro própria do roteador.
+Continuam valendo, com `TODO` no código: trocar a senha de dentro do app
+(hoje, só pelo e-mail de "Esqueci a senha") e a tela de erro própria do
+roteador. A autenticação com o Firebase saiu na US32, e o tema escuro na
+US30.

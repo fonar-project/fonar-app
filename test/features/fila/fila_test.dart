@@ -19,6 +19,7 @@ import 'package:fonar_app/features/fila/presentation/fila_controlador.dart';
 
 import '../../apoio/banco_em_memoria.dart';
 import '../../apoio/repositorios_em_memoria.dart';
+import '../../apoio/sessao_de_teste.dart';
 
 /// Rede ligável e desligável pelo teste.
 class _Rede extends Notifier<bool> {
@@ -124,7 +125,7 @@ Future<_Fila> _montar(
     overrides: [
       envioDeAnaliseProvider.overrideWithValue(envio),
       // Profissional com a sessão aberta: sem ela a fila não envia.
-      sessaoAbertaProvider.overrideWith(() => Sessao(true)),
+      sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
       repositorioFilaProvider.overrideWithValue(
         repositorio ?? RepositorioFilaEmMemoria(),
       ),
@@ -375,7 +376,7 @@ void main() {
       fila,
     ) async {
       // Achado da revisão de 23/09: sair limpava o token e a fila seguia.
-      final sessao = fila.container.read(sessaoAbertaProvider.notifier);
+      final sessao = fila.container.read(sessaoProvider.notifier);
       fila.envio.segurarAteCancelar();
       await fila.enfileirar();
       await _assentar(tester);
@@ -394,7 +395,7 @@ void main() {
       await _assentar(tester);
       expect(fila.envio.recebidos, hasLength(1));
 
-      sessao.abrir();
+      sessao.abrir(contaDeTeste);
       await _assentar(tester);
       expect(fila.envio.recebidos, hasLength(2));
       expect(fila.item.situacao, SituacaoDoEnvio.enviado);
@@ -413,7 +414,7 @@ void main() {
         await _assentar(tester);
         expect(fila.envio.recebidos, isEmpty);
 
-        fila.container.read(sessaoAbertaProvider.notifier).encerrar();
+        fila.container.read(sessaoProvider.notifier).encerrar();
         await _assentar(tester);
         lenta.segurar!.complete();
         lenta.segurar = null;
@@ -559,7 +560,7 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         conexaoOnlineProvider.overrideWithValue(false),
-        sessaoAbertaProvider.overrideWith(() => Sessao(true)),
+        sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
         repositorioFilaProvider.overrideWithValue(repositorio),
         repositorioConsentimentoProvider.overrideWithValue(
           RepositorioConsentimentoPlaceholder(),
@@ -665,5 +666,145 @@ void main() {
       ),
       throwsA(isA<EnvioCancelado>()),
     );
+  });
+
+  // US32: cada envio leva o id da conta de quem gravou e só sobe na sessão
+  // dela — o que uma profissional gravou nunca sobe com a credencial de
+  // outra que entrou depois no mesmo aparelho.
+  group('envio por conta', () {
+    ItemDaFila envioDe(
+      String? dono, {
+      String sessaoId = 'antes',
+      SituacaoDoEnvio situacao = SituacaoDoEnvio.naFila,
+    }) => ItemDaFila(
+      id: 'envio-$sessaoId',
+      pacienteId: 'p1',
+      nomeDoPaciente: 'Ana de Teste',
+      sessaoId: sessaoId,
+      amostras: [_amostra],
+      criadoEm: DateTime(2026, 9, 22, 10),
+      situacao: situacao,
+      profissionalId: dono,
+    );
+
+    RepositorioFilaEmMemoria comEnvios(List<ItemDaFila> envios) {
+      final repositorio = RepositorioFilaEmMemoria();
+      for (final e in envios) {
+        unawaited(repositorio.adicionar(e));
+      }
+      return repositorio;
+    }
+
+    _testarFila('o envio novo leva o id de quem está com a sessão aberta', (
+      tester,
+      fila,
+    ) async {
+      fila.ligarRede(false);
+      await fila.enfileirar();
+
+      expect(fila.item.profissionalId, contaDeTeste.uid);
+    });
+
+    _testarFila(
+      'o de outra conta não sobe nesta sessão; sobe quando ela entrar',
+      (tester, fila) async {
+        await _assentar(tester);
+        expect(fila.envio.recebidos, isEmpty);
+        expect(fila.item.situacao, SituacaoDoEnvio.naFila);
+
+        final sessao = fila.container.read(sessaoProvider.notifier);
+        sessao.encerrar();
+        sessao.abrir(outraConta);
+        await _assentar(tester);
+
+        expect(fila.envio.recebidos, ['envio-antes']);
+        expect(fila.item.situacao, SituacaoDoEnvio.enviado);
+      },
+      repositorio: comEnvios([envioDe(outraConta.uid)]),
+    );
+
+    _testarFila('o de antes da US32, sem dono, sobe com quem entrar', (
+      tester,
+      fila,
+    ) async {
+      await _assentar(tester);
+
+      expect(fila.envio.recebidos, ['envio-antes']);
+    }, repositorio: comEnvios([envioDe(null)]));
+
+    _testarFila(
+      'sessão expirada: entrar de novo devolve o envio à fila, e ele sobe',
+      (tester, fila) async {
+        await _assentar(tester);
+        expect(fila.envio.recebidos, isEmpty);
+
+        final sessao = fila.container.read(sessaoProvider.notifier);
+        sessao.encerrar();
+        sessao.abrir(contaDeTeste);
+        await _assentar(tester);
+
+        expect(fila.envio.recebidos, ['envio-antes']);
+        expect(fila.item.situacao, SituacaoDoEnvio.enviado);
+      },
+      repositorio: comEnvios([
+        envioDe(contaDeTeste.uid, situacao: SituacaoDoEnvio.aguardandoLogin),
+      ]),
+    );
+
+    _testarFila(
+      'entrar não mexe na sessão expirada de outra conta',
+      (tester, fila) async {
+        final sessao = fila.container.read(sessaoProvider.notifier);
+        sessao.encerrar();
+        sessao.abrir(contaDeTeste);
+        await _assentar(tester);
+
+        expect(fila.envio.recebidos, isEmpty);
+        expect(fila.item.situacao, SituacaoDoEnvio.aguardandoLogin);
+      },
+      repositorio: comEnvios([
+        envioDe(outraConta.uid, situacao: SituacaoDoEnvio.aguardandoLogin),
+      ]),
+    );
+
+    _testarFila(
+      'prazo vencido de outra conta não acorda a fila sem parar',
+      (tester, fila) async {
+        await _assentar(tester);
+        // Nenhum relógio armado por envio que esta sessão não pode mandar.
+        await _passar(tester, fila, const Duration(hours: 1));
+        expect(fila.envio.recebidos, isEmpty);
+        expect(tester.binding.transientCallbackCount, 0);
+      },
+      repositorio: comEnvios([
+        envioDe(
+          outraConta.uid,
+          situacao: SituacaoDoEnvio.aguardandoNovaTentativa,
+        ).copiar(proximaTentativa: () => DateTime(2026, 9, 23, 9)),
+      ]),
+    );
+
+    test('o dono do envio atravessa o banco local', () async {
+      final banco = bancoEmMemoria();
+      addTearDown(banco.close);
+      final repositorio = RepositorioFilaLocal(banco);
+
+      await repositorio.adicionar(envioDe(contaDeTeste.uid));
+      await repositorio.adicionar(envioDe(null, sessaoId: 'sem-dono'));
+
+      final lidos = {for (final e in await repositorio.listar()) e.sessaoId: e};
+      expect(lidos['antes']!.profissionalId, contaDeTeste.uid);
+      expect(lidos['sem-dono']!.profissionalId, isNull);
+
+      // E atualizar a situação não apaga o dono.
+      await repositorio.atualizar(
+        lidos['antes']!.copiar(situacao: SituacaoDoEnvio.enviado),
+      );
+      final depois = await repositorio.listar();
+      expect(
+        depois.firstWhere((e) => e.sessaoId == 'antes').profissionalId,
+        contaDeTeste.uid,
+      );
+    });
   });
 }

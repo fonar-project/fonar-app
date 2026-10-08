@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_strings.dart';
-import '../tokens/app_colors.dart';
+import '../tokens/app_cores.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_spacing.dart';
 import 'app_icone.dart';
@@ -15,18 +15,9 @@ enum StatusMedida {
   dentroDaFaixa(
     rotulo: AppStrings.statusDentroDaFaixa,
     icone: NomeIcone.confirmacao,
-    cor: AppColors.sucesso,
   ),
-  limitrofe(
-    rotulo: AppStrings.statusLimitrofe,
-    icone: NomeIcone.alerta,
-    cor: AppColors.atencao,
-  ),
-  foraDaFaixa(
-    rotulo: AppStrings.statusForaDaFaixa,
-    icone: NomeIcone.negacao,
-    cor: AppColors.erro,
-  ),
+  limitrofe(rotulo: AppStrings.statusLimitrofe, icone: NomeIcone.alerta),
+  foraDaFaixa(rotulo: AppStrings.statusForaDaFaixa, icone: NomeIcone.negacao),
 
   /// Não existe faixa validada para este perfil de paciente e equipamento.
   ///
@@ -36,16 +27,9 @@ enum StatusMedida {
   semReferencia(
     rotulo: AppStrings.statusSemReferencia,
     icone: NomeIcone.semReferencia,
-    // O tom escuro, não o "sobre creme": o selo pinta o próprio fundo com a
-    // cor a 10%, e sobre essa mistura o tom claro cai para 4,41:1.
-    cor: AppColors.secundarioSobreLavanda,
   );
 
-  const StatusMedida({
-    required this.rotulo,
-    required this.icone,
-    required this.cor,
-  });
+  const StatusMedida({required this.rotulo, required this.icone});
 
   /// Texto exibido. É ele que carrega a informação — a cor só reforça.
   final String rotulo;
@@ -54,7 +38,16 @@ enum StatusMedida {
   /// do vermelho ainda distingue um "confere" de um "x".
   final NomeIcone icone;
 
-  final Color cor;
+  /// A cor do status no tema de [cores].
+  Color cor(AppCores cores) => switch (this) {
+    dentroDaFaixa => cores.sucesso,
+    limitrofe => cores.atencao,
+    foraDaFaixa => cores.erro,
+    // O tom de "sobre lavanda", não o secundário comum: o selo pinta o
+    // próprio fundo com a cor a 10%, e no claro, sobre essa mistura, o tom
+    // comum cai para 4,41:1.
+    semReferencia => cores.secundarioSobreLavanda,
+  };
 }
 
 /// Selo de status de uma medida acústica.
@@ -80,18 +73,18 @@ class AppStatusMedida extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cor = status.cor(context.cores);
     final conteudo = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        AppIcone(nome: status.icone, cor: status.cor, tamanho: 18),
+        AppIcone(nome: status.icone, cor: cor, tamanho: 18),
         const SizedBox(width: AppSpacing.xxs + 2),
         // Flexible: num cartão estreito, ou com o texto do sistema ampliado,
         // o rótulo quebra linha em vez de estourar o selo.
         Flexible(
           child: Text(
             status.rotulo,
-            style: Theme.of(context).textTheme.labelSmall
-                ?.copyWith(color: status.cor),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(color: cor),
           ),
         ),
       ],
@@ -108,7 +101,7 @@ class AppStatusMedida extends StatelessWidget {
         vertical: AppSpacing.xxs + 2,
       ),
       decoration: BoxDecoration(
-        color: status.cor.withValues(alpha: 0.10),
+        color: cor.withValues(alpha: 0.10),
         borderRadius: AppRadius.bordaPequena,
       ),
       child: semantico,

@@ -59,6 +59,10 @@ enum ItemDaConferencia {
   qualidadeDasAmostras,
   capeV,
   conclusao,
+
+  /// Nome e registro de quem assina. Desde a US32 vêm do perfil da conta,
+  /// que começa vazio: laudo sem quem assina não serve.
+  assinatura,
 }
 
 enum SituacaoDoItem {
@@ -86,6 +90,7 @@ ConferenciaDoLaudo conferirLaudo({
   required ResultadoDaAnalise resultado,
   required AvaliacaoCapeV? capeV,
   required String conclusao,
+  required bool temAssinatura,
 }) {
   final amostrasComProblema = resultado.qualidade.values.any(
     (q) => !q.adequada,
@@ -110,5 +115,8 @@ ConferenciaDoLaudo conferirLaudo({
     ItemDaConferencia.conclusao: conclusao.trim().isEmpty
         ? SituacaoDoItem.pendente
         : SituacaoDoItem.ok,
+    ItemDaConferencia.assinatura: temAssinatura
+        ? SituacaoDoItem.ok
+        : SituacaoDoItem.pendente,
   });
 }

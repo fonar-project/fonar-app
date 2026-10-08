@@ -1,13 +1,17 @@
 # FONAR — aplicativo
 
 > [!IMPORTANT]
-> **O app funciona de ponta a ponta no aparelho, mas ainda sem backend.** O
-> login, o envio para a análise e os resultados são **placeholder**: o login
-> aceita qualquer e-mail e senha, a API de análise ainda não existe, e os
-> resultados que aparecem são de exemplo — avisados como tal na tela. Tudo o
-> que é do aparelho é de verdade: cadastro, consentimento, gravação, fila,
-> CAPE-V, laudo em PDF, com os dados salvos num banco local. O que falta, e
-> de quem depende, está em [`PENDENCIAS.md`](PENDENCIAS.md).
+> **O app funciona de ponta a ponta no aparelho; do backend, só a
+> autenticação.** O login é o **Firebase Authentication** de verdade quando o
+> build recebe a chave do projeto (ver [Conectar ao
+> Firebase](#conectar-ao-firebase-autenticação)); sem ela, roda com um login
+> de exemplo, que aceita qualquer e-mail e senha e avisa disso na tela. O
+> envio para a análise e os resultados ainda são **placeholder**: a API de
+> análise não existe, e os resultados que aparecem são de exemplo — avisados
+> como tal na tela. Tudo o que é do aparelho é de verdade: cadastro,
+> consentimento, gravação, fila, CAPE-V, laudo em PDF, com os dados salvos num
+> banco local. O que falta, e de quem depende, está em
+> [`PENDENCIAS.md`](PENDENCIAS.md).
 
 Aplicativo do FONAR, plataforma de avaliação vocal clínica para
 fonoaudiólogos. O uso previsto é durante a consulta, com o paciente presente.
@@ -23,9 +27,10 @@ plataforma: as duas rodam exatamente o mesmo conjunto de recursos.
 
 O caminho de uma avaliação, na ordem em que o profissional passa por ele:
 
-1. **Entra** (US00) e vê **os pacientes** (US01), com busca que não liga para
-   acento — e, sem conexão, entra no modo offline se houver pacientes no
-   aparelho.
+1. **Entra** (US00) com e-mail e senha conferidos pelo Firebase (US32) e vê
+   **os pacientes** (US01), com busca que não liga para acento. Esqueceu a
+   senha? O Firebase manda o link de redefinição. Sem conexão, entra no modo
+   offline com a conta da última entrada, se houver pacientes no aparelho.
 2. **Cadastra o paciente** (US02) — ou corrige os dados depois (US20). Salvar
    avisa se já existe alguém com o mesmo nome e nascimento, e sair com o
    formulário preenchido pergunta antes (US21).
@@ -37,22 +42,40 @@ O caminho de uma avaliação, na ordem em que o profissional passa por ele:
    absoluto é tratado como microfone mudo, nunca como sala silenciosa.
 5. **Grava as tarefas** (US05) — vogal sustentada e fala encadeada —, com cada
    WAV conferido depois de gravado. Dá para **ouvir** cada gravação (US13).
-   Voltar à gravação no mesmo dia **retoma a sessão** (US16).
+   Voltar à gravação no mesmo dia **retoma a sessão** (US16). A gravação é
+   **guiada, uma etapa por vez** (US26): instrução grande para o paciente,
+   revisão das amostras antes de enviar e, no desktop, Espaço e R como atalhos.
 6. **Manda para a análise** pela **fila** (US06), que funciona sem conexão e
    sobe quando a rede voltar. Sessões que ficaram paradas no aparelho aparecem
    no perfil para enviar ou descartar (US19).
 7. **Vê o resultado** (US07): as medidas, classificadas só se houver faixa de
    referência validada — hoje nenhuma há, e o app diz isso. O **espectrograma**
-   abre em tela cheia, deitado no celular (US17).
-8. **Registra a CAPE-V** (US08), vê a **evolução** entre sessões (US09) — com
-   um modo para mostrar ao paciente — e gera o **laudo em PDF** (US10).
+   abre em tela cheia, deitado no celular (US17). AVQI e CPPS vêm em
+   destaque, as demais medidas menores, e o próximo passo — CAPE-V ou laudo —
+   fica num rodapé fixo (US27).
+8. **Registra a CAPE-V** (US08) numa régua de 100 mm, ouvindo a amostra — no
+   celular, cada escala abre em tela cheia, para marcar deitado (US28) —, vê a
+   **evolução** entre sessões (US09) — com um modo para mostrar ao paciente — e
+   gera o **laudo em PDF** (US10).
 
 Em volta disso: o **perfil do paciente** (US12) reúne dados, consentimento,
 sessões, laudos e fila; o **histórico** (US23) lista as avaliações de todos os
 pacientes, por mês, para achar uma pelo quando; a **conta** (US11) tem os dados do profissional e o
 sair; tudo fica num **banco local** (US14); o token vai para o **cofre do
 sistema** (US18); e, depois de 5 minutos sem uso, o app **bloqueia** e pede a
-senha, sem perder a tela que estava aberta (US24).
+senha, sem perder a tela que estava aberta (US24). O app tem **tema escuro**,
+que segue o sistema ou a escolha feita na conta (US30), e **movimento
+funcional** — trocas de tela, de etapa e de estado com transição curta, que
+some com o movimento reduzido do sistema —, com as ações presas no rodapé só
+quando a tela tem altura para isso (US31).
+
+A **autenticação** (US32) é o Firebase Authentication pela API REST, o mesmo
+código no Android e no Windows. A sessão é da conta: o roteador manda para a
+entrada quem não entrou, cada envio da fila leva o id de quem gravou e só sobe
+na sessão dessa pessoa, o nome e o registro que vão no laudo são guardados por
+conta, e sair apaga a credencial do aparelho. Quando o Firebase não renova
+mais a sessão (senha trocada, conta desativada), a fila mostra "Entrar de
+novo", e o envio sobe sozinho depois da entrada.
 
 A numeração das US03 a US10 foi deduzida das telas do protótipo — confira com
 o backlog antes de citar no texto do TCC (ver `PENDENCIAS.md`).
@@ -302,6 +325,56 @@ repositório. O padrão é `http://localhost:8080` (ver
 flutter run -d windows --dart-define=FONAR_API_BASE_URL=https://...
 ```
 
+### Conectar ao Firebase (autenticação)
+
+O login fala com o Firebase Authentication pela **API REST**, com o Dio que
+já estava no projeto. Não usamos o plugin `firebase_auth`: ele declara o
+Windows como "só para desenvolvimento, produção não suportada", e a regra do
+projeto é que Android e Windows têm as mesmas funcionalidades. Por isso não há
+`google-services.json` nem `firebase_options.dart` — o app só precisa da
+**chave Web API** do projeto `fonar-763db`.
+
+**No console do Firebase** (uma vez, por quem administra o projeto):
+
+1. **Authentication → Sign-in method → E-mail/senha**: ativar. Só a primeira
+   opção; o "link por e-mail" não é usado.
+2. **Authentication → Users → Adicionar usuário**: criar a conta de cada
+   profissional (e uma de teste). O app não tem cadastro de conta — ver
+   `PENDENCIAS.md`.
+3. **Configurações do projeto → Geral → Chave de API da Web**: é a chave. Se
+   aparecer "nenhuma chave", ative o Authentication primeiro (passo 1).
+4. Opcional, recomendado: **Authentication → Modelos → Redefinição de senha**,
+   conferir o texto em português. O app pede o e-mail em pt-BR.
+5. Opcional, recomendado: no Google Cloud Console, em **APIs e serviços →
+   Credenciais**, restringir essa chave às APIs **Identity Toolkit** e
+   **Token Service**.
+
+**No build**, a chave entra por `--dart-define`, como a URL da API:
+
+```bash
+flutter run -d windows --dart-define=FONAR_FIREBASE_API_KEY=AIza...
+```
+
+Ou num arquivo fora do git — `dart_defines.json` está no `.gitignore`:
+
+```json
+{ "FONAR_FIREBASE_API_KEY": "AIza...", "FONAR_API_BASE_URL": "https://..." }
+```
+
+```bash
+flutter run -d windows --dart-define-from-file=dart_defines.json
+```
+
+A chave não é segredo — o Firebase a põe dentro de todo app cliente, e quem
+protege os dados são as regras do projeto —, mas fica fora do repositório para
+cada ambiente apontar para o seu projeto.
+
+**Sem a chave**, o app roda com o **login de exemplo**: aceita qualquer e-mail
+e senha, cada e-mail vira uma conta "exemplo:…", e a tela de entrada avisa. É o
+que roda nos testes e no CI, e serve para desenvolver sem rede. Um build de
+**distribuição** (`--release`) sem a chave se recusa a abrir: seria dado de
+saúde aberto a qualquer senha.
+
 ---
 
 ## Verificando o ambiente
@@ -358,7 +431,8 @@ lib/
 │                          antes de sair de formulário alterado
 ├── core/                  infraestrutura, sem regra de negócio
 │   ├── banco/             o banco local (Drift): tabelas, migração, ids
-│   ├── config/            URL da API, timeouts e versão, via --dart-define
+│   ├── auth/              Firebase Auth pela API REST, credencial e token
+│   ├── config/            URL da API, chave do Firebase, timeouts e versão
 │   ├── error/             AppException selado; erro traduzido para o usuário
 │   ├── network/           cliente Dio, interceptors e estado da conexão
 │   ├── offline/           se dá para entrar sem conexão
@@ -373,7 +447,7 @@ lib/
 ├── l10n/
 │   └── app_strings.dart   TODO texto de interface, em pt-BR
 └── features/              uma pasta por funcionalidade
-    ├── auth/              login, sessão e profissional logado
+    ├── auth/              entrada, sessão por conta, desbloqueio e perfil
     ├── pacientes/         lista, cadastro, perfil e correção dos dados
     ├── consentimento/     registro e retirada
     ├── captura/           aferição, gravação, retomada e sessões paradas
@@ -486,12 +560,16 @@ desenvolvimento: todo build de debug funciona sem ela. Se alguém "limpar" essa
 linha, o app continua perfeito na máquina de quem removeu e chega sem rede na
 mão do usuário.
 
-### Token no cofre do sistema, e sem backup automático no Android
+### Credencial no cofre do sistema, e sem backup automático no Android
 
-O token fica em `lib/core/storage/token_storage.dart`, no cofre do sistema
-(`flutter_secure_storage`): cifrado com chave do Keystore no Android e com
-chave guardada no Gerenciador de Credenciais no Windows. Token de acesso a
-dado de saúde não pode ficar em `SharedPreferences`.
+A credencial do Firebase — o token de acesso, o de renovação e o id da conta,
+juntos — fica no cofre do sistema (`flutter_secure_storage`, por
+`lib/core/storage/token_storage.dart` e `lib/core/auth/credencial.dart`):
+cifrada com chave do Keystore no Android e com chave guardada no Gerenciador
+de Credenciais no Windows. Credencial de acesso a dado de saúde não pode ficar
+em `SharedPreferences`. O token de acesso vale uma hora e é renovado antes de
+vencer (`lib/core/auth/fonte_de_token.dart`), sem pedir a senha; sair da conta
+apaga a credencial, e com ela o modo offline daquela conta.
 
 O `AndroidManifest.xml` desliga o backup automático (`allowBackup` e
 `dataExtractionRules`). Não reative: o padrão do Android sobe a área privada

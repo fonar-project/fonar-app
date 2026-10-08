@@ -23,10 +23,12 @@ import 'package:go_router/go_router.dart';
 
 import 'package:fonar_app/design_system/tokens/app_colors.dart';
 import 'package:fonar_app/design_system/widgets/app_toque.dart';
+import 'package:fonar_app/features/auth/data/sessao.dart';
 
 import '../../apoio/banco_em_memoria.dart';
 import '../../apoio/hover.dart';
 import '../../apoio/repositorios_em_memoria.dart';
+import '../../apoio/sessao_de_teste.dart';
 
 const _ana = Paciente(
   id: 'p-ana',
@@ -120,6 +122,7 @@ Future<GoRouter> _abrir(
   final container = ProviderContainer(
     retry: (_, _) => null,
     overrides: [
+      sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
       bancoDeTeste(),
       conexaoOnlineProvider.overrideWithValue(false),
       pacientesProvider.overrideWith((ref) async => const [_ana, _bia]),
@@ -195,6 +198,7 @@ void main() {
       );
       final container = ProviderContainer(
         overrides: [
+          sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
           pacientesProvider.overrideWith((ref) async => const [_ana, _bia]),
           repositorioAnalisesProvider.overrideWithValue(_Analises(_padrao)),
           repositorioLaudosProvider.overrideWithValue(laudos),
@@ -255,8 +259,12 @@ void main() {
 
     // `push`: o resultado vem por cima do histórico.
     expect(find.byType(AnaliseResultadoPage), findsOneWidget);
+    // O paciente certo, no cabeçalho do resultado.
     expect(
-      find.text(AppStrings.consentimentoPaciente('Ana de Teste')),
+      find.descendant(
+        of: find.byType(AnaliseResultadoPage),
+        matching: find.text('Ana de Teste'),
+      ),
       findsOneWidget,
     );
     await tester.tap(find.bySemanticsLabel(AppStrings.voltar).first);

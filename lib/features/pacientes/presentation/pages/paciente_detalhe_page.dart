@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/trilhas.dart';
+import '../../../../app/app_estrutura.dart';
 import '../../../../core/relogio.dart';
 import '../../../../design_system/breakpoints.dart';
-import '../../../../design_system/tokens/app_colors.dart';
+import '../../../../design_system/tokens/app_cores.dart';
+import '../../../../design_system/tokens/app_movimento.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
@@ -58,48 +61,65 @@ class PacienteDetalhePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final paciente = ref.watch(pacienteProvider(pacienteId));
 
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, restricoes) {
-          final largura = Breakpoints.de(restricoes.maxWidth);
+    return AppEstrutura(
+      destino: DestinoPrincipal.pacientes,
+      navegacaoInferior: false,
+      child: Scaffold(
+        body: LayoutBuilder(
+          builder: (context, restricoes) {
+            final largura = Breakpoints.de(restricoes.maxWidth);
 
-          final Widget conteudo = switch (paciente) {
-            AsyncData(value: final p?) => _Perfil(
-              paciente: p,
-              largura: largura,
-            ),
-            AsyncData() => AppEstado.central(
-              titulo: AppStrings.perfilNaoEncontrado,
-              texto: AppStrings.perfilNaoEncontradoTexto,
-              acao: AppBotao.secundario(
-                rotulo: AppStrings.perfilVoltarParaLista,
-                aoTocar: () => context.goNamed(AppRoutes.pacientesNome),
+            final Widget conteudo = switch (paciente) {
+              AsyncData(value: final p?) => _Perfil(
+                paciente: p,
+                largura: largura,
               ),
-            ),
-            AsyncError() => AppEstado.central(
-              titulo: AppStrings.perfilErroCarregar,
-              acao: AppBotao.secundario(
-                rotulo: AppStrings.tentarNovamente,
-                aoTocar: () => ref.invalidate(pacientesProvider),
+              AsyncData() => AppEstado.central(
+                titulo: AppStrings.perfilNaoEncontrado,
+                texto: AppStrings.perfilNaoEncontradoTexto,
+                acao: AppBotao.secundario(
+                  rotulo: AppStrings.perfilVoltarParaLista,
+                  aoTocar: () => context.goNamed(AppRoutes.pacientesNome),
+                ),
               ),
-            ),
-            _ => const Center(
-              child: CircularProgressIndicator(color: AppColors.roxoProfundo),
-            ),
-          };
+              AsyncError() => AppEstado.central(
+                titulo: AppStrings.perfilErroCarregar,
+                acao: AppBotao.secundario(
+                  rotulo: AppStrings.tentarNovamente,
+                  aoTocar: () => ref.invalidate(pacientesProvider),
+                ),
+              ),
+              _ => Center(
+                child: CircularProgressIndicator(color: context.cores.acento),
+              ),
+            };
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AppCabecalhoDeTarefa(
-                titulo: AppStrings.pacienteDetalheTitulo,
-                aoVoltar: () => _voltar(context),
-                compacta: largura == LarguraDeTela.compacta,
-              ),
-              Expanded(child: conteudo),
-            ],
-          );
-        },
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AppCabecalhoDeTarefa(
+                  titulo: AppStrings.pacienteDetalheTitulo,
+                  aoVoltar: () => _voltar(context),
+                  largura: largura,
+                  trilha: [
+                    Trilhas.pacientes(context),
+                    ItemDaTrilha(
+                      paciente.value?.nome ?? AppStrings.pacienteDetalheTitulo,
+                    ),
+                  ],
+                ),
+                Expanded(
+                  // Carregando → pronto (ou erro): o conteúdo novo entra.
+                  child: AppTrocaAnimada(
+                    chave: conteudo.runtimeType,
+                    preencher: true,
+                    child: conteudo,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -177,7 +197,7 @@ class _DadosEAcoes extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final textos = Theme.of(context).textTheme;
     final secundario = textos.bodyMedium?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
     final consentimento = ref.watch(consentimentoProvider(paciente.id));
     final retirada = ref.watch(retiradaEmVigorProvider(paciente.id)).value;
@@ -227,9 +247,7 @@ class _DadosEAcoes extends ConsumerWidget {
           const SizedBox(height: AppSpacing.xs),
           Text(
             AppStrings.perfilSemPerfilDeReferencia,
-            style: textos.bodySmall?.copyWith(
-              color: AppColors.secundarioSobreCreme,
-            ),
+            style: textos.bodySmall?.copyWith(color: context.cores.secundario),
           ),
         ],
         const SizedBox(height: AppSpacing.xs),
@@ -268,13 +286,13 @@ class _DadosEAcoes extends ConsumerWidget {
             titulo: AppStrings.consentimentoErroCarregar,
             texto: AppStrings.consentimentoNaoRegistradoTexto,
           ),
-          _ => const Align(
+          _ => Align(
             alignment: Alignment.centerLeft,
             child: SizedBox.square(
               dimension: 24,
               child: CircularProgressIndicator(
                 strokeWidth: 3,
-                color: AppColors.roxoProfundo,
+                color: context.cores.acento,
               ),
             ),
           ),
@@ -367,7 +385,7 @@ class _Sessoes extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final textos = Theme.of(context).textTheme;
     final secundario = textos.bodyMedium?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
     final analises = ref.watch(analisesDoPacienteProvider(pacienteId));
     final laudos = {
@@ -468,8 +486,8 @@ class _Sessoes extends ConsumerWidget {
             ),
           ],
           _ => [
-            const Center(
-              child: CircularProgressIndicator(color: AppColors.roxoProfundo),
+            Center(
+              child: CircularProgressIndicator(color: context.cores.acento),
             ),
           ],
         },
@@ -508,7 +526,7 @@ class _LinhaDaSessao extends StatelessWidget {
   Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
     final secundario = textos.bodySmall?.copyWith(
-      color: AppColors.secundarioSobreCreme,
+      color: context.cores.secundario,
     );
     final quando = analise.realizadaEm;
     final data = quando == null
@@ -520,7 +538,7 @@ class _LinhaDaSessao extends StatelessWidget {
 
     Widget marca(NomeIcone icone, String texto) => Row(
       children: [
-        AppIcone(nome: icone, cor: AppColors.cinzaChumbo, tamanho: 18),
+        AppIcone(nome: icone, cor: context.cores.texto, tamanho: 18),
         const SizedBox(width: AppSpacing.xxs),
         Flexible(child: Text(texto, style: textos.bodySmall)),
       ],
@@ -542,8 +560,8 @@ class _LinhaDaSessao extends StatelessWidget {
           conteudo: (context) => Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: AppColors.branco,
-              border: Border.all(color: AppColors.lavandaClaro),
+              color: context.cores.cartao,
+              border: Border.all(color: context.cores.borda),
               borderRadius: AppRadius.bordaMedia,
             ),
             child: Row(
@@ -611,9 +629,9 @@ class _LinhaDaSessao extends StatelessWidget {
                     ],
                   ),
                 ),
-                const AppIcone(
+                AppIcone(
                   nome: NomeIcone.avancar,
-                  cor: AppColors.roxoProfundo,
+                  cor: context.cores.acento,
                   tamanho: 22,
                 ),
               ],

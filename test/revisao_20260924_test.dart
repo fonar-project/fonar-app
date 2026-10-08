@@ -10,9 +10,7 @@ import 'package:fonar_app/core/network/conexao.dart';
 import 'package:fonar_app/features/auth/data/sessao.dart';
 import 'package:fonar_app/core/relogio.dart';
 import 'package:fonar_app/features/auth/data/bloqueio_por_inatividade.dart';
-import 'package:fonar_app/features/auth/domain/profissional.dart';
-import 'package:fonar_app/features/conta/data/repositorio_da_conta_placeholder.dart';
-import 'package:fonar_app/features/conta/domain/dados_do_profissional.dart';
+import 'package:fonar_app/features/auth/data/repositorio_autenticacao_firebase.dart';
 import 'package:fonar_app/features/conta/presentation/conta_controlador.dart';
 import 'package:fonar_app/features/captura/presentation/gravacao_controlador.dart';
 import 'package:fonar_app/features/captura/data/gravador_record.dart';
@@ -36,6 +34,7 @@ import 'apoio/banco_em_memoria.dart';
 import 'apoio/repositorios_em_memoria.dart';
 import 'features/reproducao/reproducao_test.dart' show ReprodutorFalso;
 import 'features/captura/wav_de_teste.dart';
+import 'apoio/sessao_de_teste.dart';
 
 Future<void> settle() async {
   for (var n = 0; n < 12; n++) {
@@ -74,12 +73,10 @@ class Arquivos implements ArquivosDeAmostra {
       '/novo.wav';
 }
 
-class ContaLenta implements RepositorioDaConta {
+class ContaLenta extends AutenticacaoFalsa {
   final pendente = Completer<void>();
   @override
   Future<void> sair() => pendente.future;
-  @override
-  Future<void> salvar(Profissional profissional) async {}
 }
 
 class DiscoComFalha extends Arquivos {
@@ -167,7 +164,7 @@ void main() {
           repositorioFilaProvider.overrideWithValue(fila),
           arquivosDeAmostraProvider.overrideWithValue(disco),
           conexaoOnlineProvider.overrideWithValue(false),
-          sessaoAbertaProvider.overrideWith(() => Sessao(false)),
+          sessaoProvider.overrideWith(Sessao.new),
         ],
       );
       addTearDown(c.dispose);
@@ -212,9 +209,9 @@ void main() {
       final conta = ContaLenta();
       final c = ProviderContainer(
         overrides: [
-          sessaoAbertaProvider.overrideWith(() => Sessao(true)),
+          sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
           relogioProvider.overrideWithValue(() => agora),
-          repositorioDaContaProvider.overrideWithValue(conta),
+          repositorioAutenticacaoProvider.overrideWithValue(conta),
         ],
       );
       addTearDown(c.dispose);
@@ -334,7 +331,7 @@ void main() {
         ),
         envioDeAnaliseProvider.overrideWithValue(envio),
         conexaoOnlineProvider.overrideWithValue(true),
-        sessaoAbertaProvider.overrideWith(() => Sessao(true)),
+        sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
       ],
     );
     addTearDown(c.dispose);
@@ -358,14 +355,14 @@ void main() {
           repositorioConsentimentoProvider.overrideWithValue(consentimento),
           envioDeAnaliseProvider.overrideWithValue(envio),
           conexaoOnlineProvider.overrideWithValue(true),
-          sessaoAbertaProvider.overrideWith(() => Sessao(true)),
+          sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
         ],
       );
       addTearDown(c.dispose);
       await c.read(filaControladorProvider.future);
       await settle();
       expect(consentimento.consultando, isTrue);
-      c.read(sessaoAbertaProvider.notifier).encerrar();
+      c.read(sessaoProvider.notifier).encerrar();
       await c.pump();
       consentimento.pendente.complete();
       await settle();

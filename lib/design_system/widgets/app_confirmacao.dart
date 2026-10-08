@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../tokens/app_colors.dart';
+import '../tokens/app_cores.dart';
 import '../tokens/app_movimento.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_spacing.dart';
@@ -56,7 +56,7 @@ Future<bool> appConfirmar(
     context: context,
     barrierDismissible: true,
     barrierLabel: cancelar,
-    barrierColor: AppColors.cinzaChumbo.withValues(alpha: 0.4),
+    barrierColor: context.cores.barreira,
     // Pelo token, não pelo `MediaQuery` direto: `AppMovimento` é onde a
     // preferência de movimento reduzido é lida no projeto, e ele usa a versão
     // `maybe`, que não estoura onde não há `MediaQuery` acima.
@@ -95,7 +95,7 @@ class _Confirmacao extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 440),
           child: Material(
-            color: AppColors.creme,
+            color: context.cores.fundo,
             borderRadius: AppRadius.bordaMedia,
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(AppSpacing.lg),
