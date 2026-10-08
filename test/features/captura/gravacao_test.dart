@@ -683,6 +683,7 @@ void main() {
 
   for (final (nome, tamanho) in [
     ('celular', const Size(390, 844)),
+    ('celular deitado', const Size(844, 390)),
     ('desktop', const Size(1440, 900)),
   ]) {
     testWidgets('$nome não estoura com o texto do sistema em 200%', (

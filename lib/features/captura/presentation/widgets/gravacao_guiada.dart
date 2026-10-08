@@ -8,6 +8,7 @@ import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
+import '../../../../design_system/widgets/app_area_com_acoes.dart';
 import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_fundo.dart';
 import '../../../../design_system/widgets/app_icone.dart';
@@ -178,125 +179,133 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
           ],
         );
 
+        // Tela baixa — celular deitado, ou o texto do sistema ampliado —: nada
+        // fica preso, tudo rola junto. Ver `AppAreaComAcoes`.
+        final baixa =
+            restricoes.maxHeight < AppAreaComAcoes.alturaParaFixar(context);
+
         final Widget tela;
         if (compacta) {
-          tela = Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.sm,
-                ),
-                child: etapas,
+          tela = AppAreaComAcoes(
+            topo: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
               ),
-              Expanded(
-                child: _Rolavel(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  // No celular o texto do rodapé rola com o conteúdo: na
-                  // barra fixa, com o texto em 200%, não sobraria tela.
-                  child: palco.rodape == null
-                      ? conteudo
-                      : Column(
-                          mainAxisSize: MainAxisSize.min,
+              child: etapas,
+            ),
+            padding: const EdgeInsets.all(AppSpacing.md),
+            centralizar: true,
+            // No celular o texto do rodapé rola com o conteúdo: na barra fixa,
+            // com o texto em 200%, não sobraria tela.
+            corpo: palco.rodape == null
+                ? conteudo
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      conteudo,
+                      const SizedBox(height: AppSpacing.sm),
+                      _Apoio(palco.rodape!),
+                    ],
+                  ),
+            acoes: palco.acoes.isEmpty
+                ? const SizedBox.shrink()
+                : DecoratedBox(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(color: context.cores.borda),
+                      ),
+                    ),
+                    child: SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            conteudo,
-                            const SizedBox(height: AppSpacing.sm),
-                            _Apoio(palco.rodape!),
+                            for (final (i, acao) in palco.acoes.indexed) ...[
+                              if (i > 0) const SizedBox(height: AppSpacing.xs),
+                              acao.botao(ocupaLargura: true),
+                            ],
                           ],
                         ),
-                ),
-              ),
-              if (palco.acoes.isNotEmpty)
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    border: Border(top: BorderSide(color: context.cores.borda)),
-                  ),
-                  child: SafeArea(
-                    top: false,
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          for (final (i, acao) in palco.acoes.indexed) ...[
-                            if (i > 0) const SizedBox(height: AppSpacing.xs),
-                            acao.botao(ocupaLargura: true),
-                          ],
-                        ],
                       ),
                     ),
                   ),
-                ),
-            ],
           );
         } else {
-          tela = Padding(
-            padding: const EdgeInsets.fromLTRB(34, 26, 34, 26),
+          final corpoDoCartao = Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              conteudo,
+              if (palco.acoes.isNotEmpty && palco.rodape == null) ...[
+                const SizedBox(height: AppSpacing.lg),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.xs,
+                  children: [
+                    for (final acao in palco.acoes)
+                      acao.botao(ocupaLargura: false),
+                  ],
+                ),
+              ],
+            ],
+          );
+          final cartao = Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: context.cores.borda),
+              borderRadius: AppRadius.bordaMedia,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                etapas,
-                const SizedBox(height: 22),
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: context.cores.borda),
-                      borderRadius: AppRadius.bordaMedia,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          child: _Rolavel(
-                            padding: const EdgeInsets.all(AppSpacing.xl),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                conteudo,
-                                if (palco.acoes.isNotEmpty &&
-                                    palco.rodape == null) ...[
-                                  const SizedBox(height: AppSpacing.lg),
-                                  Wrap(
-                                    alignment: WrapAlignment.center,
-                                    spacing: AppSpacing.sm,
-                                    runSpacing: AppSpacing.xs,
-                                    children: [
-                                      for (final acao in palco.acoes)
-                                        acao.botao(ocupaLargura: false),
-                                    ],
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ),
-                        if (palco.rodape case final rodape?)
-                          _Rodape(texto: rodape, acoes: palco.acoes)
-                        else
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                              AppSpacing.md,
-                              0,
-                              AppSpacing.md,
-                              AppSpacing.sm,
-                            ),
-                            child: Text(
-                              AppStrings.capturaAtalhos,
-                              textAlign: TextAlign.end,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: context.cores.secundario),
-                            ),
-                          ),
-                      ],
+                if (baixa)
+                  Padding(
+                    padding: const EdgeInsets.all(AppSpacing.xl),
+                    child: corpoDoCartao,
+                  )
+                else
+                  Expanded(
+                    child: _Rolavel(
+                      padding: const EdgeInsets.all(AppSpacing.xl),
+                      child: corpoDoCartao,
                     ),
                   ),
-                ),
+                if (palco.rodape case final rodape?)
+                  _Rodape(texto: rodape, acoes: palco.acoes)
+                else
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.md,
+                      0,
+                      AppSpacing.md,
+                      AppSpacing.sm,
+                    ),
+                    child: Text(
+                      AppStrings.capturaAtalhos,
+                      textAlign: TextAlign.end,
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: context.cores.secundario),
+                    ),
+                  ),
               ],
             ),
           );
+          final coluna = Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              etapas,
+              const SizedBox(height: 22),
+              if (baixa) cartao else Expanded(child: cartao),
+            ],
+          );
+          const respiro = EdgeInsets.fromLTRB(34, 26, 34, 26);
+          tela = baixa
+              ? SingleChildScrollView(padding: respiro, child: coluna)
+              : Padding(padding: respiro, child: coluna);
         }
 
         // O foco começa na tela, para os atalhos valerem sem clicar antes.

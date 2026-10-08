@@ -9,6 +9,7 @@ import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
+import '../../../../design_system/widgets/app_area_com_acoes.dart';
 import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_cabecalho_de_tarefa.dart';
 import '../../../../design_system/widgets/app_campo_texto.dart';
@@ -218,92 +219,86 @@ class _FormularioState extends ConsumerState<_Formulario> {
       ocupaLargura: compacta,
     );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Fora da rolagem no desktop: ouve-se enquanto se marca.
-        if (!compacta)
-          _Faixa(embaixo: true, child: _Ouvir(analiseId: widget.analiseId)),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(
-              horizontal: lateral,
-              vertical: AppSpacing.lg,
-            ),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 880),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (compacta) ...[
-                      _Ouvir(analiseId: widget.analiseId),
-                      const SizedBox(height: AppSpacing.md),
-                    ],
-                    Text(
-                      AppStrings.capeVExplicacao,
-                      style: textos.bodyMedium?.copyWith(
-                        color: context.cores.secundario,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    for (final parametro in ParametroCapeV.values) ...[
-                      if (compacta)
-                        _ParametroCompacto(
-                          parametro: parametro,
-                          nota: estado.notas[parametro] ?? const NotaCapeV(),
-                          problema: estado.problemas[parametro],
-                          aoAbrir: ocupado ? null : () => _abrir(parametro),
-                        )
-                      else
-                        _Parametro(
-                          parametro: parametro,
-                          nota: estado.notas[parametro] ?? const NotaCapeV(),
-                          problema: estado.problemas[parametro],
-                          habilitado: !ocupado,
-                          controlador: _controlador,
-                        ),
-                      SizedBox(
-                        height: compacta ? AppSpacing.sm : AppSpacing.md,
-                      ),
-                    ],
-                    AppCampoTexto(
-                      rotulo: AppStrings.capeVComentarios,
-                      controlador: _comentarios,
-                      somenteLeitura: ocupado,
-                      linhas: 3,
-                      capitalizacao: TextCapitalization.sentences,
-                    ),
-                  ],
+    // Player em cima e registrar embaixo, presos quando há altura; com a tela
+    // baixa, tudo rola junto — ver `AppAreaComAcoes`.
+    return AppAreaComAcoes(
+      // Fora da rolagem no desktop: ouve-se enquanto se marca.
+      topo: compacta
+          ? null
+          : _Faixa(embaixo: true, child: _Ouvir(analiseId: widget.analiseId)),
+      padding: EdgeInsets.symmetric(
+        horizontal: lateral,
+        vertical: AppSpacing.lg,
+      ),
+      corpo: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 880),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (compacta) ...[
+                _Ouvir(analiseId: widget.analiseId),
+                const SizedBox(height: AppSpacing.md),
+              ],
+              Text(
+                AppStrings.capeVExplicacao,
+                style: textos.bodyMedium?.copyWith(
+                  color: context.cores.secundario,
                 ),
               ),
-            ),
-          ),
-        ),
-        // Registrar preso embaixo: com seis escalas, o botão no fim da
-        // página ficava longe de quem acabou de marcar a última.
-        _Faixa(
-          embaixo: false,
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 880),
-              child: Column(
-                crossAxisAlignment: compacta
-                    ? CrossAxisAlignment.stretch
-                    : CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  registrar,
-                  AppMensagemDeCampo(
-                    erro: estado.erroGeral,
-                    corDoApoio: context.cores.secundario,
+              const SizedBox(height: AppSpacing.lg),
+              for (final parametro in ParametroCapeV.values) ...[
+                if (compacta)
+                  _ParametroCompacto(
+                    parametro: parametro,
+                    nota: estado.notas[parametro] ?? const NotaCapeV(),
+                    problema: estado.problemas[parametro],
+                    aoAbrir: ocupado ? null : () => _abrir(parametro),
+                  )
+                else
+                  _Parametro(
+                    parametro: parametro,
+                    nota: estado.notas[parametro] ?? const NotaCapeV(),
+                    problema: estado.problemas[parametro],
+                    habilitado: !ocupado,
+                    controlador: _controlador,
                   ),
-                ],
+                SizedBox(height: compacta ? AppSpacing.sm : AppSpacing.md),
+              ],
+              AppCampoTexto(
+                rotulo: AppStrings.capeVComentarios,
+                controlador: _comentarios,
+                somenteLeitura: ocupado,
+                linhas: 3,
+                capitalizacao: TextCapitalization.sentences,
               ),
+            ],
+          ),
+        ),
+      ),
+      // Registrar preso embaixo: com seis escalas, o botão no fim da página
+      // ficava longe de quem acabou de marcar a última.
+      acoes: _Faixa(
+        embaixo: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 880),
+            child: Column(
+              crossAxisAlignment: compacta
+                  ? CrossAxisAlignment.stretch
+                  : CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                registrar,
+                AppMensagemDeCampo(
+                  erro: estado.erroGeral,
+                  corDoApoio: context.cores.secundario,
+                ),
+              ],
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 }

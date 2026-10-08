@@ -83,12 +83,15 @@ final _rotas = <(String, Map<String, String>)>[
 ];
 
 /// Os dois alvos de design do projeto, o celular deitado (espectrograma e
-/// gráfico de evolução) e a janela estreita de desktop.
+/// gráfico de evolução), a janela estreita de desktop — e as duas pontas: o
+/// celular pequeno, comum entre os Android de entrada, e o monitor Full HD.
 const _larguras = <(String, Size)>[
+  ('360x640', Size(360, 640)),
   ('390x844', Size(390, 844)),
   ('844x390 deitado', Size(844, 390)),
   ('1024x768', Size(1024, 768)),
   ('1440x900', Size(1440, 900)),
+  ('1920x1080', Size(1920, 1080)),
 ];
 
 /// Escalas de texto do sistema. 200% é o teto do Android e do Windows.

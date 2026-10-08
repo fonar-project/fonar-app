@@ -10,6 +10,7 @@ import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/tokens/app_typography.dart';
+import '../../../../design_system/widgets/app_area_com_acoes.dart';
 import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_cabecalho_de_tarefa.dart';
 import '../../../../design_system/widgets/app_estado.dart';
@@ -259,63 +260,58 @@ class _Resultado extends ConsumerWidget {
       ],
     );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
+    // Ações presas embaixo quando há altura; no celular deitado ou com o
+    // texto ampliado, elas rolam junto — ver `AppAreaComAcoes`.
+    return AppAreaComAcoes(
+      padding: EdgeInsets.symmetric(
+        horizontal: compacta ? AppSpacing.md : AppSpacing.xl,
+        vertical: AppSpacing.lg,
+      ),
+      corpo: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1040),
+          child: corpo,
+        ),
+      ),
+      acoes: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: context.cores.borda)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
             padding: EdgeInsets.symmetric(
               horizontal: compacta ? AppSpacing.md : AppSpacing.xl,
-              vertical: AppSpacing.lg,
+              vertical: AppSpacing.md,
             ),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1040),
-                child: corpo,
-              ),
-            ),
+            child: compacta
+                ? acoes.principal(ocupaLargura: true)
+                : Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: AppSpacing.md,
+                    runSpacing: AppSpacing.sm,
+                    children: [
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 440),
+                        child: Text(
+                          AppStrings.resultadoRodape,
+                          style: secundario,
+                        ),
+                      ),
+                      Wrap(
+                        spacing: AppSpacing.sm,
+                        runSpacing: AppSpacing.xs,
+                        children: [
+                          acoes.secundarias(ocupaLargura: false),
+                          acoes.principal(ocupaLargura: false),
+                        ],
+                      ),
+                    ],
+                  ),
           ),
         ),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: context.cores.borda)),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: compacta ? AppSpacing.md : AppSpacing.xl,
-                vertical: AppSpacing.md,
-              ),
-              child: compacta
-                  ? acoes.principal(ocupaLargura: true)
-                  : Wrap(
-                      alignment: WrapAlignment.spaceBetween,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: AppSpacing.md,
-                      runSpacing: AppSpacing.sm,
-                      children: [
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 440),
-                          child: Text(
-                            AppStrings.resultadoRodape,
-                            style: secundario,
-                          ),
-                        ),
-                        Wrap(
-                          spacing: AppSpacing.sm,
-                          runSpacing: AppSpacing.xs,
-                          children: [
-                            acoes.secundarias(ocupaLargura: false),
-                            acoes.principal(ocupaLargura: false),
-                          ],
-                        ),
-                      ],
-                    ),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
