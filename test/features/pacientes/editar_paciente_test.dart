@@ -19,9 +19,11 @@ import 'package:fonar_app/features/pacientes/presentation/edicao_paciente_contro
 import 'package:fonar_app/features/pacientes/presentation/pages/editar_paciente_page.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 import 'package:go_router/go_router.dart';
+import 'package:fonar_app/features/auth/data/sessao.dart';
 
 import '../../apoio/banco_em_memoria.dart';
 import '../../apoio/repositorios_em_memoria.dart';
+import '../../apoio/sessao_de_teste.dart';
 
 NovoPaciente _dados({
   String nome = 'Ana de Teste',
@@ -55,6 +57,7 @@ Future<(GoRouter, RepositorioPacientesPlaceholder, String)> _abrir(
   final container = ProviderContainer(
     retry: (_, _) => null,
     overrides: [
+      sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
       bancoDeTeste(),
       conexaoOnlineProvider.overrideWithValue(false),
       relogioProvider.overrideWithValue(() => DateTime(2026, 9, 24)),
@@ -241,7 +244,10 @@ void main() {
     final pacientes = _PacientesLentos();
     final ana = await pacientes.cadastrar(_dados());
     final container = ProviderContainer(
-      overrides: [repositorioPacientesProvider.overrideWithValue(pacientes)],
+      overrides: [
+        sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
+        repositorioPacientesProvider.overrideWithValue(pacientes),
+      ],
     );
     addTearDown(container.dispose);
     container.listen(pacientesProvider, (_, _) {});

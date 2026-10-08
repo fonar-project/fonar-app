@@ -31,6 +31,7 @@ import 'package:fonar_app/l10n/app_strings.dart';
 import 'wav_de_teste.dart';
 
 import '../../apoio/repositorios_em_memoria.dart';
+import '../../apoio/sessao_de_teste.dart';
 
 /// Sala silenciosa: a aferição sempre libera.
 class _SalaQuieta implements FonteDeNivel {
@@ -182,7 +183,7 @@ Future<_Cenario> _abrir(
         repositorioFilaProvider.overrideWithValue(fila),
         envioDeAnaliseProvider.overrideWithValue(_EnvioQueSegura()),
         // Profissional com a sessão aberta: sem ela a fila não envia.
-        sessaoAbertaProvider.overrideWith(() => Sessao(true)),
+        sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
         pacientesProvider.overrideWith(
           (ref) async => const [
             Paciente(

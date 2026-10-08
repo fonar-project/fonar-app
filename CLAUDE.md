@@ -89,6 +89,24 @@ Drift. Gráficos com fl_chart. Áudio: record para captura, audioplayers para
 reprodução. Ícones com vector_graphics_compiler.
 Backend: Firebase (auth e dados) + API Python no Cloud Run (análise).
 
+### Autenticação — Firebase pela API REST, sem `firebase_auth` (US32)
+O plugin `firebase_auth` declara o Windows "só para desenvolvimento, produção
+não suportada". Como as duas plataformas têm as mesmas funcionalidades, o
+login fala com o Identity Toolkit e o Secure Token pela API REST, com o Dio
+(`lib/core/auth/`). A chave Web API entra por
+`--dart-define=FONAR_FIREBASE_API_KEY`; sem ela, roda o login de EXEMPLO,
+avisado na tela — e o build `--release` sem a chave se recusa a abrir
+(`main.dart`).
+
+- A credencial (token de acesso, de renovação e uid, juntos) fica no cofre
+  (`CofreDeCredencial`). A `FonteDeToken` renova ANTES de vencer: a requisição
+  recusada não se repete, porque o corpo do envio é um WAV em multipart.
+- A sessão é a conta (`sessaoProvider`, `ContaAutenticada`). O roteador manda
+  para a entrada quem não tem sessão, sem `refreshListenable` de propósito
+  (ver o comentário em `app_router.dart`).
+- Cada envio da fila leva o uid de quem gravou e só sobe na sessão dele.
+- Não diga se um e-mail tem conta: a redefinição de senha responde igual.
+
 ### Reprodução de áudio — por que é o `audioplayers` (dívida encerrada)
 Até 24/09/2026 a reprodução era `just_audio` + `just_audio_windows`. O plugin
 de Windows inclui `<experimental/coroutine>`, header que a Microsoft marcou
@@ -116,7 +134,7 @@ Reproduzir não é analisar — a troca mexe só em quem toca o WAV, nunca em qu
 mede —, mas a restrição de licença vale para o executável inteiro.
 
 O job de `flutter build windows` no CI segue sendo o único que compila código
-nativo. Teste nenhum pega: os 624 rodam no Ubuntu.
+nativo. Teste nenhum pega: os 842 rodam no Ubuntu.
 
 ## Offline
 A fila de sincronização vale para AS DUAS plataformas. Queda de conexão em
@@ -208,22 +226,24 @@ Todo dado exibido em desenvolvimento é placeholder e deve ser identificável
 como tal.
 
 ## Estado atual
-O fluxo da avaliação existe de ponta a ponta no aparelho (US00 a US24 — lista
+O fluxo da avaliação existe de ponta a ponta no aparelho (US00 a US32 — lista
 e resumo no README): cadastro, consentimento e retirada, aferição, gravação,
 fila, resultado, CAPE-V, evolução, laudo em PDF, com os dados num banco local
 (Drift, `lib/core/banco/`).
 
-Ainda é PLACEHOLDER, e identificado como tal: o login (aceita qualquer
-e-mail e senha), a API de análise e os resultados (de exemplo, avisados na
-tela), e os pacientes "de Exemplo", que aparecem por cima do banco sem serem
-gravados nele. O catálogo de faixas de referência está vazio de propósito:
+O login é o Firebase Authentication de verdade quando o build recebe a chave
+(US32). Ainda é PLACEHOLDER, e identificado como tal: o login sem a chave
+(aceita qualquer e-mail e senha, e a tela avisa), a API de análise e os
+resultados (de exemplo, avisados na tela), e os pacientes "de Exemplo", que
+aparecem por cima do banco sem serem gravados nele. O catálogo de faixas de referência está vazio de propósito:
 nenhuma medida é classificada.
 
 O que falta e de quem depende está em `PENDENCIAS.md` — ao resolver um item,
 apague a linha de lá e o `TODO` do código, no mesmo commit.
 
-O token de autenticação fica no cofre do sistema (`TokenStorageSeguro`), e o
-backup automático do Android está desligado de propósito — não reativar.
+A credencial do Firebase fica no cofre do sistema (`TokenStorageSeguro`, via
+`CofreDeCredencial`), e o backup automático do Android está desligado de
+propósito — não reativar.
 
 ## Git
 Branch: `nome/USxx-featureImplementada` — ex.: `felipe/US04-medidorDeNivel`

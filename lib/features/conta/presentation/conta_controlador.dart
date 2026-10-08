@@ -4,7 +4,8 @@ import '../../../core/error/app_exception.dart';
 import '../../../l10n/app_strings.dart';
 import '../../auth/data/profissional_atual.dart';
 import '../../auth/data/sessao.dart';
-import '../data/repositorio_da_conta_placeholder.dart';
+import '../../auth/data/repositorio_autenticacao_firebase.dart';
+import '../data/repositorio_da_conta_local.dart';
 import '../domain/dados_do_profissional.dart';
 
 enum CampoDaConta { nome, registro }
@@ -63,7 +64,11 @@ class ContaControlador extends Notifier<EstadoDaConta> {
         // à sessão mesmo assim (revisão de 23/09).
         final container = ref.container;
         try {
-          await ref.read(repositorioDaContaProvider).salvar(profissional);
+          final uid = ref.read(sessaoProvider)?.uid;
+          // A Conta só abre com a sessão aberta; sem ela, não há de quem
+          // guardar.
+          if (uid == null) throw const NaoAutorizado();
+          await ref.read(repositorioDaContaProvider).salvar(uid, profissional);
           container
               .read(profissionalAtualProvider.notifier)
               .definir(profissional);
@@ -83,15 +88,17 @@ class ContaControlador extends Notifier<EstadoDaConta> {
 
   /// Encerra a sessão. Devolve `true` se saiu; a navegação fica com a tela.
   ///
-  /// A fila pausa ANTES de o token sair: um envio no meio é interrompido, e
-  /// nada mais sobe até alguém entrar de novo (revisão de 23/09).
+  /// A fila pausa ANTES de a credencial sair: um envio no meio é
+  /// interrompido, e nada mais sobe até alguém entrar de novo (revisão de
+  /// 23/09). Sair apaga a credencial do cofre — depois disso, nem o modo
+  /// offline entra nesta conta sem a senha.
   Future<bool> sair() async {
     if (state.salvando || state.saindo) return false;
     state = const EstadoDaConta(saindo: true);
     final container = ref.container;
-    container.read(sessaoAbertaProvider.notifier).encerrar();
+    container.read(sessaoProvider.notifier).encerrar();
     try {
-      await ref.read(repositorioDaContaProvider).sair();
+      await ref.read(repositorioAutenticacaoProvider).sair();
     } on AppException catch (e) {
       if (ref.mounted) state = EstadoDaConta(erroGeral: e.mensagem);
       return false;
@@ -101,8 +108,6 @@ class ContaControlador extends Notifier<EstadoDaConta> {
       }
       return false;
     }
-    // Quem entrar depois não herda o profissional desta sessão.
-    container.invalidate(profissionalAtualProvider);
     return true;
   }
 }

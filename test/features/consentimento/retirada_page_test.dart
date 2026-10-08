@@ -19,9 +19,11 @@ import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_local.da
 import 'package:fonar_app/features/pacientes/domain/paciente.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 import 'package:go_router/go_router.dart';
+import 'package:fonar_app/features/auth/data/sessao.dart';
 
 import '../../apoio/banco_em_memoria.dart';
 import '../../apoio/repositorios_em_memoria.dart';
+import '../../apoio/sessao_de_teste.dart';
 
 final _hora = DateTime(2026, 9, 23, 10, 15);
 
@@ -94,6 +96,7 @@ Future<_Montagem> _abrir(
   final container = ProviderContainer(
     retry: (_, _) => null,
     overrides: [
+      sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
       bancoDeTeste(),
       // Sem rede: a fila guarda e não envia.
       conexaoOnlineProvider.overrideWithValue(false),

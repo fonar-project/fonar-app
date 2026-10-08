@@ -14,4 +14,12 @@ class Profissional {
 
   /// O e-mail da conta. Vem da autenticação e não se edita aqui.
   final String email;
+
+  /// Nome e registro preenchidos — o que o laudo precisa para sair. Na
+  /// primeira entrada num aparelho, os dois começam vazios.
+  bool get completo => nome.isNotEmpty && registro.isNotEmpty;
+
+  /// Como chamar o profissional na tela: o nome, ou o e-mail enquanto ele
+  /// não preencheu o nome.
+  String get identificacao => nome.isNotEmpty ? nome : email;
 }

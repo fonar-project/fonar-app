@@ -21,20 +21,45 @@ import 'package:fonar_app/l10n/app_strings.dart';
 import '../../apoio/banco_em_memoria.dart';
 import '../../apoio/repositorios_em_memoria.dart';
 import '../../core/migracoes/schema.dart';
+import '../../apoio/sessao_de_teste.dart';
 
 void main() {
-  group('migração do banco para a versão 3', () {
+  // Cada versão já distribuída chega à atual igual a um banco novo. A 3
+  // trouxe as preferências (o tema); a 4, o dono de cada envio (US32).
+  group('migração do banco para a versão atual', () {
     final verificador = SchemaVerifier(GeneratedHelper());
 
-    for (final de in [1, 2]) {
-      test('da versão $de para a 3, igual a um banco novo', () async {
+    for (final de in [1, 2, 3]) {
+      test('da versão $de para a atual, igual a um banco novo', () async {
         final conexao = await verificador.startAt(de);
         final banco = BancoLocal(conexao);
         addTearDown(banco.close);
 
-        await verificador.migrateAndValidate(banco, 3);
+        await verificador.migrateAndValidate(banco, banco.schemaVersion);
       });
     }
+
+    test(
+      'o envio da fila gravado na versão 3 chega sem dono, e continua lá',
+      () async {
+        final esquema = await verificador.schemaAt(3);
+        esquema.rawDatabase.execute(
+          'INSERT INTO envios (id, paciente_id, nome_do_paciente, sessao_id, '
+          'criado_em, situacao, tentativas) VALUES '
+          "('envio-s1', 'p1', 'Ana', 's1', '2026-09-01T09:00:00.000Z', "
+          "'naFila', 0)",
+        );
+        final banco = BancoLocal(esquema.newConnection());
+        addTearDown(banco.close);
+        await verificador.migrateAndValidate(banco, banco.schemaVersion);
+
+        final envio = (await RepositorioFilaLocal(banco).listar()).single;
+        expect(envio.id, 'envio-s1');
+        // Sem dono: sobe com quem entrar (ver `ItemDaFila.profissionalId`).
+        expect(envio.profissionalId, isNull);
+        expect(envio.deQuem(contaDeTeste.uid), isTrue);
+      },
+    );
   });
 
   group('preferência de tema', () {
@@ -86,7 +111,9 @@ void main() {
           bancoLocalProvider.overrideWithValue(banco),
           conexaoOnlineProvider.overrideWithValue(false),
           repositorioFilaProvider.overrideWithValue(RepositorioFilaEmMemoria()),
-          sessaoAbertaProvider.overrideWith(() => Sessao(naConta)),
+          sessaoProvider.overrideWith(
+            () => Sessao(naConta ? contaDeTeste : null),
+          ),
           tokenStorageProvider.overrideWithValue(TokenStorageEmMemoria()),
         ],
       );

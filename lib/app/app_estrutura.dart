@@ -219,11 +219,13 @@ class _BarraLateral extends ConsumerWidget {
                           ),
                           const SizedBox(height: AppSpacing.xs),
                           Text(
-                            profissional.nome,
+                            profissional.identificacao,
                             style: textos.labelSmall?.copyWith(color: creme),
                           ),
                           Text(
-                            profissional.registro,
+                            profissional.completo
+                                ? profissional.registro
+                                : AppStrings.contaPerfilIncompleto,
                             style: textos.bodySmall?.copyWith(
                               color: creme.withValues(alpha: 0.75),
                             ),

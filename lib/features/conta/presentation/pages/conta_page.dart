@@ -20,6 +20,7 @@ import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../../analise/data/catalogo_de_referencias_vazio.dart';
 import '../../../auth/data/profissional_atual.dart';
+import '../../../auth/data/sessao.dart';
 import '../../data/preferencia_de_tema_local.dart';
 import '../../domain/tema_escolhido.dart';
 import '../../../fila/presentation/fila_controlador.dart';
@@ -170,6 +171,13 @@ class _SeusDadosState extends ConsumerState<_SeusDados> {
 
   @override
   Widget build(BuildContext context) {
+    // O perfil vem do banco e pode chegar depois de a tela abrir: o campo
+    // que o profissional não mexeu acompanha; o que ele mexeu fica.
+    ref.listen(profissionalAtualProvider, (antes, depois) {
+      if (antes == null) return;
+      if (_nome.text == antes.nome) _nome.text = depois.nome;
+      if (_registro.text == antes.registro) _registro.text = depois.registro;
+    });
     final estado = ref.watch(contaControladorProvider);
     final profissional = ref.watch(profissionalAtualProvider);
     final textos = Theme.of(context).textTheme;
@@ -307,13 +315,18 @@ class _NesteAparelho extends ConsumerWidget {
   }
 }
 
-int _pendentes(WidgetRef ref) =>
-    ref
-        .watch(filaControladorProvider)
-        .value
-        ?.where((item) => item.pendente)
-        .length ??
-    0;
+/// Os envios pendentes DESTA conta: são os que pausam ao sair e voltam a
+/// subir quando ela entrar de novo. Os de outra conta no aparelho esperam
+/// por ela, e não mudam com esta saída.
+int _pendentes(WidgetRef ref) {
+  final uid = ref.watch(sessaoProvider)?.uid ?? '';
+  return ref
+          .watch(filaControladorProvider)
+          .value
+          ?.where((item) => item.pendente && item.deQuem(uid))
+          .length ??
+      0;
+}
 
 // ------------------------------------------------------------ aparência --
 

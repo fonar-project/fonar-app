@@ -18,6 +18,7 @@ import 'package:fonar_app/features/fila/presentation/pages/fila_page.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 
 import '../../apoio/repositorios_em_memoria.dart';
+import '../../apoio/sessao_de_teste.dart';
 
 final _agora = DateTime(2026, 9, 23, 10);
 
@@ -36,6 +37,7 @@ ItemDaFila _item(
   SituacaoDoEnvio situacao, {
   String? falha,
   String? analiseId,
+  String? dono,
 }) => ItemDaFila(
   id: 'envio-$sessao',
   pacienteId: 'p-$sessao',
@@ -60,6 +62,7 @@ ItemDaFila _item(
   tentativas: situacao == SituacaoDoEnvio.naFila ? 0 : 1,
   ultimaFalha: falha,
   analiseId: analiseId,
+  profissionalId: dono,
   // Espera longa: nada sobe sozinho durante o teste.
   proximaTentativa: situacao == SituacaoDoEnvio.aguardandoNovaTentativa
       ? _agora.add(const Duration(minutes: 5))
@@ -99,7 +102,7 @@ Future<_EnvioQueDaCerto> _abrir(
         ),
         envioDeAnaliseProvider.overrideWithValue(envio),
         // Profissional com a sessão aberta: sem ela a fila não envia.
-        sessaoAbertaProvider.overrideWith(() => Sessao(true)),
+        sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
         conexaoOnlineProvider.overrideWithValue(online),
         relogioProvider.overrideWithValue(() => _agora),
       ],
@@ -140,6 +143,11 @@ Future<_EnvioQueDaCerto> _abrir(
             GoRoute(
               name: AppRoutes.contaNome,
               path: AppRoutes.contaCaminho,
+              builder: (_, s) => destino(s),
+            ),
+            GoRoute(
+              name: AppRoutes.loginNome,
+              path: AppRoutes.loginCaminho,
               builder: (_, s) => destino(s),
             ),
           ],
@@ -217,6 +225,72 @@ void main() {
       tester.getTopLeft(find.text('Paciente Quatro de Teste')).dy,
       lessThan(tester.getTopLeft(find.text('Paciente Um de Teste')).dy),
     );
+  });
+
+  testWidgets('sessão expirada: "Entrar de novo" fecha a sessão e leva à '
+      'entrada', (tester) async {
+    await _abrir(
+      tester,
+      itens: [
+        _item(
+          's4',
+          'Paciente Quatro de Teste',
+          SituacaoDoEnvio.aguardandoLogin,
+          dono: contaDeTeste.uid,
+        ),
+      ],
+    );
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(FilaPage)),
+    );
+    // Tentar de novo falharia igual: não é oferecido.
+    expect(find.text(AppStrings.filaTentarDeNovo), findsNothing);
+
+    await _tocar(tester, AppStrings.filaEntrarDeNovo);
+
+    expect(container.read(sessaoAbertaProvider), isFalse);
+    expect(find.text('destino ${AppRoutes.loginCaminho}'), findsOneWidget);
+  });
+
+  testWidgets('sessão expirada, sem conexão: "Entrar de novo" diz por quê', (
+    tester,
+  ) async {
+    await _abrir(
+      tester,
+      online: false,
+      itens: [
+        _item(
+          's4',
+          'Paciente Quatro de Teste',
+          SituacaoDoEnvio.aguardandoLogin,
+        ),
+      ],
+    );
+
+    expect(find.text(AppStrings.filaEntrarExigeConexao), findsOneWidget);
+    await _tocar(tester, AppStrings.filaEntrarDeNovo);
+    expect(find.byType(FilaPage), findsOneWidget);
+  });
+
+  testWidgets('envio de outra conta diz que espera ela entrar, sem ação', (
+    tester,
+  ) async {
+    await _abrir(
+      tester,
+      itens: [
+        _item(
+          's4',
+          'Paciente Quatro de Teste',
+          SituacaoDoEnvio.aguardandoLogin,
+          dono: outraConta.uid,
+        ),
+      ],
+    );
+
+    expect(find.text(AppStrings.filaDeOutraConta), findsOneWidget);
+    expect(find.text(AppStrings.filaDeOutraContaTexto), findsOneWidget);
+    expect(find.text(AppStrings.filaEntrarDeNovo), findsNothing);
+    expect(find.text(AppStrings.filaTentarDeNovo), findsNothing);
   });
 
   testWidgets('sem conexão: aviso no topo e tentar desabilitado com motivo', (

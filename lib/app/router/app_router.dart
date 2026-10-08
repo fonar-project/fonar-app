@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/analise/presentation/pages/analise_resultado_page.dart';
 import '../../features/analise/presentation/pages/espectrograma_page.dart';
+import '../../features/auth/data/sessao.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/cape_v/presentation/pages/cape_v_page.dart';
 import '../../features/captura/presentation/pages/captura_page.dart';
@@ -39,9 +40,21 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: AppRoutes.loginCaminho,
     debugLogDiagnostics: kDebugMode,
 
-    // TODO(auth): redirect que manda para /login quando não há sessão, e tira
-    // de /login quando já há. Vai depender de um provider de estado de
-    // autenticação (Firebase Auth) + `refreshListenable`.
+    // Sem sessão, só a entrada; com sessão, a entrada não tem o que fazer.
+    //
+    // Conferido a cada navegação, e sem `refreshListenable` de propósito:
+    // quem entra e quem sai já navega sozinho (a tela de entrada para os
+    // pacientes, a Conta para a entrada). Redirecionar no instante em que a
+    // sessão fecha tiraria o profissional da Conta antes de ele ler que a
+    // saída falhou — e a sessão fecha ANTES de a credencial sair, para a
+    // fila parar primeiro.
+    redirect: (context, state) {
+      final naEntrada = state.matchedLocation == AppRoutes.loginCaminho;
+      final aberta = ref.read(sessaoAbertaProvider);
+      if (!aberta && !naEntrada) return AppRoutes.loginCaminho;
+      if (aberta && naEntrada) return AppRoutes.pacientesCaminho;
+      return null;
+    },
     routes: [
       GoRoute(
         name: AppRoutes.loginNome,

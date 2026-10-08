@@ -50,6 +50,7 @@ import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/features/auth/data/sessao.dart';
 
 import '../apoio/banco_em_memoria.dart';
+import '../apoio/sessao_de_teste.dart';
 
 const _p = AppRoutes.paramPacienteId;
 const _a = AppRoutes.paramAnaliseId;
@@ -130,13 +131,9 @@ void main() {
         overrides: [
           bancoDeTeste(),
           conexaoOnlineProvider.overrideWithValue(true),
-          // Sessão aberta: não muda o roteamento — o redirect de
-          // autenticação ainda não existe (TODO(auth) em `app_router.dart`)
-          // —, mas é o estado em que as telas são usadas de verdade: com a
-          // sessão fechada a fila fica pausada e a tela dela mostra outra
-          // coisa. Quando o redirect existir, é isto que impede a varredura
-          // de virar 18 visitas ao login.
-          sessaoAbertaProvider.overrideWith(() => Sessao(true)),
+          // Sessão aberta: sem ela, o redirect de autenticação leva toda
+          // rota à entrada, e a varredura viraria 18 visitas ao login.
+          sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
         ],
       );
       addTearDown(container.dispose);
@@ -161,9 +158,14 @@ void main() {
 
       final estouros = <String>[];
       final desviadas = <String>[];
+      final sessao = container.read(sessaoProvider.notifier);
       for (final (nome, params) in _rotas) {
+        // A entrada é o contrário: só existe sem sessão.
+        final naEntrada = nome == AppRoutes.loginNome;
+        if (naEntrada) sessao.encerrar();
         roteador.goNamed(nome, pathParameters: params);
         await _desenhar(tester);
+        if (naEntrada) sessao.abrir(contaDeTeste);
 
         final erro = tester.takeException();
         if (erro != null) estouros.add('$nome: $erro');

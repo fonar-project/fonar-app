@@ -27,6 +27,8 @@ import '../domain/repositorio_fila.dart';
 ///   por ela é tentado na hora, sem esperar o fim da espera;
 /// - sem sessão aberta, também nada: sair da conta pausa a fila e interrompe
 ///   o envio em curso, e entrar de novo a retoma (ver `Sessao`);
+/// - cada envio é de quem gravou ([ItemDaFila.profissionalId]) e só sobe na
+///   sessão dessa conta; o de outra espera ela entrar;
 /// - falha passageira espera cada vez mais (ver [PoliticaDeReenvio]); sessão
 ///   expirada e envio recusado não se repetem sozinhos;
 /// - consentimento retirado, nada do paciente sobe: a fila confere antes de
@@ -45,6 +47,12 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
   bool get _podeEnviar =>
       ref.read(conexaoOnlineProvider) && ref.read(sessaoAbertaProvider);
 
+  /// O item é da conta com a sessão aberta?
+  bool _daSessao(ItemDaFila item) {
+    final uid = ref.read(sessaoProvider)?.uid;
+    return uid != null && item.deQuem(uid);
+  }
+
   DateTime _agora() => ref.read(relogioProvider)();
 
   @override
@@ -53,10 +61,10 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
     ref.listen(conexaoOnlineProvider, (antes, online) {
       if (online && antes != true) unawaited(_aoVoltarConexao());
     });
-    ref.listen(sessaoAbertaProvider, (antes, aberta) {
-      if (aberta && antes != true) {
-        unawaited(_aoVoltarConexao());
-      } else if (!aberta) {
+    ref.listen(sessaoProvider, (antes, conta) {
+      if (conta != null && antes?.uid != conta.uid) {
+        unawaited(_aoEntrar());
+      } else if (conta == null) {
         // Saiu da conta: nenhum relógio armado, e o que está subindo para.
         _proxima?.cancel();
         _proxima = null;
@@ -118,6 +126,9 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
       sessaoId: sessaoId,
       amostras: amostras,
       criadoEm: _agora(),
+      // Quem está gravando é quem está com a sessão aberta: a captura só
+      // existe depois de entrar.
+      profissionalId: ref.read(sessaoProvider)?.uid,
     );
     await ref.read(repositorioFilaProvider).adicionar(item);
     if (!ref.mounted) return item;
@@ -180,7 +191,9 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
       await _carregada();
       while (ref.mounted && _podeEnviar) {
         final agora = _agora();
-        final proximo = _itens.where((i) => i.prontoEm(agora)).firstOrNull;
+        final proximo = _itens
+            .where((i) => i.prontoEm(agora) && _daSessao(i))
+            .firstOrNull;
         if (proximo == null) break;
         await _enviar(proximo);
       }
@@ -229,8 +242,9 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
         return;
       }
       // Pediram para parar durante a consulta: o item fica como está — a
-      // retirada já o marcou, e sem sessão ou rede ele espera na fila.
-      if (cancelamento.pedido || !_podeEnviar) return;
+      // retirada já o marcou, e sem sessão ou rede ele espera na fila. Outra
+      // conta pode ter entrado nesse meio-tempo, também.
+      if (cancelamento.pedido || !_podeEnviar || !_daSessao(item)) return;
 
       final tentativas = item.tentativas + 1;
       await _salvar(
@@ -239,8 +253,8 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
       // Toda espera pode terminar com a fila descartada (app fechando).
       if (!ref.mounted) return;
       // Última conferência antes de transmitir: ninguém pediu para parar, e
-      // ainda há rede e sessão.
-      if (cancelamento.pedido || !_podeEnviar) {
+      // ainda há rede e a sessão de quem gravou.
+      if (cancelamento.pedido || !_podeEnviar || !_daSessao(item)) {
         await _devolverAFila(item);
         return;
       }
@@ -300,6 +314,32 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
     item.copiar(situacao: SituacaoDoEnvio.naFila, proximaTentativa: () => null),
   );
 
+  /// Alguém entrou: o que esperava login desta conta volta para a fila — a
+  /// sessão expirada que pedia "entre de novo" foi atendida —, e o resto
+  /// segue como na volta da conexão.
+  Future<void> _aoEntrar() async {
+    if (!ref.mounted) return;
+    await _carregada();
+    final esperandoLogin = [
+      for (final i in _itens)
+        if (i.situacao == SituacaoDoEnvio.aguardandoLogin && _daSessao(i)) i.id,
+    ];
+    for (final id in esperandoLogin) {
+      if (!ref.mounted) return;
+      final atual = _itens.where((i) => i.id == id).firstOrNull;
+      if (atual?.situacao == SituacaoDoEnvio.aguardandoLogin) {
+        await _salvar(
+          atual!.copiar(
+            situacao: SituacaoDoEnvio.naFila,
+            proximaTentativa: () => null,
+            ultimaFalha: () => null,
+          ),
+        );
+      }
+    }
+    await _aoVoltarConexao();
+  }
+
   /// A conexão voltou, ou a sessão abriu: o que esperava não precisa mais
   /// esperar.
   ///
@@ -339,8 +379,11 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
     if (!_podeEnviar) return;
     final agendadas = [
       for (final i in _itens)
+        // Só os desta sessão: o prazo vencido de outra conta acordaria a
+        // fila sem parar, para ela achar nada que possa enviar.
         if (i.situacao == SituacaoDoEnvio.aguardandoNovaTentativa &&
-            i.proximaTentativa != null)
+            i.proximaTentativa != null &&
+            _daSessao(i))
           i.proximaTentativa!,
     ];
     if (agendadas.isEmpty) return;

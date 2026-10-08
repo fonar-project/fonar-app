@@ -17,6 +17,7 @@ import 'package:fonar_app/l10n/app_strings.dart';
 import '../apoio/banco_em_memoria.dart';
 import '../apoio/hover.dart';
 import '../apoio/repositorios_em_memoria.dart';
+import '../apoio/sessao_de_teste.dart';
 
 const _desktop = Size(1440, 900);
 
@@ -38,7 +39,12 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
 
-      final container = ProviderContainer(overrides: [bancoDeTeste()]);
+      final container = ProviderContainer(
+        overrides: [
+          bancoDeTeste(),
+          sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
+        ],
+      );
       addTearDown(container.dispose);
       final roteador = container.read(routerProvider);
 
@@ -70,7 +76,8 @@ void main() {
       }
 
       // E o outro lado: a maioria das telas não tem navegação principal, e o
-      // login vem antes de haver navegação.
+      // login vem antes de haver navegação — e só existe sem sessão.
+      container.read(sessaoProvider.notifier).encerrar();
       roteador.goNamed(AppRoutes.loginNome);
       await tester.pumpAndSettle();
 
@@ -129,7 +136,7 @@ void main() {
         overrides: [
           bancoDeTeste(),
           conexaoOnlineProvider.overrideWithValue(true),
-          sessaoAbertaProvider.overrideWith(() => Sessao(true)),
+          sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
           tokenStorageProvider.overrideWithValue(TokenStorageEmMemoria()),
         ],
       );

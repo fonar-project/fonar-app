@@ -25,8 +25,10 @@ import 'package:fonar_app/features/pacientes/domain/paciente.dart';
 import 'package:fonar_app/design_system/tokens/app_colors.dart';
 import 'package:fonar_app/design_system/widgets/app_toque.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
+import 'package:fonar_app/features/auth/data/sessao.dart';
 
 import '../../apoio/hover.dart';
+import '../../apoio/sessao_de_teste.dart';
 
 class _Repositorio implements RepositorioAnalises {
   _Repositorio(this.sessoes, {this.falha = false});
@@ -111,6 +113,7 @@ Future<GoRouter> _abrir(
   final container = ProviderContainer(
     retry: (_, _) => null,
     overrides: [
+      sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
       conexaoOnlineProvider.overrideWithValue(true),
       repositorioAnalisesProvider.overrideWithValue(
         _Repositorio(sessoes ?? _tres, falha: falha),

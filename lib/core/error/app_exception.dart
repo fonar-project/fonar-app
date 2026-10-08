@@ -48,6 +48,20 @@ final class CredencialInvalida extends AppException {
     : super(AppStrings.erroCredencialInvalida);
 }
 
+/// O Firebase Auth pausou a conta depois de muitas senhas erradas seguidas.
+///
+/// Separado de [CredencialInvalida] porque a saída é outra: redigitar a senha
+/// agora, mesmo a certa, continua sendo recusado.
+final class MuitasTentativas extends AppException {
+  const MuitasTentativas({super.causa})
+    : super(AppStrings.erroMuitasTentativas);
+}
+
+/// A conta existe e a senha confere, mas a conta foi desativada no Firebase.
+final class ContaDesativada extends AppException {
+  const ContaDesativada({super.causa}) : super(AppStrings.erroContaDesativada);
+}
+
 /// 403 — autenticado, mas sem acesso ao recurso.
 final class Proibido extends AppException {
   const Proibido({super.causa}) : super(AppStrings.erroProibido);

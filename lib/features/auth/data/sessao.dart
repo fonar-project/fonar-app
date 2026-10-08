@@ -1,26 +1,30 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Há um profissional com a sessão aberta neste aparelho?
-///
-/// Abre quando ele entra — com a senha ou em modo offline — e fecha quando
-/// sai da conta. A fila de sincronização só envia com a sessão aberta: sair
-/// pausa os envios, e o que estiver subindo é interrompido (achado da
-/// revisão de 23/09 — antes, sair limpava o token e a fila seguia tentando).
-///
-/// TODO(auth): nascer do estado do Firebase Auth. E cada envio da fila
-/// precisa levar o id do profissional que gravou, para nunca subir na
-/// sessão de outro — hoje o placeholder não tem esse id.
-class Sessao extends Notifier<bool> {
-  Sessao([this._aberta = false]);
+import '../domain/conta_autenticada.dart';
 
-  final bool _aberta;
+/// Quem está com a sessão aberta neste aparelho, ou `null`.
+///
+/// Abre quando o profissional entra — com a senha, conferida pelo Firebase,
+/// ou em modo offline, com a conta da última entrada — e fecha quando ele
+/// sai. O roteador manda para a entrada quem não tem sessão, e a fila só
+/// envia com a sessão aberta, e só o que a conta dela gravou: sair pausa os
+/// envios, e o que estiver subindo é interrompido (revisão de 23/09).
+class Sessao extends Notifier<ContaAutenticada?> {
+  Sessao([this._inicial]);
+
+  final ContaAutenticada? _inicial;
 
   @override
-  bool build() => _aberta;
+  ContaAutenticada? build() => _inicial;
 
-  void abrir() => state = true;
+  void abrir(ContaAutenticada conta) => state = conta;
 
-  void encerrar() => state = false;
+  void encerrar() => state = null;
 }
 
-final sessaoAbertaProvider = NotifierProvider<Sessao, bool>(Sessao.new);
+final sessaoProvider = NotifierProvider<Sessao, ContaAutenticada?>(Sessao.new);
+
+/// Há alguém com a sessão aberta?
+final sessaoAbertaProvider = Provider<bool>(
+  (ref) => ref.watch(sessaoProvider) != null,
+);

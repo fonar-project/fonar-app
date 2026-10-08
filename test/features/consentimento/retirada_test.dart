@@ -25,6 +25,7 @@ import 'package:fonar_app/l10n/app_strings.dart';
 import '../../apoio/banco_em_memoria.dart';
 import '../../apoio/repositorios_em_memoria.dart';
 import '../../core/migracoes/schema.dart';
+import '../../apoio/sessao_de_teste.dart';
 
 final _hora = DateTime(2026, 9, 23, 10);
 
@@ -127,7 +128,7 @@ _montar({
   final container = ProviderContainer(
     overrides: [
       envioDeAnaliseProvider.overrideWithValue(envio),
-      sessaoAbertaProvider.overrideWith(() => Sessao(true)),
+      sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
       conexaoOnlineProvider.overrideWithValue(online),
       relogioProvider.overrideWithValue(() => _hora),
       repositorioFilaProvider.overrideWithValue(fila),
@@ -294,13 +295,13 @@ void main() {
     final verificador = SchemaVerifier(GeneratedHelper());
 
     test(
-      'da versão 1 para a 2, o formato fica igual ao de um banco novo',
+      'da versão 1 em diante, o formato fica igual ao de um banco novo',
       () async {
         final conexao = await verificador.startAt(1);
         final banco = BancoLocal(conexao);
         addTearDown(banco.close);
 
-        await verificador.migrateAndValidate(banco, 2);
+        await verificador.migrateAndValidate(banco, banco.schemaVersion);
       },
     );
 
@@ -314,7 +315,7 @@ void main() {
       );
       final banco = BancoLocal(esquema.newConnection());
       addTearDown(banco.close);
-      await verificador.migrateAndValidate(banco, 2);
+      await verificador.migrateAndValidate(banco, banco.schemaVersion);
 
       final repositorio = _repositorio(banco: banco);
       final c = (await repositorio.buscar('p1'))!;
@@ -430,7 +431,7 @@ void main() {
       });
 
       test('sair da conta: nada sobe, e o item espera na fila', () async {
-        m.container.read(sessaoAbertaProvider.notifier).encerrar();
+        m.container.read(sessaoProvider.notifier).encerrar();
         await _assentar();
         consentimentos.segurar!.complete();
         await _assentar();
@@ -512,7 +513,7 @@ void main() {
         final container = ProviderContainer(
           overrides: [
             envioDeAnaliseProvider.overrideWithValue(envio),
-            sessaoAbertaProvider.overrideWith(() => Sessao(true)),
+            sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
             conexaoOnlineProvider.overrideWithValue(true),
             relogioProvider.overrideWithValue(() => _hora),
             repositorioFilaProvider.overrideWithValue(
@@ -541,7 +542,7 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           envioDeAnaliseProvider.overrideWithValue(_Envio()),
-          sessaoAbertaProvider.overrideWith(() => Sessao(true)),
+          sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
           conexaoOnlineProvider.overrideWithValue(false),
           relogioProvider.overrideWithValue(() => _hora),
           repositorioFilaProvider.overrideWithValue(

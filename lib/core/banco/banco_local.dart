@@ -52,7 +52,7 @@ class BancoLocal extends _$BancoLocal {
   /// `drift_schemas/` guarda o formato de cada versão já distribuída; é com
   /// ele que se testa que o banco de quem atualiza o app chega inteiro.
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -66,6 +66,10 @@ class BancoLocal extends _$BancoLocal {
       if (de < 3) {
         // US30: preferências do aparelho (o tema).
         await m.createTable(preferencias);
+      }
+      if (de < 4) {
+        // US32: de quem é cada envio da fila.
+        await m.addColumn(envios, envios.profissionalId);
       }
     },
     // O SQLite vem com chave estrangeira DESLIGADA; sem isto, nada impediria

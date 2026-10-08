@@ -330,6 +330,7 @@ class _LaudoState extends ConsumerState<_Laudo> {
       resultado: widget.resultado,
       capeV: widget.capeV,
       conclusao: _conclusao.text,
+      temAssinatura: ref.watch(profissionalAtualProvider).completo,
     );
     final expandida = widget.largura == LarguraDeTela.expandida;
 
@@ -597,6 +598,10 @@ class _ItemDaConferencia extends StatelessWidget {
         AppStrings.laudoItemConclusao,
         AppStrings.laudoItemConclusaoFalta,
       ),
+      ItemDaConferencia.assinatura => (
+        AppStrings.laudoItemAssinatura,
+        AppStrings.laudoItemAssinaturaFalta,
+      ),
     };
     // Sem verde, amarelo ou vermelho: são reservados a status de medida e
     // saturação. A situação vem no ícone e, sobretudo, no texto.
@@ -624,6 +629,11 @@ class _ItemDaConferencia extends StatelessWidget {
             AppRoutes.consentimentoNome,
             pathParameters: {AppRoutes.paramPacienteId: pacienteId},
           ),
+        ),
+      (ItemDaConferencia.assinatura, SituacaoDoItem.pendente) =>
+        AppBotao.secundario(
+          rotulo: AppStrings.laudoIrParaConta,
+          aoTocar: () => context.pushNamed(AppRoutes.contaNome),
         ),
       (ItemDaConferencia.capeV, SituacaoDoItem.aviso) => AppBotao.secundario(
         rotulo: AppStrings.laudoIrParaCapeV,

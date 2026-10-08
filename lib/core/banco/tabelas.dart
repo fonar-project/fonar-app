@@ -81,6 +81,10 @@ class Envios extends Table {
   DateTimeColumn get proximaTentativa => dateTime().nullable()();
   TextColumn get ultimaFalha => text().nullable()();
   TextColumn get analiseId => text().nullable()();
+
+  /// O id da conta (Firebase) de quem gravou. O envio só sobe na sessão
+  /// dela. Vazio nos envios de antes da US32, do login de exemplo.
+  TextColumn get profissionalId => text().nullable()();
 }
 
 /// Cada gravação conferida e guardada. O WAV fica no disco; aqui, onde ele

@@ -1429,6 +1429,17 @@ class $EnviosTable extends Envios with TableInfo<$EnviosTable, LinhaDoEnvio> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _profissionalIdMeta = const VerificationMeta(
+    'profissionalId',
+  );
+  @override
+  late final GeneratedColumn<String> profissionalId = GeneratedColumn<String>(
+    'profissional_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     posicao,
@@ -1442,6 +1453,7 @@ class $EnviosTable extends Envios with TableInfo<$EnviosTable, LinhaDoEnvio> {
     proximaTentativa,
     ultimaFalha,
     analiseId,
+    profissionalId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1541,6 +1553,15 @@ class $EnviosTable extends Envios with TableInfo<$EnviosTable, LinhaDoEnvio> {
         analiseId.isAcceptableOrUnknown(data['analise_id']!, _analiseIdMeta),
       );
     }
+    if (data.containsKey('profissional_id')) {
+      context.handle(
+        _profissionalIdMeta,
+        profissionalId.isAcceptableOrUnknown(
+          data['profissional_id']!,
+          _profissionalIdMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1594,6 +1615,10 @@ class $EnviosTable extends Envios with TableInfo<$EnviosTable, LinhaDoEnvio> {
         DriftSqlType.string,
         data['${effectivePrefix}analise_id'],
       ),
+      profissionalId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}profissional_id'],
+      ),
     );
   }
 
@@ -1618,6 +1643,10 @@ class LinhaDoEnvio extends DataClass implements Insertable<LinhaDoEnvio> {
   final DateTime? proximaTentativa;
   final String? ultimaFalha;
   final String? analiseId;
+
+  /// O id da conta (Firebase) de quem gravou. O envio só sobe na sessão
+  /// dela. Vazio nos envios de antes da US32, do login de exemplo.
+  final String? profissionalId;
   const LinhaDoEnvio({
     required this.posicao,
     required this.id,
@@ -1630,6 +1659,7 @@ class LinhaDoEnvio extends DataClass implements Insertable<LinhaDoEnvio> {
     this.proximaTentativa,
     this.ultimaFalha,
     this.analiseId,
+    this.profissionalId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1650,6 +1680,9 @@ class LinhaDoEnvio extends DataClass implements Insertable<LinhaDoEnvio> {
     }
     if (!nullToAbsent || analiseId != null) {
       map['analise_id'] = Variable<String>(analiseId);
+    }
+    if (!nullToAbsent || profissionalId != null) {
+      map['profissional_id'] = Variable<String>(profissionalId);
     }
     return map;
   }
@@ -1673,6 +1706,9 @@ class LinhaDoEnvio extends DataClass implements Insertable<LinhaDoEnvio> {
       analiseId: analiseId == null && nullToAbsent
           ? const Value.absent()
           : Value(analiseId),
+      profissionalId: profissionalId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(profissionalId),
     );
   }
 
@@ -1695,6 +1731,7 @@ class LinhaDoEnvio extends DataClass implements Insertable<LinhaDoEnvio> {
       ),
       ultimaFalha: serializer.fromJson<String?>(json['ultimaFalha']),
       analiseId: serializer.fromJson<String?>(json['analiseId']),
+      profissionalId: serializer.fromJson<String?>(json['profissionalId']),
     );
   }
   @override
@@ -1712,6 +1749,7 @@ class LinhaDoEnvio extends DataClass implements Insertable<LinhaDoEnvio> {
       'proximaTentativa': serializer.toJson<DateTime?>(proximaTentativa),
       'ultimaFalha': serializer.toJson<String?>(ultimaFalha),
       'analiseId': serializer.toJson<String?>(analiseId),
+      'profissionalId': serializer.toJson<String?>(profissionalId),
     };
   }
 
@@ -1727,6 +1765,7 @@ class LinhaDoEnvio extends DataClass implements Insertable<LinhaDoEnvio> {
     Value<DateTime?> proximaTentativa = const Value.absent(),
     Value<String?> ultimaFalha = const Value.absent(),
     Value<String?> analiseId = const Value.absent(),
+    Value<String?> profissionalId = const Value.absent(),
   }) => LinhaDoEnvio(
     posicao: posicao ?? this.posicao,
     id: id ?? this.id,
@@ -1741,6 +1780,9 @@ class LinhaDoEnvio extends DataClass implements Insertable<LinhaDoEnvio> {
         : this.proximaTentativa,
     ultimaFalha: ultimaFalha.present ? ultimaFalha.value : this.ultimaFalha,
     analiseId: analiseId.present ? analiseId.value : this.analiseId,
+    profissionalId: profissionalId.present
+        ? profissionalId.value
+        : this.profissionalId,
   );
   LinhaDoEnvio copyWithCompanion(EnviosCompanion data) {
     return LinhaDoEnvio(
@@ -1765,6 +1807,9 @@ class LinhaDoEnvio extends DataClass implements Insertable<LinhaDoEnvio> {
           ? data.ultimaFalha.value
           : this.ultimaFalha,
       analiseId: data.analiseId.present ? data.analiseId.value : this.analiseId,
+      profissionalId: data.profissionalId.present
+          ? data.profissionalId.value
+          : this.profissionalId,
     );
   }
 
@@ -1781,7 +1826,8 @@ class LinhaDoEnvio extends DataClass implements Insertable<LinhaDoEnvio> {
           ..write('tentativas: $tentativas, ')
           ..write('proximaTentativa: $proximaTentativa, ')
           ..write('ultimaFalha: $ultimaFalha, ')
-          ..write('analiseId: $analiseId')
+          ..write('analiseId: $analiseId, ')
+          ..write('profissionalId: $profissionalId')
           ..write(')'))
         .toString();
   }
@@ -1799,6 +1845,7 @@ class LinhaDoEnvio extends DataClass implements Insertable<LinhaDoEnvio> {
     proximaTentativa,
     ultimaFalha,
     analiseId,
+    profissionalId,
   );
   @override
   bool operator ==(Object other) =>
@@ -1814,7 +1861,8 @@ class LinhaDoEnvio extends DataClass implements Insertable<LinhaDoEnvio> {
           other.tentativas == this.tentativas &&
           other.proximaTentativa == this.proximaTentativa &&
           other.ultimaFalha == this.ultimaFalha &&
-          other.analiseId == this.analiseId);
+          other.analiseId == this.analiseId &&
+          other.profissionalId == this.profissionalId);
 }
 
 class EnviosCompanion extends UpdateCompanion<LinhaDoEnvio> {
@@ -1829,6 +1877,7 @@ class EnviosCompanion extends UpdateCompanion<LinhaDoEnvio> {
   final Value<DateTime?> proximaTentativa;
   final Value<String?> ultimaFalha;
   final Value<String?> analiseId;
+  final Value<String?> profissionalId;
   const EnviosCompanion({
     this.posicao = const Value.absent(),
     this.id = const Value.absent(),
@@ -1841,6 +1890,7 @@ class EnviosCompanion extends UpdateCompanion<LinhaDoEnvio> {
     this.proximaTentativa = const Value.absent(),
     this.ultimaFalha = const Value.absent(),
     this.analiseId = const Value.absent(),
+    this.profissionalId = const Value.absent(),
   });
   EnviosCompanion.insert({
     this.posicao = const Value.absent(),
@@ -1854,6 +1904,7 @@ class EnviosCompanion extends UpdateCompanion<LinhaDoEnvio> {
     this.proximaTentativa = const Value.absent(),
     this.ultimaFalha = const Value.absent(),
     this.analiseId = const Value.absent(),
+    this.profissionalId = const Value.absent(),
   }) : id = Value(id),
        pacienteId = Value(pacienteId),
        nomeDoPaciente = Value(nomeDoPaciente),
@@ -1873,6 +1924,7 @@ class EnviosCompanion extends UpdateCompanion<LinhaDoEnvio> {
     Expression<DateTime>? proximaTentativa,
     Expression<String>? ultimaFalha,
     Expression<String>? analiseId,
+    Expression<String>? profissionalId,
   }) {
     return RawValuesInsertable({
       if (posicao != null) 'posicao': posicao,
@@ -1886,6 +1938,7 @@ class EnviosCompanion extends UpdateCompanion<LinhaDoEnvio> {
       if (proximaTentativa != null) 'proxima_tentativa': proximaTentativa,
       if (ultimaFalha != null) 'ultima_falha': ultimaFalha,
       if (analiseId != null) 'analise_id': analiseId,
+      if (profissionalId != null) 'profissional_id': profissionalId,
     });
   }
 
@@ -1901,6 +1954,7 @@ class EnviosCompanion extends UpdateCompanion<LinhaDoEnvio> {
     Value<DateTime?>? proximaTentativa,
     Value<String?>? ultimaFalha,
     Value<String?>? analiseId,
+    Value<String?>? profissionalId,
   }) {
     return EnviosCompanion(
       posicao: posicao ?? this.posicao,
@@ -1914,6 +1968,7 @@ class EnviosCompanion extends UpdateCompanion<LinhaDoEnvio> {
       proximaTentativa: proximaTentativa ?? this.proximaTentativa,
       ultimaFalha: ultimaFalha ?? this.ultimaFalha,
       analiseId: analiseId ?? this.analiseId,
+      profissionalId: profissionalId ?? this.profissionalId,
     );
   }
 
@@ -1953,6 +2008,9 @@ class EnviosCompanion extends UpdateCompanion<LinhaDoEnvio> {
     if (analiseId.present) {
       map['analise_id'] = Variable<String>(analiseId.value);
     }
+    if (profissionalId.present) {
+      map['profissional_id'] = Variable<String>(profissionalId.value);
+    }
     return map;
   }
 
@@ -1969,7 +2027,8 @@ class EnviosCompanion extends UpdateCompanion<LinhaDoEnvio> {
           ..write('tentativas: $tentativas, ')
           ..write('proximaTentativa: $proximaTentativa, ')
           ..write('ultimaFalha: $ultimaFalha, ')
-          ..write('analiseId: $analiseId')
+          ..write('analiseId: $analiseId, ')
+          ..write('profissionalId: $profissionalId')
           ..write(')'))
         .toString();
   }
@@ -5181,6 +5240,7 @@ typedef $$EnviosTableCreateCompanionBuilder = EnviosCompanion Function({
   Value<DateTime?> proximaTentativa,
   Value<String?> ultimaFalha,
   Value<String?> analiseId,
+  Value<String?> profissionalId,
 });
 typedef $$EnviosTableUpdateCompanionBuilder = EnviosCompanion Function({
   Value<int> posicao,
@@ -5194,6 +5254,7 @@ typedef $$EnviosTableUpdateCompanionBuilder = EnviosCompanion Function({
   Value<DateTime?> proximaTentativa,
   Value<String?> ultimaFalha,
   Value<String?> analiseId,
+  Value<String?> profissionalId,
 });
 
 final class $$EnviosTableReferences
@@ -5281,6 +5342,11 @@ class $$EnviosTableFilterComposer extends Composer<_$BancoLocal, $EnviosTable> {
 
   ColumnFilters<String> get analiseId => $composableBuilder(
     column: $table.analiseId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get profissionalId => $composableBuilder(
+    column: $table.profissionalId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5373,6 +5439,11 @@ class $$EnviosTableOrderingComposer
     column: $table.analiseId,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get profissionalId => $composableBuilder(
+    column: $table.profissionalId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$EnviosTableAnnotationComposer
@@ -5426,6 +5497,11 @@ class $$EnviosTableAnnotationComposer
 
   GeneratedColumn<String> get analiseId =>
       $composableBuilder(column: $table.analiseId, builder: (column) => column);
+
+  GeneratedColumn<String> get profissionalId => $composableBuilder(
+    column: $table.profissionalId,
+    builder: (column) => column,
+  );
 
   Expression<T> amostrasDoEnvioRefs<T extends Object>(
     Expression<T> Function($$AmostrasDoEnvioTableAnnotationComposer a) f,
@@ -5492,6 +5568,7 @@ class $$EnviosTableTableManager
                 Value<DateTime?> proximaTentativa = const Value.absent(),
                 Value<String?> ultimaFalha = const Value.absent(),
                 Value<String?> analiseId = const Value.absent(),
+                Value<String?> profissionalId = const Value.absent(),
               }) => EnviosCompanion(
                 posicao: posicao,
                 id: id,
@@ -5504,6 +5581,7 @@ class $$EnviosTableTableManager
                 proximaTentativa: proximaTentativa,
                 ultimaFalha: ultimaFalha,
                 analiseId: analiseId,
+                profissionalId: profissionalId,
               ),
           createCompanionCallback:
               ({
@@ -5518,6 +5596,7 @@ class $$EnviosTableTableManager
                 Value<DateTime?> proximaTentativa = const Value.absent(),
                 Value<String?> ultimaFalha = const Value.absent(),
                 Value<String?> analiseId = const Value.absent(),
+                Value<String?> profissionalId = const Value.absent(),
               }) => EnviosCompanion.insert(
                 posicao: posicao,
                 id: id,
@@ -5530,6 +5609,7 @@ class $$EnviosTableTableManager
                 proximaTentativa: proximaTentativa,
                 ultimaFalha: ultimaFalha,
                 analiseId: analiseId,
+                profissionalId: profissionalId,
               ),
           withReferenceMapper: (p0) => p0
               .map(

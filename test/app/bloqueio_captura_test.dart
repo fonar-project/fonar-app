@@ -12,8 +12,10 @@ import 'package:fonar_app/features/consentimento/domain/consentimento.dart';
 import 'package:fonar_app/features/consentimento/domain/repositorio_consentimento.dart';
 import 'package:fonar_app/features/consentimento/data/repositorio_consentimento_local.dart';
 import 'package:fonar_app/features/consentimento/presentation/pages/consentimento_page.dart';
+import 'package:fonar_app/features/auth/data/sessao.dart';
 
 import '../apoio/banco_em_memoria.dart';
+import '../apoio/sessao_de_teste.dart';
 
 /// Consentimento de um paciente só, controlável pelo teste.
 class _Repositorio implements RepositorioConsentimento {
@@ -62,6 +64,7 @@ Future<GoRouter> _irParaGravacao(
     // falha precisa ficar na tela, e o timer da nova tentativa sobraria.
     retry: (_, _) => null,
     overrides: [
+      sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
       repositorioConsentimentoProvider.overrideWithValue(repositorio),
       conexaoOnlineProvider.overrideWithValue(true),
       bancoDeTeste(),

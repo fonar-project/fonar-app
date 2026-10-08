@@ -16,6 +16,7 @@ import '../../../../design_system/widgets/app_estado.dart';
 import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../../auth/data/sessao.dart';
 import '../../domain/item_da_fila.dart';
 import '../fila_controlador.dart';
 
@@ -154,8 +155,16 @@ class _CartaoDoEnvio extends ConsumerWidget {
     void tentar() =>
         ref.read(filaControladorProvider.notifier).tentarAgora(item.id);
     final motivo = item.ultimaFalha ?? '';
+    // Gravado por outra conta neste aparelho: não sobe nesta sessão.
+    final deOutraConta =
+        item.pendente && !item.deQuem(ref.watch(sessaoProvider)?.uid ?? '');
 
     final (icone, titulo, texto) = switch (item.situacao) {
+      _ when deOutraConta => (
+        NomeIcone.passoPendente,
+        AppStrings.filaDeOutraConta,
+        AppStrings.filaDeOutraContaTexto,
+      ),
       SituacaoDoEnvio.naFila when !online => (
         NomeIcone.passoPendente,
         AppStrings.filaAguardandoConexao,
@@ -206,12 +215,21 @@ class _CartaoDoEnvio extends ConsumerWidget {
       ),
     };
 
-    // TODO(auth): com o Firebase Auth, "sessão expirada" deve levar ao login
-    // e a fila deve retomar sozinha depois de entrar. Hoje só oferece tentar
-    // de novo, que falha igual enquanto a sessão não for renovada.
     final Widget? acao = switch (item.situacao) {
+      _ when deOutraConta => null,
+      // Tentar de novo falharia igual: o Firebase não renova mais a sessão.
+      // Entrar de novo, com a senha, devolve o envio à fila sozinho.
+      SituacaoDoEnvio.aguardandoLogin => AppBotao.secundario(
+        rotulo: AppStrings.filaEntrarDeNovo,
+        aoTocar: online
+            ? () {
+                ref.read(sessaoProvider.notifier).encerrar();
+                context.goNamed(AppRoutes.loginNome);
+              }
+            : null,
+        motivoDesabilitado: AppStrings.filaEntrarExigeConexao,
+      ),
       SituacaoDoEnvio.aguardandoNovaTentativa ||
-      SituacaoDoEnvio.aguardandoLogin ||
       SituacaoDoEnvio.recusado ||
       // Sem consentimento novo, a conferência de antes do envio para de novo.
       SituacaoDoEnvio.semConsentimento => AppBotao.secundario(

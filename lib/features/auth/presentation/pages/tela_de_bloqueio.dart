@@ -100,7 +100,7 @@ class _TelaDeBloqueioState extends ConsumerState<TelaDeBloqueio> {
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    AppStrings.bloqueioProfissional(profissional.nome),
+                    AppStrings.bloqueioProfissional(profissional.identificacao),
                     style: textos.titleSmall,
                   ),
                   const SizedBox(height: AppSpacing.sm),

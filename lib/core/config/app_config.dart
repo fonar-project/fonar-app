@@ -15,6 +15,23 @@ abstract final class AppConfig {
     defaultValue: 'http://localhost:8080',
   );
 
+  /// A "Web API key" do projeto `fonar-763db` no Firebase (Configurações do
+  /// projeto → Geral). Não é segredo — o Firebase a põe dentro de todo app
+  /// cliente, e quem protege os dados são as regras do projeto —, mas entra
+  /// por aqui para cada build apontar para o projeto certo:
+  ///
+  /// ```
+  /// flutter run --dart-define=FONAR_FIREBASE_API_KEY=AIza...
+  /// ```
+  ///
+  /// Sem ela, o app roda com o login de EXEMPLO, que aceita qualquer e-mail e
+  /// senha e avisa disso na tela de entrada. Só em desenvolvimento: o build
+  /// de distribuição sem a chave se recusa a abrir a tela de entrada (ver
+  /// `repositorioAutenticacaoProvider`).
+  static const firebaseApiKey = String.fromEnvironment(
+    'FONAR_FIREBASE_API_KEY',
+  );
+
   /// Versão exibida na tela de conta. Entra no build de distribuição por
   /// `--dart-define=FONAR_VERSAO=...`; sem ela, a tela diz que é versão de
   /// desenvolvimento — e não um número que ninguém conferiu.

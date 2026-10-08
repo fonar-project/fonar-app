@@ -539,6 +539,13 @@ abstract final class AppStrings {
   static const filaSessaoExpirada = 'Sessão expirada';
   static const filaSessaoExpiradaTexto =
       'Entre novamente para o envio continuar. A gravação continua guardada.';
+  static const filaEntrarDeNovo = 'Entrar de novo';
+  static const filaEntrarExigeConexao =
+      'Entrar com a senha exige conexão. A gravação continua guardada.';
+  static const filaDeOutraConta = 'Gravado por outra conta';
+  static const filaDeOutraContaTexto =
+      'Sobe quando quem gravou entrar neste aparelho. A gravação continua '
+      'guardada.';
   static const filaRecusado = 'A análise recusou o envio';
   static String filaRecusadoTexto(String motivo) =>
       '$motivo Tentar de novo costuma repetir a recusa; se repetir, avise o '
@@ -867,6 +874,10 @@ abstract final class AppStrings {
   static const laudoItemConclusao = 'Conclusão do profissional';
   static const laudoItemConclusaoFalta = 'Escreva a conclusão abaixo.';
 
+  static const laudoItemAssinatura = 'Seu nome e registro';
+  static const laudoItemAssinaturaFalta =
+      'Vão na assinatura do laudo. Preencha na Conta.';
+  static const laudoIrParaConta = 'Preencher na Conta';
   static const laudoIrParaConsentimento = 'Registrar consentimento';
   static const laudoIrParaCapeV = 'Registrar CAPE-V';
 
@@ -1006,13 +1017,13 @@ abstract final class AppStrings {
   static String contaVersao(String versao) => 'Versão: $versao';
   static const contaLicencas = 'Licenças de software';
 
+  /// Barra lateral, enquanto o perfil da conta está vazio (US32).
+  static const contaPerfilIncompleto = 'Preencha nome e registro na Conta';
   static const contaSair = 'Sair da conta';
   static const contaSairPergunta = 'Sair da conta neste aparelho?';
 
   // TODO(jurídico): o que fica no aparelho depois de sair — hoje pacientes,
   // gravações e fila continuam guardados.
-  // TODO(auth): "quando você entrar de novo" só é verdade de fato quando cada
-  // envio levar o id de quem gravou; ver `Sessao`.
   static const contaSairTexto =
       'Pacientes, gravações e laudos continuam guardados neste aparelho.';
   static String contaSairComFila(int n) => n == 1
@@ -1105,12 +1116,28 @@ abstract final class AppStrings {
       'Entrar com e-mail e senha exige conexão.';
   static const loginEsqueciSenha = 'Esqueci a senha';
 
-  /// TODO(auth): remover quando a recuperação de senha do Firebase existir.
+  static const loginRecuperacaoInformeEmail =
+      'Informe acima o e-mail da conta para receber o link de redefinição.';
+  static const loginRecuperacaoEmailInvalido =
+      'Confira o e-mail: ele não parece um endereço válido.';
+  static const loginRecuperacaoEnviadaTitulo = 'Confira seu e-mail';
+
+  /// Igual com ou sem conta para o e-mail: dizer "não há conta" seria dizer
+  /// a qualquer um quem usa o FONAR.
+  static const loginRecuperacaoEnviadaTexto =
+      'Se houver uma conta FONAR com este e-mail, o link para criar uma senha '
+      'nova chega em alguns minutos. Confira também a caixa de spam.';
   static const loginRecuperacaoIndisponivel =
-      'Recuperação de senha ainda não disponível';
+      'Recuperação de senha indisponível no login de exemplo';
   static const loginRecuperacaoIndisponivelTexto =
-      'Nesta versão o aplicativo ainda não envia o e-mail de redefinição '
-      '(placeholder). O login aceita qualquer e-mail e senha.';
+      'Sem a chave do Firebase, o aplicativo não envia e-mail de '
+      'redefinição.';
+
+  /// PLACEHOLDER — o build sem a chave do Firebase.
+  static const loginExemploTitulo = 'Login de exemplo';
+  static const loginExemploTexto =
+      'Este build não recebeu a chave do Firebase: o login aceita qualquer '
+      'e-mail e senha. Serve só para desenvolvimento.';
 
   static const loginOfflineComCacheTitulo =
       'Sem conexão — dados locais disponíveis';
@@ -1119,6 +1146,11 @@ abstract final class AppStrings {
       '${pacientes == 1 ? 'paciente salvo' : 'pacientes salvos'}. Dá para '
       'gravar e revisar; o envio para análise aguarda a conexão voltar.';
   static const loginEntrarOffline = 'Entrar em modo offline';
+  static String loginOfflineComo(String email) => 'Entra como $email.';
+  static const loginOfflineSemContaTexto =
+      'O modo offline entra com a conta da última entrada com senha neste '
+      'aparelho, e ainda não houve nenhuma. Conecte-se e entre uma vez para '
+      'habilitá-lo.';
 
   static const loginOfflineSemCacheTitulo = 'Sem conexão e sem dados locais';
   static const loginOfflineSemCacheTexto =
@@ -1143,6 +1175,11 @@ abstract final class AppStrings {
       'Sua sessão expirou. Entre novamente para continuar.';
   static const erroCredencialInvalida =
       'E-mail ou senha incorretos. Confira e tente novamente.';
+  static const erroMuitasTentativas =
+      'Muitas tentativas seguidas. Por segurança, esta conta ficou pausada '
+      'por alguns minutos. Aguarde e tente de novo, ou redefina a senha.';
+  static const erroContaDesativada =
+      'Esta conta foi desativada. Fale com o responsável pelo FONAR.';
   static const erroProibido = 'Você não tem acesso a este recurso.';
   static const erroNaoEncontrado = 'Não encontramos o que você procurava.';
   static const erroValidacao = 'Confira os dados informados e tente novamente.';

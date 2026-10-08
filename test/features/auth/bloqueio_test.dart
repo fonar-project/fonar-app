@@ -12,12 +12,10 @@ import 'package:fonar_app/core/storage/token_storage.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/design_system/widgets/app_campo_texto.dart';
 import 'package:fonar_app/features/auth/data/bloqueio_por_inatividade.dart';
-import 'package:fonar_app/features/auth/data/repositorio_autenticacao_placeholder.dart';
+import 'package:fonar_app/features/auth/data/repositorio_autenticacao_firebase.dart';
 import 'package:fonar_app/features/auth/data/sessao.dart';
-import 'package:fonar_app/features/auth/domain/profissional.dart';
+import 'package:fonar_app/features/auth/domain/conta_autenticada.dart';
 import 'package:fonar_app/features/auth/domain/repositorio_autenticacao.dart';
-import 'package:fonar_app/features/conta/data/repositorio_da_conta_placeholder.dart';
-import 'package:fonar_app/features/conta/domain/dados_do_profissional.dart';
 import 'package:fonar_app/features/auth/presentation/pages/login_page.dart';
 import 'package:fonar_app/features/auth/presentation/pages/tela_de_bloqueio.dart';
 import 'package:fonar_app/features/auth/presentation/widgets/vigia_de_inatividade.dart';
@@ -28,38 +26,43 @@ import 'package:fonar_app/l10n/app_strings.dart';
 
 import '../../apoio/banco_em_memoria.dart';
 import '../../apoio/repositorios_em_memoria.dart';
+import '../../apoio/sessao_de_teste.dart';
 
 const _limite = Duration(minutes: 5);
 
-/// Aceita só a senha "certa".
+/// Aceita só a senha "certa". Sair faz o que [saida] mandar.
 class _Autenticacao implements RepositorioAutenticacao {
+  _Autenticacao({this.saida});
+
+  final Future<void> Function()? saida;
   final pedidos = <(String, String)>[];
 
   @override
-  Future<void> entrar({required String email, required String senha}) async {
+  Future<ContaAutenticada> entrar({
+    required String email,
+    required String senha,
+  }) async {
     pedidos.add((email, senha));
     if (senha != 'certa') throw const CredencialInvalida();
+    return contaDeTeste;
   }
-}
-
-class _ContaQueNaoSai implements RepositorioDaConta {
-  @override
-  Future<void> salvar(Profissional profissional) async {}
 
   @override
-  Future<void> sair() => Future.error(const FalhaDesconhecida());
+  Future<ContaAutenticada?> contaGuardada() async => contaDeTeste;
+
+  @override
+  Future<void> pedirRedefinicaoDeSenha(String email) async {}
+
+  @override
+  Future<void> sair() => saida?.call() ?? Future.value();
 }
 
 /// Saída que só termina quando o teste deixa — o cofre do sistema pode
 /// demorar.
-class _ContaLenta implements RepositorioDaConta {
+class _SaidaLenta {
   final pendente = Completer<void>();
 
-  @override
-  Future<void> salvar(Profissional profissional) async {}
-
-  @override
-  Future<void> sair() => pendente.future;
+  Future<void> call() => pendente.future;
 }
 
 class _Cena {
@@ -81,7 +84,7 @@ Future<_Cena> _abrir(
   WidgetTester tester, {
   bool online = true,
   bool saidaFalha = false,
-  RepositorioDaConta? conta,
+  Future<void> Function()? saida,
   Size tamanho = const Size(390, 844),
   double escala = 1,
 }) async {
@@ -92,23 +95,21 @@ Future<_Cena> _abrir(
     tester.platformDispatcher.textScaleFactorTestValue = escala;
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
   }
-  final autenticacao = _Autenticacao();
+  final autenticacao = _Autenticacao(
+    saida: saidaFalha ? () => Future.error(const FalhaDesconhecida()) : saida,
+  );
   late _Cena cena;
   final container = ProviderContainer(
     retry: (_, _) => null,
     overrides: [
       bancoDeTeste(),
       conexaoOnlineProvider.overrideWithValue(online),
-      sessaoAbertaProvider.overrideWith(() => Sessao(true)),
+      sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
       relogioProvider.overrideWithValue(() => cena.agora),
       limiteDeInatividadeProvider.overrideWithValue(_limite),
       repositorioAutenticacaoProvider.overrideWithValue(autenticacao),
       // O cofre do sistema não existe no teste.
       tokenStorageProvider.overrideWithValue(TokenStorageEmMemoria()),
-      if (saidaFalha)
-        repositorioDaContaProvider.overrideWithValue(_ContaQueNaoSai())
-      else if (conta != null)
-        repositorioDaContaProvider.overrideWithValue(conta),
       pacientesProvider.overrideWith(
         (ref) async => const [
           Paciente(
@@ -315,8 +316,8 @@ void main() {
   ) async {
     // Revisão de 24/09: fechar a sessão soltava o bloqueio na hora, e a
     // tela de baixo voltava à vista durante toda a espera da saída.
-    final conta = _ContaLenta();
-    final c = await _abrir(tester, conta: conta);
+    final saida = _SaidaLenta();
+    final c = await _abrir(tester, saida: saida.call);
     await tester.enterText(
       _campo(AppStrings.cadastroCampoNome),
       'Caio de Teste',
@@ -333,7 +334,7 @@ void main() {
     expect(find.byType(TelaDeBloqueio), findsOneWidget);
     expect(find.semantics.byLabel('Caio de Teste'), findsNothing);
 
-    conta.pendente.complete();
+    saida.pendente.complete();
     await tester.pumpAndSettle();
 
     expect(c.bloqueado, isFalse);
@@ -346,7 +347,7 @@ void main() {
     test('sessão que fecha bloqueada continua bloqueada até liberar', () {
       final container = ProviderContainer(
         overrides: [
-          sessaoAbertaProvider.overrideWith(() => Sessao(true)),
+          sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
           relogioProvider.overrideWithValue(() => DateTime(2026, 9, 24, 10, 6)),
           limiteDeInatividadeProvider.overrideWithValue(Duration.zero),
         ],
@@ -361,7 +362,7 @@ void main() {
       bloqueio.liberar();
       expect(container.read(bloqueioPorInatividadeProvider), isTrue);
 
-      container.read(sessaoAbertaProvider.notifier).encerrar();
+      container.read(sessaoProvider.notifier).encerrar();
       expect(container.read(bloqueioPorInatividadeProvider), isTrue);
 
       bloqueio.liberar();
@@ -371,20 +372,20 @@ void main() {
     test('entrar de novo começa desbloqueado', () {
       final container = ProviderContainer(
         overrides: [
-          sessaoAbertaProvider.overrideWith(() => Sessao(true)),
+          sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
           relogioProvider.overrideWithValue(() => DateTime(2026, 9, 24, 10, 6)),
           limiteDeInatividadeProvider.overrideWithValue(Duration.zero),
         ],
       );
       addTearDown(container.dispose);
       container.listen(bloqueioPorInatividadeProvider, (_, _) {});
-      final sessao = container.read(sessaoAbertaProvider.notifier);
+      final sessao = container.read(sessaoProvider.notifier);
       container.read(bloqueioPorInatividadeProvider.notifier).conferir();
       expect(container.read(bloqueioPorInatividadeProvider), isTrue);
 
       sessao.encerrar();
       expect(container.read(bloqueioPorInatividadeProvider), isTrue);
-      sessao.abrir();
+      sessao.abrir(contaDeTeste);
 
       expect(container.read(bloqueioPorInatividadeProvider), isFalse);
     });
@@ -392,7 +393,7 @@ void main() {
 
   _testar('sem sessão aberta, nunca bloqueia', (tester) async {
     final c = await _abrir(tester);
-    c.container.read(sessaoAbertaProvider.notifier).encerrar();
+    c.container.read(sessaoProvider.notifier).encerrar();
     await tester.pump();
 
     await _passar(tester, c, _limite * 3);

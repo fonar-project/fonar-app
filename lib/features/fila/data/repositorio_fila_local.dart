@@ -53,6 +53,7 @@ class RepositorioFilaLocal implements RepositorioFila {
           proximaTentativa: e.proximaTentativa,
           ultimaFalha: e.ultimaFalha,
           analiseId: e.analiseId,
+          profissionalId: e.profissionalId,
         ),
     ];
   });
@@ -73,6 +74,7 @@ class RepositorioFilaLocal implements RepositorioFila {
             proximaTentativa: Value(item.proximaTentativa),
             ultimaFalha: Value(item.ultimaFalha),
             analiseId: Value(item.analiseId),
+            profissionalId: Value(item.profissionalId),
           ),
         );
     for (final (ordem, amostra) in item.amostras.indexed) {
