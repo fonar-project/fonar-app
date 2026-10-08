@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../tokens/app_cores.dart';
+import '../tokens/app_movimento.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_spacing.dart';
 import 'app_fundo.dart';
@@ -134,7 +135,10 @@ class _Opcao extends StatelessWidget {
       (false, false) => context.cores.bordaDeCampo,
     };
 
-    final conteudo = Container(
+    // Marcar muda a cor com transição curta, como o hover dos botões.
+    final conteudo = AnimatedContainer(
+      duration: AppMovimento.duracao(context, AppMovimento.rapida),
+      curve: AppMovimento.curva,
       constraints: const BoxConstraints(
         minHeight: AppSpacing.alvoDeToqueMinimo,
       ),

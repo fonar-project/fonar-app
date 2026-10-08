@@ -7,6 +7,7 @@ import '../../../../app/router/app_routes.dart';
 import '../../../../core/network/conexao.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
+import '../../../../design_system/tokens/app_movimento.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/tokens/app_typography.dart';
@@ -197,7 +198,14 @@ class _LayoutExpandido extends StatelessWidget {
             ],
           ),
         ),
-        Expanded(child: conteudo),
+        Expanded(
+          // Carregando → pronto (ou erro): o conteúdo novo entra.
+          child: AppTrocaAnimada(
+            chave: conteudo.runtimeType,
+            preencher: true,
+            child: conteudo,
+          ),
+        ),
       ],
     );
   }
@@ -267,7 +275,14 @@ class _LayoutCompacto extends ConsumerWidget {
             ),
           ),
         ),
-        Expanded(child: conteudo),
+        Expanded(
+          // Carregando → pronto (ou erro): o conteúdo novo entra.
+          child: AppTrocaAnimada(
+            chave: conteudo.runtimeType,
+            preencher: true,
+            child: conteudo,
+          ),
+        ),
         if (aoNovaAvaliacao case final aoTocar?)
           Container(
             padding: const EdgeInsets.symmetric(

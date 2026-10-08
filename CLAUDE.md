@@ -166,6 +166,19 @@ entrada. Exceção proposital — o VU meter continua respondendo ao nível de
 áudio, porque é feedback clínico e não decoração; reduza a suavização,
 mantenha a resposta.
 
+Fora do movimento reduzido, o movimento é FUNCIONAL (US31): diz o que mudou,
+nunca enfeita. Curto (≤ 250 ms), sem quique, zoom ou parallax, e na troca de
+conteúdo só o novo entra — o antigo sai na hora, para nunca haver dois
+estados (e um valor velho) na tela ao mesmo tempo. Tudo passa pelos tokens e
+componentes de `design_system/tokens/app_movimento.dart` (`AppTrocaAnimada`,
+`AppRevelar`, `AppTamanhoAnimado`), que já zeram com movimento reduzido.
+
+Ação presa no rodapé só quando cabe: `AppAreaComAcoes` decide pela altura
+(já na escala de texto); em tela baixa — celular deitado, texto em 200% —
+tudo rola junto. A matriz de layout (`test/app/matriz_de_layout_test.dart`)
+varre toda rota do celular pequeno (360×640) ao Full HD, e uma vez com
+movimento reduzido.
+
 ## Ícones
 19 SVG em `assets/icons/`, 24x24, `currentColor`, sem width/height fixos.
 Índice de uso em `assets/icons/README.md`.

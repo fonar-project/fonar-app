@@ -7,6 +7,7 @@ import '../../../../app/router/trilhas.dart';
 import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
+import '../../../../design_system/tokens/app_movimento.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
@@ -135,7 +136,14 @@ class GravacoesNaoEnviadasPage extends ConsumerWidget {
                     ItemDaTrilha(AppStrings.naoEnviadasTitulo),
                   ],
                 ),
-                Expanded(child: conteudo),
+                Expanded(
+                  // Carregando → pronto (ou erro): o conteúdo novo entra.
+                  child: AppTrocaAnimada(
+                    chave: conteudo.runtimeType,
+                    preencher: true,
+                    child: conteudo,
+                  ),
+                ),
               ],
             );
           },

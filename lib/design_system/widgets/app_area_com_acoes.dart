@@ -20,6 +20,7 @@ class AppAreaComAcoes extends StatelessWidget {
     this.topo,
     this.padding = EdgeInsets.zero,
     this.centralizar = false,
+    this.controller,
     super.key,
   });
 
@@ -40,6 +41,10 @@ class AppAreaComAcoes extends StatelessWidget {
   /// gravação guiada fica no meio da tela, como no protótipo.
   final bool centralizar;
 
+  /// O controle da rolagem — para quem precisa voltar ao topo quando o
+  /// conteúdo muda, como a gravação guiada a cada etapa.
+  final ScrollController? controller;
+
   /// A altura a partir da qual a faixa fica presa, já na escala de texto.
   static double alturaParaFixar(BuildContext context) =>
       MediaQuery.textScalerOf(context).scale(520);
@@ -51,6 +56,7 @@ class AppAreaComAcoes extends StatelessWidget {
         final fixa = restricoes.maxHeight >= alturaParaFixar(context);
         if (!fixa) {
           return SingleChildScrollView(
+            controller: controller,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -68,6 +74,7 @@ class AppAreaComAcoes extends StatelessWidget {
             Expanded(
               child: LayoutBuilder(
                 builder: (context, area) => SingleChildScrollView(
+                  controller: controller,
                   padding: padding,
                   child: centralizar
                       ? ConstrainedBox(

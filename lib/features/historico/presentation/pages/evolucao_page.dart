@@ -7,6 +7,7 @@ import '../../../../app/router/trilhas.dart';
 import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
+import '../../../../design_system/tokens/app_movimento.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/tokens/app_typography.dart';
@@ -128,7 +129,14 @@ class EvolucaoPage extends ConsumerWidget {
                       _MostrarAoPaciente(pacienteId: pacienteId),
                   ],
                 ),
-                Expanded(child: conteudo),
+                Expanded(
+                  // Carregando → pronto (ou erro): o conteúdo novo entra.
+                  child: AppTrocaAnimada(
+                    chave: conteudo.runtimeType,
+                    preencher: true,
+                    child: conteudo,
+                  ),
+                ),
               ],
             );
           },
@@ -224,10 +232,15 @@ class _Evolucao extends ConsumerWidget {
           ref.read(medidaDaEvolucaoProvider(pacienteId).notifier).escolher(m),
     );
 
-    final comparacaoDasUltimas = _Comparacao(
-      medida: medida,
-      comparacao: comparacao,
-      valores: serie.where((p) => p.valor != null).length,
+    // Trocando de medida, os números da comparação entram de novo — a
+    // mesma caixa com valores de outra medida não pode parecer a anterior.
+    final comparacaoDasUltimas = AppTrocaAnimada(
+      chave: medida,
+      child: _Comparacao(
+        medida: medida,
+        comparacao: comparacao,
+        valores: serie.where((p) => p.valor != null).length,
+      ),
     );
 
     final cartao = Container(

@@ -270,6 +270,29 @@ void main() {
     expect(find.text(AppStrings.capturaBloqueadaMicrofone), findsNothing);
   });
 
+  testWidgets('celular deitado: a etapa nova aparece do começo', (
+    tester,
+  ) async {
+    // Com a tela baixa tudo rola; "Continuar" fica lá embaixo. A etapa nova
+    // não pode aparecer com o começo dela escondido em cima.
+    await _abrir(tester, tamanho: const Size(844, 390));
+    await _medir(tester);
+    final continuar = find.text(AppStrings.capturaContinuar);
+    await tester.ensureVisible(continuar);
+    await tester.pumpAndSettle();
+    await tester.tap(continuar);
+    await tester.pumpAndSettle();
+
+    final rotulo = tester.getRect(
+      find.text(
+        AppStrings.etapaDe(2, 3, AppStrings.tarefaVogalTitulo).toUpperCase(),
+      ),
+    );
+    expect(rotulo.top, greaterThanOrEqualTo(0));
+    expect(rotulo.bottom, lessThan(390));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('no desktop, Espaço mede o ruído', (tester) async {
     final fonte = await _abrir(tester, tamanho: _desktop);
     expect(find.text(AppStrings.capturaAtalhos), findsOneWidget);

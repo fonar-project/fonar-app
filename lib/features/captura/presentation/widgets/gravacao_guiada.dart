@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
+import '../../../../design_system/tokens/app_movimento.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_area_com_acoes.dart';
@@ -54,6 +55,13 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
   var _etapa = _ruido;
   final _foco = FocusNode(debugLabel: 'gravação guiada');
 
+  /// A rolagem do palco. Quando a etapa ou a fase muda, volta ao topo: com a
+  /// tela baixa tudo rola, e tocar em "Continuar" lá embaixo deixava a etapa
+  /// nova aparecer com o começo dela — o "Etapa 2 de 3" e a instrução —
+  /// escondido em cima.
+  final _rolagem = ScrollController();
+  Object? _faseMostrada;
+
   String get _id => widget.pacienteId;
 
   @override
@@ -66,6 +74,7 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
   void dispose() {
     HardwareKeyboard.instance.removeHandler(_tecla);
     _foco.dispose();
+    _rolagem.dispose();
     super.dispose();
   }
 
@@ -159,6 +168,32 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
           aoEscolher: liberada && !gravacao.ocupado ? _irPara : null,
         );
 
+        // A fase do palco: muda quando a etapa avança, quando a gravação
+        // começa ou termina, quando a conferência devolve o resultado. É ela
+        // que decide quando o conteúdo entra animado — ver `AppTrocaAnimada`.
+        final fase = switch (etapa) {
+          _ruido => afericao.runtimeType,
+          _ when etapa == _revisao => 'revisão',
+          _ => switch (_tarefas[etapa - 1]) {
+            final t when gravacao.gravando == t => 'gravando',
+            final t when gravacao.conferindo == t => 'conferindo',
+            final t
+                when gravacao.amostras[t] != null ||
+                    gravacao.rejeitadas[t] != null ||
+                    gravacao.falha?.tarefa == t =>
+              'resultado',
+            _ => 'pronto',
+          },
+        };
+
+        final chaveDaFase = (etapa, fase);
+        if (_faseMostrada != null && _faseMostrada != chaveDaFase) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (_rolagem.hasClients) _rolagem.jumpTo(0);
+          });
+        }
+        _faseMostrada = chaveDaFase;
+
         final conteudo = Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -175,7 +210,14 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
               ),
               const SizedBox(height: AppSpacing.lg),
             ],
-            ...palco.corpo,
+            AppTrocaAnimada(
+              chave: chaveDaFase,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: palco.corpo,
+              ),
+            ),
           ],
         );
 
@@ -187,6 +229,7 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
         final Widget tela;
         if (compacta) {
           tela = AppAreaComAcoes(
+            controller: _rolagem,
             topo: Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.md,
@@ -270,6 +313,7 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
                 else
                   Expanded(
                     child: _Rolavel(
+                      controller: _rolagem,
                       padding: const EdgeInsets.all(AppSpacing.xl),
                       child: corpoDoCartao,
                     ),
@@ -304,7 +348,11 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
           );
           const respiro = EdgeInsets.fromLTRB(34, 26, 34, 26);
           tela = baixa
-              ? SingleChildScrollView(padding: respiro, child: coluna)
+              ? SingleChildScrollView(
+                  controller: _rolagem,
+                  padding: respiro,
+                  child: coluna,
+                )
               : Padding(padding: respiro, child: coluna);
         }
 
@@ -756,15 +804,21 @@ class _Acao {
 
 /// Centraliza o palco na altura quando cabe, e rola quando não cabe.
 class _Rolavel extends StatelessWidget {
-  const _Rolavel({required this.padding, required this.child});
+  const _Rolavel({
+    required this.padding,
+    required this.child,
+    required this.controller,
+  });
 
   final EdgeInsets padding;
   final Widget child;
+  final ScrollController controller;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, restricoes) => SingleChildScrollView(
+        controller: controller,
         padding: padding,
         child: ConstrainedBox(
           constraints: BoxConstraints(
@@ -909,10 +963,12 @@ class _Cronometro extends StatelessWidget {
           alignment: WrapAlignment.center,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            AppIcone(
-              nome: NomeIcone.gravar,
-              cor: context.cores.acento,
-              tamanho: 18,
+            _Pulsar(
+              child: AppIcone(
+                nome: NomeIcone.gravar,
+                cor: context.cores.acento,
+                tamanho: 18,
+              ),
             ),
             const SizedBox(width: AppSpacing.xs),
             Text(
@@ -935,6 +991,53 @@ class _Cronometro extends StatelessWidget {
       ),
     );
   }
+}
+
+/// O ponto de "gravando" pulsando devagar: diz, sem precisar ler, que a
+/// captura está acontecendo agora. É o único movimento contínuo da
+/// interface além do medidor — e, ao contrário dele, para com movimento
+/// reduzido: o texto "Gravando" e o cronômetro já dizem o mesmo.
+class _Pulsar extends StatefulWidget {
+  const _Pulsar({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_Pulsar> createState() => _PulsarState();
+}
+
+class _PulsarState extends State<_Pulsar> with SingleTickerProviderStateMixin {
+  late final _controle = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (AppMovimento.reduzido(context)) {
+      _controle
+        ..stop()
+        ..value = 1;
+    } else if (!_controle.isAnimating) {
+      _controle.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controle.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => FadeTransition(
+    opacity: Tween<double>(
+      begin: 0.35,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controle, curve: Curves.easeInOut)),
+    child: widget.child,
+  );
 }
 
 /// As etapas no topo: número (ou ✓), nome e situação.
@@ -1018,7 +1121,11 @@ class _Etapa extends StatelessWidget {
         : AppStrings.etapaPendente;
     final destaque = atual || concluida;
     Widget marca(BuildContext context) {
-      return Container(
+      // A cor da etapa muda com transição curta quando ela é concluída ou
+      // passa a ser a atual.
+      return AnimatedContainer(
+        duration: AppMovimento.duracao(context, AppMovimento.media),
+        curve: AppMovimento.curva,
         width: 28,
         height: 28,
         alignment: Alignment.center,

@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../design_system/tokens/app_cores.dart';
+import '../../../../design_system/tokens/app_movimento.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../../analise/domain/faixa_de_referencia.dart';
 import '../../../analise/presentation/apresentacao_da_medida.dart';
@@ -112,7 +113,10 @@ class GraficoDeEvolucao extends StatelessWidget {
                   reservaEsquerda: reservaEsquerda,
                   reservaEmbaixo: reservaEmbaixo,
                 ),
-                duration: Duration.zero,
+                // Trocando de medida, a linha vai de uma para a outra em vez
+                // de saltar — o olho acompanha. Zero com movimento reduzido.
+                duration: AppMovimento.duracao(context, AppMovimento.media),
+                curve: AppMovimento.curva,
               );
             },
           ),

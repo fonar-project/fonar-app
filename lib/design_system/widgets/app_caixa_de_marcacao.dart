@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../tokens/app_cores.dart';
+import '../tokens/app_movimento.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_spacing.dart';
 import 'app_fundo.dart';
@@ -56,7 +57,10 @@ class AppCaixaDeMarcacao extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
+          // Marcar muda a cor com transição curta, como o hover dos botões.
+          AnimatedContainer(
+            duration: AppMovimento.duracao(context, AppMovimento.rapida),
+            curve: AppMovimento.curva,
             width: _aresta,
             height: _aresta,
             decoration: BoxDecoration(

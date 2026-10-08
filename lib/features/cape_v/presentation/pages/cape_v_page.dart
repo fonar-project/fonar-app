@@ -7,6 +7,7 @@ import '../../../../app/router/trilhas.dart';
 import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
+import '../../../../design_system/tokens/app_movimento.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_area_com_acoes.dart';
@@ -469,41 +470,44 @@ class _Qualificacao extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!nota.temDesvio) return const SizedBox.shrink();
     String? erroSe(ProblemaNaNota p) =>
         problema == p ? mensagemDoProblema(p) : null;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const SizedBox(height: AppSpacing.sm),
-        AppEscolhaUnica<Consistencia>(
-          rotulo: AppStrings.capeVConsistencia,
-          opcoes: [
-            for (final c in Consistencia.values)
-              AppOpcao(valor: c, rotulo: nomeDaConsistencia(c)),
-          ],
-          selecionado: nota.consistencia,
-          aoEscolher: habilitado
-              ? (c) => controlador.definirConsistencia(parametro, c)
-              : null,
-          erro: erroSe(ProblemaNaNota.semConsistencia),
-        ),
-        if (parametro.temDirecao) ...[
+    // Aparece acompanhando a altura ao marcar desvio, e some ao zerar.
+    return AppRevelar(
+      visivel: nota.temDesvio,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
           const SizedBox(height: AppSpacing.sm),
-          AppEscolhaUnica<DirecaoDoDesvio>(
-            rotulo: AppStrings.capeVSentido,
+          AppEscolhaUnica<Consistencia>(
+            rotulo: AppStrings.capeVConsistencia,
             opcoes: [
-              for (final d in DirecaoDoDesvio.values)
-                AppOpcao(valor: d, rotulo: parametro.nomeDaDirecao(d)),
+              for (final c in Consistencia.values)
+                AppOpcao(valor: c, rotulo: nomeDaConsistencia(c)),
             ],
-            selecionado: nota.direcao,
+            selecionado: nota.consistencia,
             aoEscolher: habilitado
-                ? (d) => controlador.definirDirecao(parametro, d)
+                ? (c) => controlador.definirConsistencia(parametro, c)
                 : null,
-            erro: erroSe(ProblemaNaNota.semDirecao),
+            erro: erroSe(ProblemaNaNota.semConsistencia),
           ),
+          if (parametro.temDirecao) ...[
+            const SizedBox(height: AppSpacing.sm),
+            AppEscolhaUnica<DirecaoDoDesvio>(
+              rotulo: AppStrings.capeVSentido,
+              opcoes: [
+                for (final d in DirecaoDoDesvio.values)
+                  AppOpcao(valor: d, rotulo: parametro.nomeDaDirecao(d)),
+              ],
+              selecionado: nota.direcao,
+              aoEscolher: habilitado
+                  ? (d) => controlador.definirDirecao(parametro, d)
+                  : null,
+              erro: erroSe(ProblemaNaNota.semDirecao),
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }
@@ -678,6 +682,17 @@ class _EscalaEmTelaCheia extends ConsumerStatefulWidget {
 class _EscalaEmTelaCheiaState extends ConsumerState<_EscalaEmTelaCheia> {
   late var _parametro = widget.inicial;
 
+  /// Anterior e próximo voltam a rolagem ao topo: com a tela deitada, o
+  /// parâmetro novo aparecia já rolado até a consistência, com o número e a
+  /// régua escondidos em cima.
+  final _rolagem = ScrollController();
+
+  @override
+  void dispose() {
+    _rolagem.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final estado =
@@ -696,7 +711,11 @@ class _EscalaEmTelaCheiaState extends ConsumerState<_EscalaEmTelaCheia> {
     final problema = estado.problemas[_parametro];
     final habilitado = !estado.registrando;
     final emPe = MediaQuery.orientationOf(context) == Orientation.portrait;
-    void ir(int j) => setState(() => _parametro = todos[j]);
+    void ir(int j) {
+      setState(() => _parametro = todos[j]);
+      if (_rolagem.hasClients) _rolagem.jumpTo(0);
+    }
+
     void concluir() => Navigator.of(context).pop();
 
     return Scaffold(
@@ -790,71 +809,79 @@ class _EscalaEmTelaCheiaState extends ConsumerState<_EscalaEmTelaCheia> {
             ),
             Expanded(
               child: SingleChildScrollView(
+                controller: _rolagem,
                 padding: const EdgeInsets.all(AppSpacing.md),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (emPe) ...[
-                      Row(
-                        children: [
-                          const AppIcone(nome: NomeIcone.girarAparelho),
-                          const SizedBox(width: AppSpacing.xs),
-                          Expanded(
-                            child: Text(
-                              AppStrings.capeVGireAparelho,
-                              style: textos.bodyMedium,
+                // Anterior e próximo: o parâmetro novo entra, o anterior sai
+                // na hora.
+                child: AppTrocaAnimada(
+                  chave: _parametro,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (emPe) ...[
+                        Row(
+                          children: [
+                            const AppIcone(nome: NomeIcone.girarAparelho),
+                            const SizedBox(width: AppSpacing.xs),
+                            Expanded(
+                              child: Text(
+                                AppStrings.capeVGireAparelho,
+                                style: textos.bodyMedium,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                      ],
+                      _Ouvir(analiseId: widget.analiseId),
                       const SizedBox(height: AppSpacing.md),
-                    ],
-                    _Ouvir(analiseId: widget.analiseId),
-                    const SizedBox(height: AppSpacing.md),
-                    Center(
-                      child: nota.valor == null
-                          ? Text(AppStrings.capeVNaoMarcado, style: secundario)
-                          : Row(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.baseline,
-                              textBaseline: TextBaseline.alphabetic,
-                              children: [
-                                Text(
-                                  '${nota.valor}',
-                                  style: AppTypography.medidaDestaque.copyWith(
-                                    color: context.cores.texto,
+                      Center(
+                        child: nota.valor == null
+                            ? Text(
+                                AppStrings.capeVNaoMarcado,
+                                style: secundario,
+                              )
+                            : Row(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.baseline,
+                                textBaseline: TextBaseline.alphabetic,
+                                children: [
+                                  Text(
+                                    '${nota.valor}',
+                                    style: AppTypography.medidaDestaque
+                                        .copyWith(color: context.cores.texto),
                                   ),
-                                ),
-                                Text(' /100', style: secundario),
-                              ],
-                            ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    AppEscalaVisual(
-                      // Uma escala por parâmetro: trocar de parâmetro não
-                      // arrasta o foco nem o arraste da anterior.
-                      key: ValueKey(_parametro),
-                      rotulo: _parametro.nome,
-                      valor: nota.valor,
-                      aoMudar: habilitado
-                          ? (v) => controlador.marcar(_parametro, v)
-                          : null,
-                      rotuloMinimo: AppStrings.capeVSemDesvio,
-                      rotuloMaximo: AppStrings.capeVDesvioExtremo,
-                      textoNaoMarcado: AppStrings.capeVNaoMarcado,
-                      erro: problema == ProblemaNaNota.naoMarcada
-                          ? mensagemDoProblema(problema!)
-                          : null,
-                      mostrarCabecalho: false,
-                    ),
-                    _Qualificacao(
-                      parametro: _parametro,
-                      nota: nota,
-                      problema: problema,
-                      habilitado: habilitado,
-                      controlador: controlador,
-                    ),
-                  ],
+                                  Text(' /100', style: secundario),
+                                ],
+                              ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      AppEscalaVisual(
+                        // Uma escala por parâmetro: trocar de parâmetro não
+                        // arrasta o foco nem o arraste da anterior.
+                        key: ValueKey(_parametro),
+                        rotulo: _parametro.nome,
+                        valor: nota.valor,
+                        aoMudar: habilitado
+                            ? (v) => controlador.marcar(_parametro, v)
+                            : null,
+                        rotuloMinimo: AppStrings.capeVSemDesvio,
+                        rotuloMaximo: AppStrings.capeVDesvioExtremo,
+                        textoNaoMarcado: AppStrings.capeVNaoMarcado,
+                        erro: problema == ProblemaNaNota.naoMarcada
+                            ? mensagemDoProblema(problema!)
+                            : null,
+                        mostrarCabecalho: false,
+                      ),
+                      _Qualificacao(
+                        parametro: _parametro,
+                        nota: nota,
+                        problema: problema,
+                        habilitado: habilitado,
+                        controlador: controlador,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

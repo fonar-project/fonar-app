@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../tokens/app_cores.dart';
+import '../tokens/app_movimento.dart';
 import '../tokens/app_spacing.dart';
 import 'app_icone.dart';
 
@@ -29,18 +30,27 @@ class AppMensagemDeCampo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (erro case final erro? when erro.isNotEmpty) {
-      return _Linha(
-        texto: erro,
-        cor: context.cores.erro,
-        icone: NomeIcone.alerta,
-        ehErro: true,
-      );
-    }
-    if (apoio case final apoio?) {
-      return _Linha(texto: apoio, cor: corDoApoio);
-    }
-    return const SizedBox.shrink();
+    final (Object? chave, Widget linha) = switch ((erro, apoio)) {
+      (final erro?, _) when erro.isNotEmpty => (
+        'erro:$erro',
+        _Linha(
+          texto: erro,
+          cor: context.cores.erro,
+          icone: NomeIcone.alerta,
+          ehErro: true,
+        ),
+      ),
+      (_, final apoio?) => (
+        'apoio:$apoio',
+        _Linha(texto: apoio, cor: corDoApoio),
+      ),
+      _ => (null, const SizedBox(width: double.infinity)),
+    };
+    // O erro entra com a altura acompanhando: o que vem embaixo do campo
+    // desce em vez de pular. Ver `AppMovimento`.
+    return AppTamanhoAnimado(
+      child: AppTrocaAnimada(chave: chave, child: linha),
+    );
   }
 }
 

@@ -8,6 +8,7 @@ import '../../../../app/app_estrutura.dart';
 import '../../../../app/router/saida_protegida.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
+import '../../../../design_system/tokens/app_movimento.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_cabecalho_de_tarefa.dart';
@@ -102,7 +103,14 @@ class EditarPacientePage extends ConsumerWidget {
                     ItemDaTrilha(AppStrings.edicaoTitulo),
                   ],
                 ),
-                Expanded(child: conteudo),
+                Expanded(
+                  // Carregando → pronto (ou erro): o conteúdo novo entra.
+                  child: AppTrocaAnimada(
+                    chave: conteudo.runtimeType,
+                    preencher: true,
+                    child: conteudo,
+                  ),
+                ),
               ],
             );
           },

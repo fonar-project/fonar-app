@@ -492,6 +492,41 @@ void main() {
       semantica.dispose();
     });
 
+    testWidgets('deitado, "Anterior" mostra o parâmetro do começo', (
+      tester,
+    ) async {
+      final semantica = tester.ensureSemantics();
+      // Texto ampliado: é quando a tela deitada passa a rolar.
+      await abrir(tester, escala: 1.5);
+      await _tocar(tester, abrirEscala(ParametroCapeV.grauGeral));
+      tester.view.physicalSize = const Size(844, 390);
+      await tester.pumpAndSettle();
+      // Os dois com desvio: a consistência deixa os dois altos o bastante
+      // para rolar.
+      await _marcar(tester, 0, 0.5);
+      await _tocar(tester, find.text(AppStrings.capeVProximo));
+      await _marcar(tester, 0, 0.5);
+      await tester.drag(
+        find.byType(SingleChildScrollView).last,
+        const Offset(0, -600),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(AppStrings.capeVAnterior));
+      await tester.pumpAndSettle();
+
+      final cabecalho = tester.getRect(
+        find.text(AppStrings.capeVParametroDe(1, 6)),
+      );
+      // O começo do parâmetro — o primeiro item, logo abaixo do cabeçalho —
+      // está à vista, e não rolado para trás dele.
+      final primeiro = tester.getRect(
+        find.text(AppStrings.resultadoAudioIndisponivel).last,
+      );
+      expect(primeiro.top, greaterThan(cabecalho.bottom));
+      semantica.dispose();
+    });
+
     testWidgets('em 200% nem a lista nem a tela cheia estouram', (
       tester,
     ) async {

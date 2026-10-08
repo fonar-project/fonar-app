@@ -10,6 +10,7 @@ import '../../../../app/router/trilhas.dart';
 import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
+import '../../../../design_system/tokens/app_movimento.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
@@ -156,7 +157,14 @@ class LaudoPage extends ConsumerWidget {
                   ],
                   situacao: AppStrings.situacaoLaudo,
                 ),
-                Expanded(child: conteudo),
+                Expanded(
+                  // Carregando → pronto (ou erro): o conteúdo novo entra.
+                  child: AppTrocaAnimada(
+                    chave: conteudo.runtimeType,
+                    preencher: true,
+                    child: conteudo,
+                  ),
+                ),
               ],
             );
           },
@@ -469,51 +477,64 @@ class _Painel extends StatelessWidget {
               : AppStrings.laudoGerarBloqueado,
           ocupaLargura: true,
         ),
-        if (estado.falhou) ...[
-          const SizedBox(height: AppSpacing.sm),
-          const AppSituacao(
-            icone: NomeIcone.alerta,
-            titulo: AppStrings.laudoErroGerar,
-          ),
-        ],
-        if (laudo != null) ...[
-          const SizedBox(height: AppSpacing.md),
-          Semantics(
-            liveRegion: true,
+        AppRevelar(
+          visivel: estado.falhou,
+          child: const Padding(
+            padding: EdgeInsets.only(top: AppSpacing.sm),
             child: AppSituacao(
-              icone: NomeIcone.confirmacao,
-              titulo: AppStrings.laudoGeradoEm(
-                AppStrings.data(laudo.geradoEm),
-                AppStrings.hora(laudo.geradoEm),
-              ),
-              texto: mudou ? AppStrings.laudoTextoMudou : null,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children: [
-              AppBotao.secundario(
-                rotulo: AppStrings.laudoCompartilhar,
-                aoTocar: saindo ? null : aoCompartilhar,
-                motivoDesabilitado: AppStrings.laudoGerando,
-              ),
-              AppBotao.secundario(
-                rotulo: AppStrings.laudoImprimir,
-                aoTocar: saindo ? null : aoImprimir,
-                motivoDesabilitado: AppStrings.laudoGerando,
-              ),
-            ],
-          ),
-          if (falhouSaida) ...[
-            const SizedBox(height: AppSpacing.sm),
-            const AppSituacao(
               icone: NomeIcone.alerta,
-              titulo: AppStrings.laudoErroSaida,
+              titulo: AppStrings.laudoErroGerar,
             ),
-          ],
-        ],
+          ),
+        ),
+        // O laudo gerado aparece acompanhando a altura, com as ações de
+        // compartilhar e imprimir — ver `AppRevelar`.
+        AppRevelar(
+          visivel: laudo != null,
+          child: laudo == null
+              ? const SizedBox.shrink()
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: AppSpacing.md),
+                    Semantics(
+                      liveRegion: true,
+                      child: AppSituacao(
+                        icone: NomeIcone.confirmacao,
+                        titulo: AppStrings.laudoGeradoEm(
+                          AppStrings.data(laudo.geradoEm),
+                          AppStrings.hora(laudo.geradoEm),
+                        ),
+                        texto: mudou ? AppStrings.laudoTextoMudou : null,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Wrap(
+                      spacing: AppSpacing.sm,
+                      runSpacing: AppSpacing.sm,
+                      children: [
+                        AppBotao.secundario(
+                          rotulo: AppStrings.laudoCompartilhar,
+                          aoTocar: saindo ? null : aoCompartilhar,
+                          motivoDesabilitado: AppStrings.laudoGerando,
+                        ),
+                        AppBotao.secundario(
+                          rotulo: AppStrings.laudoImprimir,
+                          aoTocar: saindo ? null : aoImprimir,
+                          motivoDesabilitado: AppStrings.laudoGerando,
+                        ),
+                      ],
+                    ),
+                    if (falhouSaida) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      const AppSituacao(
+                        icone: NomeIcone.alerta,
+                        titulo: AppStrings.laudoErroSaida,
+                      ),
+                    ],
+                  ],
+                ),
+        ),
       ],
     );
   }

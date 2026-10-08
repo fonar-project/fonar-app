@@ -9,6 +9,7 @@ import '../../../pacientes/data/repositorio_pacientes_local.dart';
 import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
+import '../../../../design_system/tokens/app_movimento.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_cabecalho_de_tarefa.dart';
@@ -213,7 +214,14 @@ class _EspectrogramaPageState extends ConsumerState<EspectrogramaPage> {
                     ItemDaTrilha(AppStrings.resultadoEspectrogramaTitulo),
                   ],
                 ),
-                Expanded(child: conteudo),
+                Expanded(
+                  // Carregando → pronto (ou erro): o conteúdo novo entra.
+                  child: AppTrocaAnimada(
+                    chave: conteudo.runtimeType,
+                    preencher: true,
+                    child: conteudo,
+                  ),
+                ),
               ],
             );
           },
