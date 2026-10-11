@@ -185,27 +185,30 @@ void main() {
     });
   });
 
-  test('o responsável legal vai com o nome; a retirada vem logo depois', () async {
-    final m = await _montar(
-      [_naoExiste, _ok, _ok, _ok, _ok, _naoExiste, _ok],
-      comRetirada: true,
-      responsavel: 'Maria Souza',
-    );
+  test(
+    'o responsável legal vai com o nome; a retirada vem logo depois',
+    () async {
+      final m = await _montar(
+        [_naoExiste, _ok, _ok, _ok, _ok, _naoExiste, _ok],
+        comRetirada: true,
+        responsavel: 'Maria Souza',
+      );
 
-    await m.sincronizacao.prepararEnvio(_item());
+      await m.sincronizacao.prepararEnvio(_item());
 
-    final concessao = (m.escritas[1]['update'] as Map)['fields'] as Map;
-    expect(concessao['declarante'], {'stringValue': 'responsavel_legal'});
-    expect(concessao['nome_responsavel'], {'stringValue': 'Maria Souza'});
-    final retirada = (m.escritas[2]['update'] as Map)['fields'] as Map;
-    expect(retirada['seq'], {'integerValue': '2'});
-    expect(retirada['tipo'], {'stringValue': 'retirada'});
-    // A retirada é da mesma versão do termo, e quem pediu foi o paciente:
-    // sem nome de terceiro.
-    expect(retirada['versao_termo'], {'stringValue': 'provisorio-1'});
-    expect(retirada['declarante'], {'stringValue': 'paciente'});
-    expect(retirada.containsKey('nome_responsavel'), isFalse);
-  });
+      final concessao = (m.escritas[1]['update'] as Map)['fields'] as Map;
+      expect(concessao['declarante'], {'stringValue': 'responsavel_legal'});
+      expect(concessao['nome_responsavel'], {'stringValue': 'Maria Souza'});
+      final retirada = (m.escritas[2]['update'] as Map)['fields'] as Map;
+      expect(retirada['seq'], {'integerValue': '2'});
+      expect(retirada['tipo'], {'stringValue': 'retirada'});
+      // A retirada é da mesma versão do termo, e quem pediu foi o paciente:
+      // sem nome de terceiro.
+      expect(retirada['versao_termo'], {'stringValue': 'provisorio-1'});
+      expect(retirada['declarante'], {'stringValue': 'paciente'});
+      expect(retirada.containsKey('nome_responsavel'), isFalse);
+    },
+  );
 
   test('o que já está lá não é gravado de novo', () async {
     final m = await _montar([
@@ -271,29 +274,32 @@ void main() {
     expect(atualizacao.containsKey('updateTransforms'), isFalse);
   });
 
-  test('livro diferente no Firebase: nada é gravado e o envio é recusado', () async {
-    final m = await _montar([
-      _naoExiste,
-      _ok,
-      RespostaFalsa(
-        200,
-        _paginaDeConsentimentos([
-          {'seq': 1, 'tipo': 'concessao', 'versao_termo': 'outra-versao'},
-        ]),
-      ),
-    ]);
+  test(
+    'livro diferente no Firebase: nada é gravado e o envio é recusado',
+    () async {
+      final m = await _montar([
+        _naoExiste,
+        _ok,
+        RespostaFalsa(
+          200,
+          _paginaDeConsentimentos([
+            {'seq': 1, 'tipo': 'concessao', 'versao_termo': 'outra-versao'},
+          ]),
+        ),
+      ]);
 
-    await expectLater(
-      m.sincronizacao.prepararEnvio(_item()),
-      throwsA(isA<FalhaDeValidacao>()),
-    );
-    // Só o paciente subiu; consentimento e sessão, não.
-    expect(m.escritas, hasLength(1));
-    expect(
-      PoliticaDeReenvio.depoisDe(const FalhaDeValidacao()),
-      SituacaoDoEnvio.recusado,
-    );
-  });
+      await expectLater(
+        m.sincronizacao.prepararEnvio(_item()),
+        throwsA(isA<FalhaDeValidacao>()),
+      );
+      // Só o paciente subiu; consentimento e sessão, não.
+      expect(m.escritas, hasLength(1));
+      expect(
+        PoliticaDeReenvio.depoisDe(const FalhaDeValidacao()),
+        SituacaoDoEnvio.recusado,
+      );
+    },
+  );
 
   test('sem sessão aberta, nada sai', () async {
     final m = await _montar([]);

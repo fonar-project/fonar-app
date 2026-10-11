@@ -130,14 +130,18 @@ class SincronizacaoFirestore implements Sincronizacao {
     for (var i = remotos.length; i < locais.length; i++) {
       final registro = locais[i];
       final seq = i + 1;
-      await _firestore.criar('$colecao/$seq', {
-        'seq': seq,
-        'tipo': registro.tipo,
-        'data': registro.data,
-        'versao_termo': registro.versaoDoTermo,
-        'declarante': registro.declarante,
-        'nome_responsavel': ?registro.nomeDoResponsavel,
-      }, horaDoServidor: ['registrado_em']);
+      await _firestore.criar(
+        '$colecao/$seq',
+        {
+          'seq': seq,
+          'tipo': registro.tipo,
+          'data': registro.data,
+          'versao_termo': registro.versaoDoTermo,
+          'declarante': registro.declarante,
+          'nome_responsavel': ?registro.nomeDoResponsavel,
+        },
+        horaDoServidor: ['registrado_em'],
+      );
     }
   }
 
@@ -155,7 +159,8 @@ class SincronizacaoFirestore implements Sincronizacao {
     final retiradas =
         await (_banco.select(_banco.retiradasDeConsentimento)..where(
               (r) =>
-                  r.pacienteId.equals(pacienteId) & r.consentimentoId.isNotNull(),
+                  r.pacienteId.equals(pacienteId) &
+                  r.consentimentoId.isNotNull(),
             ))
             .get();
     final retiradaDe = {for (final r in retiradas) r.consentimentoId!: r};
@@ -187,13 +192,17 @@ class SincronizacaoFirestore implements Sincronizacao {
     final data = gravadas.isEmpty
         ? item.criadoEm
         : gravadas.reduce((a, b) => a.isBefore(b) ? a : b);
-    await _firestore.criar(caminho, {
-      // A data da sessão é a da primeira gravação: é ela que dá a idade do
-      // paciente para a faixa de referência.
-      'data': data,
-      // Mandada para a análise, a sessão está encerrada.
-      'estado': 'concluida',
-    }, horaDoServidor: ['criado_em']);
+    await _firestore.criar(
+      caminho,
+      {
+        // A data da sessão é a da primeira gravação: é ela que dá a idade do
+        // paciente para a faixa de referência.
+        'data': data,
+        // Mandada para a análise, a sessão está encerrada.
+        'estado': 'concluida',
+      },
+      horaDoServidor: ['criado_em'],
+    );
   }
 
   /// O sexo do cadastro com o nome que o Firestore (e a API) usa.

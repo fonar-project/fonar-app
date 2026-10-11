@@ -156,9 +156,15 @@ Map<String, Object?> codificarValor(Object? valor) => switch (valor) {
     'mapValue': {'fields': codificar(m)},
   },
   final List<Object?> l => {
-    'arrayValue': {'values': [for (final v in l) codificarValor(v)]},
+    'arrayValue': {
+      'values': [for (final v in l) codificarValor(v)],
+    },
   },
-  _ => throw ArgumentError.value(valor, 'valor', 'tipo sem formato no Firestore'),
+  _ => throw ArgumentError.value(
+    valor,
+    'valor',
+    'tipo sem formato no Firestore',
+  ),
 };
 
 /// O valor da API REST do Firestore como valor do Dart.

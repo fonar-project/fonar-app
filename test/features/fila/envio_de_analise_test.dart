@@ -110,9 +110,7 @@ void main() {
         'https://api.test/v1/pacientes/$_paciente/sessoes/$_sessao/amostras',
       );
     }
-    final [vogal, fala] = [
-      for (final p in m.servidor.feitas) _campos(p.corpo),
-    ];
+    final [vogal, fala] = [for (final p in m.servidor.feitas) _campos(p.corpo)];
     expect(vogal, {
       'amostra_id': 'a1',
       'tipo_tarefa': 'vogal_sustentada',
@@ -155,8 +153,7 @@ void main() {
     Future<AppException> falhaCom(int status, [String? codigo]) async {
       final m = montar([
         RespostaFalsa(status, {
-          if (codigo != null)
-            'detail': {'codigo': codigo, 'mensagem': 'teste'},
+          if (codigo != null) 'detail': {'codigo': codigo, 'mensagem': 'teste'},
         }),
       ]);
       try {

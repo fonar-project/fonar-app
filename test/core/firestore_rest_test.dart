@@ -133,9 +133,8 @@ void main() {
 
   test('criar exige que não exista e põe a hora do servidor', () async {
     final servidor = AdaptadorFalso([const RespostaFalsa(200, {})]);
-    await _cliente(
-      servidor,
-    ).criar('a/b', {'nome': 'Ana'}, horaDoServidor: ['criado_em']);
+    await _cliente(servidor)
+        .criar('a/b', {'nome': 'Ana'}, horaDoServidor: ['criado_em']);
     final pedido = servidor.feitas.single;
     expect(pedido.opcoes.method, 'POST');
     expect(pedido.uri.path, '/v1/$_documentos:commit');
