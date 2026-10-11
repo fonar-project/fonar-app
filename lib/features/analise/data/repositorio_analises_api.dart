@@ -23,8 +23,11 @@ class RepositorioAnalisesApi implements RepositorioAnalises {
 
   @override
   Future<ResultadoDaAnalise> buscar(String pacienteId, String analiseId) async {
-    final corpo = await _ler('/v1/pacientes/$pacienteId/sessoes/$analiseId/analise');
-    if (corpo is! Map) throw const FalhaDesconhecida(causa: 'análise sem corpo');
+    final corpo = await _ler(
+      '/v1/pacientes/$pacienteId/sessoes/$analiseId/analise',
+    );
+    if (corpo is! Map)
+      throw const FalhaDesconhecida(causa: 'análise sem corpo');
     return analiseDaApi(corpo);
   }
 

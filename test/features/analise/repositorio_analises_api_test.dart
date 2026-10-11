@@ -42,45 +42,43 @@ Map<String, Object?> _faixaDoJitter({required bool provisoria}) => {
 
 /// A análise de uma sessão como a API manda, com as duas tarefas: a fala
 /// encadeada VEM ANTES, para provar que as medidas são lidas da vogal.
-Map<String, Object?> _analise({
-  bool completa = true,
-  bool provisoria = true,
-}) => {
-  'id': _sessao,
-  'paciente_id': _paciente,
-  'sessao_id': _sessao,
-  'data': '2026-10-11T13:30:00Z',
-  'estado': 'concluida',
-  'tarefas': ['vogal_sustentada', 'fala_encadeada'],
-  'completa': completa,
-  'amostras': [
+Map<String, Object?> _analise({bool completa = true, bool provisoria = true}) =>
     {
-      'amostra': {'id': 'a2', 'tipo_tarefa': 'fala_encadeada'},
-      'resultado': {
-        'id': 'r2',
-        'medidas': [_medida('jitter.local', 0.05, 'fracao')],
-      },
-    },
-    {
-      'amostra': {'id': 'a1', 'tipo_tarefa': 'vogal_sustentada'},
-      'resultado': {
-        'id': 'r1',
-        'medidas': [
-          _medida(
-            'jitter.local',
-            0.0042,
-            'fracao',
-            faixa: _faixaDoJitter(provisoria: provisoria),
-          ),
-          _medida('shimmer.local', 0.031, 'fracao'),
-          _medida('hnr.mean_db', 21.5, 'db'),
-          _medida('f0.mean_hz', 212, 'hz'),
-          _medida('pulses.n_points', 239, 'contagem'),
-        ],
-      },
-    },
-  ],
-};
+      'id': _sessao,
+      'paciente_id': _paciente,
+      'sessao_id': _sessao,
+      'data': '2026-10-11T13:30:00Z',
+      'estado': 'concluida',
+      'tarefas': ['vogal_sustentada', 'fala_encadeada'],
+      'completa': completa,
+      'amostras': [
+        {
+          'amostra': {'id': 'a2', 'tipo_tarefa': 'fala_encadeada'},
+          'resultado': {
+            'id': 'r2',
+            'medidas': [_medida('jitter.local', 0.05, 'fracao')],
+          },
+        },
+        {
+          'amostra': {'id': 'a1', 'tipo_tarefa': 'vogal_sustentada'},
+          'resultado': {
+            'id': 'r1',
+            'medidas': [
+              _medida(
+                'jitter.local',
+                0.0042,
+                'fracao',
+                faixa: _faixaDoJitter(provisoria: provisoria),
+              ),
+              _medida('shimmer.local', 0.031, 'fracao'),
+              _medida('hnr.mean_db', 21.5, 'db'),
+              _medida('f0.mean_hz', 212, 'hz'),
+              _medida('pulses.n_points', 239, 'contagem'),
+            ],
+          },
+        },
+      ],
+    };
 
 ({RepositorioAnalisesApi repositorio, AdaptadorFalso servidor}) _montar(
   List<RespostaFalsa> respostas,
@@ -138,7 +136,10 @@ void main() {
     final lida = lidas.firstWhere((x) => x.medida == MedidaAcustica.jitter);
     expect(lida.valor, closeTo(0.42, 1e-9));
     expect(lida.classificacao, ClassificacaoDaMedida.semReferencia);
-    expect(lida.semClassificacaoPorque, SemClassificacaoPorque.semFaixaValidada);
+    expect(
+      lida.semClassificacaoPorque,
+      SemClassificacaoPorque.semFaixaValidada,
+    );
   });
 
   test('faixa validada vem na unidade da tela e classifica', () async {
@@ -151,15 +152,12 @@ void main() {
     expect(faixa.maximo, closeTo(1.04, 1e-9));
     expect(faixa.procedencia, 'MDVP — adultos');
 
-    final lida =
-        lerMedidas(
-          resultado: resultado,
-          sexo: SexoDeReferencia.feminino,
-          dataDeNascimento: DateTime(1990, 6, 15),
-          catalogo: const CatalogoDeReferenciasVazio(),
-        ).firstWhere(
-          (x) => x.medida == MedidaAcustica.jitter,
-        );
+    final lida = lerMedidas(
+      resultado: resultado,
+      sexo: SexoDeReferencia.feminino,
+      dataDeNascimento: DateTime(1990, 6, 15),
+      catalogo: const CatalogoDeReferenciasVazio(),
+    ).firstWhere((x) => x.medida == MedidaAcustica.jitter);
     expect(lida.classificacao, ClassificacaoDaMedida.dentroDaFaixa);
   });
 

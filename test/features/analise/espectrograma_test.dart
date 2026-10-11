@@ -34,17 +34,17 @@ class _Analises implements RepositorioAnalises {
   final String? url;
 
   @override
-  Future<ResultadoDaAnalise> buscar(String pacienteId, String analiseId) async =>
-      ResultadoDaAnalise(
-        id: analiseId,
-        pacienteId: 'p1',
-        situacao: SituacaoDaAnalise.concluida,
-        realizadaEm: DateTime(2026, 9, 23, 9, 30),
-        medidas: const [
-          MedidaCalculada(medida: MedidaAcustica.avqi, valor: 3.12),
-        ],
-        espectrogramaUrl: url,
-      );
+  Future<ResultadoDaAnalise> buscar(
+    String pacienteId,
+    String analiseId,
+  ) async => ResultadoDaAnalise(
+    id: analiseId,
+    pacienteId: 'p1',
+    situacao: SituacaoDaAnalise.concluida,
+    realizadaEm: DateTime(2026, 9, 23, 9, 30),
+    medidas: const [MedidaCalculada(medida: MedidaAcustica.avqi, valor: 3.12)],
+    espectrogramaUrl: url,
+  );
 
   @override
   Future<List<ResultadoDaAnalise>> doPaciente(String pacienteId) async =>

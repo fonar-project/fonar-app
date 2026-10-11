@@ -32,7 +32,8 @@ class _Repositorio implements RepositorioAnalises {
   _Repositorio(this.resposta);
   final Future<ResultadoDaAnalise> Function() resposta;
   @override
-  Future<ResultadoDaAnalise> buscar(String pacienteId, String analiseId) => resposta();
+  Future<ResultadoDaAnalise> buscar(String pacienteId, String analiseId) =>
+      resposta();
   @override
   Future<List<ResultadoDaAnalise>> doPaciente(String pacienteId) async =>
       const [];

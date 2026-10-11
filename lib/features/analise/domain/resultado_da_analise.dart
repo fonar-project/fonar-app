@@ -15,7 +15,11 @@ enum SituacaoDaAnalise {
 
 /// Uma medida como chegou do servidor.
 class MedidaCalculada {
-  const MedidaCalculada({required this.medida, required this.valor, this.faixa});
+  const MedidaCalculada({
+    required this.medida,
+    required this.valor,
+    this.faixa,
+  });
 
   final MedidaAcustica medida;
 
