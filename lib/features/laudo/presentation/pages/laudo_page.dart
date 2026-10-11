@@ -85,7 +85,9 @@ class LaudoPage extends ConsumerWidget {
     final cargas = [analise, paciente, laudo, capeV, consentimento];
 
     void tentarDeNovo() {
-      ref.invalidate(analiseProvider(analiseId));
+      ref.invalidate(
+        analiseProvider((pacienteId: pacienteId, analiseId: analiseId)),
+      );
       ref.invalidate(pacientesProvider);
       ref.invalidate(laudoControladorProvider(analiseId));
       ref.invalidate(capeVDaAnaliseProvider(analiseId));

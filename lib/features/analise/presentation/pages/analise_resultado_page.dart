@@ -75,7 +75,9 @@ class AnaliseResultadoPage extends ConsumerWidget {
       analiseDoPacienteProvider((pacienteId: pacienteId, analiseId: analiseId)),
     );
     final paciente = ref.watch(pacienteProvider(pacienteId)).value;
-    void atualizar() => ref.invalidate(analiseProvider(analiseId));
+    void atualizar() => ref.invalidate(
+      analiseProvider((pacienteId: pacienteId, analiseId: analiseId)),
+    );
 
     return AppEstrutura(
       destino: DestinoPrincipal.pacientes,

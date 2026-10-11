@@ -340,6 +340,14 @@ O envio da fila segue o contrato da ADR-014 da API (US33):
 Sem consentimento em vigor no Firebase, a API responde
 `409 consentimento_ausente`, e o envio para como numa retirada.
 
+Com `FONAR_API_BASE_URL`, os resultados também vêm da API
+(`lib/features/analise/data/repositorio_analises_api.dart`): a análise da
+sessão e a evolução do paciente, com os valores do motor da gravação da
+vogal sustentada (jitter e shimmer convertidos de fração para %). Faixa
+provisória da API não classifica: a medida aparece com o valor e "sem faixa
+validada", como a regra das faixas pede. Os pacientes e resultados de
+exemplo só aparecem no build sem a URL.
+
 ### Conectar ao Firebase (autenticação)
 
 O login fala com o Firebase Authentication pela **API REST**, com o Dio que

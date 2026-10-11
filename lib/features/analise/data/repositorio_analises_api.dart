@@ -1,0 +1,142 @@
+import 'package:dio/dio.dart';
+
+import '../../../core/error/app_exception.dart';
+import '../../historico/domain/evolucao_da_medida.dart';
+import '../domain/faixa_de_referencia.dart';
+import '../domain/resultado_da_analise.dart';
+
+/// Os resultados lidos da API de análise (repositório `fonar-api`).
+///
+/// A análise é a SESSÃO (ADR-014 da API):
+///
+/// - `GET /v1/pacientes/{p}/sessoes/{s}/analise`: a sessão, com cada
+///   gravação e o resultado mais recente dela;
+/// - `GET /v1/pacientes/{p}/analises`: as sessões gravadas do paciente, da
+///   mais antiga à mais recente.
+///
+/// Os números são os do motor (parselmouth, que executa o Praat), sem conta
+/// nenhuma aqui — ver [analiseDaApi].
+class RepositorioAnalisesApi implements RepositorioAnalises {
+  const RepositorioAnalisesApi(this._dio);
+
+  final Dio _dio;
+
+  @override
+  Future<ResultadoDaAnalise> buscar(String pacienteId, String analiseId) async {
+    final corpo = await _ler('/v1/pacientes/$pacienteId/sessoes/$analiseId/analise');
+    if (corpo is! Map) throw const FalhaDesconhecida(causa: 'análise sem corpo');
+    return analiseDaApi(corpo);
+  }
+
+  @override
+  Future<List<ResultadoDaAnalise>> doPaciente(String pacienteId) async {
+    final Object? corpo;
+    try {
+      corpo = await _ler('/v1/pacientes/$pacienteId/analises');
+    } on NaoEncontrado {
+      // Paciente que nunca mandou nada para a análise ainda não está no
+      // Firebase: não tem análise, e não é erro.
+      return const [];
+    }
+    if (corpo is! List) throw const FalhaDesconhecida(causa: 'lista sem corpo');
+    return [
+      for (final analise in corpo)
+        if (analise is Map) analiseDaApi(analise),
+    ];
+  }
+
+  Future<Object?> _ler(String caminho) async {
+    try {
+      return (await _dio.get<Object?>(caminho)).data;
+    } on DioException catch (e) {
+      final falha = e.error;
+      throw falha is AppException ? falha : FalhaDesconhecida(causa: e);
+    }
+  }
+}
+
+/// De qual medida do motor vem cada medida da tela, na gravação da vogal
+/// sustentada — onde jitter, shimmer, HNR e f0 se medem.
+///
+/// AVQI e CPPS ainda não são calculados pela API: aparecem como "não
+/// calculada", nunca como zero.
+const identificadorNaApi = <MedidaAcustica, String?>{
+  MedidaAcustica.avqi: null,
+  MedidaAcustica.cpps: null,
+  MedidaAcustica.jitter: 'jitter.local',
+  MedidaAcustica.shimmer: 'shimmer.local',
+  MedidaAcustica.hnr: 'hnr.mean_db',
+  MedidaAcustica.f0: 'f0.mean_hz',
+};
+
+/// A análise da API no formato das telas.
+///
+/// Só troca de unidade: o motor dá jitter e shimmer como FRAÇÃO (0,0104), e
+/// a tela mostra em porcentagem (1,04 %) — multiplicar por 100 é formatação,
+/// não análise. Valor e limites da faixa mudam juntos.
+///
+/// Faixa PROVISÓRIA (`referencia_provisoria`, ainda sem validação clínica)
+/// não vem para a tela: a medida aparece com o valor do motor e sem
+/// classificação, como manda a regra das faixas (CLAUDE.md). Quando o
+/// co-orientador validar, a faixa passa a vir, sem mudar nada aqui.
+ResultadoDaAnalise analiseDaApi(Map<Object?, Object?> corpo) {
+  final amostras = [
+    for (final a in (corpo['amostras'] as List?) ?? const [])
+      if (a is Map) a,
+  ];
+  final vogal = amostras
+      .where(
+        (a) =>
+            (a['amostra'] as Map?)?['tipo_tarefa'] == 'vogal_sustentada' &&
+            a['resultado'] is Map,
+      )
+      .firstOrNull;
+  final medidasDaVogal = <String, Map<Object?, Object?>>{
+    if (vogal != null)
+      for (final m
+          in ((vogal['resultado'] as Map)['medidas'] as List?) ?? const [])
+        if (m is Map && m['identificador'] is String)
+          m['identificador'] as String: m,
+  };
+
+  final completa = corpo['completa'] == true;
+  return ResultadoDaAnalise(
+    id: corpo['id'] as String,
+    pacienteId: corpo['paciente_id'] as String,
+    situacao: completa
+        ? SituacaoDaAnalise.concluida
+        : SituacaoDaAnalise.processando,
+    realizadaEm: DateTime.tryParse('${corpo['data']}'),
+    medidas: [
+      for (final MapEntry(key: medida, value: identificador)
+          in identificadorNaApi.entries)
+        _medida(medida, medidasDaVogal[identificador]),
+    ],
+  );
+}
+
+MedidaCalculada _medida(MedidaAcustica medida, Map<Object?, Object?>? daApi) {
+  if (daApi == null) return MedidaCalculada(medida: medida, valor: null);
+  final escala = daApi['unidade'] == 'fracao' ? 100.0 : 1.0;
+  final valor = daApi['valor'];
+  return MedidaCalculada(
+    medida: medida,
+    valor: valor is num ? valor.toDouble() * escala : null,
+    faixa: _faixaValidada(daApi['faixa'], escala),
+  );
+}
+
+FaixaDeReferencia? _faixaValidada(Object? faixa, double escala) {
+  if (faixa is! Map || faixa['referencia_provisoria'] != false) return null;
+  double? limite(Object? v) => v is num ? v.toDouble() * escala : null;
+  final minimo = limite(faixa['limite_inferior']);
+  final maximo = limite(faixa['limite_superior']);
+  if (minimo == null && maximo == null) return null;
+  final fonte = '${faixa['fonte_bibliografica'] ?? ''}'.trim();
+  final populacao = '${faixa['populacao_descricao'] ?? ''}'.trim();
+  return FaixaDeReferencia(
+    minimo: minimo,
+    maximo: maximo,
+    procedencia: populacao.isEmpty ? fonte : '$fonte — $populacao',
+  );
+}

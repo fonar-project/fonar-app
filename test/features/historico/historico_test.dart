@@ -68,7 +68,7 @@ class _Analises implements RepositorioAnalises {
   final Map<String, List<ResultadoDaAnalise>> porPaciente;
 
   @override
-  Future<ResultadoDaAnalise> buscar(String analiseId) async {
+  Future<ResultadoDaAnalise> buscar(String pacienteId, String analiseId) async {
     for (final l in porPaciente.values) {
       for (final a in l) {
         if (a.id == analiseId) return a;

@@ -71,7 +71,11 @@ List<MedidaLida> lerMedidas({
           semClassificacaoPorque: SemClassificacaoPorque.perfilIncompleto,
         )
       else
-        _comCatalogo(m, _validaOuNula(catalogo.faixa(m.medida, perfil))),
+        // A faixa que veio do servidor vale primeiro; sem ela, o catálogo.
+        _comCatalogo(
+          m,
+          _validaOuNula(m.faixa ?? catalogo.faixa(m.medida, perfil)),
+        ),
   ];
 }
 

@@ -118,7 +118,7 @@ class CapeVControlador extends AsyncNotifier<EstadoCapeV> {
     try {
       // A conferência vale aqui, e não só na tela: nenhuma avaliação é
       // registrada para uma análise de outro paciente.
-      daPaciente(await analises.buscar(analiseId), pacienteId);
+      daPaciente(await analises.buscar(pacienteId, analiseId), pacienteId);
       await avaliacoes.registrar(
         AvaliacaoCapeV(
           analiseId: analiseId,

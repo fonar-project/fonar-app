@@ -37,7 +37,7 @@ class _Repositorio implements RepositorioAnalises {
   final bool falha;
 
   @override
-  Future<ResultadoDaAnalise> buscar(String analiseId) async =>
+  Future<ResultadoDaAnalise> buscar(String pacienteId, String analiseId) async =>
       sessoes.firstWhere((s) => s.id == analiseId);
 
   @override

@@ -48,9 +48,7 @@ houver, no mesmo commit.
 
 | Pendência | US | Onde |
 |---|---|---|
-| **Ler os resultados da API** — ela já serve a análise da sessão (`GET /v1/pacientes/{p}/sessoes/{s}/analise`) e a evolução (`GET /v1/pacientes/{p}/analises`), com a classificação pronta (ADR-014 da API); o app ainda mostra os resultados de exemplo, avisados como tal. Para o histórico geral, ele continua perguntando paciente por paciente. | 07, 09 | `analise/data/repositorio_analises_placeholder.dart` |
 | Quando o aparelho troca taxa ou canais: bloqueia ou só avisa? (hoje só avisa) | 04, 05 | `captura/presentation/pages/captura_page.dart`, `captura/domain/verificacao_da_amostra.dart` |
-| Unidade de cada medida (shimmer em % ou dB?). Se a API mandar a unidade, ela prevalece. | 07 | `analise/presentation/apresentacao_da_medida.dart` |
 | Campos recusados pela API, para marcar no formulário: ela manda o motivo num código estável (`detail.codigo`), e hoje só `consentimento_ausente` muda o que o app faz. Nenhuma tela de formulário fala com a API ainda. | — | `core/network/interceptors/error_interceptor.dart` |
 
 ## Equipe (produto e implementação)
@@ -60,7 +58,7 @@ houver, no mesmo commit.
 | **Numeração das US03 a US10 foi deduzida** das telas do protótipo e do índice de ícones — conferir com o backlog. A US11 (conta) veio do `TODO(US11)` que a equipe deixou no roteador; as US12 (perfil do paciente), US13 (ouvir as gravações), US14 (dados salvos no aparelho), US15 (retirar o consentimento), US16 (retomar a sessão de gravação), US17 (espectrograma no celular), US18 (token no cofre do sistema), US19 (limpeza de gravações não enviadas), US20 (editar os dados do paciente), US21 (aviso de duplicado e de saída sem salvar), US22 (documentação), US23 (histórico geral) e US24 (bloqueio por inatividade) foram escolhidas pelo Felipe. | 03–10 | — |
 | **Tempo sem uso até bloquear**: 5 minutos, escolhido sem medir a consulta. O bloqueio também pode cair no meio de uma gravação longa sem toque (a gravação continua embaixo). | 24 | `core/config/app_config.dart` (`tempoDeInatividade`) |
 | **CAPE-V, laudo e dados do profissional só no aparelho.** Desde a US33, o paciente, os consentimentos (e retiradas) e a sessão sobem para o Firebase antes de cada envio para a análise; o resto ainda não. E nada desce: o que outro aparelho gravou não aparece aqui. | 14, 15, 33 | `TODO(backend)` nos repositórios `*_local.dart`, `sincronizacao/data/sincronizacao_firestore.dart` |
-| **Pacientes e consentimentos de exemplo** aparecem por cima do banco (não são gravados nele). Saem quando a API de análise responder de verdade — os resultados de exemplo são amarrados aos ids deles. | 14 | `pacientes/data/pacientes_de_exemplo.dart`, `consentimento/data/consentimentos_de_exemplo.dart` |
+| **Pacientes, consentimentos e resultados de exemplo** aparecem só no build sem `FONAR_API_BASE_URL` (desenvolvimento, avisados na tela); com a API, somem (US33). Apagar de vez quando ninguém mais precisar deles para olhar as telas sem servidor. | 14, 33 | `core/config/app_config.dart` (`apiConfigurada`) |
 | "Última sessão" e tendência do AVQI do paciente cadastrado: hoje sempre "sem sessão" e "sem comparação" — dependem do contrato do resultado. | 14 | `pacientes/data/repositorio_pacientes_local.dart` |
 | Retomar a sessão: só se retoma a do **mesmo dia** (decisão de implementação — a voz muda de um dia para o outro, e a análise combina as tarefas). É isso que define uma consulta? | 16 | `captura/domain/retomada.dart` |
 | Cadastro: queixa obrigatória e "salvar leva ao consentimento" foram decisões sem o protótipo. | 02 | `pacientes/presentation/pages/novo_paciente_page.dart` |

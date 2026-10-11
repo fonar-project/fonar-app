@@ -1,29 +1,38 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/config/app_config.dart';
+import '../../../core/network/dio_client.dart';
 import '../../captura/domain/amostra.dart';
 import '../../historico/domain/evolucao_da_medida.dart';
 import '../domain/resultado_da_analise.dart';
+import 'repositorio_analises_api.dart';
 
-/// TODO(backend): trocar pela API — `GET /analises/{id}` e
-/// `GET /pacientes/{id}/analises`, contrato a acertar com quem mantém a
-/// análise, junto do `POST /analises` da fila.
+/// Os resultados vêm da API quando o build aponta para uma
+/// (`AppConfig.apiConfigurada`); sem ela, dos exemplos abaixo, avisados na
+/// tela.
 final repositorioAnalisesProvider = Provider<RepositorioAnalises>(
-  (ref) => const RepositorioAnalisesPlaceholder(),
+  (ref) => AppConfig.apiConfigurada
+      ? RepositorioAnalisesApi(ref.watch(dioProvider))
+      : const RepositorioAnalisesPlaceholder(),
 );
+
+/// Uma análise: de que paciente, e qual. O id da análise é o da sessão.
+typedef ChaveDaAnalise = ({String pacienteId, String analiseId});
 
 /// O resultado de uma análise, buscado quando a tela abre.
 final analiseProvider = FutureProvider.autoDispose
-    .family<ResultadoDaAnalise, String>(
-      (ref, analiseId) =>
-          ref.watch(repositorioAnalisesProvider).buscar(analiseId),
+    .family<ResultadoDaAnalise, ChaveDaAnalise>(
+      (ref, chave) => ref
+          .watch(repositorioAnalisesProvider)
+          .buscar(chave.pacienteId, chave.analiseId),
     );
 
 /// A análise, conferida contra o paciente — ver [daPaciente]. É por aqui que
 /// as telas de um paciente leem uma análise.
 final analiseDoPacienteProvider = FutureProvider.autoDispose
-    .family<ResultadoDaAnalise, ({String pacienteId, String analiseId})>(
+    .family<ResultadoDaAnalise, ChaveDaAnalise>(
       (ref, chave) async => daPaciente(
-        await ref.watch(analiseProvider(chave.analiseId).future),
+        await ref.watch(analiseProvider(chave).future),
         chave.pacienteId,
       ),
     );
@@ -49,7 +58,7 @@ class RepositorioAnalisesPlaceholder implements RepositorioAnalises {
   const RepositorioAnalisesPlaceholder();
 
   @override
-  Future<ResultadoDaAnalise> buscar(String analiseId) async {
+  Future<ResultadoDaAnalise> buscar(String pacienteId, String analiseId) async {
     for (final sessoes in _historicos.values) {
       for (final sessao in sessoes) {
         if (sessao.id == analiseId) return sessao;
