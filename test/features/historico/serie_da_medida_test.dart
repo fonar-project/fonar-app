@@ -172,7 +172,7 @@ void main() {
     });
 
     test('buscar acha a sessão do histórico pelo id', () async {
-      final sessao = await repositorio.buscar('exemplo-d-2');
+      final sessao = await repositorio.buscar('exemplo-d', 'exemplo-d-2');
       expect(sessao.pacienteId, 'exemplo-d');
       expect(
         sessao.medidas.firstWhere((m) => m.medida == MedidaAcustica.f0).valor,

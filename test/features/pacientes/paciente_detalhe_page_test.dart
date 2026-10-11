@@ -66,8 +66,10 @@ class _Analises implements RepositorioAnalises {
   final List<ResultadoDaAnalise> sessoes;
 
   @override
-  Future<ResultadoDaAnalise> buscar(String analiseId) async =>
-      sessoes.firstWhere((s) => s.id == analiseId);
+  Future<ResultadoDaAnalise> buscar(
+    String pacienteId,
+    String analiseId,
+  ) async => sessoes.firstWhere((s) => s.id == analiseId);
 
   @override
   Future<List<ResultadoDaAnalise>> doPaciente(String pacienteId) async =>

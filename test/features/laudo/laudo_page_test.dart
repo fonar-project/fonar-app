@@ -46,7 +46,7 @@ class _Analises implements RepositorioAnalises {
   final String dono;
 
   @override
-  Future<ResultadoDaAnalise> buscar(String analiseId) async {
+  Future<ResultadoDaAnalise> buscar(String pacienteId, String analiseId) async {
     if (falha) throw const FalhaDeConexao();
     return ResultadoDaAnalise(
       id: analiseId,

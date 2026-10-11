@@ -17,6 +17,11 @@ abstract final class AppConfig {
     defaultValue: 'http://localhost:8080',
   );
 
+  /// O build aponta para uma API de verdade? Sem a URL, o app roda com os
+  /// resultados e os pacientes de EXEMPLO, avisados na tela; com ela, os
+  /// resultados vêm da API, e os exemplos somem.
+  static const apiConfigurada = bool.hasEnvironment('FONAR_API_BASE_URL');
+
   /// O projeto do Firebase: o mesmo da autenticação, do banco (Cloud
   /// Firestore) e da API. Não é segredo.
   static const firebaseProjectId = String.fromEnvironment(

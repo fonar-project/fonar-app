@@ -8,9 +8,11 @@ import '../domain/leitura_do_resultado.dart';
 ///
 /// Só apresentação — o valor chega pronto do servidor.
 ///
-/// TODO(backend): confirmar com a API a unidade de cada medida. Shimmer, por
-/// exemplo, é publicado tanto em % quanto em dB; se a API devolver a unidade
-/// junto do valor, ela deve prevalecer sobre esta tabela.
+/// A unidade de cada medida é a desta tabela. A API manda a unidade do
+/// motor junto do valor, e a conversão para a da tela é feita na leitura
+/// (`repositorio_analises_api.dart`): jitter e shimmer vêm em fração e
+/// aparecem em porcentagem; shimmer é o local (`shimmer.local`), não o em
+/// dB.
 extension ApresentacaoDaMedida on MedidaAcustica {
   String get nome => switch (this) {
     MedidaAcustica.avqi => AppStrings.medidaAvqi,

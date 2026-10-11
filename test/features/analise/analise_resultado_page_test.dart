@@ -32,7 +32,8 @@ class _Repositorio implements RepositorioAnalises {
   _Repositorio(this.resposta);
   final Future<ResultadoDaAnalise> Function() resposta;
   @override
-  Future<ResultadoDaAnalise> buscar(String analiseId) => resposta();
+  Future<ResultadoDaAnalise> buscar(String pacienteId, String analiseId) =>
+      resposta();
   @override
   Future<List<ResultadoDaAnalise>> doPaciente(String pacienteId) async =>
       const [];
@@ -252,7 +253,8 @@ void main() {
   testWidgets('dado de exemplo é avisado como exemplo', (tester) async {
     await _abrir(
       tester,
-      resposta: () => const RepositorioAnalisesPlaceholder().buscar('x'),
+      resposta: () =>
+          const RepositorioAnalisesPlaceholder().buscar('exemplo', 'x'),
       // O resultado de exemplo pertence ao paciente "exemplo".
       pacienteDaRota: 'exemplo',
     );

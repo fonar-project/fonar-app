@@ -35,12 +35,14 @@ class _Analises implements RepositorioAnalises {
   final String dono;
 
   @override
-  Future<ResultadoDaAnalise> buscar(String analiseId) async =>
-      ResultadoDaAnalise(
-        id: analiseId,
-        pacienteId: dono,
-        situacao: SituacaoDaAnalise.concluida,
-      );
+  Future<ResultadoDaAnalise> buscar(
+    String pacienteId,
+    String analiseId,
+  ) async => ResultadoDaAnalise(
+    id: analiseId,
+    pacienteId: dono,
+    situacao: SituacaoDaAnalise.concluida,
+  );
 
   @override
   Future<List<ResultadoDaAnalise>> doPaciente(String pacienteId) async => [];

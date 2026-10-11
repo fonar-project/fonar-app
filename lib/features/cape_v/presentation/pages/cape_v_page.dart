@@ -82,7 +82,9 @@ class CapeVPage extends ConsumerWidget {
     );
     final estado = ref.watch(capeVControladorProvider(analiseId));
     void tentarDeNovo() {
-      ref.invalidate(analiseProvider(analiseId));
+      ref.invalidate(
+        analiseProvider((pacienteId: pacienteId, analiseId: analiseId)),
+      );
       ref.invalidate(capeVControladorProvider(analiseId));
     }
 

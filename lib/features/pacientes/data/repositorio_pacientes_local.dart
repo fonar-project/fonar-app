@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/banco/banco_local.dart';
 import '../../../core/banco/conversao.dart';
 import '../../../core/banco/novo_id.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/error/app_exception.dart';
 import '../../../core/relogio.dart';
 import '../../historico/domain/evolucao_da_medida.dart';
@@ -16,7 +17,9 @@ final repositorioPacientesProvider = Provider<RepositorioPacientes>(
   (ref) => RepositorioPacientesLocal(
     ref.watch(bancoLocalProvider),
     agora: ref.watch(relogioProvider),
-    exemplos: pacientesDeExemplo,
+    // Os de exemplo existem para os resultados de exemplo: com a API de
+    // verdade, nenhum dos dois aparece.
+    exemplos: AppConfig.apiConfigurada ? const [] : pacientesDeExemplo,
   ),
 );
 

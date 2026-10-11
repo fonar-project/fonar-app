@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/banco/banco_local.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/error/app_exception.dart';
 import '../../../core/relogio.dart';
 import '../domain/consentimento.dart';
@@ -19,7 +20,9 @@ final repositorioConsentimentoProvider = Provider<RepositorioConsentimento>(
   (ref) => RepositorioConsentimentoLocal(
     ref.watch(bancoLocalProvider),
     agora: ref.watch(relogioProvider),
-    exemplos: consentimentosDeExemplo,
+    // Os de exemplo são dos pacientes de exemplo, que somem com a API de
+    // verdade.
+    exemplos: AppConfig.apiConfigurada ? const {} : consentimentosDeExemplo,
   ),
 );
 

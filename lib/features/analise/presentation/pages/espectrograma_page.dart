@@ -184,8 +184,7 @@ class _EspectrogramaPageState extends ConsumerState<EspectrogramaPage> {
                 titulo: AppStrings.resultadoErroCarregar,
                 acao: AppBotao.secundario(
                   rotulo: AppStrings.tentarNovamente,
-                  aoTocar: () =>
-                      ref.invalidate(analiseProvider(widget.analiseId)),
+                  aoTocar: () => ref.invalidate(analiseProvider(chave)),
                 ),
               ),
               _ => Center(

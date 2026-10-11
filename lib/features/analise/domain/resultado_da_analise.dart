@@ -1,5 +1,6 @@
 import '../../captura/domain/amostra.dart';
 import '../../historico/domain/evolucao_da_medida.dart';
+import 'faixa_de_referencia.dart';
 
 /// Em que pé a análise está no servidor.
 enum SituacaoDaAnalise {
@@ -14,7 +15,11 @@ enum SituacaoDaAnalise {
 
 /// Uma medida como chegou do servidor.
 class MedidaCalculada {
-  const MedidaCalculada({required this.medida, required this.valor});
+  const MedidaCalculada({
+    required this.medida,
+    required this.valor,
+    this.faixa,
+  });
 
   final MedidaAcustica medida;
 
@@ -22,6 +27,12 @@ class MedidaCalculada {
   /// por exemplo, com f0 numa amostra muito irregular. A medida aparece como
   /// "não calculada", nunca como zero.
   final double? valor;
+
+  /// A faixa VALIDADA que o servidor escolheu para o perfil do paciente na
+  /// data da sessão, já na unidade de [valor]. Nula sem faixa validada — e
+  /// faixa provisória, ainda sem validação clínica, não chega aqui: a
+  /// medida aparece com o valor e sem classificação.
+  final FaixaDeReferencia? faixa;
 }
 
 /// O que o servidor achou da amostra como material de análise.
@@ -103,8 +114,11 @@ ResultadoDaAnalise daPaciente(ResultadoDaAnalise resultado, String pacienteId) {
 
 /// De onde vêm os resultados.
 abstract interface class RepositorioAnalises {
+  /// A análise [analiseId] do paciente [pacienteId]. O id da análise é o
+  /// id da sessão (ADR-014 da API), e a API acha a sessão pelo paciente.
+  ///
   /// Lança só `AppException`.
-  Future<ResultadoDaAnalise> buscar(String analiseId);
+  Future<ResultadoDaAnalise> buscar(String pacienteId, String analiseId);
 
   /// Todas as análises do paciente, em qualquer situação e ordem. Quem filtra
   /// e ordena é quem usa — ver `sessoesAnalisadas`.

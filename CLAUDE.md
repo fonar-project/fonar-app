@@ -235,12 +235,13 @@ O login é o Firebase Authentication de verdade quando o build recebe a chave
 (US32). O envio para a análise é a API de verdade (US33): paciente,
 consentimentos e sessão sobem para o Firestore pela API REST
 (`lib/features/sincronizacao/`), e cada gravação vai para a API com o id da
-amostra; o id da análise é o id da sessão. Ainda é PLACEHOLDER, e
+amostra; o id da análise é o id da sessão. Os resultados vêm da API
+(`RepositorioAnalisesApi`) quando o build recebe `FONAR_API_BASE_URL`: os
+valores do motor, sem classificação enquanto não houver faixa VALIDADA — as
+faixas provisórias da API não classificam no app. Ainda é PLACEHOLDER, e
 identificado como tal: o login sem a chave (aceita qualquer e-mail e senha,
-e a tela avisa), os resultados (de exemplo, avisados na tela), e os
-pacientes "de Exemplo", que aparecem por cima do banco sem serem gravados
-nele. O catálogo de faixas de referência está vazio de propósito:
-nenhuma medida é classificada.
+e a tela avisa) e, no build sem a URL da API, os resultados e os pacientes
+"de Exemplo", que aparecem por cima do banco sem serem gravados nele.
 
 O que falta e de quem depende está em `PENDENCIAS.md` — ao resolver um item,
 apague a linha de lá e o `TODO` do código, no mesmo commit.
