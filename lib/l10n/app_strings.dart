@@ -1186,6 +1186,9 @@ abstract final class AppStrings {
   static const erroServidor =
       'Houve uma falha no servidor. Tente novamente em alguns instantes.';
   static const erroEnvioCancelado = 'O envio foi cancelado.';
+  static const erroSemConsentimentoNoServidor =
+      'O servidor não encontrou consentimento em vigor para este paciente. '
+      'Registre o consentimento de novo antes de enviar.';
   static const erroGravacaoNaoEncontrada =
       'O arquivo da gravação não está mais neste aparelho, e sem ele a '
       'análise não pode ser feita. Grave a sessão de novo.';

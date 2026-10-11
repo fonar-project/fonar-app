@@ -90,6 +90,17 @@ final class FalhaNoServidor extends AppException {
   final int? statusCode;
 }
 
+/// 409 `consentimento_ausente` — a API conferiu o consentimento do paciente
+/// no Firebase e não achou um em vigor.
+///
+/// No aparelho o consentimento podia estar valendo: foi retirado em outro
+/// aparelho, ou o registro não chegou ao Firebase. Como na retirada feita
+/// aqui, a gravação não sobe sozinha — só com um consentimento novo.
+final class SemConsentimentoNoServidor extends AppException {
+  const SemConsentimentoNoServidor({super.causa})
+    : super(AppStrings.erroSemConsentimentoNoServidor);
+}
+
 /// Requisição cancelada pelo app (usuário saiu da tela, por exemplo).
 final class EnvioCancelado extends AppException {
   const EnvioCancelado({super.causa}) : super(AppStrings.erroEnvioCancelado);
