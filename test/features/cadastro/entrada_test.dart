@@ -330,7 +330,11 @@ void main() {
   });
 
   group('Conta com a API', () {
-    ({ProviderContainer container, AdaptadorFalso servidor, _ContaEmMemoria local})
+    ({
+      ProviderContainer container,
+      AdaptadorFalso servidor,
+      _ContaEmMemoria local,
+    })
     montar(List<RespostaFalsa> respostas) {
       final servidor = AdaptadorFalso(respostas);
       final local = _ContaEmMemoria();
@@ -350,32 +354,35 @@ void main() {
       return (container: container, servidor: servidor, local: local);
     }
 
-    test('salva pelo PATCH, com a região e o número lidos do registro', () async {
-      final m = montar([
-        RespostaFalsa(200, {
-          ..._perfil(),
-          'crefono_inscricao': '54321',
-          'registro_conselho': 'CRFa 2-54321',
-        }),
-      ]);
-      final salvou = await m.container
-          .read(contaControladorProvider.notifier)
-          .salvar(nome: 'Ana Souza', registro: 'CRFa 2-54321');
+    test(
+      'salva pelo PATCH, com a região e o número lidos do registro',
+      () async {
+        final m = montar([
+          RespostaFalsa(200, {
+            ..._perfil(),
+            'crefono_inscricao': '54321',
+            'registro_conselho': 'CRFa 2-54321',
+          }),
+        ]);
+        final salvou = await m.container
+            .read(contaControladorProvider.notifier)
+            .salvar(nome: 'Ana Souza', registro: 'CRFa 2-54321');
 
-      expect(salvou, isTrue);
-      final pedido = m.servidor.feitas.single;
-      expect(pedido.opcoes.method, 'PATCH');
-      expect(pedido.json, {
-        'nome': 'Ana Souza',
-        'crefono_regiao': 2,
-        'crefono_inscricao': '54321',
-      });
-      // O que vale é o que a API devolveu: trocar o número voltou a pendente.
-      final atual = m.container.read(profissionalAtualProvider);
-      expect(atual.registro, 'CRFa 2-54321');
-      expect(atual.credenciamento, Credenciamento.pendente);
-      expect(m.local.salvos.single.registro, 'CRFa 2-54321');
-    });
+        expect(salvou, isTrue);
+        final pedido = m.servidor.feitas.single;
+        expect(pedido.opcoes.method, 'PATCH');
+        expect(pedido.json, {
+          'nome': 'Ana Souza',
+          'crefono_regiao': 2,
+          'crefono_inscricao': '54321',
+        });
+        // O que vale é o que a API devolveu: trocar o número voltou a pendente.
+        final atual = m.container.read(profissionalAtualProvider);
+        expect(atual.registro, 'CRFa 2-54321');
+        expect(atual.credenciamento, Credenciamento.pendente);
+        expect(m.local.salvos.single.registro, 'CRFa 2-54321');
+      },
+    );
 
     test('registro fora do formato: erro no campo, nada vai à API', () async {
       final m = montar([]);
