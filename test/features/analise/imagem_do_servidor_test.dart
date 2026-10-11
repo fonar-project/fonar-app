@@ -29,7 +29,7 @@ Future<ImageInfo> _carregar(ImageProvider imagem) {
       .resolve(ImageConfiguration.empty)
       .addListener(
         ImageStreamListener(
-          pronta.complete,
+          (info, _) => pronta.complete(info),
           onError: (erro, pilha) => pronta.completeError(erro, pilha),
         ),
       );

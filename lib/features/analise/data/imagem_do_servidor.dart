@@ -44,12 +44,14 @@ class ImagemDaApi extends ImageProvider<ImagemDaApi> {
       SynchronousFuture<ImagemDaApi>(this);
 
   @override
-  ImageStreamCompleter loadImage(ImagemDaApi key, ImageDecoderCallback decode) =>
-      MultiFrameImageStreamCompleter(
-        codec: _carregar(decode),
-        scale: 1,
-        debugLabel: caminho,
-      );
+  ImageStreamCompleter loadImage(
+    ImagemDaApi key,
+    ImageDecoderCallback decode,
+  ) => MultiFrameImageStreamCompleter(
+    codec: _carregar(decode),
+    scale: 1,
+    debugLabel: caminho,
+  );
 
   Future<ui.Codec> _carregar(ImageDecoderCallback decode) async {
     final resposta = await _dio.get<List<int>>(
