@@ -12,6 +12,11 @@ import 'package:fonar_app/features/cadastro/data/criacao_de_conta.dart';
 import 'package:fonar_app/features/cadastro/domain/cadastro.dart';
 import 'package:fonar_app/features/cadastro/presentation/cadastro_controlador.dart';
 import 'package:fonar_app/features/cadastro/presentation/entrada.dart';
+import 'package:fonar_app/features/conta/data/repositorio_da_conta_local.dart';
+import 'package:fonar_app/features/conta/domain/dados_do_profissional.dart';
+import 'package:fonar_app/features/conta/presentation/conta_controlador.dart';
+import 'package:fonar_app/features/auth/data/profissional_atual.dart';
+import 'package:fonar_app/features/auth/domain/profissional.dart';
 
 import '../../apoio/http_falso.dart';
 import '../../apoio/sessao_de_teste.dart';
@@ -94,6 +99,28 @@ class _Montagem {
   Future<DestinoDaEntrada?> entrar() => container
       .read(loginControladorProvider.notifier)
       .entrar(email: 'fono@exemplo.com', senha: 'senha');
+}
+
+/// O perfil já carregado, sem ir ao banco nem à API ao abrir.
+class _ProfissionalFixo extends ProfissionalAtual {
+  @override
+  Profissional build() => const Profissional(
+    nome: 'Ana Souza',
+    registro: 'CRFa 2-12345',
+    email: 'fono@exemplo.com',
+    credenciamento: Credenciamento.credenciado,
+  );
+}
+
+class _ContaEmMemoria implements RepositorioDaConta {
+  final salvos = <Profissional>[];
+
+  @override
+  Future<Profissional?> perfil(String uid) async => null;
+
+  @override
+  Future<void> salvar(String uid, Profissional profissional) async =>
+      salvos.add(profissional);
 }
 
 const _dados = DadosDoCadastro(
@@ -299,6 +326,70 @@ void main() {
             .erroDe(CampoDoRegistro.termos),
         isNotNull,
       );
+    });
+  });
+
+  group('Conta com a API', () {
+    ({ProviderContainer container, AdaptadorFalso servidor, _ContaEmMemoria local})
+    montar(List<RespostaFalsa> respostas) {
+      final servidor = AdaptadorFalso(respostas);
+      final local = _ContaEmMemoria();
+      final dio = Dio(BaseOptions(baseUrl: 'https://api.test'))
+        ..httpClientAdapter = servidor
+        ..interceptors.add(const ErrorInterceptor());
+      final container = ProviderContainer(
+        overrides: [
+          cadastroApiProvider.overrideWithValue(CadastroApi(dio)),
+          repositorioDaContaProvider.overrideWithValue(local),
+          profissionalAtualProvider.overrideWith(_ProfissionalFixo.new),
+          sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.listen(contaControladorProvider, (_, _) {});
+      return (container: container, servidor: servidor, local: local);
+    }
+
+    test('salva pelo PATCH, com a região e o número lidos do registro', () async {
+      final m = montar([
+        RespostaFalsa(200, {
+          ..._perfil(),
+          'crefono_inscricao': '54321',
+          'registro_conselho': 'CRFa 2-54321',
+        }),
+      ]);
+      final salvou = await m.container
+          .read(contaControladorProvider.notifier)
+          .salvar(nome: 'Ana Souza', registro: 'CRFa 2-54321');
+
+      expect(salvou, isTrue);
+      final pedido = m.servidor.feitas.single;
+      expect(pedido.opcoes.method, 'PATCH');
+      expect(pedido.json, {
+        'nome': 'Ana Souza',
+        'crefono_regiao': 2,
+        'crefono_inscricao': '54321',
+      });
+      // O que vale é o que a API devolveu: trocar o número voltou a pendente.
+      final atual = m.container.read(profissionalAtualProvider);
+      expect(atual.registro, 'CRFa 2-54321');
+      expect(atual.credenciamento, Credenciamento.pendente);
+      expect(m.local.salvos.single.registro, 'CRFa 2-54321');
+    });
+
+    test('registro fora do formato: erro no campo, nada vai à API', () async {
+      final m = montar([]);
+      final salvou = await m.container
+          .read(contaControladorProvider.notifier)
+          .salvar(nome: 'Ana Souza', registro: '54321');
+
+      expect(salvou, isFalse);
+      expect(
+        m.container.read(contaControladorProvider).erroRegistro,
+        ProblemaNosDados.registroFormato,
+      );
+      expect(m.servidor.feitas, isEmpty);
+      expect(m.local.salvos, isEmpty);
     });
   });
 }
