@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fonar_app/core/network/interceptors/error_interceptor.dart';
@@ -37,6 +38,10 @@ Future<ImageInfo> _carregar(ImageProvider imagem) {
 }
 
 void main() {
+  // A mesma imagem (mesmo caminho) fica no cache de imagens entre os testes:
+  // sem limpar, o teste da recusa receberia a imagem que o anterior baixou.
+  tearDown(() => PaintingBinding.instance.imageCache.clear());
+
   testWidgets('a imagem vem pelo cliente da API, no caminho da análise', (
     tester,
   ) async {
@@ -60,7 +65,7 @@ void main() {
     ]);
     final falha = await tester.runAsync(() async {
       try {
-        await _carregar(ImagemDaApi(_caminho, _dio(servidor)));
+        await _carregar(ImagemDaApi('$_caminho?recusa', _dio(servidor)));
         return null;
       } catch (erro) {
         return erro;
