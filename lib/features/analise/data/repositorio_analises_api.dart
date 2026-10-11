@@ -62,13 +62,13 @@ class RepositorioAnalisesApi implements RepositorioAnalises {
 }
 
 /// De qual medida do motor vem cada medida da tela, na gravação da vogal
-/// sustentada — onde jitter, shimmer, HNR e f0 se medem.
+/// sustentada — onde jitter, shimmer, HNR, f0 e CPPS se medem.
 ///
-/// AVQI e CPPS ainda não são calculados pela API: aparecem como "não
-/// calculada", nunca como zero.
+/// O AVQI ainda não é calculado pela API (falta o script oficial da versão
+/// 03.01): aparece como "não calculada", nunca como zero.
 const identificadorNaApi = <MedidaAcustica, String?>{
   MedidaAcustica.avqi: null,
-  MedidaAcustica.cpps: null,
+  MedidaAcustica.cpps: 'cpps.mean_db',
   MedidaAcustica.jitter: 'jitter.local',
   MedidaAcustica.shimmer: 'shimmer.local',
   MedidaAcustica.hnr: 'hnr.mean_db',
@@ -106,13 +106,23 @@ ResultadoDaAnalise analiseDaApi(Map<Object?, Object?> corpo) {
   };
 
   final completa = corpo['completa'] == true;
+  final pacienteId = corpo['paciente_id'] as String;
+  final sessaoId = (corpo['sessao_id'] ?? corpo['id']) as String;
+  final amostraDaVogal = (vogal?['amostra'] as Map?)?['id'];
   return ResultadoDaAnalise(
     id: corpo['id'] as String,
-    pacienteId: corpo['paciente_id'] as String,
+    pacienteId: pacienteId,
     situacao: completa
         ? SituacaoDaAnalise.concluida
         : SituacaoDaAnalise.processando,
     realizadaEm: DateTime.tryParse('${corpo['data']}'),
+    // O espectrograma da vogal, gerado pela API a partir do áudio guardado.
+    // Caminho relativo: quem busca é o cliente da API, com o token (ver
+    // `imagemDoServidorProvider`).
+    espectrogramaUrl: amostraDaVogal is String
+        ? '/v1/pacientes/$pacienteId/sessoes/$sessaoId/amostras/'
+              '$amostraDaVogal/espectrograma'
+        : null,
     medidas: [
       for (final MapEntry(key: medida, value: identificador)
           in identificadorNaApi.entries)

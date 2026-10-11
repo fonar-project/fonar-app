@@ -8,12 +8,27 @@ import 'package:dio/dio.dart';
 /// Uma resposta programada: status e corpo JSON — ou, com [semRede], a
 /// conexão que nem chega a abrir.
 class RespostaFalsa {
-  const RespostaFalsa(this.status, [this.corpo = const {}]) : semRede = false;
-  const RespostaFalsa.semRede() : status = 0, corpo = const {}, semRede = true;
+  const RespostaFalsa(this.status, [this.corpo = const {}])
+    : semRede = false,
+      bytes = null,
+      tipo = null;
+  const RespostaFalsa.semRede()
+    : status = 0,
+      corpo = const {},
+      semRede = true,
+      bytes = null,
+      tipo = null;
+
+  /// Corpo binário — uma imagem, um WAV —, com o tipo de conteúdo.
+  const RespostaFalsa.bytes(this.status, List<int> this.bytes, String this.tipo)
+    : corpo = const {},
+      semRede = false;
 
   final int status;
   final Object corpo;
   final bool semRede;
+  final List<int>? bytes;
+  final String? tipo;
 }
 
 /// Uma requisição como chegou: método, endereço, cabeçalhos e corpo em texto.
@@ -61,6 +76,15 @@ class AdaptadorFalso implements HttpClientAdapter {
       throw DioException.connectionError(
         requestOptions: options,
         reason: 'sem rede (teste)',
+      );
+    }
+    if (resposta.bytes case final bytes?) {
+      return ResponseBody.fromBytes(
+        bytes,
+        resposta.status,
+        headers: {
+          Headers.contentTypeHeader: [resposta.tipo!],
+        },
       );
     }
     return ResponseBody.fromString(

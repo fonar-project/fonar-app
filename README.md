@@ -343,10 +343,15 @@ Sem consentimento em vigor no Firebase, a API responde
 Com `FONAR_API_BASE_URL`, os resultados também vêm da API
 (`lib/features/analise/data/repositorio_analises_api.dart`): a análise da
 sessão e a evolução do paciente, com os valores do motor da gravação da
-vogal sustentada (jitter e shimmer convertidos de fração para %). Faixa
-provisória da API não classifica: a medida aparece com o valor e "sem faixa
-validada", como a regra das faixas pede. Os pacientes e resultados de
-exemplo só aparecem no build sem a URL.
+vogal sustentada (jitter e shimmer convertidos de fração para %; CPPS em dB).
+Faixa provisória da API não classifica: a medida aparece com o valor e "sem
+faixa validada", como a regra das faixas pede. O AVQI ainda aparece como "não
+calculado": a API depende do script oficial da versão 03.01. O
+**espectrograma** é o PNG que a API gera da gravação da vogal
+(`GET .../amostras/{a}/espectrograma`), buscado pelo mesmo cliente das outras
+chamadas, com o token (`ImagemDaApi`, em
+`lib/features/analise/data/imagem_do_servidor.dart`). Os pacientes e
+resultados de exemplo só aparecem no build sem a URL.
 
 ### Conectar ao Firebase (autenticação)
 

@@ -238,7 +238,9 @@ consentimentos e sessão sobem para o Firestore pela API REST
 amostra; o id da análise é o id da sessão. Os resultados vêm da API
 (`RepositorioAnalisesApi`) quando o build recebe `FONAR_API_BASE_URL`: os
 valores do motor, sem classificação enquanto não houver faixa VALIDADA — as
-faixas provisórias da API não classificam no app. Ainda é PLACEHOLDER, e
+faixas provisórias da API não classificam no app. O CPPS vem da API; o AVQI
+ainda não (falta o script oficial da v03.01). O espectrograma é o PNG da API,
+buscado com o token (`ImagemDaApi`). Ainda é PLACEHOLDER, e
 identificado como tal: o login sem a chave (aceita qualquer e-mail e senha,
 e a tela avisa) e, no build sem a URL da API, os resultados e os pacientes
 "de Exemplo", que aparecem por cima do banco sem serem gravados nele.

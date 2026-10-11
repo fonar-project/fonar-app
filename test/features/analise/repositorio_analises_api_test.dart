@@ -73,6 +73,7 @@ Map<String, Object?> _analise({bool completa = true, bool provisoria = true}) =>
               _medida('shimmer.local', 0.031, 'fracao'),
               _medida('hnr.mean_db', 21.5, 'db'),
               _medida('f0.mean_hz', 212, 'hz'),
+              _medida('cpps.mean_db', 14.2, 'db'),
               _medida('pulses.n_points', 239, 'contagem'),
             ],
           },
@@ -113,9 +114,14 @@ void main() {
     // dB e Hz chegam como estão.
     expect(_valor(resultado, MedidaAcustica.hnr), 21.5);
     expect(_valor(resultado, MedidaAcustica.f0), 212);
+    expect(_valor(resultado, MedidaAcustica.cpps), 14.2);
     // O que a API ainda não calcula aparece como "não calculada".
     expect(_valor(resultado, MedidaAcustica.avqi), isNull);
-    expect(_valor(resultado, MedidaAcustica.cpps), isNull);
+    // O espectrograma é o da gravação da VOGAL (a1), pedido à API.
+    expect(
+      resultado.espectrogramaUrl,
+      '/v1/pacientes/$_paciente/sessoes/$_sessao/amostras/a1/espectrograma',
+    );
     expect(resultado.medidas.map((x) => x.medida), MedidaAcustica.values);
   });
 
@@ -208,6 +214,8 @@ void main() {
     for (final m in resultado.medidas) {
       expect(m.valor, isNull, reason: m.medida.name);
     }
+    // Nem o espectrograma: ele é o da vogal.
+    expect(resultado.espectrogramaUrl, isNull);
   });
 
   test('a faixa que veio do servidor é usada antes do catálogo', () {
