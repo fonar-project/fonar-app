@@ -46,10 +46,13 @@ final retiradaEmVigorProvider =
 /// aparelho pode ter sido corrigido para trás entre um registro e outro. O
 /// horário fica como está, como prova.
 ///
-/// TODO(backend): a sincronização vai precisar de uma regra explícita de
-/// ordem entre aparelhos — a sequência local só vale neste banco.
+/// Sobe para o Firebase antes de cada envio para a análise (US33,
+/// `SincronizacaoFirestore`), como o livro de registros que as regras de
+/// lá exigem.
 ///
-/// TODO(backend): subir pela fila de sincronização quando o Firebase entrar.
+/// TODO(backend): a ordem entre aparelhos ainda não tem regra — a sequência
+/// local só vale neste banco, e um livro diferente no Firebase recusa o
+/// envio (ver `PENDENCIAS.md`).
 class RepositorioConsentimentoLocal implements RepositorioConsentimento {
   RepositorioConsentimentoLocal(
     this._banco, {

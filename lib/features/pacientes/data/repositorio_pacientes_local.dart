@@ -43,8 +43,9 @@ final pacienteProvider = FutureProvider.family<Paciente?, String>((
 
 /// Os pacientes cadastrados neste aparelho, no banco local.
 ///
-/// TODO(backend): subir o cadastro pela fila de sincronização quando o
-/// Firebase entrar. Hoje ele fica só no aparelho.
+/// O cadastro sobe para o Firebase antes de cada envio para a análise
+/// (US33, `SincronizacaoFirestore`), e as correções feitas aqui vão junto.
+/// TODO(backend): o que outro aparelho cadastrou não desce para este.
 class RepositorioPacientesLocal implements RepositorioPacientes {
   RepositorioPacientesLocal(
     this._banco, {
