@@ -26,8 +26,9 @@ class RepositorioAnalisesApi implements RepositorioAnalises {
     final corpo = await _ler(
       '/v1/pacientes/$pacienteId/sessoes/$analiseId/analise',
     );
-    if (corpo is! Map)
+    if (corpo is! Map) {
       throw const FalhaDesconhecida(causa: 'análise sem corpo');
+    }
     return analiseDaApi(corpo);
   }
 
@@ -41,7 +42,9 @@ class RepositorioAnalisesApi implements RepositorioAnalises {
       // Firebase: não tem análise, e não é erro.
       return const [];
     }
-    if (corpo is! List) throw const FalhaDesconhecida(causa: 'lista sem corpo');
+    if (corpo is! List) {
+      throw const FalhaDesconhecida(causa: 'lista sem corpo');
+    }
     return [
       for (final analise in corpo)
         if (analise is Map) analiseDaApi(analise),
