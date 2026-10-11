@@ -8,6 +8,9 @@ aparecer na página do PR, no arquivo e na linha, sem precisar abrir o log:
     python3 tool/ci_anotacoes.py analise analise.txt   # `dart analyze --format=machine`
     python3 tool/ci_anotacoes.py testes testes.json    # `flutter test --file-reporter json:...`
 
+O de testes também imprime, sempre, um resumo (`::notice`) com quantos
+testes rodaram.
+
 Sempre sai com código 0: quem reprova o passo é o comando de verdade.
 """
 
@@ -85,6 +88,7 @@ def testes(relatorio: Path) -> None:
     """
     nomes: dict[int, str] = {}
     falhas: list[tuple[str, str]] = []
+    contagem = {"success": 0, "failure": 0, "error": 0, "pulados": 0}
     for linha in relatorio.read_text(encoding="utf-8", errors="replace").splitlines():
         try:
             evento = json.loads(linha)
@@ -95,10 +99,23 @@ def testes(relatorio: Path) -> None:
         if evento.get("type") == "testStart":
             teste = evento.get("test", {})
             nomes[teste.get("id")] = teste.get("name", "?")
+        elif evento.get("type") == "testDone" and not evento.get("hidden"):
+            if evento.get("skipped"):
+                contagem["pulados"] += 1
+            else:
+                resultado = evento.get("result")
+                contagem[resultado] = contagem.get(resultado, 0) + 1
         elif evento.get("type") == "error":
             nome = nomes.get(evento.get("testID"), "?")
             pilha = "\n".join(str(evento.get("stackTrace", "")).splitlines()[:12])
             falhas.append((nome, f"{evento.get('error', '')}\n\n{pilha}"))
+    # O resumo sai sempre: sem abrir o log, dá para ver quantos testes
+    # rodaram - e se um teste novo entrou na conta.
+    total = sum(contagem.values())
+    print(
+        f"::notice title=Testes::{total} testes: {contagem['success']} passaram, "
+        f"{contagem['failure'] + contagem['error']} falharam, {contagem['pulados']} pulados"
+    )
     for nome, mensagem in falhas[:MAXIMO]:
         _anotar(mensagem, titulo=f"Teste: {nome}"[:200])
     if len(falhas) > MAXIMO:
