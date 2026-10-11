@@ -92,7 +92,7 @@ const regioesDoCrefono = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 const tamanhoMinimoDaSenha = 8;
 
 /// O que pode estar errado no formulário — um por campo.
-enum ProblemaNoCadastro {
+enum ProblemaNoRegistro {
   nomeVazio,
   nomeLongo,
   regiaoVazia,
@@ -119,25 +119,25 @@ class DadosDoCadastro {
 }
 
 /// O resultado de conferir o formulário.
-sealed class ConferenciaDoCadastro {
-  const ConferenciaDoCadastro();
+sealed class ConferenciaDoRegistro {
+  const ConferenciaDoRegistro();
 }
 
-final class CadastroValido extends ConferenciaDoCadastro {
-  const CadastroValido(this.dados);
+final class RegistroValido extends ConferenciaDoRegistro {
+  const RegistroValido(this.dados);
 
   final DadosDoCadastro dados;
 }
 
-final class CadastroInvalido extends ConferenciaDoCadastro {
-  const CadastroInvalido(this.problemas);
+final class RegistroInvalido extends ConferenciaDoRegistro {
+  const RegistroInvalido(this.problemas);
 
   /// No máximo um problema por campo.
-  final Map<CampoDoCadastro, ProblemaNoCadastro> problemas;
+  final Map<CampoDoRegistro, ProblemaNoRegistro> problemas;
 }
 
 /// Os campos dos formulários de conta e de cadastro.
-enum CampoDoCadastro {
+enum CampoDoRegistro {
   nome,
   regiao,
   inscricao,
@@ -155,34 +155,34 @@ final _email = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 ///
 /// Espaços sobrando saem do nome ("Ana   Souza " vira "Ana Souza"). O número
 /// é só o número: "CRFa 2-12345" é recusado, porque a região já é um campo.
-ConferenciaDoCadastro validarCadastro({
+ConferenciaDoRegistro validarRegistro({
   required String nome,
   required int? regiao,
   required String inscricao,
   required bool aceitouTermos,
 }) {
-  final problemas = <CampoDoCadastro, ProblemaNoCadastro>{};
+  final problemas = <CampoDoRegistro, ProblemaNoRegistro>{};
   final nomeLimpo = nome.trim().replaceAll(RegExp(r'\s+'), ' ');
   final inscricaoLimpa = inscricao.trim();
   if (nomeLimpo.isEmpty) {
-    problemas[CampoDoCadastro.nome] = ProblemaNoCadastro.nomeVazio;
+    problemas[CampoDoRegistro.nome] = ProblemaNoRegistro.nomeVazio;
   } else if (nomeLimpo.length > 200) {
-    problemas[CampoDoCadastro.nome] = ProblemaNoCadastro.nomeLongo;
+    problemas[CampoDoRegistro.nome] = ProblemaNoRegistro.nomeLongo;
   }
   if (regiao == null || !regioesDoCrefono.contains(regiao)) {
-    problemas[CampoDoCadastro.regiao] = ProblemaNoCadastro.regiaoVazia;
+    problemas[CampoDoRegistro.regiao] = ProblemaNoRegistro.regiaoVazia;
   }
   if (inscricaoLimpa.isEmpty) {
-    problemas[CampoDoCadastro.inscricao] = ProblemaNoCadastro.inscricaoVazia;
+    problemas[CampoDoRegistro.inscricao] = ProblemaNoRegistro.inscricaoVazia;
   } else if (inscricaoLimpa.length > 20 ||
       !_inscricao.hasMatch(inscricaoLimpa)) {
-    problemas[CampoDoCadastro.inscricao] = ProblemaNoCadastro.inscricaoInvalida;
+    problemas[CampoDoRegistro.inscricao] = ProblemaNoRegistro.inscricaoInvalida;
   }
   if (!aceitouTermos) {
-    problemas[CampoDoCadastro.termos] = ProblemaNoCadastro.termosNaoAceitos;
+    problemas[CampoDoRegistro.termos] = ProblemaNoRegistro.termosNaoAceitos;
   }
-  if (problemas.isNotEmpty) return CadastroInvalido(problemas);
-  return CadastroValido(
+  if (problemas.isNotEmpty) return RegistroInvalido(problemas);
+  return RegistroValido(
     DadosDoCadastro(
       nome: nomeLimpo,
       crefonoRegiao: regiao!,
@@ -192,7 +192,7 @@ ConferenciaDoCadastro validarCadastro({
 }
 
 /// Confere e-mail, senha e a repetição dela — os campos da conta nova.
-Map<CampoDoCadastro, ProblemaNoCadastro> validarConta({
+Map<CampoDoRegistro, ProblemaNoRegistro> validarConta({
   required String email,
   required String senha,
   required String confirmacao,
@@ -200,14 +200,14 @@ Map<CampoDoCadastro, ProblemaNoCadastro> validarConta({
   final emailLimpo = email.trim();
   return {
     if (emailLimpo.isEmpty)
-      CampoDoCadastro.email: ProblemaNoCadastro.emailVazio
+      CampoDoRegistro.email: ProblemaNoRegistro.emailVazio
     else if (!_email.hasMatch(emailLimpo))
-      CampoDoCadastro.email: ProblemaNoCadastro.emailInvalido,
+      CampoDoRegistro.email: ProblemaNoRegistro.emailInvalido,
     // A senha não é aparada: espaço pode fazer parte dela.
     if (senha.length < tamanhoMinimoDaSenha)
-      CampoDoCadastro.senha: ProblemaNoCadastro.senhaCurta
+      CampoDoRegistro.senha: ProblemaNoRegistro.senhaCurta
     else if (confirmacao != senha)
-      CampoDoCadastro.confirmacao: ProblemaNoCadastro.senhasDiferentes,
+      CampoDoRegistro.confirmacao: ProblemaNoRegistro.senhasDiferentes,
   };
 }
 

@@ -52,8 +52,9 @@ class ErrorInterceptor extends Interceptor {
       400 || 413 || 415 || 422 => FalhaDeValidacao(causa: err),
       401 => NaoAutorizado(causa: err),
       // A equipe conferiu a inscrição no Crefono e recusou (ADR-015 da API).
-      403 when codigoDaApi(err) == 'credencial_recusada' =>
-        CredencialRecusada(causa: err),
+      403 when codigoDaApi(err) == 'credencial_recusada' => CredencialRecusada(
+        causa: err,
+      ),
       403 => Proibido(causa: err),
       404 => NaoEncontrado(causa: err),
       // A API conferiu o consentimento no Firebase e não achou um em vigor.

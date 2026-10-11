@@ -1197,7 +1197,7 @@ abstract final class AppStrings {
   static const criarContaCriando = 'Criando a conta…';
   static const criarContaJaTenho = 'Já tenho conta';
 
-  static const cadastroCampoNome = 'Nome completo';
+  static const registroCampoNome = 'Nome completo';
   static const cadastroNomeApoio = 'Como vai assinado no laudo.';
   static const cadastroCampoRegiao = 'Região do Crefono';
   static String cadastroRegiao(int regiao) => '$regiaoª';
@@ -1217,7 +1217,7 @@ abstract final class AppStrings {
       'consentimento do paciente. A equipe confere a sua inscrição no Crefono '
       'e pode fechar o acesso se ela não for confirmada. O texto completo dos '
       'termos e da política de privacidade ainda está sendo escrito.';
-  static const cadastroInformeNome = 'Informe o nome completo.';
+  static const registroInformeNome = 'Informe o nome completo.';
   static const cadastroNomeLongo = 'O nome passa de 200 caracteres.';
   static const cadastroInformeRegiao =
       'Escolha a região do Crefono em que você é inscrito(a).';

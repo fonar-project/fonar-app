@@ -160,22 +160,29 @@ void main() {
       );
       final servidor = AdaptadorFalso([_renovou]);
 
-      await FonteDeToken(cofre, _firebase(servidor), () => _agora).renovarAgora();
+      await FonteDeToken(
+        cofre,
+        _firebase(servidor),
+        () => _agora,
+      ).renovarAgora();
 
       expect(servidor.feitas, hasLength(1));
       expect((await cofre.ler())!.idToken, 'token-2');
     });
 
-    test('renovar já, sem ninguém no cofre: não há com que autenticar', () async {
-      await expectLater(
-        FonteDeToken(
-          cofre,
-          _firebase(AdaptadorFalso([])),
-          () => _agora,
-        ).renovarAgora(),
-        throwsA(isA<NaoAutorizado>()),
-      );
-    });
+    test(
+      'renovar já, sem ninguém no cofre: não há com que autenticar',
+      () async {
+        await expectLater(
+          FonteDeToken(
+            cofre,
+            _firebase(AdaptadorFalso([])),
+            () => _agora,
+          ).renovarAgora(),
+          throwsA(isA<NaoAutorizado>()),
+        );
+      },
+    );
 
     test('o Firebase não renova mais: a credencial sai do cofre', () async {
       await cofre.guardar(_credencial(expiraEm: _agora));

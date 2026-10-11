@@ -45,33 +45,33 @@ const _dados = DadosDoCadastro(
 );
 
 void main() {
-  group('validarCadastro', () {
+  group('validarRegistro', () {
     test('aceita e limpa', () {
-      final resultado = validarCadastro(
+      final resultado = validarRegistro(
         nome: '  Ana   Souza ',
         regiao: 9,
         inscricao: ' 12.345-6 ',
         aceitouTermos: true,
       );
-      expect(resultado, isA<CadastroValido>());
-      final dados = (resultado as CadastroValido).dados;
+      expect(resultado, isA<RegistroValido>());
+      final dados = (resultado as RegistroValido).dados;
       expect(dados.nome, 'Ana Souza');
       expect(dados.crefonoRegiao, 9);
       expect(dados.crefonoInscricao, '12.345-6');
     });
 
     test('um problema por campo, todos de uma vez', () {
-      final resultado = validarCadastro(
+      final resultado = validarRegistro(
         nome: ' ',
         regiao: null,
         inscricao: 'CRFa 2-12345',
         aceitouTermos: false,
       );
-      expect((resultado as CadastroInvalido).problemas, {
-        CampoDoCadastro.nome: ProblemaNoCadastro.nomeVazio,
-        CampoDoCadastro.regiao: ProblemaNoCadastro.regiaoVazia,
-        CampoDoCadastro.inscricao: ProblemaNoCadastro.inscricaoInvalida,
-        CampoDoCadastro.termos: ProblemaNoCadastro.termosNaoAceitos,
+      expect((resultado as RegistroInvalido).problemas, {
+        CampoDoRegistro.nome: ProblemaNoRegistro.nomeVazio,
+        CampoDoRegistro.regiao: ProblemaNoRegistro.regiaoVazia,
+        CampoDoRegistro.inscricao: ProblemaNoRegistro.inscricaoInvalida,
+        CampoDoRegistro.termos: ProblemaNoRegistro.termosNaoAceitos,
       });
     });
 
@@ -85,27 +85,27 @@ void main() {
         ('1' * 21, false),
         ('', false),
       ]) {
-        final resultado = validarCadastro(
+        final resultado = validarRegistro(
           nome: 'Ana',
           regiao: 2,
           inscricao: inscricao,
           aceitouTermos: true,
         );
-        expect(resultado is CadastroValido, valida, reason: inscricao);
+        expect(resultado is RegistroValido, valida, reason: inscricao);
       }
     });
 
     test('região fora de 1 a 9', () {
       for (final regiao in [0, 10]) {
-        final resultado = validarCadastro(
+        final resultado = validarRegistro(
           nome: 'Ana',
           regiao: regiao,
           inscricao: '1',
           aceitouTermos: true,
         );
         expect(
-          (resultado as CadastroInvalido).problemas[CampoDoCadastro.regiao],
-          ProblemaNoCadastro.regiaoVazia,
+          (resultado as RegistroInvalido).problemas[CampoDoRegistro.regiao],
+          ProblemaNoRegistro.regiaoVazia,
         );
       }
     });
@@ -114,14 +114,14 @@ void main() {
   group('validarConta', () {
     test('e-mail, senha curta e repetição diferente', () {
       expect(validarConta(email: '', senha: '', confirmacao: ''), {
-        CampoDoCadastro.email: ProblemaNoCadastro.emailVazio,
-        CampoDoCadastro.senha: ProblemaNoCadastro.senhaCurta,
+        CampoDoRegistro.email: ProblemaNoRegistro.emailVazio,
+        CampoDoRegistro.senha: ProblemaNoRegistro.senhaCurta,
       });
       expect(
         validarConta(email: 'fono@', senha: '12345678', confirmacao: '1234567'),
         {
-          CampoDoCadastro.email: ProblemaNoCadastro.emailInvalido,
-          CampoDoCadastro.confirmacao: ProblemaNoCadastro.senhasDiferentes,
+          CampoDoRegistro.email: ProblemaNoRegistro.emailInvalido,
+          CampoDoRegistro.confirmacao: ProblemaNoRegistro.senhasDiferentes,
         },
       );
       expect(

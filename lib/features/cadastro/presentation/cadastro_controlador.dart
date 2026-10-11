@@ -22,7 +22,7 @@ class EstadoDoCadastro {
   final bool enviando;
 
   /// Campo -> mensagem, no máximo uma por campo.
-  final Map<CampoDoCadastro, String> erros;
+  final Map<CampoDoRegistro, String> erros;
 
   /// Falha que não é de um campo — rede, servidor.
   final String? erroGeral;
@@ -30,25 +30,25 @@ class EstadoDoCadastro {
   /// Aviso que não é erro: "e-mail reenviado", "ainda não confirmado".
   final ({String titulo, String texto})? aviso;
 
-  String? erroDe(CampoDoCadastro campo) => erros[campo];
+  String? erroDe(CampoDoRegistro campo) => erros[campo];
 }
 
 /// O texto de cada problema do formulário.
-String mensagemDe(ProblemaNoCadastro problema) => switch (problema) {
-  ProblemaNoCadastro.nomeVazio => AppStrings.cadastroInformeNome,
-  ProblemaNoCadastro.nomeLongo => AppStrings.cadastroNomeLongo,
-  ProblemaNoCadastro.regiaoVazia => AppStrings.cadastroInformeRegiao,
-  ProblemaNoCadastro.inscricaoVazia => AppStrings.cadastroInformeInscricao,
-  ProblemaNoCadastro.inscricaoInvalida => AppStrings.cadastroInscricaoInvalida,
-  ProblemaNoCadastro.termosNaoAceitos => AppStrings.cadastroAceiteTermos,
-  ProblemaNoCadastro.emailVazio => AppStrings.cadastroInformeEmail,
-  ProblemaNoCadastro.emailInvalido => AppStrings.cadastroEmailInvalido,
-  ProblemaNoCadastro.senhaCurta => AppStrings.cadastroSenhaCurta,
-  ProblemaNoCadastro.senhasDiferentes => AppStrings.cadastroSenhasDiferentes,
+String mensagemDe(ProblemaNoRegistro problema) => switch (problema) {
+  ProblemaNoRegistro.nomeVazio => AppStrings.registroInformeNome,
+  ProblemaNoRegistro.nomeLongo => AppStrings.cadastroNomeLongo,
+  ProblemaNoRegistro.regiaoVazia => AppStrings.cadastroInformeRegiao,
+  ProblemaNoRegistro.inscricaoVazia => AppStrings.cadastroInformeInscricao,
+  ProblemaNoRegistro.inscricaoInvalida => AppStrings.cadastroInscricaoInvalida,
+  ProblemaNoRegistro.termosNaoAceitos => AppStrings.cadastroAceiteTermos,
+  ProblemaNoRegistro.emailVazio => AppStrings.cadastroInformeEmail,
+  ProblemaNoRegistro.emailInvalido => AppStrings.cadastroEmailInvalido,
+  ProblemaNoRegistro.senhaCurta => AppStrings.cadastroSenhaCurta,
+  ProblemaNoRegistro.senhasDiferentes => AppStrings.cadastroSenhasDiferentes,
 };
 
-Map<CampoDoCadastro, String> _mensagens(
-  Map<CampoDoCadastro, ProblemaNoCadastro> problemas,
+Map<CampoDoRegistro, String> _mensagens(
+  Map<CampoDoRegistro, ProblemaNoRegistro> problemas,
 ) => {
   for (final MapEntry(key: campo, value: problema) in problemas.entries)
     campo: mensagemDe(problema),
@@ -70,7 +70,7 @@ class CriarContaControlador extends Notifier<EstadoDoCadastro> {
   EstadoDoCadastro build() => const EstadoDoCadastro();
 
   /// O profissional mexeu no campo: o erro dele sai.
-  void editou(CampoDoCadastro campo) {
+  void editou(CampoDoRegistro campo) {
     if (!state.erros.containsKey(campo) && state.erroGeral == null) return;
     state = EstadoDoCadastro(erros: {...state.erros}..remove(campo));
   }
@@ -90,16 +90,16 @@ class CriarContaControlador extends Notifier<EstadoDoCadastro> {
     final problemas = {
       ...validarConta(email: email, senha: senha, confirmacao: confirmacao),
     };
-    final cadastro = validarCadastro(
+    final cadastro = validarRegistro(
       nome: nome,
       regiao: regiao,
       inscricao: inscricao,
       aceitouTermos: aceitouTermos,
     );
-    if (cadastro case CadastroInvalido(problemas: final doCadastro)) {
+    if (cadastro case RegistroInvalido(problemas: final doCadastro)) {
       problemas.addAll(doCadastro);
     }
-    if (problemas.isNotEmpty || cadastro is! CadastroValido) {
+    if (problemas.isNotEmpty || cadastro is! RegistroValido) {
       state = EstadoDoCadastro(erros: _mensagens(problemas));
       return null;
     }
@@ -114,11 +114,11 @@ class CriarContaControlador extends Notifier<EstadoDoCadastro> {
     try {
       await criacao.criarConta(email: email.trim(), senha: senha);
     } on EmailIndisponivel catch (e) {
-      falha = EstadoDoCadastro(erros: {CampoDoCadastro.email: e.mensagem});
+      falha = EstadoDoCadastro(erros: {CampoDoRegistro.email: e.mensagem});
     } on EmailInvalido catch (e) {
-      falha = EstadoDoCadastro(erros: {CampoDoCadastro.email: e.mensagem});
+      falha = EstadoDoCadastro(erros: {CampoDoRegistro.email: e.mensagem});
     } on SenhaFraca catch (e) {
-      falha = EstadoDoCadastro(erros: {CampoDoCadastro.senha: e.mensagem});
+      falha = EstadoDoCadastro(erros: {CampoDoRegistro.senha: e.mensagem});
     } on AppException catch (e) {
       falha = EstadoDoCadastro(erroGeral: e.mensagem);
     } catch (_) {
@@ -254,7 +254,7 @@ class CompletarCadastroControlador extends Notifier<EstadoDoCadastro> {
   @override
   EstadoDoCadastro build() => const EstadoDoCadastro();
 
-  void editou(CampoDoCadastro campo) {
+  void editou(CampoDoRegistro campo) {
     if (!state.erros.containsKey(campo) && state.erroGeral == null) return;
     state = EstadoDoCadastro(erros: {...state.erros}..remove(campo));
   }
@@ -268,17 +268,17 @@ class CompletarCadastroControlador extends Notifier<EstadoDoCadastro> {
     required bool aceitouTermos,
   }) async {
     if (state.enviando) return null;
-    final cadastro = validarCadastro(
+    final cadastro = validarRegistro(
       nome: nome,
       regiao: regiao,
       inscricao: inscricao,
       aceitouTermos: aceitouTermos,
     );
     switch (cadastro) {
-      case CadastroInvalido(:final problemas):
+      case RegistroInvalido(:final problemas):
         state = EstadoDoCadastro(erros: _mensagens(problemas));
         return null;
-      case CadastroValido(:final dados):
+      case RegistroValido(:final dados):
         state = const EstadoDoCadastro(enviando: true);
         try {
           await ref.read(cadastroApiProvider)?.cadastrar(dados);

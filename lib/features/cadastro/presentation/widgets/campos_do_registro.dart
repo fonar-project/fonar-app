@@ -36,8 +36,8 @@ class CamposDoRegistro extends StatelessWidget {
   final ValueChanged<bool> aoMarcarTermos;
 
   /// O campo mudou: o erro dele sai.
-  final ValueChanged<CampoDoCadastro> aoEditar;
-  final String? Function(CampoDoCadastro) erroDe;
+  final ValueChanged<CampoDoRegistro> aoEditar;
+  final String? Function(CampoDoRegistro) erroDe;
 
   /// Enquanto o formulário é enviado, nada se edita.
   final bool ocupado;
@@ -53,16 +53,16 @@ class CamposDoRegistro extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         AppCampoTexto(
-          rotulo: AppStrings.cadastroCampoNome,
+          rotulo: AppStrings.registroCampoNome,
           apoio: AppStrings.cadastroNomeApoio,
           controlador: nome,
-          erro: erroDe(CampoDoCadastro.nome),
+          erro: erroDe(CampoDoRegistro.nome),
           somenteLeitura: ocupado,
           capitalizacao: TextCapitalization.words,
           autoCorrecao: false,
           acaoDeEntrada: TextInputAction.next,
           autopreenchimento: const [AutofillHints.name],
-          aoMudar: (_) => aoEditar(CampoDoCadastro.nome),
+          aoMudar: (_) => aoEditar(CampoDoRegistro.nome),
         ),
         const SizedBox(height: AppSpacing.md),
         AppEscolhaUnica<int>(
@@ -75,10 +75,10 @@ class CamposDoRegistro extends StatelessWidget {
           aoEscolher: ocupado
               ? null
               : (r) {
-                  aoEditar(CampoDoCadastro.regiao);
+                  aoEditar(CampoDoRegistro.regiao);
                   aoEscolherRegiao(r);
                 },
-          erro: erroDe(CampoDoCadastro.regiao),
+          erro: erroDe(CampoDoRegistro.regiao),
         ),
         const SizedBox(height: AppSpacing.md),
         AppCampoTexto(
@@ -86,13 +86,13 @@ class CamposDoRegistro extends StatelessWidget {
           dica: AppStrings.cadastroInscricaoDica,
           apoio: AppStrings.cadastroInscricaoApoio,
           controlador: inscricao,
-          erro: erroDe(CampoDoCadastro.inscricao),
+          erro: erroDe(CampoDoRegistro.inscricao),
           somenteLeitura: ocupado,
           tipoDeTeclado: TextInputType.number,
           autoCorrecao: false,
           acaoDeEntrada: TextInputAction.done,
           aoEnviar: aoEnviar == null ? null : (_) => aoEnviar!(),
-          aoMudar: (_) => aoEditar(CampoDoCadastro.inscricao),
+          aoMudar: (_) => aoEditar(CampoDoRegistro.inscricao),
         ),
         const SizedBox(height: AppSpacing.lg),
         Text(
@@ -106,10 +106,10 @@ class CamposDoRegistro extends StatelessWidget {
           aoMudar: ocupado
               ? null
               : (marcada) {
-                  aoEditar(CampoDoCadastro.termos);
+                  aoEditar(CampoDoRegistro.termos);
                   aoMarcarTermos(marcada);
                 },
-          erro: erroDe(CampoDoCadastro.termos),
+          erro: erroDe(CampoDoRegistro.termos),
         ),
       ],
     );

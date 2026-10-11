@@ -97,7 +97,9 @@ class LoginControlador extends Notifier<EstadoLogin> {
           // Fica no cofre; a API continua recusando tudo desta conta.
         }
         if (!ref.mounted) return null;
-        state = EstadoLogin(erroGeral: AppStrings.loginCredencialRecusada(motivo));
+        state = EstadoLogin(
+          erroGeral: AppStrings.loginCredencialRecusada(motivo),
+        );
         ref.invalidate(contaGuardadaProvider);
         return null;
       case VerificarEmail() || CompletarCadastro():

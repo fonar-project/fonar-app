@@ -169,12 +169,15 @@ void main() {
 
     test('formulário com problema não cria nada', () async {
       final m = _Montagem([]);
-      expect(await criar(m, senha: 'curta', regiao: null, termos: false), isNull);
+      expect(
+        await criar(m, senha: 'curta', regiao: null, termos: false),
+        isNull,
+      );
       final erros = m.container.read(criarContaControladorProvider).erros;
       expect(erros.keys, {
-        CampoDoCadastro.senha,
-        CampoDoCadastro.regiao,
-        CampoDoCadastro.termos,
+        CampoDoRegistro.senha,
+        CampoDoRegistro.regiao,
+        CampoDoRegistro.termos,
       });
       expect(m.criacao.criadas, isEmpty);
     });
@@ -195,7 +198,7 @@ void main() {
       expect(
         m.container
             .read(criarContaControladorProvider)
-            .erroDe(CampoDoCadastro.email),
+            .erroDe(CampoDoRegistro.email),
         isNotNull,
       );
     });
@@ -238,21 +241,26 @@ void main() {
 
     test('reenviar pede outro e-mail e avisa', () async {
       final m = _Montagem([], guardada: contaDeTeste);
-      await m.container.read(verificacaoControladorProvider.notifier).reenviar();
+      await m.container
+          .read(verificacaoControladorProvider.notifier)
+          .reenviar();
       expect(m.criacao.reenvios, 1);
       expect(m.container.read(verificacaoControladorProvider).aviso, isNotNull);
     });
 
-    test('outra conta: a credencial sai e o cadastro guardado também', () async {
-      final m = _Montagem([], guardada: contaDeTeste);
-      m.container.read(cadastroPendenteProvider.notifier).guardar(_dados);
-      final saiu = await m.container
-          .read(verificacaoControladorProvider.notifier)
-          .trocarDeConta();
-      expect(saiu, isTrue);
-      expect(m.autenticacao.saidas, 1);
-      expect(m.container.read(cadastroPendenteProvider), isNull);
-    });
+    test(
+      'outra conta: a credencial sai e o cadastro guardado também',
+      () async {
+        final m = _Montagem([], guardada: contaDeTeste);
+        m.container.read(cadastroPendenteProvider.notifier).guardar(_dados);
+        final saiu = await m.container
+            .read(verificacaoControladorProvider.notifier)
+            .trocarDeConta();
+        expect(saiu, isTrue);
+        expect(m.autenticacao.saidas, 1);
+        expect(m.container.read(cadastroPendenteProvider), isNull);
+      },
+    );
   });
 
   group('completar o cadastro', () {
@@ -288,7 +296,7 @@ void main() {
       expect(
         m.container
             .read(completarCadastroControladorProvider)
-            .erroDe(CampoDoCadastro.termos),
+            .erroDe(CampoDoRegistro.termos),
         isNotNull,
       );
     });

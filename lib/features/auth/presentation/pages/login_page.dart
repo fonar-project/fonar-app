@@ -296,4 +296,3 @@ class _BotaoEntrarOffline extends ConsumerWidget {
     ],
   );
 }
-
