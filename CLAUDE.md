@@ -232,10 +232,14 @@ fila, resultado, CAPE-V, evolução, laudo em PDF, com os dados num banco local
 (Drift, `lib/core/banco/`).
 
 O login é o Firebase Authentication de verdade quando o build recebe a chave
-(US32). Ainda é PLACEHOLDER, e identificado como tal: o login sem a chave
-(aceita qualquer e-mail e senha, e a tela avisa), a API de análise e os
-resultados (de exemplo, avisados na tela), e os pacientes "de Exemplo", que
-aparecem por cima do banco sem serem gravados nele. O catálogo de faixas de referência está vazio de propósito:
+(US32). O envio para a análise é a API de verdade (US33): paciente,
+consentimentos e sessão sobem para o Firestore pela API REST
+(`lib/features/sincronizacao/`), e cada gravação vai para a API com o id da
+amostra; o id da análise é o id da sessão. Ainda é PLACEHOLDER, e
+identificado como tal: o login sem a chave (aceita qualquer e-mail e senha,
+e a tela avisa), os resultados (de exemplo, avisados na tela), e os
+pacientes "de Exemplo", que aparecem por cima do banco sem serem gravados
+nele. O catálogo de faixas de referência está vazio de propósito:
 nenhuma medida é classificada.
 
 O que falta e de quem depende está em `PENDENCIAS.md` — ao resolver um item,

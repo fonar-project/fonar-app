@@ -19,8 +19,8 @@ class AuthInterceptor extends Interceptor {
 
   final FonteDeToken _fonte;
 
-  /// Rotas que não levam token. TODO: ajustar quando a API existir.
-  static const _rotasPublicas = <String>{'/health'};
+  /// Rotas que não levam token: só o health check da API.
+  static const _rotasPublicas = <String>{'/v1/health'};
 
   @override
   Future<void> onRequest(

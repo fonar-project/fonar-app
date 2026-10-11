@@ -155,5 +155,8 @@ abstract final class PoliticaDeReenvio {
     // O arquivo não volta sozinho: reenviar a cada 30 minutos só repetiria a
     // mesma falha até alguém olhar.
     GravacaoNaoEncontrada() => SituacaoDoEnvio.recusado,
+    // A API não achou consentimento em vigor: como a retirada feita aqui,
+    // só sobe com um consentimento novo.
+    SemConsentimentoNoServidor() => SituacaoDoEnvio.semConsentimento,
   };
 }

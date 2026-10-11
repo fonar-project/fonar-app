@@ -7,12 +7,21 @@
 /// flutter run --dart-define=FONAR_API_BASE_URL=https://...
 /// ```
 ///
-/// TODO: apontar para a API Python no Cloud Run quando ela subir. O valor
-/// padrão abaixo é placeholder de desenvolvimento local.
+/// A API está no Cloud Run, em
+/// `https://fonar-api-97444293253.southamerica-east1.run.app` (ver o README).
+/// O valor padrão abaixo é o de desenvolvimento local
+/// (`uvicorn web.main:app` no repositório `fonar-api`).
 abstract final class AppConfig {
   static const baseUrl = String.fromEnvironment(
     'FONAR_API_BASE_URL',
     defaultValue: 'http://localhost:8080',
+  );
+
+  /// O projeto do Firebase: o mesmo da autenticação, do banco (Cloud
+  /// Firestore) e da API. Não é segredo.
+  static const firebaseProjectId = String.fromEnvironment(
+    'FONAR_FIREBASE_PROJECT_ID',
+    defaultValue: 'fonar-763db',
   );
 
   /// A "Web API key" do projeto `fonar-763db` no Firebase (Configurações do

@@ -48,13 +48,10 @@ houver, no mesmo commit.
 
 | Pendência | US | Onde |
 |---|---|---|
-| **Contrato de envio** — suposto: `POST /analises`, multipart, `Idempotency-Key`. | 06 | `fila/data/envio_de_analise_api.dart` |
-| **Contrato do resultado** — `GET /analises/{id}`; para a evolução, `GET /pacientes/{id}/analises`; para o histórico geral, `GET /analises` paginado (hoje ele pergunta paciente por paciente); hoje as telas mostram resultados de exemplo, avisados como tal. | 07, 09 | `analise/data/repositorio_analises_placeholder.dart` |
-| Taxa de amostragem e canais que a API espera (hoje 44,1 kHz mono). | 04 | `captura/data/configuracao_de_captura.dart` |
+| **Ler os resultados da API** — ela já serve a análise da sessão (`GET /v1/pacientes/{p}/sessoes/{s}/analise`) e a evolução (`GET /v1/pacientes/{p}/analises`), com a classificação pronta (ADR-014 da API); o app ainda mostra os resultados de exemplo, avisados como tal. Para o histórico geral, ele continua perguntando paciente por paciente. | 07, 09 | `analise/data/repositorio_analises_placeholder.dart` |
 | Quando o aparelho troca taxa ou canais: bloqueia ou só avisa? (hoje só avisa) | 04, 05 | `captura/presentation/pages/captura_page.dart`, `captura/domain/verificacao_da_amostra.dart` |
 | Unidade de cada medida (shimmer em % ou dB?). Se a API mandar a unidade, ela prevalece. | 07 | `analise/presentation/apresentacao_da_medida.dart` |
-| Contrato de erro da API, para marcar campos recusados. | — | `core/error/app_exception.dart` |
-| **A API confere o token do Firebase** (`Authorization: Bearer <idToken>`, o Admin SDK verifica) e responde 401 quando não vale. O app renova o token antes de vencer e não repete a requisição recusada — 401 vira "Entrar de novo" na fila. | 32 | `core/network/interceptors/auth_interceptor.dart` |
+| Campos recusados pela API, para marcar no formulário: ela manda o motivo num código estável (`detail.codigo`), e hoje só `consentimento_ausente` muda o que o app faz. Nenhuma tela de formulário fala com a API ainda. | — | `core/network/interceptors/error_interceptor.dart` |
 
 ## Equipe (produto e implementação)
 
@@ -62,7 +59,7 @@ houver, no mesmo commit.
 |---|---|---|
 | **Numeração das US03 a US10 foi deduzida** das telas do protótipo e do índice de ícones — conferir com o backlog. A US11 (conta) veio do `TODO(US11)` que a equipe deixou no roteador; as US12 (perfil do paciente), US13 (ouvir as gravações), US14 (dados salvos no aparelho), US15 (retirar o consentimento), US16 (retomar a sessão de gravação), US17 (espectrograma no celular), US18 (token no cofre do sistema), US19 (limpeza de gravações não enviadas), US20 (editar os dados do paciente), US21 (aviso de duplicado e de saída sem salvar), US22 (documentação), US23 (histórico geral) e US24 (bloqueio por inatividade) foram escolhidas pelo Felipe. | 03–10 | — |
 | **Tempo sem uso até bloquear**: 5 minutos, escolhido sem medir a consulta. O bloqueio também pode cair no meio de uma gravação longa sem toque (a gravação continua embaixo). | 24 | `core/config/app_config.dart` (`tempoDeInatividade`) |
-| **Pacientes, consentimentos (e retiradas) e CAPE-V só no aparelho**: estão no banco local, mas ainda não sobem para o Firebase. | 14, 15 | `TODO(backend)` nos repositórios `*_local.dart` |
+| **CAPE-V, laudo e dados do profissional só no aparelho.** Desde a US33, o paciente, os consentimentos (e retiradas) e a sessão sobem para o Firebase antes de cada envio para a análise; o resto ainda não. E nada desce: o que outro aparelho gravou não aparece aqui. | 14, 15, 33 | `TODO(backend)` nos repositórios `*_local.dart`, `sincronizacao/data/sincronizacao_firestore.dart` |
 | **Pacientes e consentimentos de exemplo** aparecem por cima do banco (não são gravados nele). Saem quando a API de análise responder de verdade — os resultados de exemplo são amarrados aos ids deles. | 14 | `pacientes/data/pacientes_de_exemplo.dart`, `consentimento/data/consentimentos_de_exemplo.dart` |
 | "Última sessão" e tendência do AVQI do paciente cadastrado: hoje sempre "sem sessão" e "sem comparação" — dependem do contrato do resultado. | 14 | `pacientes/data/repositorio_pacientes_local.dart` |
 | Retomar a sessão: só se retoma a do **mesmo dia** (decisão de implementação — a voz muda de um dia para o outro, e a análise combina as tarefas). É isso que define uma consulta? | 16 | `captura/domain/retomada.dart` |
@@ -75,7 +72,7 @@ houver, no mesmo commit.
 | Ouvir a análise gravada em OUTRO aparelho: hoje só toca o que ainda está neste (achado pelo envio da fila). Precisa da API servir o áudio. | 13 | `fila/presentation/fila_controlador.dart` (`amostrasDaAnaliseProvider`) |
 | **WAV sem registro**: se apagar o arquivo antigo falha numa regravação, ou no meio de um descarte já com o registro apagado, o WAV fica no disco sem ninguém que o aponte. Falta uma varredura que compare a pasta de amostras com o banco e apague o que sobrou. | 05, 19 | `captura/presentation/gravacao_controlador.dart` (`_apagarSubstituido`) |
 | Descartar uma sessão confere se ela já está num envio antes de apagar qualquer arquivo, mas conferência e descarte não são uma operação só: um envio criado exatamente entre os dois ainda perderia o WAV. Hoje nenhum fluxo põe na fila a sessão que está na tela de limpeza; se passar a existir, os dois precisam de trava comum. | 19 | `captura/presentation/gravacoes_nao_enviadas_controlador.dart` |
-| Consentimento vigente: no aparelho, vale a ordem de gravação (id autoincremento), não o relógio. Ao sincronizar com o Firebase, a ordem entre aparelhos precisa de regra própria. | 14, 15 | `consentimento/data/repositorio_consentimento_local.dart` |
+| Consentimento vigente: no aparelho, vale a ordem de gravação (id autoincremento), não o relógio. Na sincronização (US33), o livro do Firebase tem de ser o começo do livro deste aparelho; se outro aparelho escreveu outro livro para o mesmo paciente, o envio é recusado para alguém olhar. A regra entre aparelhos continua em aberto. | 14, 15, 33 | `sincronizacao/data/sincronizacao_firestore.dart` |
 
 ## Verificar em aparelho real
 

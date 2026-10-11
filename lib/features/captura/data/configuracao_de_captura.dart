@@ -13,9 +13,10 @@ import 'package:record/record.dart';
 /// e, na gravação, conferido de novo no cabeçalho do WAV que saiu
 /// (`VerificacaoDaAmostra`).
 ///
-/// TODO(backend): taxa e canais combinados com quem mantém a API de análise.
-/// 44,1 kHz mono é o formato usual de gravação para análise acústica de voz,
-/// mas precisa ser o que a API espera.
+/// A API de análise aceita WAV PCM mono de 16, 24 ou 32 bits, de 8 a
+/// 192 kHz, até 60 s e 20 MB, e confere taxa e canais declarados contra o
+/// cabeçalho (`domain/audio.py`, no repositório `fonar-api`). 44,1 kHz mono
+/// está dentro.
 abstract final class ConfiguracaoDeCaptura {
   static const taxaDeAmostragem = 44100;
   static const canais = 1;

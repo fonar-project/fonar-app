@@ -319,11 +319,26 @@ divergirem, o CI passa a validar um Flutter que ninguém usa.
 
 A URL da API entra por `--dart-define`, para não versionarmos endpoint no
 repositório. O padrão é `http://localhost:8080` (ver
-`lib/core/config/app_config.dart`):
+`lib/core/config/app_config.dart`). A API de produção, no Cloud Run:
 
 ```bash
-flutter run -d windows --dart-define=FONAR_API_BASE_URL=https://...
+flutter run -d windows \
+  --dart-define=FONAR_API_BASE_URL=https://fonar-api-97444293253.southamerica-east1.run.app \
+  --dart-define=FONAR_FIREBASE_API_KEY=AIza...
 ```
+
+O envio da fila segue o contrato da ADR-014 da API (US33):
+
+1. antes do primeiro WAV, o paciente, o livro de consentimentos e a sessão
+   sobem para o Cloud Firestore, pela API REST e com o token de quem está
+   na sessão (`lib/features/sincronizacao/`), no formato que as regras de
+   segurança aceitam. A API confere o consentimento lá;
+2. cada gravação vai em `POST /v1/pacientes/{p}/sessoes/{s}/amostras`, com
+   o id da amostra, que torna o reenvio seguro;
+3. o id da análise é o id da sessão.
+
+Sem consentimento em vigor no Firebase, a API responde
+`409 consentimento_ausente`, e o envio para como numa retirada.
 
 ### Conectar ao Firebase (autenticação)
 

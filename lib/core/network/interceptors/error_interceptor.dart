@@ -15,9 +15,10 @@ import '../../error/app_exception.dart';
 /// }
 /// ```
 ///
-/// TODO: quando o contrato de erro da API estiver definido, extrair do corpo
-/// da resposta a mensagem e os campos inválidos para alimentar
-/// [FalhaDeValidacao.camposComErro].
+/// A API de análise manda o motivo da recusa num código estável
+/// ([codigoDaApi]); hoje só o `consentimento_ausente` muda o que o app faz.
+/// TODO: extrair os campos inválidos para [FalhaDeValidacao.camposComErro],
+/// quando alguma tela de formulário falar com a API.
 class ErrorInterceptor extends Interceptor {
   const ErrorInterceptor();
 
@@ -46,12 +47,32 @@ class ErrorInterceptor extends Interceptor {
   AppException _mapearStatus(DioException err) {
     final status = err.response?.statusCode;
     return switch (status) {
-      400 || 422 => FalhaDeValidacao(causa: err),
+      // 413: arquivo grande demais; 415: não é WAV PCM. Repetir o mesmo
+      // envio repetiria a recusa.
+      400 || 413 || 415 || 422 => FalhaDeValidacao(causa: err),
       401 => NaoAutorizado(causa: err),
       403 => Proibido(causa: err),
       404 => NaoEncontrado(causa: err),
+      // A API conferiu o consentimento no Firebase e não achou um em vigor.
+      409 when codigoDaApi(err) == 'consentimento_ausente' =>
+        SemConsentimentoNoServidor(causa: err),
+      // O mesmo id com outro conteúdo (`id_ja_existe`, na API) ou uma
+      // gravação concorrente no Firestore: tentar sozinho não resolve.
+      409 => FalhaDeValidacao(causa: err),
       final int s when s >= 500 => FalhaNoServidor(statusCode: s, causa: err),
       _ => FalhaDesconhecida(causa: err),
     };
   }
+}
+
+/// O código da recusa da API de análise, que vem no corpo como
+/// `{"detail": {"codigo": "...", "mensagem": "..."}}` — ou `null` quando o
+/// corpo não é desse formato (erro do Firestore, de um proxy no caminho).
+String? codigoDaApi(DioException err) {
+  final corpo = err.response?.data;
+  if (corpo is! Map) return null;
+  final detalhe = corpo['detail'];
+  if (detalhe is! Map) return null;
+  final codigo = detalhe['codigo'];
+  return codigo is String ? codigo : null;
 }

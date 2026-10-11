@@ -16,6 +16,7 @@ import 'package:fonar_app/features/fila/domain/item_da_fila.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 import 'package:fonar_app/features/fila/domain/repositorio_fila.dart';
 import 'package:fonar_app/features/fila/presentation/fila_controlador.dart';
+import 'package:fonar_app/features/sincronizacao/domain/sincronizacao.dart';
 
 import '../../apoio/banco_em_memoria.dart';
 import '../../apoio/repositorios_em_memoria.dart';
@@ -55,6 +56,14 @@ class _Envio implements EnvioDeAnalise {
     }
     return comportamentos.removeAt(0)();
   }
+}
+
+/// A sincronização que falha se for chamada: os testes abaixo param antes
+/// dela (gravação que sumiu, cancelamento).
+class _SemSincronizacao implements Sincronizacao {
+  @override
+  Future<void> prepararEnvio(ItemDaFila item) =>
+      Future.error(StateError('não devia sincronizar'));
 }
 
 final _amostra = Amostra(
@@ -594,7 +603,11 @@ void main() {
     test('o envio para antes da rede, com falha própria', () async {
       // Dio sem `baseUrl`: se a conferência deixasse passar, o erro seria
       // outro, e o teste não confundiria os dois.
-      final envio = EnvioDeAnaliseApi(Dio(), existe: (_) async => false);
+      final envio = EnvioDeAnaliseApi(
+        Dio(),
+        _SemSincronizacao(),
+        existe: (_) async => false,
+      );
 
       await expectLater(
         envio.enviar(item()),
@@ -636,6 +649,7 @@ void main() {
       final conferidos = <String>[];
       final envio = EnvioDeAnaliseApi(
         Dio(),
+        _SemSincronizacao(),
         existe: (caminho) async {
           conferidos.add(caminho);
           return false;
@@ -653,7 +667,7 @@ void main() {
   test('envio com cancelamento já pedido não chega à rede', () async {
     final cancelamento = Cancelamento()..pedir();
     await expectLater(
-      EnvioDeAnaliseApi(Dio()).enviar(
+      EnvioDeAnaliseApi(Dio(), _SemSincronizacao()).enviar(
         ItemDaFila(
           id: 'envio-s',
           pacienteId: 'p1',

@@ -42,14 +42,34 @@ jobs:
       - name: Dependências
         run: flutter pub get
 
+      # Os três passos abaixo rodam mesmo se o anterior falhar, e cada falha
+      # vira anotação no PR, no arquivo e na linha (tool/ci_anotacoes.py):
+      # um push mostra tudo o que está errado, sem abrir o log.
       - name: Formatação
-        run: dart format --output=none --set-exit-if-changed .
+        run: |
+          if ! dart format --output=none --set-exit-if-changed .; then
+            dart format . > /dev/null
+            python3 tool/ci_anotacoes.py formato
+            git checkout -- .
+            exit 1
+          fi
 
       - name: Análise estática
-        run: flutter analyze --fatal-infos
+        if: success() || failure()
+        run: |
+          if ! flutter analyze --fatal-infos; then
+            dart analyze --format=machine > "$RUNNER_TEMP/analise.txt" 2>&1 || true
+            python3 tool/ci_anotacoes.py analise "$RUNNER_TEMP/analise.txt"
+            exit 1
+          fi
 
       - name: Testes
-        run: flutter test
+        if: success() || failure()
+        run: |
+          status=0
+          flutter test --file-reporter "json:$RUNNER_TEMP/testes.json" || status=$?
+          python3 tool/ci_anotacoes.py testes "$RUNNER_TEMP/testes.json"
+          exit $status
 
       # O código do banco local (`banco_local.g.dart`) é gerado das tabelas e
       # commitado. Gerar de novo é a verificação, como a dos ícones abaixo:

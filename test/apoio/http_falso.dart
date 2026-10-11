@@ -48,7 +48,11 @@ class AdaptadorFalso implements HttpClientAdapter {
         bytes.addAll(parte);
       }
     }
-    feitas.add(RequisicaoFeita(options, utf8.decode(bytes)));
+    // Corpo multipart leva o WAV: bytes que não são texto não derrubam o
+    // teste, só não se leem.
+    feitas.add(
+      RequisicaoFeita(options, utf8.decode(bytes, allowMalformed: true)),
+    );
     if (respostas.isEmpty) {
       throw StateError('requisição sem resposta programada');
     }
