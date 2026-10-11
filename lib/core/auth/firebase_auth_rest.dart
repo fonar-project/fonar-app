@@ -16,9 +16,10 @@ import 'credencial.dart';
 /// API REST é o que o próprio SDK chama por baixo. Sem pacote novo: o Dio já
 /// estava aqui.
 ///
-/// Documentação dos três pontos usados:
-/// - `accounts:signInWithPassword` e `accounts:sendOobCode`, no Identity
-///   Toolkit;
+/// Documentação dos pontos usados:
+/// - `accounts:signInWithPassword`, `accounts:signUp` e
+///   `accounts:sendOobCode` (redefinição de senha e verificação de e-mail),
+///   no Identity Toolkit;
 /// - `token`, no Secure Token, que troca o token de renovação por um novo.
 class FirebaseAuthRest {
   FirebaseAuthRest(this._dio, {required this.chave, required this.agora});
@@ -53,6 +54,60 @@ class FirebaseAuthRest {
       idToken: _texto(corpo, 'idToken'),
       refreshToken: _texto(corpo, 'refreshToken'),
       expiraEm: _vencimento(corpo['expiresIn']),
+    );
+  }
+
+  /// Cria a conta com e-mail e senha. Ela nasce com o e-mail NÃO
+  /// verificado: a API só aceita o cadastro depois da verificação
+  /// ([enviarVerificacaoDeEmail]).
+  ///
+  /// Lança [EmailIndisponivel], [EmailInvalido], [SenhaFraca],
+  /// [MuitasTentativas] ou a `AppException` da rede.
+  Future<Credencial> criarConta({
+    required String email,
+    required String senha,
+  }) async {
+    final corpo = await _post(
+      '$_identidade/accounts:signUp',
+      {'email': email, 'password': senha, 'returnSecureToken': true},
+      traduzir: (codigo, erro) => switch (codigo) {
+        'EMAIL_EXISTS' => EmailIndisponivel(causa: erro),
+        'INVALID_EMAIL' || 'MISSING_EMAIL' => EmailInvalido(causa: erro),
+        'WEAK_PASSWORD' ||
+        'MISSING_PASSWORD' ||
+        'PASSWORD_DOES_NOT_MEET_REQUIREMENTS' => SenhaFraca(causa: erro),
+        'TOO_MANY_ATTEMPTS_TRY_LATER' => MuitasTentativas(causa: erro),
+        _ => null,
+      },
+    );
+    final emailDevolvido = corpo['email'];
+    return Credencial(
+      uid: _texto(corpo, 'localId'),
+      // O signUp nem sempre devolve o e-mail; é o que foi pedido.
+      email: emailDevolvido is String ? emailDevolvido : email,
+      idToken: _texto(corpo, 'idToken'),
+      refreshToken: _texto(corpo, 'refreshToken'),
+      expiraEm: _vencimento(corpo['expiresIn']),
+    );
+  }
+
+  /// Pede ao Firebase o e-mail com o link que verifica o endereço da conta
+  /// dona de [idToken]. O e-mail sai em português.
+  ///
+  /// Lança [MuitasTentativas] quando o Firebase segura os reenvios,
+  /// [NaoAutorizado] quando o token não vale mais, ou a `AppException` da
+  /// rede.
+  Future<void> enviarVerificacaoDeEmail(String idToken) async {
+    await _post(
+      '$_identidade/accounts:sendOobCode',
+      {'requestType': 'VERIFY_EMAIL', 'idToken': idToken},
+      traduzir: (codigo, erro) => switch (codigo) {
+        'TOO_MANY_ATTEMPTS_TRY_LATER' => MuitasTentativas(causa: erro),
+        'INVALID_ID_TOKEN' ||
+        'TOKEN_EXPIRED' ||
+        'USER_NOT_FOUND' => NaoAutorizado(causa: erro),
+        _ => null,
+      },
     );
   }
 

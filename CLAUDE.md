@@ -106,6 +106,13 @@ avisado na tela — e o build `--release` sem a chave se recusa a abrir
   (ver o comentário em `app_router.dart`).
 - Cada envio da fila leva o uid de quem gravou e só sobe na sessão dele.
 - Não diga se um e-mail tem conta: a redefinição de senha responde igual.
+  A exceção inevitável é criar conta (o Firebase recusa e-mail já usado), e
+  a mensagem só sugere entrar ou redefinir a senha.
+- Criar conta (US34) é do Firebase (`accounts:signUp`, e-mail de
+  verificação); o cadastro profissional é da API (`/v1/profissionais/eu`),
+  que conduz o primeiro acesso: e-mail por verificar → formulário → entra.
+  O credenciamento (pendente, credenciado, recusado) é da equipe, e o app só
+  o mostra. `features/cadastro/`.
 
 ### Reprodução de áudio — por que é o `audioplayers` (dívida encerrada)
 Até 24/09/2026 a reprodução era `just_audio` + `just_audio_windows`. O plugin
@@ -226,7 +233,7 @@ Todo dado exibido em desenvolvimento é placeholder e deve ser identificável
 como tal.
 
 ## Estado atual
-O fluxo da avaliação existe de ponta a ponta no aparelho (US00 a US32 — lista
+O fluxo da avaliação existe de ponta a ponta no aparelho (US00 a US34 — lista
 e resumo no README): cadastro, consentimento e retirada, aferição, gravação,
 fila, resultado, CAPE-V, evolução, laudo em PDF, com os dados num banco local
 (Drift, `lib/core/banco/`).

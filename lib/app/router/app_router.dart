@@ -6,6 +6,9 @@ import '../../features/analise/presentation/pages/analise_resultado_page.dart';
 import '../../features/analise/presentation/pages/espectrograma_page.dart';
 import '../../features/auth/data/sessao.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/cadastro/presentation/pages/completar_cadastro_page.dart';
+import '../../features/cadastro/presentation/pages/criar_conta_page.dart';
+import '../../features/cadastro/presentation/pages/verificar_email_page.dart';
 import '../../features/cape_v/presentation/pages/cape_v_page.dart';
 import '../../features/captura/presentation/pages/captura_page.dart';
 import '../../features/captura/presentation/pages/gravacoes_nao_enviadas_page.dart';
@@ -48,8 +51,13 @@ final routerProvider = Provider<GoRouter>((ref) {
     // sessão fecha tiraria o profissional da Conta antes de ele ler que a
     // saída falhou — e a sessão fecha ANTES de a credencial sair, para a
     // fila parar primeiro.
+    //
+    // "A entrada" são as telas de quem ainda não tem sessão: entrar, criar
+    // conta, confirmar o e-mail e completar o cadastro (US34).
     redirect: (context, state) {
-      final naEntrada = state.matchedLocation == AppRoutes.loginCaminho;
+      final naEntrada = AppRoutes.caminhosDeEntrada.contains(
+        state.matchedLocation,
+      );
       final aberta = ref.read(sessaoAbertaProvider);
       if (!aberta && !naEntrada) return AppRoutes.loginCaminho;
       if (aberta && naEntrada) return AppRoutes.pacientesCaminho;
@@ -60,6 +68,21 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: AppRoutes.loginNome,
         path: AppRoutes.loginCaminho,
         builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        name: AppRoutes.criarContaNome,
+        path: AppRoutes.criarContaCaminho,
+        builder: (context, state) => const CriarContaPage(),
+      ),
+      GoRoute(
+        name: AppRoutes.verificarEmailNome,
+        path: AppRoutes.verificarEmailCaminho,
+        builder: (context, state) => const VerificarEmailPage(),
+      ),
+      GoRoute(
+        name: AppRoutes.completarCadastroNome,
+        path: AppRoutes.completarCadastroCaminho,
+        builder: (context, state) => const CompletarCadastroPage(),
       ),
       GoRoute(
         name: AppRoutes.pacientesNome,

@@ -44,6 +44,23 @@ class FonteDeToken {
     return (await renovacao).idToken;
   }
 
+  /// Renova o token JÁ, mesmo longe do vencimento.
+  ///
+  /// Depois de o profissional abrir o link de verificação: o `email_verified`
+  /// que a API lê vem DENTRO do token, e só um token novo traz o valor novo.
+  /// Sem o Firebase (login de exemplo), não faz nada.
+  Future<void> renovarAgora() async {
+    final firebase = _firebase;
+    if (firebase == null) return;
+    final credencial = await _cofre.ler();
+    if (credencial == null) throw const NaoAutorizado();
+    final renovacao = _renovando ??= _renovar(
+      firebase,
+      credencial,
+    ).whenComplete(() => _renovando = null);
+    await renovacao;
+  }
+
   Future<Credencial> _renovar(
     FirebaseAuthRest firebase,
     Credencial credencial,

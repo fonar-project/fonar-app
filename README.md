@@ -31,6 +31,9 @@ O caminho de uma avaliação, na ordem em que o profissional passa por ele:
    **os pacientes** (US01), com busca que não liga para acento. Esqueceu a
    senha? O Firebase manda o link de redefinição. Sem conexão, entra no modo
    offline com a conta da última entrada, se houver pacientes no aparelho.
+   Ainda não tem conta? **Cria pelo app** (US34): e-mail, senha e a inscrição
+   no Crefono; confirma o e-mail e já usa, enquanto a equipe confere a
+   inscrição.
 2. **Cadastra o paciente** (US02) — ou corrige os dados depois (US20). Salvar
    avisa se já existe alguém com o mesmo nome e nascimento, e sair com o
    formulário preenchido pergunta antes (US21).
@@ -366,13 +369,15 @@ projeto é que Android e Windows têm as mesmas funcionalidades. Por isso não h
 
 1. **Authentication → Sign-in method → E-mail/senha**: ativar. Só a primeira
    opção; o "link por e-mail" não é usado.
-2. **Authentication → Users → Adicionar usuário**: criar a conta de cada
-   profissional (e uma de teste). O app não tem cadastro de conta — ver
-   `PENDENCIAS.md`.
+2. As contas nascem **pelo próprio app** (US34, "Criar conta" na entrada) —
+   não precisa criar no console. Para teste, dá para criar lá também
+   (**Authentication → Users → Adicionar usuário**); no primeiro acesso, o app
+   pede a confirmação do e-mail e o cadastro.
 3. **Configurações do projeto → Geral → Chave de API da Web**: é a chave. Se
    aparecer "nenhuma chave", ative o Authentication primeiro (passo 1).
-4. Opcional, recomendado: **Authentication → Modelos → Redefinição de senha**,
-   conferir o texto em português. O app pede o e-mail em pt-BR.
+4. Recomendado: **Authentication → Modelos**, conferir em português os textos
+   de **Redefinição de senha** e de **Verificação de endereço de e-mail**. O
+   app pede os dois e-mails em pt-BR.
 5. Opcional, recomendado: no Google Cloud Console, em **APIs e serviços →
    Credenciais**, restringir essa chave às APIs **Identity Toolkit** e
    **Token Service**.
@@ -392,6 +397,32 @@ Ou num arquivo fora do git — `dart_defines.json` está no `.gitignore`:
 ```bash
 flutter run -d windows --dart-define-from-file=dart_defines.json
 ```
+
+### Criar conta e o primeiro acesso (US34)
+
+O cadastro é **aberto**: qualquer pessoa com e-mail cria a conta pelo app e já
+usa o sistema; a equipe confere depois a inscrição no Crefono e marca o
+cadastro como **credenciado** — ou **recusado**, o que fecha o acesso (ADR-015
+da API; a equipe usa `tools/credenciar_profissional.py`, no `fonar-api`).
+
+```
+Criar conta  ->  e-mail, senha, nome, região do Crefono, número e o aceite
+             ->  o Firebase cria a conta e manda o link de verificação
+Confirme seu e-mail  ->  "Já confirmei": token novo, e o cadastro vai à API
+                     ->  entra, como "inscrição em conferência"
+```
+
+A API conduz o primeiro acesso (`GET /v1/profissionais/eu`): sem e-mail
+verificado, o app pede a confirmação; verificado e sem cadastro, mostra o
+formulário (`/completar-cadastro`) — é o caminho de quem fechou o app antes de
+confirmar, ou de conta criada no console. Recusado não entra: a entrada mostra
+o motivo e apaga a credencial do aparelho. Com a API fora do ar, a entrada
+segue como antes — o app funciona sem rede, e a fila espera.
+
+Na Conta, nome e registro vêm do cadastro na API e são salvos lá (o registro
+no formato "CRFa 2-12345"); trocar a região ou o número de quem já foi
+credenciado volta para a conferência, e a tela avisa antes. A situação do
+credenciamento aparece embaixo do e-mail.
 
 A chave não é segredo — o Firebase a põe dentro de todo app cliente, e quem
 protege os dados são as regras do projeto —, mas fica fora do repositório para

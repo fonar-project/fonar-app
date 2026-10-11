@@ -151,6 +151,13 @@ abstract final class PoliticaDeReenvio {
     ContaDesativada() => SituacaoDoEnvio.aguardandoLogin,
     FalhaDeValidacao() ||
     Proibido() ||
+    // A equipe recusou o credenciamento: a API não aceita mais nada desta
+    // conta, e tentar de novo não muda isso.
+    CredencialRecusada() ||
+    // Só a criação de conta lança estes; na fila, não chegam.
+    EmailIndisponivel() ||
+    EmailInvalido() ||
+    SenhaFraca() ||
     NaoEncontrado() ||
     // O arquivo não volta sozinho: reenviar a cada 30 minutos só repetiria a
     // mesma falha até alguém olhar.

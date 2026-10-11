@@ -62,6 +62,30 @@ final class ContaDesativada extends AppException {
   const ContaDesativada({super.causa}) : super(AppStrings.erroContaDesativada);
 }
 
+/// Criar conta: o Firebase não aceitou este e-mail para uma conta nova —
+/// já existe uma com ele.
+final class EmailIndisponivel extends AppException {
+  const EmailIndisponivel({super.causa})
+    : super(AppStrings.erroEmailIndisponivel);
+}
+
+/// Criar conta: o e-mail não é um endereço válido.
+final class EmailInvalido extends AppException {
+  const EmailInvalido({super.causa}) : super(AppStrings.erroEmailInvalido);
+}
+
+/// Criar conta: a senha não passou na regra do Firebase.
+final class SenhaFraca extends AppException {
+  const SenhaFraca({super.causa}) : super(AppStrings.erroSenhaFraca);
+}
+
+/// 403 `credencial_recusada` — a equipe conferiu a inscrição no Crefono e
+/// recusou o credenciamento. A API fecha o acesso a pacientes e gravações.
+final class CredencialRecusada extends AppException {
+  const CredencialRecusada({super.causa})
+    : super(AppStrings.erroCredencialRecusada);
+}
+
 /// 403 — autenticado, mas sem acesso ao recurso.
 final class Proibido extends AppException {
   const Proibido({super.causa}) : super(AppStrings.erroProibido);

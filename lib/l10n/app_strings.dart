@@ -979,6 +979,17 @@ abstract final class AppStrings {
   static const contaSalvando = 'Salvando…';
   static const contaNadaMudou = 'Nenhuma alteração para salvar.';
   static const contaSalvo = 'Dados salvos.';
+  static const contaRegistroFormato =
+      'Use o formato CRFa 2-12345: a região do Crefono, um hífen e o número.';
+  static const contaRegistroTrocado =
+      'Trocar a região ou o número põe a inscrição em conferência de novo.';
+  static const contaCredenciamentoPendenteTitulo = 'Inscrição em conferência';
+  static const contaCredenciamentoPendente =
+      'A equipe do FONAR ainda vai conferir sua inscrição na consulta pública '
+      'do Crefono. Enquanto isso, você usa o aplicativo normalmente.';
+  static const contaCredenciamentoCredenciado =
+      'Inscrição conferida pela equipe do FONAR';
+  static const contaCredenciamentoRecusadoTitulo = 'Inscrição não confirmada';
 
   static const contaNesteAparelho = 'Neste aparelho';
   static String contaEnviosPendentes(int n) => switch (n) {
@@ -1115,6 +1126,11 @@ abstract final class AppStrings {
   static const loginEntrarExigeConexao =
       'Entrar com e-mail e senha exige conexão.';
   static const loginEsqueciSenha = 'Esqueci a senha';
+  static const loginSemConta = 'Ainda não tem conta no FONAR?';
+  static const loginCriarConta = 'Criar conta';
+  static String loginCredencialRecusada(String? motivo) =>
+      'A equipe do FONAR não confirmou sua inscrição no Crefono, e o acesso '
+      'foi fechado.${motivo == null || motivo.isEmpty ? '' : ' Motivo: $motivo'}';
 
   static const loginRecuperacaoInformeEmail =
       'Informe acima o e-mail da conta para receber o link de redefinição.';
@@ -1164,6 +1180,85 @@ abstract final class AppStrings {
       'Ferramenta de apoio à decisão — não substitui a avaliação do '
       'profissional.';
 
+  // ------------------------------------------------------------ cadastro --
+  // Criar conta, confirmar o e-mail e preencher o cadastro (US34). O cadastro
+  // é aberto: a pessoa já usa o app enquanto a equipe confere a inscrição no
+  // Crefono (ADR-015 da API).
+  static const criarContaTitulo = 'Criar conta';
+  static const criarContaApoio =
+      'Crie a conta com seu e-mail e informe sua inscrição no Crefono. A '
+      'equipe do FONAR confere a inscrição na consulta pública do conselho — '
+      'enquanto isso, você já pode usar o aplicativo.';
+  static const criarContaSecaoConta = 'Sua conta';
+  static const criarContaSecaoRegistro = 'Seu registro profissional';
+  static const criarContaCampoConfirmacao = 'Repita a senha';
+  static const criarContaSenhaApoio = 'Ao menos 8 caracteres.';
+  static const criarContaBotao = 'Criar conta';
+  static const criarContaCriando = 'Criando a conta…';
+  static const criarContaJaTenho = 'Já tenho conta';
+
+  static const cadastroCampoNome = 'Nome completo';
+  static const cadastroNomeApoio = 'Como vai assinado no laudo.';
+  static const cadastroCampoRegiao = 'Região do Crefono';
+  static String cadastroRegiao(int regiao) => '$regiaoª';
+  static const cadastroCampoInscricao = 'Número de inscrição';
+  static const cadastroInscricaoDica = 'ex.: 12345';
+  static const cadastroInscricaoApoio =
+      'Só o número, sem “CRFa” e sem a região.';
+  static const cadastroTermosRotulo =
+      'Li e aceito os termos de uso e a política de privacidade do FONAR.';
+
+  /// PLACEHOLDER jurídico — o texto final dos termos ainda não existe. Ao
+  /// trocar, mude também `versaoDosTermos` (`cadastro/domain/cadastro.dart`).
+  static const cadastroTermosTexto =
+      'Versão provisória. O FONAR é ferramenta de apoio à decisão e não emite '
+      'diagnóstico. Os dados dos pacientes que você cadastrar ficam sob a sua '
+      'responsabilidade profissional, e a gravação de voz só acontece com o '
+      'consentimento do paciente. A equipe confere a sua inscrição no Crefono '
+      'e pode fechar o acesso se ela não for confirmada. O texto completo dos '
+      'termos e da política de privacidade ainda está sendo escrito.';
+  static const cadastroInformeNome = 'Informe o nome completo.';
+  static const cadastroNomeLongo = 'O nome passa de 200 caracteres.';
+  static const cadastroInformeRegiao =
+      'Escolha a região do Crefono em que você é inscrito(a).';
+  static const cadastroInformeInscricao = 'Informe o número de inscrição.';
+  static const cadastroInscricaoInvalida =
+      'Use só o número (dígitos, com ponto ou hífen), sem “CRFa” e sem a '
+      'região.';
+  static const cadastroAceiteTermos =
+      'Para criar o cadastro, é preciso aceitar os termos.';
+  static const cadastroInformeEmail = 'Informe o e-mail.';
+  static const cadastroEmailInvalido =
+      'Confira o e-mail: ele não parece um endereço válido.';
+  static const cadastroSenhaCurta = 'A senha precisa de ao menos 8 caracteres.';
+  static const cadastroSenhasDiferentes = 'As duas senhas não são iguais.';
+
+  static const verificarEmailTitulo = 'Confirme seu e-mail';
+  static String verificarEmailTexto(String email) =>
+      'Enviamos um link para $email. Abra o e-mail, toque no link e volte '
+      'aqui. Confira também a caixa de spam.';
+  static const verificarEmailSemConta =
+      'Enviamos um link para o seu e-mail. Abra o e-mail, toque no link e '
+      'volte aqui. Confira também a caixa de spam.';
+  static const verificarEmailJaConfirmei = 'Já confirmei';
+  static const verificarEmailConferindo = 'Conferindo…';
+  static const verificarEmailAindaNaoTitulo = 'Ainda não confirmado';
+  static const verificarEmailAindaNao =
+      'O e-mail ainda não aparece como confirmado. Abra o link do e-mail e '
+      'toque em “Já confirmei” de novo.';
+  static const verificarEmailReenviar = 'Reenviar o e-mail';
+  static const verificarEmailReenviadoTitulo = 'E-mail reenviado';
+  static const verificarEmailReenviado =
+      'O link novo chega em alguns minutos. O anterior deixa de valer.';
+  static const verificarEmailOutraConta = 'Entrar com outra conta';
+
+  static const completarCadastroTitulo = 'Complete seu cadastro';
+  static const completarCadastroApoio =
+      'Seu e-mail está confirmado. Falta o seu registro profissional: a '
+      'equipe do FONAR confere a inscrição na consulta pública do Crefono.';
+  static const completarCadastroBotao = 'Concluir cadastro';
+  static const completarCadastroSalvando = 'Salvando…';
+
   // ---------------------------------------------------------------- erros --
   // Mensagens voltadas ao fonoaudiólogo: dizem o que aconteceu e o que fazer,
   // sem jargão de rede e sem código de status.
@@ -1181,6 +1276,17 @@ abstract final class AppStrings {
   static const erroContaDesativada =
       'Esta conta foi desativada. Fale com o responsável pelo FONAR.';
   static const erroProibido = 'Você não tem acesso a este recurso.';
+  static const erroEmailIndisponivel =
+      'Não foi possível criar uma conta com este e-mail. Se você já tem conta '
+      'no FONAR, entre com ela — ou use “Esqueci a senha”.';
+  static const erroEmailInvalido =
+      'Confira o e-mail: ele não parece um endereço válido.';
+  static const erroSenhaFraca =
+      'A senha é fraca demais. Use ao menos 8 caracteres, misturando letras e '
+      'números.';
+  static const erroCredencialRecusada =
+      'A equipe do FONAR não confirmou sua inscrição no Crefono, e o acesso '
+      'aos pacientes foi fechado. Veja o motivo na tela de entrada.';
   static const erroNaoEncontrado = 'Não encontramos o que você procurava.';
   static const erroValidacao = 'Confira os dados informados e tente novamente.';
   static const erroServidor =
