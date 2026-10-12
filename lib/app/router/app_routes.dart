@@ -12,6 +12,27 @@ abstract final class AppRoutes {
   static const loginNome = 'login';
   static const loginCaminho = '/login';
 
+  // /criar-conta — e-mail, senha e o cadastro do profissional (US34).
+  static const criarContaNome = 'criarConta';
+  static const criarContaCaminho = '/criar-conta';
+
+  // /verificar-email — a conta existe, o e-mail ainda não foi confirmado.
+  static const verificarEmailNome = 'verificarEmail';
+  static const verificarEmailCaminho = '/verificar-email';
+
+  // /completar-cadastro — e-mail confirmado, cadastro por preencher.
+  static const completarCadastroNome = 'completarCadastro';
+  static const completarCadastroCaminho = '/completar-cadastro';
+
+  /// As telas de quem ainda não tem sessão: só elas abrem sem sessão, e com
+  /// sessão nenhuma delas tem o que fazer.
+  static const caminhosDeEntrada = {
+    loginCaminho,
+    criarContaCaminho,
+    verificarEmailCaminho,
+    completarCadastroCaminho,
+  };
+
   // /pacientes
   static const pacientesNome = 'pacientes';
   static const pacientesCaminho = '/pacientes';

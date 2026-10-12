@@ -153,6 +153,37 @@ void main() {
       expect(lento.pedidos, 1);
     });
 
+    test('renovar já: token novo mesmo longe do vencimento', () async {
+      // Depois de confirmar o e-mail: o token guardado ainda diz que não.
+      await cofre.guardar(
+        _credencial(expiraEm: _agora.add(const Duration(minutes: 50))),
+      );
+      final servidor = AdaptadorFalso([_renovou]);
+
+      await FonteDeToken(
+        cofre,
+        _firebase(servidor),
+        () => _agora,
+      ).renovarAgora();
+
+      expect(servidor.feitas, hasLength(1));
+      expect((await cofre.ler())!.idToken, 'token-2');
+    });
+
+    test(
+      'renovar já, sem ninguém no cofre: não há com que autenticar',
+      () async {
+        await expectLater(
+          FonteDeToken(
+            cofre,
+            _firebase(AdaptadorFalso([])),
+            () => _agora,
+          ).renovarAgora(),
+          throwsA(isA<NaoAutorizado>()),
+        );
+      },
+    );
+
     test('o Firebase não renova mais: a credencial sai do cofre', () async {
       await cofre.guardar(_credencial(expiraEm: _agora));
       final fonte = FonteDeToken(

@@ -210,6 +210,81 @@ void main() {
     });
   });
 
+  group('criar conta', () {
+    test('cria no Identity Toolkit e devolve a credencial', () async {
+      final servidor = AdaptadorFalso([_entrou]);
+
+      final credencial = await _cliente(servidor)
+          .criarConta(email: 'fono@exemplo.com', senha: 'segredo-longo');
+
+      final pedido = servidor.feitas.single;
+      expect(
+        pedido.uri.toString(),
+        'https://identitytoolkit.googleapis.com/v1/accounts:signUp'
+        '?key=chave-de-teste',
+      );
+      expect(pedido.json, {
+        'email': 'fono@exemplo.com',
+        'password': 'segredo-longo',
+        'returnSecureToken': true,
+      });
+      expect(credencial.uid, 'uid-1');
+      expect(credencial.idToken, 'token-1');
+    });
+
+    for (final (codigo, tipo) in [
+      ('EMAIL_EXISTS', isA<EmailIndisponivel>()),
+      ('INVALID_EMAIL', isA<EmailInvalido>()),
+      (
+        'WEAK_PASSWORD : Password should be at least 6 characters',
+        isA<SenhaFraca>(),
+      ),
+      ('TOO_MANY_ATTEMPTS_TRY_LATER', isA<MuitasTentativas>()),
+    ]) {
+      test('$codigo vira o erro do campo certo', () async {
+        await expectLater(
+          _cliente(AdaptadorFalso([erroDoFirebase(codigo)]))
+              .criarConta(email: 'a@b.c', senha: 'x'),
+          throwsA(tipo),
+        );
+      });
+    }
+  });
+
+  group('verificação do e-mail', () {
+    test(
+      'pede o e-mail de verificação da conta do token, em português',
+      () async {
+        final servidor = AdaptadorFalso([
+          const RespostaFalsa(200, {'email': 'fono@exemplo.com'}),
+        ]);
+
+        await _cliente(servidor).enviarVerificacaoDeEmail('token-1');
+
+        final pedido = servidor.feitas.single;
+        expect(
+          pedido.uri.toString(),
+          'https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode'
+          '?key=chave-de-teste',
+        );
+        expect(pedido.json, {
+          'requestType': 'VERIFY_EMAIL',
+          'idToken': 'token-1',
+        });
+        expect(pedido.cabecalhos['X-Firebase-Locale'], 'pt-BR');
+      },
+    );
+
+    test('reenvios demais seguram o pedido', () async {
+      await expectLater(
+        _cliente(
+          AdaptadorFalso([erroDoFirebase('TOO_MANY_ATTEMPTS_TRY_LATER')]),
+        ).enviarVerificacaoDeEmail('token-1'),
+        throwsA(isA<MuitasTentativas>()),
+      );
+    });
+  });
+
   group('redefinição de senha', () {
     test('pede o e-mail de redefinição, em português', () async {
       final servidor = AdaptadorFalso([

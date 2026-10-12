@@ -26,7 +26,7 @@ houver, no mesmo commit.
 | "Melhorando" / "piorando" na tendência do AVQI (lista) e na evolução. | 01, 09 | `l10n/app_strings.dart` |
 | Laudo: quais itens da conferência **impedem** gerar e quais só avisam (hoje impedem consentimento, análise concluída e conclusão escrita; CAPE-V e amostra com problema só avisam). | 10 | `laudo/domain/laudo.dart` |
 | Laudo: título, seções e ordem do documento — conferir com o modelo que a orientação espera. | 10 | `laudo/presentation/pdf_do_laudo.dart` |
-| Formato do registro no conselho (ex.: "CRFa 2-12345") — hoje só se exige que exista. | 11 | `conta/domain/dados_do_profissional.dart` |
+| Formato do registro no conselho: com a API, desde a US34, é região do Crefono (1ª a 9ª) + número, e a Conta só aceita "CRFa 2-12345". Sem a API, segue texto livre. O número tem dígito verificador, letras, outro formato em alguma região? | 11, 34 | `conta/domain/dados_do_profissional.dart`, `cadastro/domain/cadastro.dart` |
 | Modo paciente: o que o paciente vê e com que palavras. Hoje: gráfico da medida escolhida, datas e valores — sem classificação e sem leitura de melhora. | 09 | `l10n/app_strings.dart`, `historico/presentation/pages/evolucao_modo_paciente_page.dart` |
 
 ## Orientação jurídica
@@ -34,6 +34,8 @@ houver, no mesmo commit.
 | Pendência | US | Onde |
 |---|---|---|
 | **Texto do termo de consentimento** — provisório, marcado na tela. Ao trocar, mudar também a versão do termo. | 03 | `l10n/app_strings.dart`, `consentimento/data/repositorio_consentimento_placeholder.dart` |
+| **Termos de uso e política de privacidade do profissional** (US34) — o cadastro registra o aceite com a versão, mas o texto ainda é um resumo provisório, marcado como tal. Ao escrever o texto, trocar `versaoDosTermos`. | 34 | `l10n/app_strings.dart` (`cadastroTermosTexto`), `cadastro/domain/cadastro.dart` |
+| **Pendente pode gravar paciente?** Hoje sim: o cadastro aberto deixa usar tudo enquanto a equipe confere a inscrição no Crefono (decisão do time, ADR-015 da API). Se o pendente tiver de esperar, a troca é na API. | 34 | — |
 | **Desbloqueio sem conexão não confere a senha** — a mesma regra do "entrar em modo offline" do login, que também não confere (desde a US32 ele entra só na conta da última entrada com senha, e some quando ela sai). Conferir sem rede por uma credencial local (PIN do app ou biometria do aparelho)? E o modo offline do login, idem. | 24, 32 | `auth/presentation/desbloqueio_controlador.dart` |
 | **Aparelho compartilhado por mais de um profissional**: pacientes, gravações, laudos e a fila são do aparelho, não da conta — quem entra vê o que outra pessoa cadastrou. Desde a US32 a fila só ENVIA o que é de quem entrou, mas a lista mostra todos ("Gravado por outra conta"). Separar por conta, ou é um aparelho por profissional? | 32 | `fila/presentation/pages/fila_page.dart`, `core/banco/tabelas.dart` |
 | Quando o responsável legal é obrigatório, e se o registro precisa de mais dados dele. | 03 | `consentimento/domain/consentimento.dart` |
@@ -63,8 +65,7 @@ houver, no mesmo commit.
 | Retomar a sessão: só se retoma a do **mesmo dia** (decisão de implementação — a voz muda de um dia para o outro, e a análise combina as tarefas). É isso que define uma consulta? | 16 | `captura/domain/retomada.dart` |
 | Cadastro: queixa obrigatória e "salvar leva ao consentimento" foram decisões sem o protótipo. | 02 | `pacientes/presentation/pages/novo_paciente_page.dart` |
 | Paciente duplicado: o aviso compara nome e nascimento só com os pacientes **deste aparelho**. Com o Firebase, comparar também com os da conta. | 21 | `pacientes/domain/duplicidade.dart` |
-| **Quem cria as contas dos profissionais?** O app não tem cadastro de conta: hoje elas nascem no console do Firebase (ver README, "Conectar ao Firebase"). Auto-cadastro com aprovação, convite, ou só pelo console? | 32 | — |
-| **Nome e registro do profissional só no aparelho**, um por conta: quem usa dois aparelhos preenche nos dois. Sobem com a sincronização. | 32 | `conta/data/repositorio_da_conta_local.dart` |
+| **Nome e registro do profissional**: com a API (US34), vêm do cadastro nela e a Conta salva lá; o aparelho guarda uma cópia para o laudo sair sem rede. Sem a API, continuam só no aparelho. | 32, 34 | `auth/data/profissional_atual.dart`, `conta/presentation/conta_controlador.dart` |
 | Espectrograma no laudo: a API já serve a imagem (PNG, com token — `ImagemDaApi`); falta decidir se ela entra no PDF e onde. | 10 | `laudo/presentation/pdf_do_laudo.dart` |
 | Ouvir a análise gravada em OUTRO aparelho: hoje só toca o que ainda está neste (achado pelo envio da fila). Precisa da API servir o áudio. | 13 | `fila/presentation/fila_controlador.dart` (`amostrasDaAnaliseProvider`) |
 | **WAV sem registro**: se apagar o arquivo antigo falha numa regravação, ou no meio de um descarte já com o registro apagado, o WAV fica no disco sem ninguém que o aponte. Falta uma varredura que compare a pasta de amostras com o banco e apague o que sobrou. | 05, 19 | `captura/presentation/gravacao_controlador.dart` (`_apagarSubstituido`) |

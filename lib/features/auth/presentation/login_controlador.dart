@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/error/app_exception.dart';
 import '../../../l10n/app_strings.dart';
+import '../../cadastro/presentation/entrada.dart';
 import '../data/repositorio_autenticacao_firebase.dart';
 import '../data/sessao.dart';
 import '../domain/conta_autenticada.dart';
@@ -33,12 +34,17 @@ class LoginControlador extends Notifier<EstadoLogin> {
   @override
   EstadoLogin build() => const EstadoLogin();
 
-  /// Tenta entrar. Devolve `true` quando a autenticação passou; a navegação
-  /// fica com a tela, que é quem tem o `BuildContext`.
-  Future<bool> entrar({required String email, required String senha}) async {
+  /// Tenta entrar. Devolve para onde ir quando a senha conferiu — os
+  /// pacientes, ou o passo que falta do primeiro acesso (confirmar o e-mail,
+  /// preencher o cadastro) —, e `null` quando não entrou. A navegação fica
+  /// com a tela, que é quem tem o `BuildContext`.
+  Future<DestinoDaEntrada?> entrar({
+    required String email,
+    required String senha,
+  }) async {
     // Toque duplo no botão, ou Enter no campo enquanto a primeira tentativa
     // ainda está no ar.
-    if (state.carregando) return false;
+    if (state.carregando) return null;
 
     final emailLimpo = email.trim();
     final erroEmail = emailLimpo.isEmpty ? AppStrings.loginInformeEmail : null;
@@ -46,7 +52,7 @@ class LoginControlador extends Notifier<EstadoLogin> {
     final erroSenha = senha.isEmpty ? AppStrings.loginInformeSenha : null;
     if (erroEmail != null || erroSenha != null) {
       state = EstadoLogin(erroEmail: erroEmail, erroSenha: erroSenha);
-      return false;
+      return null;
     }
 
     state = const EstadoLogin(carregando: true);
@@ -68,13 +74,26 @@ class LoginControlador extends Notifier<EstadoLogin> {
     }
 
     // A tela pode ter saído enquanto a autenticação estava no ar.
-    if (!ref.mounted) return false;
+    if (!ref.mounted) return null;
+    if (conta == null) {
+      state = resultado;
+      return null;
+    }
+
+    // A senha conferiu; falta saber em que pé está o cadastro. O botão
+    // continua em "Entrando…" enquanto a API responde.
+    final destino = await conferirCadastro(ref);
+    if (!ref.mounted) return null;
     state = resultado;
-    if (conta == null) return false;
-    ref.read(sessaoProvider.notifier).abrir(conta);
-    // A credencial guardada mudou: o modo offline passa a ser desta conta.
-    ref.invalidate(contaGuardadaProvider);
-    return true;
+    switch (destino) {
+      case EntrarNoApp():
+        abrirSessao(ref, conta);
+      case VerificarEmail() || CompletarCadastro():
+        // A credencial fica no cofre: é com ela que a confirmação pede o
+        // token novo e o cadastro vai à API.
+        ref.invalidate(contaGuardadaProvider);
+    }
+    return destino;
   }
 
   /// Entra sem conexão, com a conta da última entrada com senha neste

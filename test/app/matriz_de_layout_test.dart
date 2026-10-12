@@ -64,6 +64,9 @@ const _analise = 'exemplo-a-4';
 /// Toda rota do `AppRoutes`. Acrescentar uma tela é acrescentar uma linha.
 final _rotas = <(String, Map<String, String>)>[
   (AppRoutes.loginNome, {}),
+  (AppRoutes.criarContaNome, {}),
+  (AppRoutes.verificarEmailNome, {}),
+  (AppRoutes.completarCadastroNome, {}),
   (AppRoutes.pacientesNome, {}),
   (AppRoutes.novaAvaliacaoNome, {}),
   (AppRoutes.pacienteDetalheNome, {_p: _paciente}),
@@ -82,6 +85,14 @@ final _rotas = <(String, Map<String, String>)>[
   (AppRoutes.contaNome, {}),
   (AppRoutes.historicoNome, {}),
 ];
+
+/// As rotas que só abrem SEM sessão (`AppRoutes.caminhosDeEntrada`).
+const _daEntrada = {
+  AppRoutes.loginNome,
+  AppRoutes.criarContaNome,
+  AppRoutes.verificarEmailNome,
+  AppRoutes.completarCadastroNome,
+};
 
 /// Os dois alvos de design do projeto, o celular deitado (espectrograma e
 /// gráfico de evolução), a janela estreita de desktop — e as duas pontas: o
@@ -160,8 +171,8 @@ void main() {
       final desviadas = <String>[];
       final sessao = container.read(sessaoProvider.notifier);
       for (final (nome, params) in _rotas) {
-        // A entrada é o contrário: só existe sem sessão.
-        final naEntrada = nome == AppRoutes.loginNome;
+        // As telas da entrada são o contrário: só existem sem sessão.
+        final naEntrada = _daEntrada.contains(nome);
         if (naEntrada) sessao.encerrar();
         roteador.goNamed(nome, pathParameters: params);
         await _desenhar(tester);

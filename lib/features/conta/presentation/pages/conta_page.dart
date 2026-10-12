@@ -21,6 +21,7 @@ import '../../../../l10n/app_strings.dart';
 import '../../../analise/data/catalogo_de_referencias_vazio.dart';
 import '../../../auth/data/profissional_atual.dart';
 import '../../../auth/data/sessao.dart';
+import '../../../cadastro/domain/cadastro.dart';
 import '../../data/preferencia_de_tema_local.dart';
 import '../../domain/tema_escolhido.dart';
 import '../../../fila/presentation/fila_controlador.dart';
@@ -213,6 +214,11 @@ class _SeusDadosState extends ConsumerState<_SeusDados> {
         AppCampoTexto(
           rotulo: AppStrings.contaCampoRegistro,
           dica: AppStrings.contaRegistroDica,
+          // Quem já foi credenciado precisa saber, antes de salvar, que a
+          // inscrição nova volta para a conferência.
+          apoio: profissional.credenciamento == Credenciamento.credenciado
+              ? AppStrings.contaRegistroTrocado
+              : null,
           controlador: _registro,
           foco: _focoRegistro,
           erro: _mensagem(estado.erroRegistro),
@@ -241,6 +247,10 @@ class _SeusDadosState extends ConsumerState<_SeusDados> {
             ],
           ),
         ),
+        if (profissional.credenciamento case final credenciamento?) ...[
+          const SizedBox(height: AppSpacing.md),
+          _Credenciamento(credenciamento),
+        ],
         const SizedBox(height: AppSpacing.lg),
         Align(
           alignment: Alignment.centerLeft,
@@ -276,8 +286,29 @@ class _SeusDadosState extends ConsumerState<_SeusDados> {
 String? _mensagem(ProblemaNosDados? problema) => switch (problema) {
   ProblemaNosDados.nomeVazio => AppStrings.contaInformeNome,
   ProblemaNosDados.registroVazio => AppStrings.contaInformeRegistro,
+  ProblemaNosDados.registroFormato => AppStrings.contaRegistroFormato,
   null => null,
 };
+
+/// A situação do credenciamento, quando a API disse qual é (US34).
+class _Credenciamento extends StatelessWidget {
+  const _Credenciamento(this.credenciamento);
+
+  final Credenciamento credenciamento;
+
+  @override
+  Widget build(BuildContext context) => switch (credenciamento) {
+    Credenciamento.pendente => const AppSituacao(
+      icone: NomeIcone.informacao,
+      titulo: AppStrings.contaCredenciamentoPendenteTitulo,
+      texto: AppStrings.contaCredenciamentoPendente,
+    ),
+    Credenciamento.credenciado => const AppSituacao(
+      icone: NomeIcone.confirmacao,
+      titulo: AppStrings.contaCredenciamentoCredenciado,
+    ),
+  };
+}
 
 // ------------------------------------------------------- neste aparelho --
 

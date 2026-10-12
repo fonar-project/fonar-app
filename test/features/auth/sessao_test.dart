@@ -6,6 +6,7 @@ import 'package:fonar_app/features/auth/data/sessao.dart';
 import 'package:fonar_app/features/auth/presentation/desbloqueio_controlador.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 import 'package:fonar_app/features/auth/presentation/login_controlador.dart';
+import 'package:fonar_app/features/cadastro/presentation/entrada.dart';
 
 import '../../apoio/sessao_de_teste.dart';
 
@@ -34,7 +35,9 @@ void main() {
         .read(loginControladorProvider.notifier)
         .entrar(email: 'fono@exemplo.com', senha: 'senha');
 
-    expect(entrou, isTrue);
+    // Sem a API configurada (os testes não a têm), não há cadastro a
+    // conferir: entra direto.
+    expect(entrou, isA<EntrarNoApp>());
     expect(container.read(sessaoAbertaProvider), isTrue);
     expect(container.read(sessaoProvider), contaDeTeste);
   });
@@ -57,7 +60,7 @@ void main() {
         .read(loginControladorProvider.notifier)
         .entrar(email: 'fono@exemplo.com', senha: 'errada');
 
-    expect(entrou, isFalse);
+    expect(entrou, isNull);
     expect(container.read(sessaoAbertaProvider), isFalse);
   });
 
