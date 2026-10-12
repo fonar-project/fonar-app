@@ -29,8 +29,9 @@ final imagemDoServidorProvider = Provider<ImageProvider Function(String url)>((
 /// Uma imagem da API, buscada com o token.
 ///
 /// A mesma imagem (mesmo [caminho]) é a mesma chave no cache de imagens do
-/// Flutter: abrir a tela de novo não baixa outra vez. A API ainda manda o
-/// `ETag` e diz que a imagem não muda.
+/// Flutter, na memória: abrir a tela de novo, com o app aberto, não baixa
+/// outra vez. Em disco nada fica — a API manda o espectrograma sem cache, por
+/// ser dado de paciente.
 @immutable
 class ImagemDaApi extends ImageProvider<ImagemDaApi> {
   const ImagemDaApi(this.caminho, this._dio);
