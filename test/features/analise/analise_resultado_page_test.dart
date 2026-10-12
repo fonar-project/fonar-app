@@ -220,6 +220,36 @@ void main() {
     expect(find.text(AppStrings.resultadoNaoCalculadaTexto), findsOneWidget);
   });
 
+  testWidgets('AVQI que a API ainda não calcula: "ainda não disponível"', (
+    tester,
+  ) async {
+    // Como a API devolve hoje: o AVQI sem valor e marcado como indisponível.
+    // A tela não pode dar a entender que a gravação teve problema.
+    final semAvqi = ResultadoDaAnalise(
+      id: 'an-1',
+      pacienteId: 'p1',
+      situacao: SituacaoDaAnalise.concluida,
+      realizadaEm: DateTime(2026, 7, 2, 9, 30),
+      medidas: const [
+        MedidaCalculada(
+          medida: MedidaAcustica.avqi,
+          valor: null,
+          disponivel: false,
+        ),
+        MedidaCalculada(medida: MedidaAcustica.cpps, valor: 18),
+      ],
+    );
+    await _abrir(tester, resposta: () async => semAvqi);
+
+    expect(find.text(AppStrings.resultadoAindaNaoDisponivel), findsOneWidget);
+    expect(
+      find.text(AppStrings.resultadoAindaNaoDisponivelTexto),
+      findsOneWidget,
+    );
+    expect(find.text(AppStrings.resultadoNaoCalculada), findsNothing);
+    expect(find.text(AppStrings.resultadoNaoCalculadaTexto), findsNothing);
+  });
+
   testWidgets('qualidade das amostras, com o motivo do problema', (
     tester,
   ) async {

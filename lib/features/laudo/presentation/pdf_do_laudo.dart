@@ -282,7 +282,7 @@ pw.Widget _medidas(List<MedidaLida> medidas) => _tabela(
       [
         '${m.medida.nome} — ${m.medida.descricao}',
         switch (m.valor) {
-          null => AppStrings.resultadoNaoCalculada,
+          null => semValor(m),
           final v when m.medida.unidade.isEmpty => m.medida.formatar(v),
           final v => '${m.medida.formatar(v)} ${m.medida.unidade}',
         },

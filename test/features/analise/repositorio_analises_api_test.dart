@@ -115,8 +115,19 @@ void main() {
     expect(_valor(resultado, MedidaAcustica.hnr), 21.5);
     expect(_valor(resultado, MedidaAcustica.f0), 212);
     expect(_valor(resultado, MedidaAcustica.cpps), 14.2);
-    // O que a API ainda não calcula aparece como "não calculada".
+    // O que a API ainda não calcula vem sem valor e marcado como
+    // indisponível: a tela diz "ainda não disponível", não "não calculada".
     expect(_valor(resultado, MedidaAcustica.avqi), isNull);
+    final avqi = resultado.medidas.firstWhere(
+      (x) => x.medida == MedidaAcustica.avqi,
+    );
+    expect(avqi.disponivel, isFalse);
+    expect(
+      resultado.medidas
+          .where((x) => x.medida != MedidaAcustica.avqi)
+          .every((x) => x.disponivel),
+      isTrue,
+    );
     // O espectrograma é o da gravação da VOGAL (a1), pedido à API.
     expect(
       resultado.espectrogramaUrl,

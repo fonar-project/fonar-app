@@ -68,6 +68,8 @@ extension ApresentacaoDaMedida on MedidaAcustica {
 /// Por que a medida está sem classificação, em uma frase para o profissional.
 String explicarSemClassificacao(SemClassificacaoPorque motivo) =>
     switch (motivo) {
+      SemClassificacaoPorque.aindaNaoDisponivel =>
+        AppStrings.resultadoAindaNaoDisponivelTexto,
       SemClassificacaoPorque.naoCalculada =>
         AppStrings.resultadoNaoCalculadaTexto,
       SemClassificacaoPorque.perfilIncompleto =>
@@ -75,6 +77,14 @@ String explicarSemClassificacao(SemClassificacaoPorque motivo) =>
       SemClassificacaoPorque.semFaixaValidada =>
         AppStrings.resultadoSemFaixaValidada,
     };
+
+/// O que aparece no lugar do valor quando não há valor: "ainda não
+/// disponível" para a medida que o servidor ainda não calcula, "não
+/// calculada" para a que ele não conseguiu calcular nesta gravação.
+String semValor(MedidaLida lida) =>
+    lida.semClassificacaoPorque == SemClassificacaoPorque.aindaNaoDisponivel
+    ? AppStrings.resultadoAindaNaoDisponivel
+    : AppStrings.resultadoNaoCalculada;
 
 /// O status do design system para cada classificação.
 StatusMedida statusDaClassificacao(ClassificacaoDaMedida c) => switch (c) {

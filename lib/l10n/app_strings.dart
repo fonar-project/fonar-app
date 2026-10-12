@@ -602,6 +602,10 @@ abstract final class AppStrings {
   static const espectrogramaAreaDica =
       'Setas percorrem; mais e menos aproximam e afastam; zero ajusta à tela.';
 
+  static const resultadoAindaNaoDisponivel = 'Ainda não disponível';
+  static const resultadoAindaNaoDisponivelTexto =
+      'O FONAR ainda não calcula esta medida. As outras medidas não dependem '
+      'dela.';
   static const resultadoNaoCalculada = 'Não calculada';
   static const resultadoNaoCalculadaTexto =
       'O servidor não conseguiu calcular esta medida nesta gravação.';

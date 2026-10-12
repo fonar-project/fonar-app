@@ -166,6 +166,28 @@ void main() {
       );
     });
 
+    test('medida que o servidor ainda não calcula: "ainda não disponível"', () {
+      final lidas = lerMedidas(
+        resultado: _resultado(const [
+          MedidaCalculada(
+            medida: MedidaAcustica.avqi,
+            valor: null,
+            disponivel: false,
+          ),
+        ]),
+        sexo: SexoDeReferencia.feminino,
+        dataDeNascimento: DateTime(1985, 7, 2),
+        catalogo: _Catalogo(_faixaEntre),
+      );
+
+      expect(lidas.single.valor, isNull);
+      expect(lidas.single.classificacao, ClassificacaoDaMedida.semReferencia);
+      expect(
+        lidas.single.semClassificacaoPorque,
+        SemClassificacaoPorque.aindaNaoDisponivel,
+      );
+    });
+
     test('perfil incompleto: nem pergunta ao catálogo', () {
       final catalogo = _Catalogo(_faixaEntre);
       final lidas = lerMedidas(

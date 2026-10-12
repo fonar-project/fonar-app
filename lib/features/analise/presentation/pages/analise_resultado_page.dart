@@ -639,9 +639,7 @@ class _CartaoDaMedida extends StatelessWidget {
               spacing: AppSpacing.xxs,
               children: [
                 Text(
-                  valor == null
-                      ? AppStrings.resultadoNaoCalculada
-                      : medida.formatar(valor),
+                  valor == null ? semValor(lida) : medida.formatar(valor),
                   style: valor == null
                       ? textos.titleMedium
                       : (destaque

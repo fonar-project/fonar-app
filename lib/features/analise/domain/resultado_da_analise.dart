@@ -19,9 +19,15 @@ class MedidaCalculada {
     required this.medida,
     required this.valor,
     this.faixa,
+    this.disponivel = true,
   });
 
   final MedidaAcustica medida;
+
+  /// Falso quando o servidor ainda não calcula esta medida em gravação
+  /// nenhuma — o AVQI, enquanto falta o script oficial. Aí [valor] é nulo, e
+  /// a tela diz "ainda não disponível", e não que esta gravação deu problema.
+  final bool disponivel;
 
   /// Nulo quando o servidor não conseguiu calcular esta medida — acontece,
   /// por exemplo, com f0 numa amostra muito irregular. A medida aparece como

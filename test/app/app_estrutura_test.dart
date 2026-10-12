@@ -125,8 +125,8 @@ void main() {
     });
   });
 
-  // Como no protótipo: no desktop as telas de tarefa ficam ao lado da barra
-  // lateral, com a trilha no lugar do voltar; no celular, tela inteira.
+  // No desktop as telas de tarefa ficam ao lado da barra lateral, com o
+  // voltar e a trilha; no celular, tela inteira, com o voltar.
   group('telas de tarefa', () {
     Future<void> abrirPerfil(WidgetTester tester, Size tamanho) async {
       tester.view.physicalSize = tamanho;
@@ -158,14 +158,15 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('desktop: barra lateral e trilha, sem voltar', (tester) async {
+    testWidgets('desktop: barra lateral, voltar e trilha', (tester) async {
       await abrirPerfil(tester, _desktop);
 
       expect(find.byType(AppEstrutura), findsOneWidget);
       for (final destino in DestinoPrincipal.values) {
         expect(find.text(destino.rotulo), findsWidgets, reason: destino.name);
       }
-      expect(find.bySemanticsLabel(AppStrings.voltar), findsNothing);
+      // No Windows não há voltar do sistema: a seta fica no cabeçalho.
+      expect(find.bySemanticsLabel(AppStrings.voltar), findsOneWidget);
 
       // O primeiro passo da trilha leva à lista.
       final trilha = find.descendant(
@@ -173,6 +174,14 @@ void main() {
         matching: find.text(AppStrings.navPacientes),
       );
       await tester.tap(trilha);
+      await tester.pumpAndSettle();
+      expect(find.byType(PacientesListPage), findsOneWidget);
+    });
+
+    testWidgets('desktop: a seta volta para a lista', (tester) async {
+      await abrirPerfil(tester, _desktop);
+
+      await tester.tap(find.bySemanticsLabel(AppStrings.voltar));
       await tester.pumpAndSettle();
       expect(find.byType(PacientesListPage), findsOneWidget);
     });
