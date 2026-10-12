@@ -70,6 +70,7 @@ class RepositorioPacientesLocal implements RepositorioPacientes {
               (p) => OrderingTerm.desc(p.rowId),
             ]))
             .get();
+    final ultimas = await _ultimaGravacaoPorPaciente();
     return [
       // Recém-cadastrado ainda não tem sessão, e mesmo assim vai no topo: é
       // quem o profissional acabou de atender e vai procurar em seguida.
@@ -78,12 +79,45 @@ class RepositorioPacientesLocal implements RepositorioPacientes {
           id: l.id,
           nome: l.nome,
           queixa: l.queixa,
+          ultimaSessao: ultimas[l.id],
+          // TODO(clínico): segue sem comparação até haver limiar de mudança
+          // validado para o AVQI — ver `limiares_de_mudanca_indefinidos.dart`.
           direcaoAvqi: DirecaoDaMedida.semComparacao,
           sexo: enumOuNulo(SexoDeReferencia.values, l.sexo),
           dataDeNascimento: l.dataDeNascimento,
         ),
       ...exemplos,
     ];
+  }
+
+  /// A data da gravação mais recente de cada paciente, neste aparelho.
+  ///
+  /// É a "última sessão" da lista: a consulta em que algo foi gravado, tenha
+  /// ido para a análise ou não. A sessão inteira é de um dia só (a retomada
+  /// só vale no mesmo dia — `captura/domain/retomada.dart`), então a gravação
+  /// mais nova dá a data dela.
+  ///
+  /// O máximo sai aqui, e não do agregado de data do Drift: com a data
+  /// guardada como texto (`build.yaml`), ele passa por `unixepoch` e volta como
+  /// `datetime(…, 'unixepoch')` — em UTC, sem o fuso com que foi gravada e
+  /// cortado no segundo. Perto da meia-noite, isso pode trocar o dia. Lida
+  /// coluna a coluna, a data volta como foi gravada. São poucas linhas: duas
+  /// tarefas por sessão.
+  Future<Map<String, DateTime>> _ultimaGravacaoPorPaciente() async {
+    final amostras = _banco.amostras;
+    final linhas = await (_banco.selectOnly(
+      amostras,
+    )..addColumns([amostras.pacienteId, amostras.gravadaEm])).get();
+    final ultimas = <String, DateTime>{};
+    for (final linha in linhas) {
+      final paciente = linha.read(amostras.pacienteId)!;
+      final gravadaEm = linha.read(amostras.gravadaEm)!;
+      final atual = ultimas[paciente];
+      if (atual == null || gravadaEm.isAfter(atual)) {
+        ultimas[paciente] = gravadaEm;
+      }
+    }
+    return ultimas;
   }
 
   @override

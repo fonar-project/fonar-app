@@ -6,6 +6,7 @@ import '../../../core/banco/novo_id.dart';
 import '../../../core/relogio.dart';
 import '../../fila/data/repositorio_fila_local.dart';
 import '../../fila/presentation/fila_controlador.dart';
+import '../../pacientes/data/repositorio_pacientes_local.dart';
 import '../../reproducao/presentation/reproducao_controlador.dart';
 import '../data/configuracao_de_captura.dart';
 import '../data/gravador_record.dart';
@@ -343,8 +344,12 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
       // Lida antes da espera: com a tela fechada no meio, o estado não se lê
       // mais (revisão de 24/09).
       final anterior = state.amostras[tarefa];
+      final container = ref.container;
       await ref.read(repositorioAmostrasProvider).guardar(amostra);
       guardada = amostra;
+      // A lista de pacientes mostra a data da última sessão, que é a da
+      // gravação mais nova: com a tela fechada no meio, ela também muda.
+      container.invalidate(pacientesProvider);
       // Daqui em diante o arquivo novo É a amostra: nenhuma falha abaixo o
       // apaga. Apagar o novo porque o antigo não saiu perdia a coleta boa
       // com o registro já apontando para ela (revisão de 24/09).

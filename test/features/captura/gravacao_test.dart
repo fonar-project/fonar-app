@@ -151,12 +151,25 @@ class _EnvioQueSegura implements EnvioDeAnalise {
 }
 
 class _Cenario {
-  _Cenario(this.disco, this.gravador, this.repositorio, this.fila);
+  _Cenario(
+    this.disco,
+    this.gravador,
+    this.repositorio,
+    this.fila,
+    this.pacientes,
+  );
 
   final _Arquivos disco;
   final _Gravador gravador;
   final _Repositorio repositorio;
   final RepositorioFilaEmMemoria fila;
+  final _LeiturasDaLista pacientes;
+}
+
+/// Quantas vezes a lista de pacientes foi lida — a data da última sessão
+/// mora nela.
+class _LeiturasDaLista {
+  var vezes = 0;
 }
 
 Future<_Cenario> _abrir(
@@ -171,6 +184,7 @@ Future<_Cenario> _abrir(
   final gravador = _Gravador(disco);
   final repositorio = _Repositorio();
   final fila = RepositorioFilaEmMemoria();
+  final pacientes = _LeiturasDaLista();
 
   await tester.pumpWidget(
     ProviderScope(
@@ -184,16 +198,17 @@ Future<_Cenario> _abrir(
         envioDeAnaliseProvider.overrideWithValue(_EnvioQueSegura()),
         // Profissional com a sessão aberta: sem ela a fila não envia.
         sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
-        pacientesProvider.overrideWith(
-          (ref) async => const [
+        pacientesProvider.overrideWith((ref) async {
+          pacientes.vezes++;
+          return const [
             Paciente(
               id: 'p1',
               nome: 'Ana de Teste',
               queixa: 'rouquidão',
               direcaoAvqi: DirecaoDaMedida.semComparacao,
             ),
-          ],
-        ),
+          ];
+        }),
       ],
       child: MaterialApp.router(
         theme: AppTheme.claro,
@@ -227,7 +242,7 @@ Future<_Cenario> _abrir(
   await tester.pumpAndSettle();
   await _tocar(tester, find.text(AppStrings.capturaContinuar));
   await tester.pumpAndSettle();
-  return _Cenario(disco, gravador, repositorio, fila);
+  return _Cenario(disco, gravador, repositorio, fila, pacientes);
 }
 
 /// Toca em [alvo]. Durante a gravação o medidor redesenha a cada leitura e
@@ -328,6 +343,21 @@ void main() {
       _botao(tester, AppStrings.capturaRegravar).variante,
       VarianteBotao.secundario,
     );
+  });
+
+  testWidgets('gravação guardada lê a lista de pacientes de novo, pela data '
+      'da última sessão; a recusada, não', (tester) async {
+    final c = await _abrir(tester);
+    final antes = c.pacientes.vezes;
+
+    // Toque acidental: curta demais, descartada — nada mudou no banco.
+    await _gravar(tester, duracao: const Duration(milliseconds: 200));
+    expect(c.repositorio.guardadas, isEmpty);
+    expect(c.pacientes.vezes, antes);
+
+    await _gravar(tester, rotulo: AppStrings.capturaRegravar);
+    expect(c.repositorio.guardadas, hasLength(1));
+    expect(c.pacientes.vezes, greaterThan(antes));
   });
 
   testWidgets('durante a gravação: medidor de voz, e não se muda de etapa', (

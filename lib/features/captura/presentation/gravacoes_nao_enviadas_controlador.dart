@@ -5,6 +5,7 @@ import '../../../core/relogio.dart';
 import '../../../l10n/app_strings.dart';
 import '../../fila/data/repositorio_fila_local.dart';
 import '../../fila/presentation/fila_controlador.dart';
+import '../../pacientes/data/repositorio_pacientes_local.dart';
 import '../../reproducao/presentation/reproducao_controlador.dart';
 import '../data/gravador_record.dart';
 import '../data/repositorio_amostras_local.dart';
@@ -112,6 +113,8 @@ class LimpezaControlador extends Notifier<EstadoDaLimpeza> {
       falha = AppStrings.naoEnviadasErroDescartar;
     }
     container.invalidate(sessoesNaoEnviadasProvider(pacienteId));
+    // A última sessão da lista pode ter sido a descartada.
+    container.invalidate(pacientesProvider);
     if (ref.mounted) {
       state = EstadoDaLimpeza(
         erro: falha == null
