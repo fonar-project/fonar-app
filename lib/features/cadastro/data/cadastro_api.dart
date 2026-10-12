@@ -7,15 +7,18 @@ import '../../../core/network/dio_client.dart';
 import '../../../core/network/interceptors/error_interceptor.dart';
 import '../domain/cadastro.dart';
 
-/// O cadastro do profissional na API: `/v1/profissionais/eu`.
+/// O cadastro do profissional na API: `/v1/profissionais/eu` (o
+/// autocadastro da ADR-015 do `fonar-api`).
 ///
 ///     GET   403 email_nao_verificado        -> [EmailPorVerificar]
 ///           403 profissional_nao_cadastrado -> [SemCadastro]
-///           200                             -> [Cadastrado]
-///     POST  cria o cadastro (só com e-mail verificado)
-///     PATCH troca nome ou inscrição
+///           200                             -> [Cadastrado] (completo ou não)
+///     POST  cria o cadastro, ou completa o antigo (só com e-mail verificado);
+///           201 criado, 200 se já existia completo — repetir é seguro
+///     PATCH troca nome, região ou número
 ///
-/// O e-mail vem do token: o app nunca o manda no corpo.
+/// O e-mail vem do token: o app nunca o manda no corpo. A API recusa campo
+/// que não conhece, então o corpo leva só o que ela pede.
 class CadastroApi {
   const CadastroApi(this._dio);
 
@@ -38,9 +41,10 @@ class CadastroApi {
     }
   }
 
-  /// Cria o cadastro. Se ele já existe (o envio anterior chegou e a resposta
-  /// se perdeu), devolve o que existe. Lança [EmailAindaNaoVerificado] se a
-  /// API ainda não vê o e-mail confirmado.
+  /// Cria o cadastro — ou completa o antigo, do convite. Se ele já existia
+  /// completo (o envio anterior chegou e a resposta se perdeu), a API devolve
+  /// o que existe. Lança [EmailAindaNaoVerificado] se ela ainda não vê o
+  /// e-mail confirmado.
   Future<PerfilProfissional> cadastrar(DadosDoCadastro dados) async {
     try {
       final resposta = await _dio.post<Object?>(
@@ -48,19 +52,14 @@ class CadastroApi {
         data: {
           'nome': dados.nome,
           'crefono_regiao': dados.crefonoRegiao,
-          'crefono_inscricao': dados.crefonoInscricao,
+          'crefono_numero': dados.crefonoNumero,
           'versao_termos': versaoDosTermos,
-          'aceita_termos': true,
         },
       );
       return perfilDaApi(resposta.data);
     } on DioException catch (e) {
-      switch (codigoDaApi(e)) {
-        case 'profissional_ja_cadastrado':
-          final situacao = await this.situacao();
-          if (situacao case Cadastrado(:final perfil)) return perfil;
-        case 'email_nao_verificado':
-          throw const EmailAindaNaoVerificado();
+      if (codigoDaApi(e) == 'email_nao_verificado') {
+        throw const EmailAindaNaoVerificado();
       }
       throw _falha(e);
     }
@@ -75,7 +74,7 @@ class CadastroApi {
         data: {
           'nome': dados.nome,
           'crefono_regiao': dados.crefonoRegiao,
-          'crefono_inscricao': dados.crefonoInscricao,
+          'crefono_numero': dados.crefonoNumero,
         },
       );
       return perfilDaApi(resposta.data);
@@ -96,22 +95,23 @@ PerfilProfissional perfilDaApi(Object? corpo) {
     throw const FalhaDesconhecida(causa: 'cadastro sem corpo');
   }
   final email = corpo['email'];
-  final registro = corpo['registro_conselho'];
-  if (email is! String || registro is! String) {
-    throw const FalhaDesconhecida(causa: 'cadastro sem e-mail ou registro');
+  if (email is! String) {
+    throw const FalhaDesconhecida(causa: 'cadastro sem e-mail');
   }
   final nome = corpo['nome'];
   final regiao = corpo['crefono_regiao'];
-  final inscricao = corpo['crefono_inscricao'];
-  final observacao = corpo['credenciamento_observacao'];
+  final numero = corpo['crefono_numero'];
+  final registro = corpo['registro_conselho'];
   return PerfilProfissional(
     email: email,
-    registro: registro,
-    credenciamento: Credenciamento.daApi(corpo['credenciamento']),
+    credenciamento: Credenciamento.daApi(corpo['situacao']),
+    // Sem o campo, conta como incompleto: o app pede o cadastro de novo, e
+    // o POST é seguro de repetir.
+    completo: corpo['cadastro_completo'] == true,
+    registro: registro is String ? registro : null,
     nome: nome is String ? nome : null,
     crefonoRegiao: regiao is int ? regiao : null,
-    crefonoInscricao: inscricao is String ? inscricao : null,
-    observacao: observacao is String ? observacao : null,
+    crefonoNumero: numero is String ? numero : null,
   );
 }
 

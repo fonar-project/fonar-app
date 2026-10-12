@@ -22,17 +22,19 @@ import '../../apoio/http_falso.dart';
 import '../../apoio/sessao_de_teste.dart';
 
 Map<String, Object?> _perfil({
-  String credenciamento = 'pendente',
-  String? observacao,
+  String situacao = 'pendente',
+  bool completo = true,
 }) => {
   'id': contaDeTeste.uid,
   'email': contaDeTeste.email,
-  'nome': 'Ana Souza',
-  'crefono_regiao': 2,
-  'crefono_inscricao': '12345',
-  'registro_conselho': 'CRFa 2-12345',
-  'credenciamento': credenciamento,
-  'credenciamento_observacao': observacao,
+  'nome': completo ? 'Ana Souza' : null,
+  'crefono_regiao': completo ? 2 : null,
+  'crefono_numero': completo ? '12345' : null,
+  'registro_conselho': completo ? 'CRFa 2-12345' : 'CRFa 123456',
+  'situacao': situacao,
+  'credenciado_em': null,
+  'versao_termos': completo ? 'provisorio-2026-10-11' : null,
+  'cadastro_completo': completo,
 };
 
 RespostaFalsa _recusa(int status, String codigo) => RespostaFalsa(status, {
@@ -126,7 +128,7 @@ class _ContaEmMemoria implements RepositorioDaConta {
 const _dados = DadosDoCadastro(
   nome: 'Ana Souza',
   crefonoRegiao: 2,
-  crefonoInscricao: '12345',
+  crefonoNumero: '12345',
 );
 
 void main() {
@@ -151,20 +153,18 @@ void main() {
       expect(m.sessaoAberta, isFalse);
     });
 
-    test('recusado: não entra, diz o motivo e apaga a credencial', () async {
+    test('credenciado entra do mesmo jeito', () async {
       final m = _Montagem([
-        RespostaFalsa(
-          200,
-          _perfil(credenciamento: 'recusado', observacao: 'não encontrada'),
-        ),
+        RespostaFalsa(200, _perfil(situacao: 'credenciado')),
       ]);
-      expect(await m.entrar(), isNull);
+      expect(await m.entrar(), isA<EntrarNoApp>());
+      expect(m.sessaoAberta, isTrue);
+    });
+
+    test('cadastro antigo, do convite: vai completar', () async {
+      final m = _Montagem([RespostaFalsa(200, _perfil(completo: false))]);
+      expect(await m.entrar(), isA<CompletarCadastro>());
       expect(m.sessaoAberta, isFalse);
-      expect(m.autenticacao.saidas, 1);
-      expect(
-        m.container.read(loginControladorProvider).erroGeral,
-        contains('não encontrada'),
-      );
     });
 
     test('API fora do ar: entra como sempre entrou', () async {
@@ -214,7 +214,7 @@ void main() {
       expect(await criar(m), isA<VerificarEmail>());
       expect(m.criacao.criadas, ['fono@exemplo.com']);
       final pendente = m.container.read(cadastroPendenteProvider);
-      expect(pendente?.crefonoInscricao, '12345');
+      expect(pendente?.crefonoNumero, '12345');
       // A API ainda não foi chamada: o e-mail não foi confirmado.
       expect(m.servidor.feitas, isEmpty);
     });
@@ -304,7 +304,7 @@ void main() {
             aceitouTermos: true,
           );
       expect(destino, isA<EntrarNoApp>());
-      expect(m.servidor.feitas.single.json['crefono_inscricao'], '12345');
+      expect(m.servidor.feitas.single.json['crefono_numero'], '12345');
       expect(m.sessaoAberta, isTrue);
     });
 
@@ -360,7 +360,7 @@ void main() {
         final m = montar([
           RespostaFalsa(200, {
             ..._perfil(),
-            'crefono_inscricao': '54321',
+            'crefono_numero': '54321',
             'registro_conselho': 'CRFa 2-54321',
           }),
         ]);
@@ -374,7 +374,7 @@ void main() {
         expect(pedido.json, {
           'nome': 'Ana Souza',
           'crefono_regiao': 2,
-          'crefono_inscricao': '54321',
+          'crefono_numero': '54321',
         });
         // O que vale é o que a API devolveu: trocar o número voltou a pendente.
         final atual = m.container.read(profissionalAtualProvider);

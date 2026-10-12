@@ -11,8 +11,9 @@ import '../../domain/cadastro.dart';
 /// Nome, região do Crefono, número de inscrição e o aceite dos termos — o
 /// que o profissional informa ao criar a conta e ao completar o cadastro.
 ///
-/// A região é escolha visível de uma vez (nove opções curtas), e o número é
-/// só o número: "CRFa 2-12345" se monta dos dois.
+/// A região é escolha visível de uma vez (nove opções, com os estados de
+/// cada uma, para achar a sua), e o número é só o número: "CRFa 2-12345" se
+/// monta dos dois.
 class CamposDoRegistro extends StatelessWidget {
   const CamposDoRegistro({
     required this.nome,
@@ -68,8 +69,12 @@ class CamposDoRegistro extends StatelessWidget {
         AppEscolhaUnica<int>(
           rotulo: AppStrings.cadastroCampoRegiao,
           opcoes: [
-            for (final r in regioesDoCrefono)
-              AppOpcao(valor: r, rotulo: AppStrings.cadastroRegiao(r)),
+            for (final MapEntry(key: regiao, value: estados)
+                in regioesDoCrefono.entries)
+              AppOpcao(
+                valor: regiao,
+                rotulo: AppStrings.cadastroRegiao(regiao, estados),
+              ),
           ],
           selecionado: regiao,
           aoEscolher: ocupado

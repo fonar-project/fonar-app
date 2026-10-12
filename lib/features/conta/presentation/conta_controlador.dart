@@ -86,14 +86,14 @@ class ContaControlador extends Notifier<EstadoDaConta> {
               DadosDoCadastro(
                 nome: profissional.nome,
                 crefonoRegiao: registro.regiao,
-                crefonoInscricao: registro.inscricao,
+                crefonoNumero: registro.inscricao,
               ),
             );
             // O que a API gravou: o registro sai no formato dela, e o
             // credenciamento pode ter voltado a pendente.
             profissional = Profissional(
               nome: perfil.nome ?? profissional.nome,
-              registro: perfil.registro,
+              registro: perfil.registro ?? profissional.registro,
               email: profissional.email,
               credenciamento: perfil.credenciamento,
             );

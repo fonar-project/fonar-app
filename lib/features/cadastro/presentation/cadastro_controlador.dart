@@ -165,11 +165,6 @@ class VerificacaoControlador extends Notifier<EstadoDoCadastro> {
             ),
           );
           return null;
-        case EntradaRecusada(:final motivo):
-          state = EstadoDoCadastro(
-            erroGeral: AppStrings.loginCredencialRecusada(motivo),
-          );
-          return null;
         case EntrarNoApp() || CompletarCadastro():
           state = const EstadoDoCadastro();
           return destino;

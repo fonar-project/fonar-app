@@ -989,7 +989,6 @@ abstract final class AppStrings {
       'do Crefono. Enquanto isso, você usa o aplicativo normalmente.';
   static const contaCredenciamentoCredenciado =
       'Inscrição conferida pela equipe do FONAR';
-  static const contaCredenciamentoRecusadoTitulo = 'Inscrição não confirmada';
 
   static const contaNesteAparelho = 'Neste aparelho';
   static String contaEnviosPendentes(int n) => switch (n) {
@@ -1128,9 +1127,6 @@ abstract final class AppStrings {
   static const loginEsqueciSenha = 'Esqueci a senha';
   static const loginSemConta = 'Ainda não tem conta no FONAR?';
   static const loginCriarConta = 'Criar conta';
-  static String loginCredencialRecusada(String? motivo) =>
-      'A equipe do FONAR não confirmou sua inscrição no Crefono, e o acesso '
-      'foi fechado.${motivo == null || motivo.isEmpty ? '' : ' Motivo: $motivo'}';
 
   static const loginRecuperacaoInformeEmail =
       'Informe acima o e-mail da conta para receber o link de redefinição.';
@@ -1200,11 +1196,12 @@ abstract final class AppStrings {
   static const registroCampoNome = 'Nome completo';
   static const cadastroNomeApoio = 'Como vai assinado no laudo.';
   static const cadastroCampoRegiao = 'Região do Crefono';
-  static String cadastroRegiao(int regiao) => '$regiaoª';
+  static String cadastroRegiao(int regiao, String estados) =>
+      '$regiaoª · $estados';
   static const cadastroCampoInscricao = 'Número de inscrição';
   static const cadastroInscricaoDica = 'ex.: 12345';
   static const cadastroInscricaoApoio =
-      'Só o número, sem “CRFa” e sem a região.';
+      'Só o número, como o conselho publica, sem “CRFa” e sem a região.';
   static const cadastroTermosRotulo =
       'Li e aceito os termos de uso e a política de privacidade do FONAR.';
 
@@ -1214,17 +1211,17 @@ abstract final class AppStrings {
       'Versão provisória. O FONAR é ferramenta de apoio à decisão e não emite '
       'diagnóstico. Os dados dos pacientes que você cadastrar ficam sob a sua '
       'responsabilidade profissional, e a gravação de voz só acontece com o '
-      'consentimento do paciente. A equipe confere a sua inscrição no Crefono '
-      'e pode fechar o acesso se ela não for confirmada. O texto completo dos '
-      'termos e da política de privacidade ainda está sendo escrito.';
+      'consentimento do paciente. A equipe confere a sua inscrição no Crefono. '
+      'O texto completo dos termos e da política de privacidade ainda está '
+      'sendo escrito.';
   static const registroInformeNome = 'Informe o nome completo.';
   static const cadastroNomeLongo = 'O nome passa de 200 caracteres.';
   static const cadastroInformeRegiao =
       'Escolha a região do Crefono em que você é inscrito(a).';
   static const cadastroInformeInscricao = 'Informe o número de inscrição.';
   static const cadastroInscricaoInvalida =
-      'Use só o número (dígitos, com ponto ou hífen), sem “CRFa” e sem a '
-      'região.';
+      'Use só o número: algarismos (e às vezes letra, ponto, barra ou hífen), '
+      'até 20, sem “CRFa” e sem a região.';
   static const cadastroAceiteTermos =
       'Para criar o cadastro, é preciso aceitar os termos.';
   static const cadastroInformeEmail = 'Informe o e-mail.';
@@ -1284,9 +1281,6 @@ abstract final class AppStrings {
   static const erroSenhaFraca =
       'A senha é fraca demais. Use ao menos 8 caracteres, misturando letras e '
       'números.';
-  static const erroCredencialRecusada =
-      'A equipe do FONAR não confirmou sua inscrição no Crefono, e o acesso '
-      'aos pacientes foi fechado. Veja o motivo na tela de entrada.';
   static const erroNaoEncontrado = 'Não encontramos o que você procurava.';
   static const erroValidacao = 'Confira os dados informados e tente novamente.';
   static const erroServidor =

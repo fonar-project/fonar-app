@@ -8,20 +8,18 @@ import 'package:fonar_app/features/conta/domain/dados_do_profissional.dart';
 
 import '../../apoio/http_falso.dart';
 
-/// O cadastro como a API devolve.
+/// O cadastro como a API devolve (`ProfissionalResponse`, no `fonar-api`).
 const _perfil = {
   'id': 'uid-1',
   'email': 'fono@exemplo.com',
   'nome': 'Ana Souza',
   'crefono_regiao': 2,
-  'crefono_inscricao': '12345',
+  'crefono_numero': '12345',
   'registro_conselho': 'CRFa 2-12345',
-  'credenciamento': 'pendente',
-  'credenciamento_em': null,
-  'credenciamento_observacao': null,
+  'situacao': 'pendente',
+  'credenciado_em': null,
   'versao_termos': 'provisorio-2026-10-11',
-  'termos_aceitos_em': '2026-10-11T12:00:00Z',
-  'criado_em': '2026-10-11T12:00:00Z',
+  'cadastro_completo': true,
 };
 
 RespostaFalsa _recusa(int status, String codigo) => RespostaFalsa(status, {
@@ -41,7 +39,7 @@ RespostaFalsa _recusa(int status, String codigo) => RespostaFalsa(status, {
 const _dados = DadosDoCadastro(
   nome: 'Ana Souza',
   crefonoRegiao: 2,
-  crefonoInscricao: '12345',
+  crefonoNumero: '12345',
 );
 
 void main() {
@@ -57,7 +55,7 @@ void main() {
       final dados = (resultado as RegistroValido).dados;
       expect(dados.nome, 'Ana Souza');
       expect(dados.crefonoRegiao, 9);
-      expect(dados.crefonoInscricao, '12.345-6');
+      expect(dados.crefonoNumero, '12.345-6');
     });
 
     test('um problema por campo, todos de uma vez', () {
@@ -80,8 +78,12 @@ void main() {
         ('12345', true),
         ('12.345', true),
         ('12345-6', true),
-        ('-123', false),
-        ('12a45', false),
+        ('12/345', true),
+        ('12a45', true),
+        (' 12 345 ', true),
+        ('abc', false),
+        ('CRFa 2-12345', false),
+        ('12_345', false),
         ('1' * 21, false),
         ('', false),
       ]) {
@@ -93,6 +95,16 @@ void main() {
         );
         expect(resultado is RegistroValido, valida, reason: inscricao);
       }
+    });
+
+    test('o número sai como a API grava: sem espaço, em maiúsculas', () {
+      final resultado = validarRegistro(
+        nome: 'Ana',
+        regiao: 2,
+        inscricao: ' 12a 45 ',
+        aceitouTermos: true,
+      );
+      expect((resultado as RegistroValido).dados.crefonoNumero, '12A45');
     });
 
     test('região fora de 1 a 9', () {
@@ -144,10 +156,12 @@ void main() {
         regiao: 6,
         inscricao: '12.345-6',
       ));
+      // Letra no número existe (inscrição secundária), e vai em maiúsculas.
+      expect(lerRegistro('CRFa 2-12a'), (regiao: 2, inscricao: '12A'));
     });
 
     test('sem a região, ou com texto, não é registro', () {
-      for (final texto in ['12345', 'CRFa 12345', 'CRFa 0-123', 'CRFa 2-12a']) {
+      for (final texto in ['12345', 'CRFa 12345', 'CRFa 0-123', 'CRFa 2-abc']) {
         expect(lerRegistro(texto), isNull, reason: texto);
       }
     });
@@ -177,17 +191,12 @@ void main() {
       expect(await m.api.situacao(), isA<SemCadastro>());
     });
 
-    test('recusado: o motivo vem junto', () async {
+    test('credenciado: a situação da API', () async {
       final m = _montar([
-        RespostaFalsa(200, {
-          ..._perfil,
-          'credenciamento': 'recusado',
-          'credenciamento_observacao': 'inscrição não encontrada',
-        }),
+        RespostaFalsa(200, {..._perfil, 'situacao': 'credenciado'}),
       ]);
       final perfil = ((await m.api.situacao()) as Cadastrado).perfil;
-      expect(perfil.credenciamento, Credenciamento.recusado);
-      expect(perfil.observacao, 'inscrição não encontrada');
+      expect(perfil.credenciamento, Credenciamento.credenciado);
     });
 
     test('cadastro antigo, do convite, está incompleto', () async {
@@ -195,12 +204,17 @@ void main() {
         const RespostaFalsa(200, {
           'id': 'uid-1',
           'email': 'fono@exemplo.com',
+          'nome': null,
+          'crefono_regiao': null,
+          'crefono_numero': null,
           'registro_conselho': 'CRFa 123456',
-          'credenciamento': 'pendente',
+          'situacao': 'pendente',
+          'cadastro_completo': false,
         }),
       ]);
       final perfil = ((await m.api.situacao()) as Cadastrado).perfil;
       expect(perfil.completo, isFalse);
+      expect(perfil.registro, 'CRFa 123456');
     });
 
     test('rede fora: a falha sobe', () async {
@@ -208,7 +222,8 @@ void main() {
       await expectLater(m.api.situacao(), throwsA(isA<FalhaDeConexao>()));
     });
 
-    test('cadastrar manda nome, inscrição e o aceite dos termos', () async {
+    test('cadastrar manda só os campos que a API pede', () async {
+      // A API recusa campo que não conhece (`extra="forbid"`).
       final m = _montar([const RespostaFalsa(201, _perfil)]);
       await m.api.cadastrar(_dados);
       final pedido = m.servidor.feitas.single;
@@ -216,21 +231,16 @@ void main() {
       expect(pedido.json, {
         'nome': 'Ana Souza',
         'crefono_regiao': 2,
-        'crefono_inscricao': '12345',
+        'crefono_numero': '12345',
         'versao_termos': versaoDosTermos,
-        'aceita_termos': true,
       });
-      expect(pedido.json.containsKey('email'), isFalse);
     });
 
-    test('cadastro que já existe: devolve o que existe', () async {
-      final m = _montar([
-        _recusa(409, 'profissional_ja_cadastrado'),
-        const RespostaFalsa(200, _perfil),
-      ]);
+    test('cadastro que já existia: devolve o que existe', () async {
+      final m = _montar([const RespostaFalsa(200, _perfil)]);
       final perfil = await m.api.cadastrar(_dados);
       expect(perfil.registro, 'CRFa 2-12345');
-      expect(m.servidor.feitas.map((f) => f.opcoes.method), ['POST', 'GET']);
+      expect(m.servidor.feitas, hasLength(1));
     });
 
     test('e-mail ainda não verificado é um passo, não uma falha', () async {
@@ -249,16 +259,8 @@ void main() {
       expect(pedido.json, {
         'nome': 'Ana Souza',
         'crefono_regiao': 2,
-        'crefono_inscricao': '12345',
+        'crefono_numero': '12345',
       });
-    });
-
-    test('a recusa do credenciamento tem tipo próprio', () async {
-      final m = _montar([_recusa(403, 'credencial_recusada')]);
-      await expectLater(
-        m.api.atualizar(_dados),
-        throwsA(isA<CredencialRecusada>()),
-      );
     });
   });
 }

@@ -111,8 +111,8 @@ avisado na tela — e o build `--release` sem a chave se recusa a abrir
 - Criar conta (US34) é do Firebase (`accounts:signUp`, e-mail de
   verificação); o cadastro profissional é da API (`/v1/profissionais/eu`),
   que conduz o primeiro acesso: e-mail por verificar → formulário → entra.
-  O credenciamento (pendente, credenciado, recusado) é da equipe, e o app só
-  o mostra. `features/cadastro/`.
+  O credenciamento (pendente ou credenciado) é da equipe, não bloqueia nada,
+  e o app só o mostra. `features/cadastro/`.
 
 ### Reprodução de áudio — por que é o `audioplayers` (dívida encerrada)
 Até 24/09/2026 a reprodução era `just_audio` + `just_audio_windows`. O plugin

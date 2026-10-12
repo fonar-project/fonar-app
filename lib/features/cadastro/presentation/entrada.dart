@@ -27,16 +27,10 @@ final class VerificarEmail extends DestinoDaEntrada {
   const VerificarEmail();
 }
 
-/// E-mail confirmado, cadastro por preencher.
+/// E-mail confirmado, cadastro por preencher — ou o cadastro antigo, do
+/// convite, por completar.
 final class CompletarCadastro extends DestinoDaEntrada {
   const CompletarCadastro();
-}
-
-/// A equipe recusou o credenciamento: não entra, e a tela diz o motivo.
-final class EntradaRecusada extends DestinoDaEntrada {
-  const EntradaRecusada(this.motivo);
-
-  final String? motivo;
 }
 
 /// Confere o cadastro na API e diz o destino.
@@ -56,11 +50,13 @@ Future<DestinoDaEntrada> conferirCadastro(Ref ref) async {
 
 /// O destino que a situação do cadastro na API manda. Lança a
 /// `AppException` da rede — quem chama decide se entra mesmo assim.
+///
+/// A situação do credenciamento (pendente ou credenciado) não entra aqui: ela
+/// não bloqueia nada (ADR-015 do `fonar-api`), e o app só a mostra na Conta.
 Future<DestinoDaEntrada> destinoPelaApi(CadastroApi api) async =>
     switch (await api.situacao()) {
-      Cadastrado(:final perfil)
-          when perfil.credenciamento == Credenciamento.recusado =>
-        EntradaRecusada(perfil.observacao),
+      Cadastrado(:final perfil) when !perfil.completo =>
+        const CompletarCadastro(),
       Cadastrado() => const EntrarNoApp(),
       EmailPorVerificar() => const VerificarEmail(),
       SemCadastro() => const CompletarCadastro(),
@@ -73,12 +69,11 @@ void abrirSessao(Ref ref, ContaAutenticada conta) {
   ref.invalidate(contaGuardadaProvider);
 }
 
-/// O nome da rota de cada destino. A recusa fica na entrada, com o motivo.
+/// O nome da rota de cada destino.
 String rotaDe(DestinoDaEntrada destino) => switch (destino) {
   EntrarNoApp() => AppRoutes.pacientesNome,
   VerificarEmail() => AppRoutes.verificarEmailNome,
   CompletarCadastro() => AppRoutes.completarCadastroNome,
-  EntradaRecusada() => AppRoutes.loginNome,
 };
 
 /// O cadastro digitado na criação da conta, guardado enquanto o e-mail não

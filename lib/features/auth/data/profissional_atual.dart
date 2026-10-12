@@ -64,7 +64,7 @@ class ProfissionalAtual extends Notifier<Profissional> {
       if (situacao case Cadastrado(:final perfil)) {
         final profissional = Profissional(
           nome: perfil.nome ?? state.nome,
-          registro: perfil.registro,
+          registro: perfil.registro ?? state.registro,
           email: state.email,
           credenciamento: perfil.credenciamento,
         );

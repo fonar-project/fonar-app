@@ -401,9 +401,10 @@ flutter run -d windows --dart-define-from-file=dart_defines.json
 ### Criar conta e o primeiro acesso (US34)
 
 O cadastro é **aberto**: qualquer pessoa com e-mail cria a conta pelo app e já
-usa o sistema; a equipe confere depois a inscrição no Crefono e marca o
-cadastro como **credenciado** — ou **recusado**, o que fecha o acesso (ADR-015
-da API; a equipe usa `tools/credenciar_profissional.py`, no `fonar-api`).
+usa o sistema, como **pendente**; a equipe confere depois a inscrição no
+Crefono e marca o cadastro como **credenciado** (ADR-015 da API; a equipe usa
+`tools/credenciar_profissional.py`, no `fonar-api`). A situação não bloqueia
+nada: o app só a mostra.
 
 ```
 Criar conta  ->  e-mail, senha, nome, região do Crefono, número e o aceite
@@ -415,9 +416,10 @@ Confirme seu e-mail  ->  "Já confirmei": token novo, e o cadastro vai à API
 A API conduz o primeiro acesso (`GET /v1/profissionais/eu`): sem e-mail
 verificado, o app pede a confirmação; verificado e sem cadastro, mostra o
 formulário (`/completar-cadastro`) — é o caminho de quem fechou o app antes de
-confirmar, ou de conta criada no console. Recusado não entra: a entrada mostra
-o motivo e apaga a credencial do aparelho. Com a API fora do ar, a entrada
-segue como antes — o app funciona sem rede, e a fila espera.
+confirmar, de conta criada no console, e do cadastro antigo, do tempo do
+convite (`cadastro_completo: false`), que o mesmo `POST` completa. Com a API
+fora do ar, a entrada segue como antes — o app funciona sem rede, e a fila
+espera.
 
 Na Conta, nome e registro vêm do cadastro na API e são salvos lá (o registro
 no formato "CRFa 2-12345"); trocar a região ou o número de quem já foi

@@ -80,30 +80,17 @@ class LoginControlador extends Notifier<EstadoLogin> {
       return null;
     }
 
-    // A senha conferiu; falta saber se o cadastro deixa entrar. O botão
+    // A senha conferiu; falta saber em que pé está o cadastro. O botão
     // continua em "Entrando…" enquanto a API responde.
     final destino = await conferirCadastro(ref);
     if (!ref.mounted) return null;
+    state = resultado;
     switch (destino) {
       case EntrarNoApp():
-        state = resultado;
         abrirSessao(ref, conta);
-      case EntradaRecusada(:final motivo):
-        // Sem acesso, a credencial não fica: guardada, ela deixaria o modo
-        // offline entrar pela porta dos fundos.
-        try {
-          await ref.read(repositorioAutenticacaoProvider).sair();
-        } on AppException {
-          // Fica no cofre; a API continua recusando tudo desta conta.
-        }
-        if (!ref.mounted) return null;
-        state = EstadoLogin(
-          erroGeral: AppStrings.loginCredencialRecusada(motivo),
-        );
-        ref.invalidate(contaGuardadaProvider);
-        return null;
       case VerificarEmail() || CompletarCadastro():
-        state = resultado;
+        // A credencial fica no cofre: é com ela que a confirmação pede o
+        // token novo e o cadastro vai à API.
         ref.invalidate(contaGuardadaProvider);
     }
     return destino;

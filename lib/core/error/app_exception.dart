@@ -79,13 +79,6 @@ final class SenhaFraca extends AppException {
   const SenhaFraca({super.causa}) : super(AppStrings.erroSenhaFraca);
 }
 
-/// 403 `credencial_recusada` — a equipe conferiu a inscrição no Crefono e
-/// recusou o credenciamento. A API fecha o acesso a pacientes e gravações.
-final class CredencialRecusada extends AppException {
-  const CredencialRecusada({super.causa})
-    : super(AppStrings.erroCredencialRecusada);
-}
-
 /// 403 — autenticado, mas sem acesso ao recurso.
 final class Proibido extends AppException {
   const Proibido({super.causa}) : super(AppStrings.erroProibido);

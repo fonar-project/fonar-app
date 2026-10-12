@@ -307,11 +307,6 @@ class _Credenciamento extends StatelessWidget {
       icone: NomeIcone.confirmacao,
       titulo: AppStrings.contaCredenciamentoCredenciado,
     ),
-    Credenciamento.recusado => const AppSituacao(
-      icone: NomeIcone.alerta,
-      titulo: AppStrings.contaCredenciamentoRecusadoTitulo,
-      texto: AppStrings.erroCredencialRecusada,
-    ),
   };
 }
 
