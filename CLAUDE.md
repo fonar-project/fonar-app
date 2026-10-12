@@ -96,8 +96,8 @@ login fala com o Identity Toolkit e o Secure Token pela API REST, com o Dio
 (`lib/core/auth/`). A chave Web API e a URL da API de produção estão em
 `core/config/app_config.dart`: `flutter run` sem nada abre o FONAR de verdade.
 Não são segredo (a chave vai dentro de todo app cliente; quem protege os dados
-são as regras e a API), e a chave é restrita ao Identity Toolkit e ao Token
-Service. O login de EXEMPLO só existe no modo de exemplo
+são as regras e a API), e a chave deve ficar restrita ao Identity Toolkit e ao
+Token Service (README). O login de EXEMPLO só existe no modo de exemplo
 (`--dart-define=FONAR_EXEMPLO=true`), avisado na tela; é o modo dos testes
 (`test/flutter_test_config.dart`), e o build `--release` nele se recusa a abrir
 (`main.dart`).

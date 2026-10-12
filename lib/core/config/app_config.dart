@@ -30,10 +30,10 @@ abstract final class AppConfig {
   static const _urlDoBuild = String.fromEnvironment('FONAR_API_BASE_URL');
 
   /// A "Chave de API da Web" do projeto `fonar-763db` (console do Firebase →
-  /// Configurações do projeto → Geral). Restrita, no Google Cloud Console, às
-  /// APIs Identity Toolkit e Token Service: é só para entrar, criar conta e
-  /// renovar o token.
-  static const _chaveDeProducao = '__CHAVE__';
+  /// Configurações do projeto → Geral). Deve ficar restrita, no Google Cloud
+  /// Console, às APIs Identity Toolkit e Token Service (README, "Conectar ao
+  /// Firebase", passo 5): é só para entrar, criar conta e renovar o token.
+  static const _chaveDeProducao = 'AIzaSyDk0OOaEALIO16TwrJ3kKoTFENltlUcCY0';
 
   static const _chaveDoBuild = String.fromEnvironment(
     'FONAR_FIREBASE_API_KEY',
