@@ -61,14 +61,18 @@ class RepositorioAnalisesApi implements RepositorioAnalises {
   }
 }
 
-/// De qual medida do motor vem cada medida da tela, na gravação da vogal
-/// sustentada — onde jitter, shimmer, HNR, f0 e CPPS se medem.
+/// De qual medida do motor vem cada medida da tela.
 ///
-/// O AVQI ainda não é calculado pela API (falta o script oficial da versão
-/// 03.01): aparece como "ainda não disponível", nunca como zero — e nunca
-/// como se a gravação tivesse dado problema.
+/// Jitter, shimmer, HNR, f0 e CPPS são da gravação da vogal sustentada. O
+/// AVQI é da SESSÃO — junta a vogal e a fala encadeada —, e a API o manda à
+/// parte, em `resultado_da_sessao` (ADR-016 do `fonar-api`): o script
+/// oficial do AVQI v03.01, rodado no Praat do servidor.
+///
+/// Medida sem identificador (nulo) é a que a API ainda não calcula: aparece
+/// como "ainda não disponível", nunca como zero — e nunca como se a
+/// gravação tivesse dado problema.
 const identificadorNaApi = <MedidaAcustica, String?>{
-  MedidaAcustica.avqi: null,
+  MedidaAcustica.avqi: 'avqi.valor',
   MedidaAcustica.cpps: 'cpps.mean_db',
   MedidaAcustica.jitter: 'jitter.local',
   MedidaAcustica.shimmer: 'shimmer.local',
@@ -106,6 +110,20 @@ ResultadoDaAnalise analiseDaApi(Map<Object?, Object?> corpo) {
           m['identificador'] as String: m,
   };
 
+  // O AVQI vem da sessão, não de uma gravação. Nulo enquanto a sessão não
+  // tem as duas tarefas, ou quando a API não pôde calcular agora; com
+  // `erro`, vem sem medidas. Nos dois casos o AVQI fica "não calculado".
+  final daSessao = corpo['resultado_da_sessao'];
+  final medidasDaSessao = <String, Map<Object?, Object?>>{
+    if (daSessao is Map)
+      for (final m in (daSessao['medidas'] as List?) ?? const [])
+        if (m is Map && m['identificador'] is String)
+          m['identificador'] as String: m,
+  };
+  // Os identificadores da sessão (`avqi.*`) não se repetem nos da vogal:
+  // o CPPS da equação do AVQI é `avqi.cpps_db`, não o `cpps.mean_db`.
+  final medidasDaApi = {...medidasDaVogal, ...medidasDaSessao};
+
   final completa = corpo['completa'] == true;
   final pacienteId = corpo['paciente_id'] as String;
   final sessaoId = (corpo['sessao_id'] ?? corpo['id']) as String;
@@ -130,7 +148,7 @@ ResultadoDaAnalise analiseDaApi(Map<Object?, Object?> corpo) {
         if (identificador == null)
           MedidaCalculada(medida: medida, valor: null, disponivel: false)
         else
-          _medida(medida, medidasDaVogal[identificador]),
+          _medida(medida, medidasDaApi[identificador]),
     ],
   );
 }

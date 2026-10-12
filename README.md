@@ -4,8 +4,9 @@
 > **`flutter run` abre o FONAR de verdade**, sem nenhum `--dart-define`: o
 > login e o "Criar conta" no **Firebase Authentication** do projeto
 > `fonar-763db`, e o cadastro, a análise e os resultados na **API** do Cloud
-> Run (ver [Apontar para a API](#apontar-para-a-api)). O AVQI ainda não vem: a
-> API depende do script oficial da versão 03.01. Para olhar as telas sem rede,
+> Run (ver [Apontar para a API](#apontar-para-a-api)). O AVQI v03.01 também
+> vem da API, calculado pela sessão (vogal + fala encadeada). Para olhar as
+> telas sem rede,
 > há o **modo de exemplo** (`--dart-define=FONAR_EXEMPLO=true`), com login,
 > pacientes e resultados de exemplo, avisados na tela. O que falta, e de quem
 > depende, está em [`PENDENCIAS.md`](PENDENCIAS.md).
@@ -352,8 +353,11 @@ Fora do modo de exemplo, os resultados também vêm da API
 sessão e a evolução do paciente, com os valores do motor da gravação da
 vogal sustentada (jitter e shimmer convertidos de fração para %; CPPS em dB).
 Faixa provisória da API não classifica: a medida aparece com o valor e "sem
-faixa validada", como a regra das faixas pede. O AVQI ainda aparece como "não
-calculado": a API depende do script oficial da versão 03.01. O
+faixa validada", como a regra das faixas pede. O **AVQI** é da sessão, não de
+uma gravação: a API roda o script oficial do AVQI v03.01 sobre a vogal e a
+fala encadeada e o manda em `resultado_da_sessao` (ADR-016 do `fonar-api`).
+Sem as duas tarefas, ou se a API não pôde calcular, ele aparece como "não
+calculado". O
 **espectrograma** é o PNG que a API gera da gravação da vogal
 (`GET .../amostras/{a}/espectrograma`), buscado pelo mesmo cliente das outras
 chamadas, com o token (`ImagemDaApi`, em
