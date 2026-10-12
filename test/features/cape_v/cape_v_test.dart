@@ -390,7 +390,9 @@ void main() {
       // A trilha tem 12 px de recuo em cada ponta.
       final passo = (caixa.width - 24) / 100;
       for (final v in [0, 30, 77, 100]) {
-        await tester.tapAt(Offset(caixa.left + 12 + v * passo, caixa.center.dy));
+        await tester.tapAt(
+          Offset(caixa.left + 12 + v * passo, caixa.center.dy),
+        );
         await tester.pumpAndSettle();
         expect(marcado, v);
       }
@@ -431,7 +433,10 @@ void main() {
       final x = caixa.left + 12 + 30 * passo;
 
       // Acima da linha, onde ficam os tracinhos.
-      await tester.tapAt(Offset(x, caixa.top + 30), kind: PointerDeviceKind.mouse);
+      await tester.tapAt(
+        Offset(x, caixa.top + 30),
+        kind: PointerDeviceKind.mouse,
+      );
       await tester.pumpAndSettle();
       expect(marcado, 30);
 
@@ -469,11 +474,15 @@ void main() {
       int? marcado;
       await montar(tester, valor: 38, aoMudar: (v) => marcado = v);
 
-      await tester.tap(find.bySemanticsLabel(AppStrings.escalaAumentar('Teste')));
+      await tester.tap(
+        find.bySemanticsLabel(AppStrings.escalaAumentar('Teste')),
+      );
       await tester.pumpAndSettle();
       expect(marcado, 39);
 
-      await tester.tap(find.bySemanticsLabel(AppStrings.escalaDiminuir('Teste')));
+      await tester.tap(
+        find.bySemanticsLabel(AppStrings.escalaDiminuir('Teste')),
+      );
       await tester.pumpAndSettle();
       expect(marcado, 37);
     });
@@ -483,17 +492,23 @@ void main() {
     ) async {
       int? marcado;
       await montar(tester, valor: null, aoMudar: (v) => marcado = v);
-      await tester.tap(find.bySemanticsLabel(AppStrings.escalaAumentar('Teste')));
+      await tester.tap(
+        find.bySemanticsLabel(AppStrings.escalaAumentar('Teste')),
+      );
       await tester.pumpAndSettle();
       expect(marcado, isNull);
 
       await montar(tester, valor: 100, aoMudar: (v) => marcado = v);
-      await tester.tap(find.bySemanticsLabel(AppStrings.escalaAumentar('Teste')));
+      await tester.tap(
+        find.bySemanticsLabel(AppStrings.escalaAumentar('Teste')),
+      );
       await tester.pumpAndSettle();
       expect(marcado, isNull);
 
       await montar(tester, valor: 0, aoMudar: (v) => marcado = v);
-      await tester.tap(find.bySemanticsLabel(AppStrings.escalaDiminuir('Teste')));
+      await tester.tap(
+        find.bySemanticsLabel(AppStrings.escalaDiminuir('Teste')),
+      );
       await tester.pumpAndSettle();
       expect(marcado, isNull);
     });
