@@ -13,11 +13,14 @@ import 'package:fonar_app/core/network/conexao.dart';
 import 'package:fonar_app/core/relogio.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/design_system/widgets/app_escala_visual.dart';
+import 'package:fonar_app/features/auth/data/sessao.dart';
+import 'package:fonar_app/features/cape_v/data/cape_v_no_firestore.dart';
 import 'package:fonar_app/features/cape_v/data/repositorio_cape_v_local.dart';
 import 'package:fonar_app/features/cape_v/domain/avaliacao_cape_v.dart';
 import 'package:fonar_app/features/cape_v/presentation/apresentacao_cape_v.dart';
 import 'package:fonar_app/features/cape_v/presentation/cape_v_controlador.dart';
 import 'package:fonar_app/features/cape_v/presentation/pages/cape_v_page.dart';
+import 'package:fonar_app/features/cape_v/presentation/sincronizacao_cape_v_controlador.dart';
 import 'package:fonar_app/features/fila/data/repositorio_fila_local.dart';
 import 'package:fonar_app/features/historico/domain/evolucao_da_medida.dart';
 import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_local.dart';
@@ -25,6 +28,7 @@ import 'package:fonar_app/features/pacientes/domain/paciente.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 
 import '../../apoio/repositorios_em_memoria.dart';
+import '../../apoio/sessao_de_teste.dart';
 
 Map<ParametroCapeV, NotaCapeV> _todasSemDesvio() => {
   for (final p in ParametroCapeV.values) p: const NotaCapeV(valor: 0),
@@ -49,6 +53,17 @@ class _Analises implements RepositorioAnalises {
   Future<List<ResultadoDaAnalise>> doPaciente(String pacienteId) async => [];
 }
 
+/// Conta as vezes que a sincronização com o Firebase foi chamada.
+class _SincronizacaoContada implements SincronizacaoDaCapeV {
+  var vezes = 0;
+
+  @override
+  Future<int> sincronizar() async {
+    vezes++;
+    return 0;
+  }
+}
+
 Future<RepositorioCapeVEmMemoria> _abrir(
   WidgetTester tester, {
   AvaliacaoCapeV? existente,
@@ -57,6 +72,8 @@ Future<RepositorioCapeVEmMemoria> _abrir(
   // escala em tela cheia, tem o seu grupo.
   Size tamanho = const Size(800, 2600),
   double escala = 1,
+  // Com ela, a sincronização fica viva, como o `FonarApp` a mantém.
+  SincronizacaoDaCapeV? sincronizacao,
 }) async {
   tester.view.physicalSize = tamanho;
   tester.view.devicePixelRatio = 1;
@@ -89,6 +106,10 @@ Future<RepositorioCapeVEmMemoria> _abrir(
             ),
           ],
         ),
+        if (sincronizacao != null) ...[
+          sincronizacaoDaCapeVProvider.overrideWithValue(sincronizacao),
+          sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
+        ],
       ],
       child: MaterialApp.router(
         theme: AppTheme.claro,
@@ -114,6 +135,13 @@ Future<RepositorioCapeVEmMemoria> _abrir(
     ),
   );
   await tester.pumpAndSettle();
+  if (sincronizacao != null) {
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(CapeVPage)),
+    );
+    container.listen(sincronizacaoCapeVControladorProvider, (_, _) {});
+    await tester.pumpAndSettle();
+  }
   return repositorio;
 }
 
@@ -319,6 +347,32 @@ void main() {
       expect(rugosidade.valor, greaterThan(0));
       expect(rugosidade.consistencia, Consistencia.intermitente);
       expect(registrada.comentarios, 'Voz rugosa no fim das frases (teste).');
+    });
+
+    testWidgets('registrada, pede a subida para o Firebase', (tester) async {
+      final sincronizacao = _SincronizacaoContada();
+      await _abrir(tester, sincronizacao: sincronizacao);
+      // Uma ao acordar, como na abertura do app.
+      expect(sincronizacao.vezes, 1);
+
+      for (var i = 0; i < 6; i++) {
+        await _marcar(tester, i, 0);
+      }
+      await _registrar(tester);
+
+      expect(find.text('tela do resultado'), findsOneWidget);
+      expect(sincronizacao.vezes, 2);
+    });
+
+    testWidgets('comentário para no limite que o Firebase aceita', (
+      tester,
+    ) async {
+      await _abrir(tester);
+      await tester.enterText(find.byType(TextField), 'x' * 2100);
+      await tester.pump();
+
+      final campo = tester.widget<TextField>(find.byType(TextField));
+      expect(campo.controller!.text, hasLength(2000));
     });
 
     testWidgets('avaliação já registrada abre para edição, como estava', (

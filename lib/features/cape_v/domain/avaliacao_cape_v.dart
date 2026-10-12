@@ -110,12 +110,28 @@ ProblemaNaNota? _problema(ParametroCapeV parametro, NotaCapeV? nota) {
 
 /// Onde as avaliações ficam.
 ///
-/// Ficam no banco local. TODO(backend): subir pela fila de sincronização
-/// quando o Firebase entrar.
+/// Ficam no banco local, que é de onde o app lê. Uma cópia sobe para o
+/// Firebase ([SincronizacaoDaCapeV]). TODO(backend): o que outro aparelho
+/// registrou não desce para este.
 abstract interface class RepositorioCapeV {
   /// A avaliação desta análise, ou `null` se ainda não houver.
   Future<AvaliacaoCapeV?> daAnalise(String analiseId);
 
   /// Registra, substituindo a anterior da mesma análise.
   Future<void> registrar(AvaliacaoCapeV avaliacao);
+}
+
+/// Leva as avaliações deste aparelho para o Firebase.
+///
+/// No Firebase, a CAPE-V mora embaixo da sessão que ela avalia, na árvore da
+/// conta que mandou a sessão para a análise (ADR-017 da API). Registrar de
+/// novo substitui, como aqui.
+abstract interface class SincronizacaoDaCapeV {
+  /// Sobe as avaliações da conta na sessão que ainda não estão lá como
+  /// estão aqui. Devolve quantas subiram.
+  ///
+  /// Idempotente: chamar de novo depois de uma falha sobe só o que faltou.
+  /// Uma falha não impede as outras avaliações; a primeira é lançada no fim.
+  /// Lança só `AppException`.
+  Future<int> sincronizar();
 }

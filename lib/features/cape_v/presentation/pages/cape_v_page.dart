@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -30,6 +31,7 @@ import '../../../captura/domain/amostra.dart';
 import '../../../fila/presentation/fila_controlador.dart';
 import '../../../pacientes/data/repositorio_pacientes_local.dart';
 import '../../../reproducao/presentation/widgets/player_de_amostra.dart';
+import '../../../sincronizacao/data/sincronizacao_firestore.dart';
 import '../../domain/avaliacao_cape_v.dart';
 import '../apresentacao_cape_v.dart';
 import '../cape_v_controlador.dart';
@@ -274,6 +276,13 @@ class _FormularioState extends ConsumerState<_Formulario> {
                 somenteLeitura: ocupado,
                 linhas: 3,
                 capitalizacao: TextCapitalization.sentences,
+                // O limite que o Firebase aceita (ADR-017 da API): mais que
+                // isso, a avaliação ficaria só no aparelho.
+                formatadores: [
+                  LengthLimitingTextInputFormatter(
+                    LimitesDoFirestore.comentariosCapeV,
+                  ),
+                ],
               ),
             ],
           ),

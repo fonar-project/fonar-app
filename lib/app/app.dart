@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../design_system/theme/app_theme.dart';
 import '../features/auth/presentation/widgets/vigia_de_inatividade.dart';
+import '../features/cape_v/presentation/sincronizacao_cape_v_controlador.dart';
 import '../features/conta/data/preferencia_de_tema_local.dart';
 import '../features/conta/domain/tema_escolhido.dart';
 import '../features/fila/presentation/fila_controlador.dart';
@@ -19,6 +20,9 @@ class FonarApp extends ConsumerWidget {
     // pendente sobe sem o profissional precisar abrir a tela da fila.
     // `listen`, não `watch`, para a raiz não se reconstruir a cada envio.
     ref.listen(filaControladorProvider, (_, _) {});
+    // A CAPE-V registrada sobe para o Firebase do mesmo jeito (ADR-017 da
+    // API): sem ninguém precisar esperar na tela.
+    ref.listen(sincronizacaoCapeVControladorProvider, (_, _) {});
 
     return MaterialApp.router(
       title: AppStrings.appTitle,

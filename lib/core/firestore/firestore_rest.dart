@@ -87,24 +87,32 @@ class FirestoreRest {
   }) => _gravar({
     'update': {'name': '$_documentos/$caminho', 'fields': codificar(campos)},
     'currentDocument': {'exists': false},
-    'updateTransforms': [
-      for (final campo in horaDoServidor)
-        {'fieldPath': campo, 'setToServerValue': 'REQUEST_TIME'},
-    ],
+    'updateTransforms': _horaDoServidor(horaDoServidor),
   });
 
   /// Troca, no documento que tem de existir em [caminho], os campos de
   /// [mascara] pelos de [campos]. Campo da máscara ausente de [campos] é
   /// apagado do documento; campo fora da máscara fica como está.
+  ///
+  /// [horaDoServidor]: campos preenchidos com a hora do servidor, como em
+  /// [criar] (a CAPE-V registrada de novo leva `atualizado_em`).
   Future<void> atualizar(
     String caminho,
     Map<String, Object?> campos, {
     required List<String> mascara,
+    List<String> horaDoServidor = const [],
   }) => _gravar({
     'update': {'name': '$_documentos/$caminho', 'fields': codificar(campos)},
     'updateMask': {'fieldPaths': mascara},
     'currentDocument': {'exists': true},
+    if (horaDoServidor.isNotEmpty)
+      'updateTransforms': _horaDoServidor(horaDoServidor),
   });
+
+  static List<Map<String, String>> _horaDoServidor(List<String> campos) => [
+    for (final campo in campos)
+      {'fieldPath': campo, 'setToServerValue': 'REQUEST_TIME'},
+  ];
 
   Future<void> _gravar(Map<String, Object?> escrita) async {
     try {
