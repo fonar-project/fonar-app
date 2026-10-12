@@ -4,8 +4,9 @@ import 'verificacao_da_amostra.dart';
 ///
 /// TODO(clínico): as tarefas, a ordem e as instruções ao paciente são do
 /// protocolo clínico e precisam ser confirmadas pela orientação. As duas de
-/// hoje são as que o AVQI combina — vogal sustentada e fala encadeada —, com
-/// instruções PROVISÓRIAS em `app_strings.dart`.
+/// hoje são as que o AVQI combina — vogal sustentada e fala encadeada (a
+/// contagem de 1 a 20 da validação brasileira do AVQI) —, com instruções
+/// PROVISÓRIAS em `app_strings.dart`.
 enum TarefaDeGravacao { vogalSustentada, falaEncadeada }
 
 /// Uma gravação conferida e guardada no aparelho.
