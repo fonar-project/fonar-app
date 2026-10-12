@@ -35,7 +35,7 @@ final class CompletarCadastro extends DestinoDaEntrada {
 
 /// Confere o cadastro na API e diz o destino.
 ///
-/// Sem a API configurada, ou com ela fora do alcance, a entrada segue como
+/// No modo de exemplo, ou com a API fora do alcance, a entrada segue como
 /// sempre seguiu: o app funciona sem rede, e a fila espera. Quem não tem
 /// cadastro só não consegue ENVIAR — a API recusa, e a fila mostra.
 Future<DestinoDaEntrada> conferirCadastro(Ref ref) async {

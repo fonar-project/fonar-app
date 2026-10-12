@@ -1,26 +1,68 @@
+import 'package:flutter/foundation.dart';
+
 /// Configuração de ambiente.
 ///
-/// Valores entram por `--dart-define` para não versionarmos endpoint de
-/// produção no repositório:
+/// Sem nenhum `--dart-define`, o app é o FONAR de verdade: o login e o
+/// "Criar conta" no Firebase do projeto `fonar-763db`, e o cadastro, a
+/// análise e os resultados na API do Cloud Run. Nada disso é segredo — a URL
+/// é pública, e a chave Web API o Firebase põe dentro de todo app cliente;
+/// quem protege os dados são as regras do Firestore e a API, que conferem o
+/// token de quem está na sessão.
+///
+/// Para desenvolver, o build ainda troca cada um:
 ///
 /// ```
-/// flutter run --dart-define=FONAR_API_BASE_URL=https://...
+/// flutter run --dart-define=FONAR_API_BASE_URL=http://localhost:8080
+/// flutter run --dart-define=FONAR_EXEMPLO=true
 /// ```
 ///
-/// A API está no Cloud Run, em
-/// `https://fonar-api-97444293253.southamerica-east1.run.app` (ver o README).
-/// O valor padrão abaixo é o de desenvolvimento local
-/// (`uvicorn web.main:app` no repositório `fonar-api`).
+/// O primeiro aponta para a API rodando na máquina (`uvicorn web.main:app`,
+/// no `fonar-api`). O segundo é o [exemplo]: sem rede nenhuma, com o login,
+/// os pacientes e os resultados de exemplo, avisados na tela.
 abstract final class AppConfig {
-  static const baseUrl = String.fromEnvironment(
-    'FONAR_API_BASE_URL',
-    defaultValue: 'http://localhost:8080',
+  /// A API no Cloud Run (ver o README do `fonar-api`).
+  static const _urlDeProducao =
+      'https://fonar-api-97444293253.southamerica-east1.run.app';
+
+  /// A API rodando na máquina — o destino da fila no [exemplo].
+  static const _urlLocal = 'http://localhost:8080';
+
+  static const _urlDoBuild = String.fromEnvironment('FONAR_API_BASE_URL');
+
+  /// A "Chave de API da Web" do projeto `fonar-763db` (console do Firebase →
+  /// Configurações do projeto → Geral). Restrita, no Google Cloud Console, às
+  /// APIs Identity Toolkit e Token Service: é só para entrar, criar conta e
+  /// renovar o token.
+  static const _chaveDeProducao = '__CHAVE__';
+
+  static const _chaveDoBuild = String.fromEnvironment(
+    'FONAR_FIREBASE_API_KEY',
+    defaultValue: _chaveDeProducao,
   );
 
-  /// O build aponta para uma API de verdade? Sem a URL, o app roda com os
-  /// resultados e os pacientes de EXEMPLO, avisados na tela; com ela, os
-  /// resultados vêm da API, e os exemplos somem.
-  static const apiConfigurada = bool.hasEnvironment('FONAR_API_BASE_URL');
+  static bool _exemplo = const bool.fromEnvironment('FONAR_EXEMPLO');
+
+  /// O modo de exemplo (`--dart-define=FONAR_EXEMPLO=true`): o login aceita
+  /// qualquer e-mail e senha, e os pacientes e os resultados são os de
+  /// exemplo — tudo avisado na tela. Serve para olhar as telas sem rede, e é
+  /// como os testes rodam (`test/flutter_test_config.dart`). Um build de
+  /// distribuição nesse modo se recusa a abrir (`main.dart`).
+  static bool get exemplo => _exemplo;
+
+  /// Só os testes mudam o modo depois de aberto.
+  @visibleForTesting
+  static void mudarModoDeExemplo({required bool ligado}) => _exemplo = ligado;
+
+  /// A base da API: a do build, se veio; senão a de produção — ou a local,
+  /// no [exemplo], que não deve mandar nada para a produção.
+  static String get baseUrl => _urlDoBuild.isNotEmpty
+      ? _urlDoBuild
+      : (exemplo ? _urlLocal : _urlDeProducao);
+
+  /// O app fala com uma API de verdade? Sempre, fora do [exemplo]: os
+  /// resultados vêm dela, o cadastro é conferido nela, e os pacientes de
+  /// exemplo somem.
+  static bool get apiConfigurada => !exemplo;
 
   /// O projeto do Firebase: o mesmo da autenticação, do banco (Cloud
   /// Firestore) e da API. Não é segredo.
@@ -29,22 +71,9 @@ abstract final class AppConfig {
     defaultValue: 'fonar-763db',
   );
 
-  /// A "Web API key" do projeto `fonar-763db` no Firebase (Configurações do
-  /// projeto → Geral). Não é segredo — o Firebase a põe dentro de todo app
-  /// cliente, e quem protege os dados são as regras do projeto —, mas entra
-  /// por aqui para cada build apontar para o projeto certo:
-  ///
-  /// ```
-  /// flutter run --dart-define=FONAR_FIREBASE_API_KEY=AIza...
-  /// ```
-  ///
-  /// Sem ela, o app roda com o login de EXEMPLO, que aceita qualquer e-mail e
-  /// senha e avisa disso na tela de entrada. Só em desenvolvimento: o build
-  /// de distribuição sem a chave se recusa a abrir a tela de entrada (ver
-  /// `repositorioAutenticacaoProvider`).
-  static const firebaseApiKey = String.fromEnvironment(
-    'FONAR_FIREBASE_API_KEY',
-  );
+  /// A chave Web API do Firebase, ou vazia no [exemplo] — aí o login é o de
+  /// exemplo (ver `firebaseAuthRestProvider`).
+  static String get firebaseApiKey => exemplo ? '' : _chaveDoBuild;
 
   /// Versão exibida na tela de conta. Entra no build de distribuição por
   /// `--dart-define=FONAR_VERSAO=...`; sem ela, a tela diz que é versão de

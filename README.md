@@ -1,17 +1,14 @@
 # FONAR — aplicativo
 
 > [!IMPORTANT]
-> **O app funciona de ponta a ponta no aparelho; do backend, só a
-> autenticação.** O login é o **Firebase Authentication** de verdade quando o
-> build recebe a chave do projeto (ver [Conectar ao
-> Firebase](#conectar-ao-firebase-autenticação)); sem ela, roda com um login
-> de exemplo, que aceita qualquer e-mail e senha e avisa disso na tela. O
-> envio para a análise e os resultados ainda são **placeholder**: a API de
-> análise não existe, e os resultados que aparecem são de exemplo — avisados
-> como tal na tela. Tudo o que é do aparelho é de verdade: cadastro,
-> consentimento, gravação, fila, CAPE-V, laudo em PDF, com os dados salvos num
-> banco local. O que falta, e de quem depende, está em
-> [`PENDENCIAS.md`](PENDENCIAS.md).
+> **`flutter run` abre o FONAR de verdade**, sem nenhum `--dart-define`: o
+> login e o "Criar conta" no **Firebase Authentication** do projeto
+> `fonar-763db`, e o cadastro, a análise e os resultados na **API** do Cloud
+> Run (ver [Apontar para a API](#apontar-para-a-api)). O AVQI ainda não vem: a
+> API depende do script oficial da versão 03.01. Para olhar as telas sem rede,
+> há o **modo de exemplo** (`--dart-define=FONAR_EXEMPLO=true`), com login,
+> pacientes e resultados de exemplo, avisados na tela. O que falta, e de quem
+> depende, está em [`PENDENCIAS.md`](PENDENCIAS.md).
 
 Aplicativo do FONAR, plataforma de avaliação vocal clínica para
 fonoaudiólogos. O uso previsto é durante a consulta, com o paciente presente.
@@ -320,14 +317,21 @@ divergirem, o CI passa a validar um Flutter que ninguém usa.
 
 ### Apontar para a API
 
-A URL da API entra por `--dart-define`, para não versionarmos endpoint no
-repositório. O padrão é `http://localhost:8080` (ver
-`lib/core/config/app_config.dart`). A API de produção, no Cloud Run:
+O app já vem apontado para a API de produção, no Cloud Run
+(`https://fonar-api-97444293253.southamerica-east1.run.app`), e para o
+Firebase do projeto `fonar-763db` — `flutter run -d windows` e pronto (ver
+`lib/core/config/app_config.dart`). Nenhum dos dois é segredo: a URL é
+pública, a chave do Firebase vai dentro de todo app cliente, e quem protege os
+dados são as regras do Firestore e a API, que conferem o token.
+
+Para desenvolver, o build ainda troca cada um:
 
 ```bash
-flutter run -d windows \
-  --dart-define=FONAR_API_BASE_URL=https://fonar-api-97444293253.southamerica-east1.run.app \
-  --dart-define=FONAR_FIREBASE_API_KEY=AIza...
+# a API rodando na sua máquina (uvicorn web.main:app, no fonar-api)
+flutter run -d windows --dart-define=FONAR_API_BASE_URL=http://localhost:8080
+
+# modo de exemplo: sem rede, com login, pacientes e resultados de exemplo
+flutter run -d windows --dart-define=FONAR_EXEMPLO=true
 ```
 
 O envio da fila segue o contrato da ADR-014 da API (US33):
@@ -343,7 +347,7 @@ O envio da fila segue o contrato da ADR-014 da API (US33):
 Sem consentimento em vigor no Firebase, a API responde
 `409 consentimento_ausente`, e o envio para como numa retirada.
 
-Com `FONAR_API_BASE_URL`, os resultados também vêm da API
+Fora do modo de exemplo, os resultados também vêm da API
 (`lib/features/analise/data/repositorio_analises_api.dart`): a análise da
 sessão e a evolução do paciente, com os valores do motor da gravação da
 vogal sustentada (jitter e shimmer convertidos de fração para %; CPPS em dB).
@@ -354,7 +358,7 @@ calculado": a API depende do script oficial da versão 03.01. O
 (`GET .../amostras/{a}/espectrograma`), buscado pelo mesmo cliente das outras
 chamadas, com o token (`ImagemDaApi`, em
 `lib/features/analise/data/imagem_do_servidor.dart`). Os pacientes e
-resultados de exemplo só aparecem no build sem a URL.
+resultados de exemplo só aparecem no modo de exemplo.
 
 ### Conectar ao Firebase (autenticação)
 
@@ -363,7 +367,8 @@ já estava no projeto. Não usamos o plugin `firebase_auth`: ele declara o
 Windows como "só para desenvolvimento, produção não suportada", e a regra do
 projeto é que Android e Windows têm as mesmas funcionalidades. Por isso não há
 `google-services.json` nem `firebase_options.dart` — o app só precisa da
-**chave Web API** do projeto `fonar-763db`.
+**chave Web API** do projeto `fonar-763db`, que já está em
+`lib/core/config/app_config.dart`.
 
 **No console do Firebase** (uma vez, por quem administra o projeto):
 
@@ -373,26 +378,20 @@ projeto é que Android e Windows têm as mesmas funcionalidades. Por isso não h
    não precisa criar no console. Para teste, dá para criar lá também
    (**Authentication → Users → Adicionar usuário**); no primeiro acesso, o app
    pede a confirmação do e-mail e o cadastro.
-3. **Configurações do projeto → Geral → Chave de API da Web**: é a chave. Se
-   aparecer "nenhuma chave", ative o Authentication primeiro (passo 1).
+3. **Configurações do projeto → Geral → Chave de API da Web**: é a chave que
+   está em `app_config.dart` (`_chaveDeProducao`). Trocou de projeto, troque
+   lá.
 4. Recomendado: **Authentication → Modelos**, conferir em português os textos
    de **Redefinição de senha** e de **Verificação de endereço de e-mail**. O
    app pede os dois e-mails em pt-BR.
-5. Opcional, recomendado: no Google Cloud Console, em **APIs e serviços →
-   Credenciais**, restringir essa chave às APIs **Identity Toolkit** e
-   **Token Service**.
+5. **Recomendado, já que a chave está no repositório público**: no Google
+   Cloud Console, em **APIs e serviços → Credenciais**, restringir essa chave
+   às APIs **Identity Toolkit** e **Token Service**. Assim ela só serve para
+   entrar, criar conta e renovar o token, e mais nada no projeto.
 
-**No build**, a chave entra por `--dart-define`, como a URL da API:
-
-```bash
-flutter run -d windows --dart-define=FONAR_FIREBASE_API_KEY=AIza...
-```
-
-Ou num arquivo fora do git — `dart_defines.json` está no `.gitignore`:
-
-```json
-{ "FONAR_FIREBASE_API_KEY": "AIza...", "FONAR_API_BASE_URL": "https://..." }
-```
+Para apontar um build para outro projeto, a chave e a URL ainda entram por
+`--dart-define` (`FONAR_FIREBASE_API_KEY`, `FONAR_API_BASE_URL`), na linha ou
+num arquivo fora do git — `dart_defines.json` está no `.gitignore`:
 
 ```bash
 flutter run -d windows --dart-define-from-file=dart_defines.json
@@ -426,15 +425,13 @@ no formato "CRFa 2-12345"); trocar a região ou o número de quem já foi
 credenciado volta para a conferência, e a tela avisa antes. A situação do
 credenciamento aparece embaixo do e-mail.
 
-A chave não é segredo — o Firebase a põe dentro de todo app cliente, e quem
-protege os dados são as regras do projeto —, mas fica fora do repositório para
-cada ambiente apontar para o seu projeto.
-
-**Sem a chave**, o app roda com o **login de exemplo**: aceita qualquer e-mail
-e senha, cada e-mail vira uma conta "exemplo:…", e a tela de entrada avisa. É o
-que roda nos testes e no CI, e serve para desenvolver sem rede. Um build de
-**distribuição** (`--release`) sem a chave se recusa a abrir: seria dado de
-saúde aberto a qualquer senha.
+No **modo de exemplo** (`--dart-define=FONAR_EXEMPLO=true`), o app roda com o
+**login de exemplo**: aceita qualquer e-mail e senha, cada e-mail vira uma
+conta "exemplo:…", e a tela de entrada avisa; os pacientes e os resultados
+também são os de exemplo. É como rodam os testes e o CI
+(`test/flutter_test_config.dart`), e serve para olhar as telas sem rede. Um
+build de **distribuição** (`--release`) nesse modo se recusa a abrir: seria
+dado de saúde aberto a qualquer senha.
 
 ---
 

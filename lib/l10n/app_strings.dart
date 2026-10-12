@@ -1142,14 +1142,13 @@ abstract final class AppStrings {
   static const loginRecuperacaoIndisponivel =
       'Recuperação de senha indisponível no login de exemplo';
   static const loginRecuperacaoIndisponivelTexto =
-      'Sem a chave do Firebase, o aplicativo não envia e-mail de '
-      'redefinição.';
+      'No modo de exemplo, o aplicativo não envia e-mail de redefinição.';
 
-  /// PLACEHOLDER — o build sem a chave do Firebase.
+  /// PLACEHOLDER — o modo de exemplo (`AppConfig.exemplo`).
   static const loginExemploTitulo = 'Login de exemplo';
   static const loginExemploTexto =
-      'Este build não recebeu a chave do Firebase: o login aceita qualquer '
-      'e-mail e senha. Serve só para desenvolvimento.';
+      'Este build está no modo de exemplo: o login aceita qualquer e-mail e '
+      'senha. Serve só para desenvolvimento.';
 
   static const loginOfflineComCacheTitulo =
       'Sem conexão — dados locais disponíveis';

@@ -3,8 +3,9 @@ import '../../../core/error/app_exception.dart';
 import '../domain/conta_autenticada.dart';
 import '../domain/repositorio_autenticacao.dart';
 
-/// PLACEHOLDER — o login de exemplo, para quando o build não recebeu a chave
-/// do Firebase. Aceita qualquer e-mail e senha, e a tela de entrada diz isso.
+/// PLACEHOLDER — o login de exemplo, do modo de exemplo
+/// (`AppConfig.exemplo`). Aceita qualquer e-mail e senha, e a tela de
+/// entrada diz isso.
 ///
 /// Cada e-mail vira uma conta "de exemplo" diferente, para que a fila e o
 /// perfil se comportem como com o Firebase: o que um gravou não sobe na
