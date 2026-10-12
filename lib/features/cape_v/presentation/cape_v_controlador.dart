@@ -7,6 +7,7 @@ import '../../analise/data/repositorio_analises_placeholder.dart';
 import '../../analise/domain/resultado_da_analise.dart';
 import '../data/repositorio_cape_v_local.dart';
 import '../domain/avaliacao_cape_v.dart';
+import 'sincronizacao_cape_v_controlador.dart';
 
 /// O formulário da CAPE-V de uma análise.
 class EstadoCapeV {
@@ -145,6 +146,12 @@ class CapeVControlador extends AsyncNotifier<EstadoCapeV> {
     }
 
     container.invalidate(capeVDaAnaliseProvider(analiseId));
+    // Guardada aqui, sobe para o Firebase quando der. Quem mantém a
+    // sincronização viva é o `FonarApp`; sem ele (num teste da tela, por
+    // exemplo), não há o que pedir.
+    if (container.exists(sincronizacaoCapeVControladorProvider)) {
+      container.read(sincronizacaoCapeVControladorProvider.notifier).pedir();
+    }
     if (ref.mounted) state = AsyncData(atual.copiar(registrando: false));
     return true;
   }

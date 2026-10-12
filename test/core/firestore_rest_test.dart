@@ -174,4 +174,31 @@ void main() {
       },
     ]);
   });
+
+  test('atualizar também põe a hora do servidor, fora da máscara', () async {
+    final servidor = AdaptadorFalso([const RespostaFalsa(200, {})]);
+    await _cliente(servidor).atualizar(
+      'a/b',
+      {'comentarios': 'x'},
+      mascara: ['comentarios'],
+      horaDoServidor: ['atualizado_em'],
+    );
+    expect(servidor.feitas.single.json['writes'], [
+      {
+        'update': {
+          'name': '$_documentos/a/b',
+          'fields': {
+            'comentarios': {'stringValue': 'x'},
+          },
+        },
+        'updateMask': {
+          'fieldPaths': ['comentarios'],
+        },
+        'currentDocument': {'exists': true},
+        'updateTransforms': [
+          {'fieldPath': 'atualizado_em', 'setToServerValue': 'REQUEST_TIME'},
+        ],
+      },
+    ]);
+  });
 }

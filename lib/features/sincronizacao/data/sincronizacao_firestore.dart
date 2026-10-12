@@ -24,6 +24,9 @@ final sincronizacaoProvider = Provider<Sincronizacao>(
 abstract final class LimitesDoFirestore {
   static const nome = 200;
   static const queixa = 2000;
+
+  /// Os comentários da CAPE-V (`TAMANHO_MAXIMO_COMENTARIOS_CAPE_V`).
+  static const comentariosCapeV = 2000;
 }
 
 /// Sobe do banco local para o Firestore o paciente, o livro de

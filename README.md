@@ -55,7 +55,8 @@ O caminho de uma avaliação, na ordem em que o profissional passa por ele:
    destaque, as demais medidas menores, e o próximo passo — CAPE-V ou laudo —
    fica num rodapé fixo (US27).
 8. **Registra a CAPE-V** (US08) numa régua de 100 mm, ouvindo a amostra — no
-   celular, cada escala abre em tela cheia, para marcar deitado (US28) —, vê a
+   celular, cada escala abre em tela cheia, para marcar deitado (US28), e a
+   avaliação sobe para o Firebase quando há rede (US37) —, vê a
    **evolução** entre sessões (US09) — com um modo para mostrar ao paciente — e
    gera o **laudo em PDF** (US10).
 
@@ -347,6 +348,15 @@ O envio da fila segue o contrato da ADR-014 da API (US33):
 
 Sem consentimento em vigor no Firebase, a API responde
 `409 consentimento_ausente`, e o envio para como numa retirada.
+
+A **CAPE-V** registrada também sobe (US37), direto para o Firestore, em
+`sessoes/{s}/avaliacoes/cape_v` (ADR-017 da API), no formato que as regras
+aceitam (`lib/features/cape_v/data/cape_v_no_firestore.dart`). Sobe só a da
+sessão que a conta na sessão mandou para a análise, porque é na árvore dela
+que a sessão existe. Tenta ao abrir o app, quando a rede volta, quando alguém
+entra e logo depois de cada registro; registrar de novo substitui a de lá,
+a não ser que a de lá seja mais nova. Nada desce: o que outro aparelho
+registrou não aparece aqui.
 
 Fora do modo de exemplo, os resultados também vêm da API
 (`lib/features/analise/data/repositorio_analises_api.dart`): a análise da
