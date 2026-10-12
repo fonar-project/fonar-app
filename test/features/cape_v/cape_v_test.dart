@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -386,12 +387,127 @@ void main() {
         ),
       );
       final caixa = tester.getRect(find.byType(Slider));
-      // A trilha tem 12 px de recuo em cada ponta: 500 px para 100 mm.
+      // A trilha tem 12 px de recuo em cada ponta.
+      final passo = (caixa.width - 24) / 100;
       for (final v in [0, 30, 77, 100]) {
-        await tester.tapAt(Offset(caixa.left + 12 + v * 5, caixa.center.dy));
+        await tester.tapAt(Offset(caixa.left + 12 + v * passo, caixa.center.dy));
         await tester.pumpAndSettle();
         expect(marcado, v);
       }
+    });
+
+    Future<void> montar(
+      WidgetTester tester, {
+      required int? valor,
+      required ValueChanged<int>? aoMudar,
+    }) => tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.claro,
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 624,
+              child: AppEscalaVisual(
+                rotulo: 'Teste',
+                valor: valor,
+                aoMudar: aoMudar,
+                rotuloMinimo: 'min',
+                rotuloMaximo: 'max',
+                textoNaoMarcado: 'não marcado',
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    testWidgets('com o mouse, a régua inteira marca — tracinhos e números', (
+      tester,
+    ) async {
+      int? marcado;
+      await montar(tester, valor: null, aoMudar: (v) => marcado = v);
+      final caixa = tester.getRect(find.byType(Slider));
+      final passo = (caixa.width - 24) / 100;
+      final x = caixa.left + 12 + 30 * passo;
+
+      // Acima da linha, onde ficam os tracinhos.
+      await tester.tapAt(Offset(x, caixa.top + 30), kind: PointerDeviceKind.mouse);
+      await tester.pumpAndSettle();
+      expect(marcado, 30);
+
+      // Embaixo, nos números da régua.
+      marcado = null;
+      await tester.tapAt(
+        Offset(caixa.left + 12 + 60 * passo, caixa.bottom - 4),
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pumpAndSettle();
+      expect(marcado, 60);
+    });
+
+    testWidgets('passar o mouse mostra onde o clique vai cair', (tester) async {
+      await montar(tester, valor: null, aoMudar: (_) {});
+      final caixa = tester.getRect(find.byType(Slider));
+      final passo = (caixa.width - 24) / 100;
+      final sobre = find.byKey(const ValueKey('escala-sobre'));
+      expect(sobre, findsNothing);
+
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: Offset.zero);
+      addTearDown(mouse.removePointer);
+      await mouse.moveTo(Offset(caixa.left + 12 + 42 * passo, caixa.center.dy));
+      await tester.pump();
+      expect(tester.widget<Text>(sobre).data, '42');
+
+      // Saiu da régua: a prévia some.
+      await mouse.moveTo(Offset(caixa.center.dx, caixa.bottom + 200));
+      await tester.pump();
+      expect(sobre, findsNothing);
+    });
+
+    testWidgets('− e + ajustam de 1 em 1 a marca já feita', (tester) async {
+      int? marcado;
+      await montar(tester, valor: 38, aoMudar: (v) => marcado = v);
+
+      await tester.tap(find.bySemanticsLabel(AppStrings.escalaAumentar('Teste')));
+      await tester.pumpAndSettle();
+      expect(marcado, 39);
+
+      await tester.tap(find.bySemanticsLabel(AppStrings.escalaDiminuir('Teste')));
+      await tester.pumpAndSettle();
+      expect(marcado, 37);
+    });
+
+    testWidgets('sem marca, − e + não marcam nada; nas pontas, param', (
+      tester,
+    ) async {
+      int? marcado;
+      await montar(tester, valor: null, aoMudar: (v) => marcado = v);
+      await tester.tap(find.bySemanticsLabel(AppStrings.escalaAumentar('Teste')));
+      await tester.pumpAndSettle();
+      expect(marcado, isNull);
+
+      await montar(tester, valor: 100, aoMudar: (v) => marcado = v);
+      await tester.tap(find.bySemanticsLabel(AppStrings.escalaAumentar('Teste')));
+      await tester.pumpAndSettle();
+      expect(marcado, isNull);
+
+      await montar(tester, valor: 0, aoMudar: (v) => marcado = v);
+      await tester.tap(find.bySemanticsLabel(AppStrings.escalaDiminuir('Teste')));
+      await tester.pumpAndSettle();
+      expect(marcado, isNull);
+    });
+
+    testWidgets('só leitura: sem − e +', (tester) async {
+      await montar(tester, valor: 38, aoMudar: null);
+      expect(
+        find.bySemanticsLabel(AppStrings.escalaAumentar('Teste')),
+        findsNothing,
+      );
+      expect(
+        find.bySemanticsLabel(AppStrings.escalaDiminuir('Teste')),
+        findsNothing,
+      );
     });
 
     testWidgets('a marca aparece com o número e o "/100"', (tester) async {

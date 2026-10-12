@@ -668,6 +668,13 @@ abstract final class AppStrings {
   static const capeVSemDesvio = 'Sem desvio';
   static const capeVDesvioExtremo = 'Desvio extremo';
   static const capeVNaoMarcado = 'Não marcado';
+
+  /// O − e o + da escala visual: o nome para o leitor de tela e a dica para
+  /// o mouse.
+  static String escalaDiminuir(String rotulo) => 'Diminuir $rotulo em 1';
+  static String escalaAumentar(String rotulo) => 'Aumentar $rotulo em 1';
+  static const escalaMenosUm = 'Menos 1';
+  static const escalaMaisUm = 'Mais 1';
   static const capeVConsistencia = 'Consistência';
   static const capeVConsistente = 'Consistente';
   static const capeVIntermitente = 'Intermitente';
