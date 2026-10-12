@@ -16,7 +16,7 @@ houver, no mesmo commit.
 |---|---|---|
 | **Catálogo de faixas de referência validado**, com a fonte de cada faixa. Até lá o app não classifica nenhuma medida — todas aparecem "sem faixa de referência". Os valores do protótipo não foram validados e não estão no código, de propósito. | 07 | `analise/data/catalogo_de_referencias_vazio.dart` |
 | Rótulo "Sexo" e as opções do cadastro (inclui "Não informar") servem ao catálogo de faixas? | 02 | `pacientes/domain/novo_paciente.dart` |
-| Tarefas de gravação, ordem e instruções ao paciente — hoje provisórias e marcadas assim na tela. | 05 | `captura/domain/amostra.dart`, `l10n/app_strings.dart` |
+| Tarefas de gravação, ordem e instruções ao paciente — hoje provisórias e marcadas assim na tela. A fala encadeada já é a contagem de 1 a 20 da validação brasileira do AVQI (item 7 das pendências clínicas da API); falta validar o texto dito ao paciente e se a contagem é de 1 a 20 (AVQI) ou de 1 a 11 (ABI). | 05, 36 | `captura/domain/amostra.dart`, `l10n/app_strings.dart` |
 | Limite de ruído ambiente (−50 dBFS) e zonas do medidor de nível: valores de partida, a calibrar com o equipamento real. | 04 | `captura/domain/afericao_de_ruido.dart`, `captura/domain/nivel_de_audio.dart` |
 | Termos da CAPE-V em português (parâmetros, consistência, sentido do desvio, pontas da escala). | 08 | `cape_v/domain/avaliacao_cape_v.dart`, `l10n/app_strings.dart` |
 | CAPE-V: exigir o sentido do desvio em pitch e loudness (decisão de implementação). | 08 | `cape_v/domain/avaliacao_cape_v.dart` |

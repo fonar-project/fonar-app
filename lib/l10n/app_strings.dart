@@ -374,12 +374,18 @@ abstract final class AppStrings {
   // TODO(clínico): instruções PROVISÓRIAS, escritas para o fluxo funcionar.
   // As tarefas, a ordem e o texto dito ao paciente são do protocolo clínico e
   // precisam de revisão da orientação.
+  //
+  // A fala encadeada é a contagem de 1 a 20 porque foi o material da validação
+  // brasileira do AVQI v03.01 (Englert et al., J Voice 2021), de onde vem o
+  // corte candidato: com outra fala, o número não se compara com aquele corte.
+  // É a resposta provisória do item 7 de `docs/pendencias-clinicas.md` do
+  // fonar-api; o texto exato dito ao paciente continua por validar.
   static const instrucaoVogalPronto =
       'Respire fundo e sustente o som “aaaa” em tom confortável.';
   static const instrucaoVogalGravando = 'Continue… sustente o “aaaa”.';
   static const instrucaoFalaPronto =
-      'Fale de forma encadeada, como o profissional orientar.';
-  static const instrucaoFalaGravando = 'Continue falando…';
+      'Conte de 1 a 20, com a sua voz de sempre.';
+  static const instrucaoFalaGravando = 'Continue contando… até 20.';
   static const instrucaoProvisoria =
       'Instrução provisória — a validar com a orientação clínica.';
   static const instrucaoConferindo = 'Conferindo a gravação…';
