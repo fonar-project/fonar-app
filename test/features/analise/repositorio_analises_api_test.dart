@@ -40,6 +40,21 @@ Map<String, Object?> _faixaDoJitter({required bool provisoria}) => {
   'populacao_descricao': 'adultos',
 };
 
+/// O AVQI da sessão como a API manda (`resultado_da_sessao`): o índice e
+/// as medidas da equação, do som concatenado.
+Map<String, Object?> _resultadoDaSessao() => {
+  'id': 'avqi-1',
+  'script': 'avqi-v03.01',
+  'amostras': {'vogal_sustentada': 'a1', 'fala_encadeada': 'a2'},
+  'versao_praat': '6.1.38',
+  'erro': null,
+  'medidas': [
+    _medida('avqi.valor', 3.12, 'indice'),
+    _medida('avqi.cpps_db', 12.0, 'db'),
+    _medida('avqi.shimmer_local', 4.2, 'porcentagem'),
+  ],
+};
+
 /// A análise de uma sessão como a API manda, com as duas tarefas: a fala
 /// encadeada VEM ANTES, para provar que as medidas são lidas da vogal.
 Map<String, Object?> _analise({bool completa = true, bool provisoria = true}) =>
@@ -79,6 +94,7 @@ Map<String, Object?> _analise({bool completa = true, bool provisoria = true}) =>
           },
         },
       ],
+      'resultado_da_sessao': _resultadoDaSessao(),
     };
 
 ({RepositorioAnalisesApi repositorio, AdaptadorFalso servidor}) _montar(
@@ -114,20 +130,11 @@ void main() {
     // dB e Hz chegam como estão.
     expect(_valor(resultado, MedidaAcustica.hnr), 21.5);
     expect(_valor(resultado, MedidaAcustica.f0), 212);
+    // O CPPS é o da vogal (14,2), e não o da equação do AVQI (12,0).
     expect(_valor(resultado, MedidaAcustica.cpps), 14.2);
-    // O que a API ainda não calcula vem sem valor e marcado como
-    // indisponível: a tela diz "ainda não disponível", não "não calculada".
-    expect(_valor(resultado, MedidaAcustica.avqi), isNull);
-    final avqi = resultado.medidas.firstWhere(
-      (x) => x.medida == MedidaAcustica.avqi,
-    );
-    expect(avqi.disponivel, isFalse);
-    expect(
-      resultado.medidas
-          .where((x) => x.medida != MedidaAcustica.avqi)
-          .every((x) => x.disponivel),
-      isTrue,
-    );
+    // O AVQI vem da sessão, como está: é índice, não fração.
+    expect(_valor(resultado, MedidaAcustica.avqi), 3.12);
+    expect(resultado.medidas.every((x) => x.disponivel), isTrue);
     // O espectrograma é o da gravação da VOGAL (a1), pedido à API.
     expect(
       resultado.espectrogramaUrl,
@@ -218,9 +225,32 @@ void main() {
     );
   });
 
+  test('sessão sem o AVQI: não calculado, e não "indisponível"', () {
+    // Sem as duas tarefas, ou a API não pôde calcular agora: null. Com o
+    // erro do motor: sem medidas. A API calcula o AVQI; nesta sessão, não.
+    for (final daSessao in [
+      null,
+      {..._resultadoDaSessao(), 'erro': 'o motor recusou', 'medidas': []},
+    ]) {
+      final resultado = analiseDaApi({
+        ..._analise(),
+        'resultado_da_sessao': daSessao,
+      });
+      final avqi = resultado.medidas.firstWhere(
+        (x) => x.medida == MedidaAcustica.avqi,
+      );
+      expect(avqi.valor, isNull);
+      expect(avqi.disponivel, isTrue);
+      // O resto da sessão continua lá.
+      expect(_valor(resultado, MedidaAcustica.f0), 212);
+    }
+  });
+
   test('sem gravação da vogal, nada é lido da fala encadeada', () {
     final corpo = _analise();
     corpo['amostras'] = [(corpo['amostras'] as List).first];
+    // Sem a vogal não há o par do AVQI: a API não manda resultado da sessão.
+    corpo['resultado_da_sessao'] = null;
     final resultado = analiseDaApi(corpo);
     for (final m in resultado.medidas) {
       expect(m.valor, isNull, reason: m.medida.name);

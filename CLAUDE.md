@@ -248,9 +248,10 @@ Firestore pela API REST (`lib/features/sincronizacao/`), e cada gravação vai
 para a API com o id da amostra; o id da análise é o id da sessão. Os
 resultados vêm da API (`RepositorioAnalisesApi`): os valores do motor, sem
 classificação enquanto não houver faixa VALIDADA — as faixas provisórias da
-API não classificam no app. O CPPS vem da API; o AVQI
-ainda não (falta o script oficial da v03.01). O espectrograma é o PNG da API,
-buscado com o token (`ImagemDaApi`). Ainda é PLACEHOLDER, e
+API não classificam no app. O CPPS vem da API, da vogal; o AVQI v03.01 também,
+da sessão (`resultado_da_sessao`, o script oficial rodado no servidor). O
+espectrograma é o PNG da API, buscado com o token (`ImagemDaApi`). Ainda é
+PLACEHOLDER, e
 identificado como tal, só o modo de exemplo (`AppConfig.exemplo`): o login
 que aceita qualquer e-mail e senha, e os resultados e os pacientes "de
 Exemplo", que aparecem por cima do banco sem serem gravados nele.
