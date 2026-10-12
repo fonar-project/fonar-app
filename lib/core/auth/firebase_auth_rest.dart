@@ -27,8 +27,7 @@ class FirebaseAuthRest {
   final Dio _dio;
 
   /// A "Web API key" do projeto. Não é segredo — vai dentro de todo app que
-  /// usa o Firebase —, mas entra por `--dart-define` para cada ambiente
-  /// apontar para o seu projeto (ver `AppConfig.firebaseApiKey`).
+  /// usa o Firebase (ver `AppConfig.firebaseApiKey`).
   final String chave;
   final DateTime Function() agora;
 
@@ -249,10 +248,10 @@ class _ContaInexistente implements Exception {
   const _ContaInexistente();
 }
 
-/// O cliente do Firebase, ou `null` quando o build não recebeu a chave — e o
-/// app roda com o login de exemplo (ver `repositorioAutenticacaoProvider`).
+/// O cliente do Firebase, ou `null` no modo de exemplo — e o app roda com o
+/// login de exemplo (ver `repositorioAutenticacaoProvider`).
 final firebaseAuthRestProvider = Provider<FirebaseAuthRest?>((ref) {
-  const chave = AppConfig.firebaseApiKey;
+  final chave = AppConfig.firebaseApiKey;
   if (chave.isEmpty) return null;
   final dio = Dio(
     BaseOptions(

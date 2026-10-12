@@ -182,7 +182,7 @@ class VerificacaoControlador extends Notifier<EstadoDoCadastro> {
   Future<DestinoDaEntrada> _confirmar() async {
     await ref.read(criacaoDeContaProvider)?.atualizarVerificacao();
     final api = ref.read(cadastroApiProvider);
-    // Sem a API configurada não há o que conferir: entra.
+    // No modo de exemplo não há API, nem o que conferir: entra.
     if (api == null) return _entrarComAContaGuardada(ref);
     final destino = await destinoPelaApi(api);
     if (destino is EntrarNoApp) return _entrarComAContaGuardada(ref);

@@ -6,8 +6,8 @@ import '../domain/conta_autenticada.dart';
 import '../domain/repositorio_autenticacao.dart';
 import 'repositorio_autenticacao_placeholder.dart';
 
-/// O Firebase Auth quando o build recebeu a chave; o login de exemplo quando
-/// não recebeu (só em desenvolvimento — ver `main.dart`).
+/// O Firebase Auth; o login de exemplo só no modo de exemplo (desenvolvimento
+/// e testes — ver `AppConfig.exemplo` e `main.dart`).
 final repositorioAutenticacaoProvider = Provider<RepositorioAutenticacao>((
   ref,
 ) {

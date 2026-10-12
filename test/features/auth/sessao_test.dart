@@ -35,8 +35,8 @@ void main() {
         .read(loginControladorProvider.notifier)
         .entrar(email: 'fono@exemplo.com', senha: 'senha');
 
-    // Sem a API configurada (os testes não a têm), não há cadastro a
-    // conferir: entra direto.
+    // No modo de exemplo (o dos testes), não há cadastro a conferir: entra
+    // direto.
     expect(entrou, isA<EntrarNoApp>());
     expect(container.read(sessaoAbertaProvider), isTrue);
     expect(container.read(sessaoProvider), contaDeTeste);

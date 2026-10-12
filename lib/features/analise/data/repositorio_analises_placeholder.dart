@@ -7,9 +7,8 @@ import '../../historico/domain/evolucao_da_medida.dart';
 import '../domain/resultado_da_analise.dart';
 import 'repositorio_analises_api.dart';
 
-/// Os resultados vêm da API quando o build aponta para uma
-/// (`AppConfig.apiConfigurada`); sem ela, dos exemplos abaixo, avisados na
-/// tela.
+/// Os resultados vêm da API; no modo de exemplo (`AppConfig.exemplo`), dos
+/// exemplos abaixo, avisados na tela.
 final repositorioAnalisesProvider = Provider<RepositorioAnalises>(
   (ref) => AppConfig.apiConfigurada
       ? RepositorioAnalisesApi(ref.watch(dioProvider))

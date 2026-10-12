@@ -115,8 +115,8 @@ PerfilProfissional perfilDaApi(Object? corpo) {
   );
 }
 
-/// A API do cadastro, ou `null` no build sem `FONAR_API_BASE_URL` — aí não
-/// há cadastro a conferir, e a entrada segue como antes.
+/// A API do cadastro, ou `null` no modo de exemplo — aí não há cadastro a
+/// conferir, e a entrada segue direto.
 final cadastroApiProvider = Provider<CadastroApi?>(
   (ref) =>
       AppConfig.apiConfigurada ? CadastroApi(ref.watch(dioProvider)) : null,

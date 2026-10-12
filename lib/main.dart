@@ -7,12 +7,14 @@ import 'app/licencas.dart';
 import 'core/config/app_config.dart';
 
 void main() {
-  // Sem a chave do Firebase, o app entra com o login de exemplo, que aceita
-  // qualquer senha. Em desenvolvimento serve; num build de distribuição seria
-  // dado de saúde aberto a quem pegar o aparelho. Melhor não abrir.
+  // No modo de exemplo (ou com a chave do Firebase apagada no build), o app
+  // entra com o login de exemplo, que aceita qualquer senha. Em
+  // desenvolvimento serve; num build de distribuição seria dado de saúde
+  // aberto a quem pegar o aparelho. Melhor não abrir.
   if (kReleaseMode && AppConfig.firebaseApiKey.isEmpty) {
     throw StateError(
-      'Build de distribuição sem FONAR_FIREBASE_API_KEY (ver README).',
+      'Build de distribuição no modo de exemplo ou sem '
+      'FONAR_FIREBASE_API_KEY (ver README).',
     );
   }
   registrarLicencas();
