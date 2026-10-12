@@ -45,9 +45,12 @@ class SincronizacaoCapeVControlador extends Notifier<void> {
         _deNovo = false;
         if (!ref.mounted) return;
         final sincronizacao = ref.read(sincronizacaoDaCapeVProvider);
+        // A sessão é lida na fonte, e não pelo `sessaoAbertaProvider`: o
+        // pedido de quem acabou de entrar roda dentro do ouvinte da
+        // `sessaoProvider`, quando o derivado ainda tem o valor de antes.
         if (sincronizacao == null ||
             !ref.read(conexaoOnlineProvider) ||
-            !ref.read(sessaoAbertaProvider)) {
+            ref.read(sessaoProvider) == null) {
           return;
         }
         try {
