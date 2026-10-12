@@ -52,18 +52,20 @@ PedidoDeConsentimento _pedido({String? responsavel}) => (validarConsentimento(
 
 Amostra _amostra(
   String id, {
+  String pacienteId = 'p1',
   String sessaoId = 's1',
   TarefaDeGravacao tarefa = TarefaDeGravacao.vogalSustentada,
   List<ProblemaNaAmostra> problemas = const [],
+  DateTime? gravadaEm,
 }) => Amostra(
   id: id,
-  pacienteId: 'p1',
+  pacienteId: pacienteId,
   sessaoId: sessaoId,
   tarefa: tarefa,
-  caminho: '/amostras/p1/$id.wav',
+  caminho: '/amostras/$pacienteId/$id.wav',
   // Com fração de segundo: duas gravações no mesmo segundo precisam
   // continuar em ordem.
-  gravadaEm: DateTime(2026, 9, 23, 10, 15, 30, 250, 125),
+  gravadaEm: gravadaEm ?? DateTime(2026, 9, 23, 10, 15, 30, 250, 125),
   duracao: const Duration(milliseconds: 4321),
   taxaDeAmostragem: 44100,
   canais: 1,
@@ -170,6 +172,52 @@ void main() {
       expect(lido.sexo, SexoDeReferencia.naoInformado);
       expect(lido.dataDeNascimento, DateTime(1990, 3, 14));
       expect(lido.ultimaSessao, isNull);
+    });
+
+    test('última sessão: a gravação mais nova do paciente, só dele', () async {
+      final banco = _banco();
+      final pacientes = RepositorioPacientesLocal(banco, agora: DateTime.now);
+      final amostras = RepositorioAmostrasLocal(banco);
+      final ana = await pacientes.cadastrar(_novo('Ana de Teste'));
+      final bia = await pacientes.cadastrar(_novo('Bia de Teste'));
+      final semGravacao = await pacientes.cadastrar(_novo('Cida de Teste'));
+
+      // Duas sessões da Ana, gravadas fora de ordem; a mais nova à noite,
+      // perto da meia-noite, para o dia não mudar no caminho.
+      final noite = DateTime(2026, 10, 11, 23, 40, 5, 500);
+      for (final a in [
+        _amostra('a2', pacienteId: ana.id, sessaoId: 's2', gravadaEm: noite),
+        _amostra(
+          'a1',
+          pacienteId: ana.id,
+          gravadaEm: DateTime(2026, 9, 23, 10),
+        ),
+        _amostra(
+          'a3',
+          pacienteId: ana.id,
+          sessaoId: 's2',
+          tarefa: TarefaDeGravacao.falaEncadeada,
+          gravadaEm: noite.subtract(const Duration(minutes: 1)),
+        ),
+        _amostra(
+          'b1',
+          pacienteId: bia.id,
+          sessaoId: 's3',
+          gravadaEm: DateTime(2026, 10, 1, 8),
+        ),
+      ]) {
+        await amostras.guardar(a);
+      }
+
+      final porId = {for (final p in await pacientes.listar()) p.id: p};
+      expect(porId[ana.id]!.ultimaSessao, noite);
+      expect(porId[bia.id]!.ultimaSessao, DateTime(2026, 10, 1, 8));
+      expect(porId[semGravacao.id]!.ultimaSessao, isNull);
+
+      // Descartada a sessão mais nova, a anterior volta a ser a última.
+      await amostras.descartarSessao('s2');
+      final depois = {for (final p in await pacientes.listar()) p.id: p};
+      expect(depois[ana.id]!.ultimaSessao, DateTime(2026, 9, 23, 10));
     });
 
     test('só os do banco contam para entrar offline, contados de novo a cada '
