@@ -25,9 +25,13 @@ class ItemDaTrilha {
 /// Cabeçalho das telas de tarefa — perfil, gravação, resultado, laudo.
 ///
 /// Na largura expandida a tela fica ao lado da barra lateral (ver
-/// `AppEstrutura`), e o cabeçalho mostra onde se está: a [trilha] até a tela
-/// atual, uma [situacao] em pílula e as [acoes] da tela. Voltar é tocar num
-/// passo da trilha; a conexão já está na barra lateral.
+/// `AppEstrutura`), e o cabeçalho mostra onde se está: voltar, a [trilha]
+/// até a tela atual, uma [situacao] em pílula e as [acoes] da tela. A
+/// conexão já está na barra lateral.
+///
+/// O voltar aparece também aqui, e não só a trilha: no Windows não há botão
+/// de voltar do sistema, e a trilha sublinhada não se parece com um — quem
+/// abriu o espectrograma em tela cheia procurava a seta e não achava.
 ///
 /// Nas outras larguras não há barra lateral: voltar, [titulo], [subtitulo] e
 /// conexão. As ações ficam no corpo da tela, perto do conteúdo.
@@ -90,22 +94,7 @@ class AppCabecalhoDeTarefa extends ConsumerWidget {
           alignment: Alignment.centerLeft,
           child: Row(
             children: [
-              Semantics(
-                label: AppStrings.voltar,
-                child: AppToque(
-                  aoTocar: aoVoltar,
-                  raio: AppRadius.bordaPequena,
-                  conteudo: (context) => SizedBox.square(
-                    dimension: AppSpacing.alvoDeToqueMinimo,
-                    child: Center(
-                      child: AppIcone(
-                        nome: NomeIcone.voltar,
-                        cor: context.cores.acento,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              _BotaoVoltar(aoVoltar),
               const SizedBox(width: AppSpacing.xxs),
               // Wrap no espaço que sobra ao lado do voltar: com o texto do
               // sistema ampliado, o indicador de conexão desce para a linha
@@ -178,6 +167,8 @@ class AppCabecalhoDeTarefa extends ConsumerWidget {
           // uma empurrar a outra para uma coluna de uma palavra.
           child: Row(
             children: [
+              _BotaoVoltar(aoVoltar),
+              const SizedBox(width: AppSpacing.xxs),
               Expanded(flex: 3, child: _Trilha(passos: passos)),
               if (situacao case final texto?) ...[
                 const SizedBox(width: AppSpacing.sm),
@@ -207,6 +198,29 @@ class AppCabecalhoDeTarefa extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// A seta de voltar, com o alvo de toque mínimo e o nome para o leitor de
+/// tela. A mesma nas duas larguras.
+class _BotaoVoltar extends StatelessWidget {
+  const _BotaoVoltar(this.aoVoltar);
+
+  final VoidCallback aoVoltar;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    label: AppStrings.voltar,
+    child: AppToque(
+      aoTocar: aoVoltar,
+      raio: AppRadius.bordaPequena,
+      conteudo: (context) => SizedBox.square(
+        dimension: AppSpacing.alvoDeToqueMinimo,
+        child: Center(
+          child: AppIcone(nome: NomeIcone.voltar, cor: context.cores.acento),
+        ),
+      ),
+    ),
+  );
 }
 
 class _Trilha extends StatelessWidget {
