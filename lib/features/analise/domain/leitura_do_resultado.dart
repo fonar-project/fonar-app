@@ -5,7 +5,10 @@ import 'resultado_da_analise.dart';
 
 /// Por que uma medida está sem classificação.
 enum SemClassificacaoPorque {
-  /// O servidor não calculou a medida.
+  /// O servidor ainda não calcula esta medida, em gravação nenhuma.
+  aindaNaoDisponivel,
+
+  /// O servidor não calculou a medida nesta gravação.
   naoCalculada,
 
   /// O cadastro não tem sexo (ou tem "não informar") ou data de nascimento, e
@@ -56,7 +59,14 @@ List<MedidaLida> lerMedidas({
 
   return [
     for (final m in resultado.medidas)
-      if (m.valor == null)
+      if (!m.disponivel)
+        MedidaLida(
+          medida: m.medida,
+          valor: null,
+          classificacao: ClassificacaoDaMedida.semReferencia,
+          semClassificacaoPorque: SemClassificacaoPorque.aindaNaoDisponivel,
+        )
+      else if (m.valor == null)
         MedidaLida(
           medida: m.medida,
           valor: null,

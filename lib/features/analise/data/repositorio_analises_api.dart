@@ -65,7 +65,8 @@ class RepositorioAnalisesApi implements RepositorioAnalises {
 /// sustentada — onde jitter, shimmer, HNR, f0 e CPPS se medem.
 ///
 /// O AVQI ainda não é calculado pela API (falta o script oficial da versão
-/// 03.01): aparece como "não calculada", nunca como zero.
+/// 03.01): aparece como "ainda não disponível", nunca como zero — e nunca
+/// como se a gravação tivesse dado problema.
 const identificadorNaApi = <MedidaAcustica, String?>{
   MedidaAcustica.avqi: null,
   MedidaAcustica.cpps: 'cpps.mean_db',
@@ -126,7 +127,10 @@ ResultadoDaAnalise analiseDaApi(Map<Object?, Object?> corpo) {
     medidas: [
       for (final MapEntry(key: medida, value: identificador)
           in identificadorNaApi.entries)
-        _medida(medida, medidasDaVogal[identificador]),
+        if (identificador == null)
+          MedidaCalculada(medida: medida, valor: null, disponivel: false)
+        else
+          _medida(medida, medidasDaVogal[identificador]),
     ],
   );
 }
