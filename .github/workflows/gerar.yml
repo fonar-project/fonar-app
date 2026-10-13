@@ -11,7 +11,9 @@
 #     git fetch origin gerado/meu-ramo
 #     git diff HEAD origin/gerado/meu-ramo --stat
 #     git checkout origin/gerado/meu-ramo -- <o que mudou>
-#     git push origin --delete gerar/meu-ramo gerado/meu-ramo
+#     git push origin --delete gerado/meu-ramo
+#
+# O `gerar/` o próprio workflow apaga quando termina.
 #
 # Quem tem o Flutter na máquina não precisa disto: são os mesmos comandos do
 # README, rodados localmente. Nada aqui vai para a `main` sozinho - o commit
@@ -98,3 +100,6 @@ jobs:
             git commit -q -m "chore: código gerado a partir de $GITHUB_SHA"
           fi
           git push -f origin "HEAD:refs/heads/gerado/$nome"
+          # O ramo que disparou já cumpriu o papel: sai, para não acumular
+          # rascunho. O `gerado/` fica até alguém trazer o resultado.
+          git push origin --delete "$GITHUB_REF_NAME" || true
