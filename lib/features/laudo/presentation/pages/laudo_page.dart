@@ -526,6 +526,7 @@ class _Painel extends StatelessWidget {
           rotulo: estado.gerando
               ? AppStrings.laudoGerando
               : AppStrings.laudoGerar,
+          icone: NomeIcone.documento,
           aoTocar: conferencia.podeGerar && !estado.gerando ? aoGerar : null,
           motivoDesabilitado: estado.gerando
               ? AppStrings.laudoGerando

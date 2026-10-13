@@ -24,6 +24,7 @@ Não há ilustrações vetoriais no design system: espectrograma e formas de ond
 | `passo-pendente.svg` | passo aguardando na fila (06) |
 | `estado-online.svg` | indicador de conexão ativo (00, 01, 06, 11) |
 | `estado-sem-conexao.svg` | indicador sem conexão (00, 06) |
+| `documento.svg` | laudo em PDF: gerar, salvar ou compartilhar (10, 11) |
 
 > **As setas de tendência dizem DIREÇÃO, não leitura.** `tendencia-sobe` é o
 > valor que subiu — e só. Se subir é melhorar ou piorar depende da medida: no
@@ -38,7 +39,7 @@ Não há ilustrações vetoriais no design system: espectrograma e formas de ond
 
 Ícone exportado do **Claude Design** vem com cerca de **8 KB de metadados de
 procedência C2PA** embutidos no SVG — um bloco `<metadata>` que não desenha
-nada. Em 19 ícones isso é mais de 150 KB de lixo no repositório, no diff de
+nada. Em 20 ícones isso é mais de 150 KB de lixo no repositório, no diff de
 toda revisão e no bundle do aplicativo.
 
 Remova antes de commitar:
@@ -64,7 +65,7 @@ wc -c assets/icons/*.svg          # ícone limpo: algumas centenas de bytes
 grep -i c2pa assets/icons/*.svg   # não deve retornar nada
 ```
 
-Os 19 ícones atuais já estão limpos.
+Os 20 ícones atuais já estão limpos.
 
 ## Como esses arquivos chegam na tela
 
