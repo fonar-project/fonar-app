@@ -577,9 +577,10 @@ void main() {
       await repositorio.registrar(laudo('a-segundo', 'an-1', 'p1', [2]));
 
       expect((await repositorio.daAnalise('an-1'))!.id, 'a-segundo');
-      expect([for (final l in await repositorio.doPaciente('p1')) l.id], [
-        'a-segundo',
-      ]);
+      expect(
+        [for (final l in await repositorio.doPaciente('p1')) l.id],
+        ['a-segundo'],
+      );
     });
 
     test('marcar enviado muda só a hora do envio', () async {
