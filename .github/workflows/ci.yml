@@ -1,11 +1,12 @@
-# Verificação contínua, em dois jobs. Nada aqui publica artefato.
+# Verificação contínua. Nada aqui publica artefato (quem publica é o
+# release.yml, por tag).
 #
 # - `verificacao`, no Ubuntu: formato, análise, testes e código gerado.
-# - `build-windows`, no Windows: compila o código nativo. Existe porque
-#   `flutter test` roda só Dart e nunca invoca o MSVC — quebra de compilação
-#   nativa passa pelos testes inteirinha, como já passou duas vezes (ATL
+# - `build-windows`, `build-android` e `build-macos`: compilam o código
+#   nativo de cada plataforma. Existem porque `flutter test` roda só Dart e
+#   nunca invoca o MSVC, o Gradle ou o Xcode — quebra de compilação nativa
+#   passa pelos testes inteirinha, como já passou duas vezes no Windows (ATL
 #   faltando e `just_audio_windows` contra o MSVC do Visual Studio 2026).
-#   As duas estão resolvidas; o job fica porque é o único que compila nativo.
 #
 # A versão do Flutter é a mesma da máquina de referência documentada no README.
 # Se atualizar o Flutter do projeto, atualize os três lugares juntos: os dois
@@ -170,3 +171,52 @@ jobs:
       # ter compilado.
       - name: Build do Windows
         run: flutter build windows
+
+  build-android:
+    name: Build nativo do Android
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup do Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.2
+          channel: stable
+          cache: true
+
+      - name: Dependências
+        run: flutter pub get
+
+      # Debug: compila o Gradle, o Kotlin e os plugins do Android sem
+      # precisar da chave de release.
+      - name: Build do Android
+        run: flutter build apk --debug
+
+  build-macos:
+    name: Build nativo do macOS
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup do Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.2
+          channel: stable
+          cache: true
+
+      - name: Dependências
+        run: flutter pub get
+
+      - name: Build do macOS
+        run: flutter build macos --debug

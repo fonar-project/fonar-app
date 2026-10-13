@@ -67,6 +67,8 @@ jobs:
               cp -R "$RUNNER_TEMP/modelo/$p" "$p"
             done
           fi
+          # Com as pastas no lugar, o registro dos plugins de cada plataforma.
+          flutter pub get
 
       # O banco local: o código gerado das tabelas e, quando o
       # `schemaVersion` subiu, o formato novo e os esquemas do teste de

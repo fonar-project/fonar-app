@@ -3,7 +3,7 @@
 > Identificadores do projeto: organização GitHub `fonar-project`, repositório
 > `fonar-app`, projeto Firebase `fonar-763db`. Pacote Dart `fonar_app`,
 > `applicationId` e `namespace` Android `br.com.fonar`, binário Windows
-> `fonar_app`.
+> `fonar_app`, app macOS `FONAR.app` com bundle `br.com.fonar`.
 >
 > "Praat" e "parselmouth" são o software de análise fonética e seu binding
 > Python — nome de terceiro, aparece legitimamente no código e na documentação.
@@ -11,7 +11,7 @@
 
 ## Contexto
 Aplicativo de avaliação vocal clínica usado por fonoaudiólogos durante a
-consulta. Codebase único para Android e Windows. TCC de Engenharia de
+consulta. Codebase único para Android, Windows e macOS (US41). TCC de Engenharia de
 Software, PUC-Campinas.
 
 O usuário é profissional de saúde sem formação técnica em computação,
@@ -42,7 +42,7 @@ Nunca adicione biblioteca de DSP, FFT ou análise de áudio ao pubspec.
 A interface adapta por LARGURA DE TELA, nunca por sistema operacional.
 
 Proibido usar Platform.isAndroid ou Platform.isWindows para decidir layout.
-Use LayoutBuilder com breakpoints. Android e Windows têm exatamente o mesmo
+Use LayoutBuilder com breakpoints. Todas as plataformas têm exatamente o mesmo
 conjunto de funcionalidades — não existe feature exclusiva de plataforma.
 
 Alvos de design: 1440px e 390px.
