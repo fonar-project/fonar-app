@@ -61,7 +61,7 @@ const _campoDoRegistro = {
 EstadoDoCadastro estadoDaRecusa(FalhaDeValidacao falha) {
   final erros = {
     for (final MapEntry(:key, :value) in falha.camposComErro.entries)
-      if (_campoDoRegistro[key] case final campo?) campo: value,
+      ?_campoDoRegistro[key]: value,
   };
   return erros.isEmpty
       ? EstadoDoCadastro(erroGeral: falha.mensagem)

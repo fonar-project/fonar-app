@@ -130,10 +130,13 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
           .definir(estado.gravando != null);
     });
     ref.onDispose(
-      () => Future.microtask(
-        () =>
-            container.read(gravacaoEmAndamentoProvider.notifier).definir(false),
-      ),
+      () => Future.microtask(() {
+        try {
+          container.read(gravacaoEmAndamentoProvider.notifier).definir(false);
+        } on StateError {
+          // O app (ou o teste) já fechou: não há bloqueio a avisar.
+        }
+      }),
     );
     // Depois de o estado existir: procura a sessão de hoje para continuar.
     _retomada = Future.microtask(_retomar);
