@@ -9,6 +9,8 @@
 /// escala adotada pelo projeto.
 library;
 
+import '../../sincronizacao/domain/sincronizavel.dart';
+
 /// Os parâmetros da escala, na ordem da folha de registro.
 enum ParametroCapeV {
   grauGeral,
@@ -125,13 +127,6 @@ abstract interface class RepositorioCapeV {
 ///
 /// No Firebase, a CAPE-V mora embaixo da sessão que ela avalia, na árvore da
 /// conta que mandou a sessão para a análise (ADR-017 da API). Registrar de
-/// novo substitui, como aqui.
-abstract interface class SincronizacaoDaCapeV {
-  /// Sobe as avaliações da conta na sessão que ainda não estão lá como
-  /// estão aqui. Devolve quantas subiram.
-  ///
-  /// Idempotente: chamar de novo depois de uma falha sobe só o que faltou.
-  /// Uma falha não impede as outras avaliações; a primeira é lançada no fim.
-  /// Lança só `AppException`.
-  Future<int> sincronizar();
-}
+/// novo substitui, como aqui. [sincronizar] sobe as avaliações da conta na
+/// sessão que ainda não estão lá como estão aqui.
+abstract interface class SincronizacaoDaCapeV implements Sincronizavel {}

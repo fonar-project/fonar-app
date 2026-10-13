@@ -247,7 +247,11 @@ O login é o Firebase Authentication de verdade (US32). O envio para a análise
 Firestore pela API REST (`lib/features/sincronizacao/`), e cada gravação vai
 para a API com o id da amostra; o id da análise é o id da sessão. A CAPE-V
 registrada também sobe, direto para o Firestore, embaixo da sessão (US37,
-ADR-017 da API; `cape_v/data/cape_v_no_firestore.dart`). Os resultados vêm da API (`RepositorioAnalisesApi`): os valores do motor, sem
+ADR-017 da API; `cape_v/data/cape_v_no_firestore.dart`). O laudo emitido
+nunca muda nem some: emitir de novo cria outro documento, com número
+próprio, que diz qual substitui, e a cópia de cada um sobe para a API como
+o PDF saiu (US38, ADR-018 da API; `laudo/data/laudos_na_api.dart`). Os
+resultados vêm da API (`RepositorioAnalisesApi`): os valores do motor, sem
 classificação enquanto não houver faixa VALIDADA — as faixas provisórias da
 API não classificam no app. O CPPS vem da API, da vogal; o AVQI v03.01 também,
 da sessão (`resultado_da_sessao`, o script oficial rodado no servidor). O

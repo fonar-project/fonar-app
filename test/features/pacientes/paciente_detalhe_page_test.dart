@@ -302,6 +302,7 @@ void main() {
         sessoes: sessoes,
         laudos: [
           Laudo(
+            id: 'laudo-s2',
             analiseId: 's2',
             pacienteId: 'p1',
             conclusao: 'x',

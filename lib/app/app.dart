@@ -7,6 +7,7 @@ import '../features/cape_v/presentation/sincronizacao_cape_v_controlador.dart';
 import '../features/conta/data/preferencia_de_tema_local.dart';
 import '../features/conta/domain/tema_escolhido.dart';
 import '../features/fila/presentation/fila_controlador.dart';
+import '../features/laudo/presentation/sincronizacao_dos_laudos_controlador.dart';
 import '../l10n/app_strings.dart';
 import 'router/app_router.dart';
 
@@ -23,6 +24,8 @@ class FonarApp extends ConsumerWidget {
     // A CAPE-V registrada sobe para o Firebase do mesmo jeito (ADR-017 da
     // API): sem ninguém precisar esperar na tela.
     ref.listen(sincronizacaoCapeVControladorProvider, (_, _) {});
+    // E a cópia de cada laudo emitido, para a API (ADR-018 da API).
+    ref.listen(sincronizacaoDosLaudosControladorProvider, (_, _) {});
 
     return MaterialApp.router(
       title: AppStrings.appTitle,

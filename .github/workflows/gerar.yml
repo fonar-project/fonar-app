@@ -1,0 +1,100 @@
+# Gera no CI o que só o Flutter gera, para quem trabalha sem ele instalado
+# (o ambiente em nuvem onde parte do projeto é escrita não baixa o SDK).
+#
+# Como usar: empurre o ramo de trabalho também como `gerar/<nome>`. Este
+# workflow roda os passos abaixo e publica o resultado em `gerado/<nome>`,
+# num commit do bot. Daí se traz o que mudou para o ramo de verdade, com o
+# autor de sempre, e os dois ramos de rascunho são apagados:
+#
+#     git push origin HEAD:gerar/meu-ramo
+#     # (espera o workflow terminar)
+#     git fetch origin gerado/meu-ramo
+#     git diff HEAD origin/gerado/meu-ramo --stat
+#     git checkout origin/gerado/meu-ramo -- <o que mudou>
+#     git push origin --delete gerar/meu-ramo gerado/meu-ramo
+#
+# Quem tem o Flutter na máquina não precisa disto: são os mesmos comandos do
+# README, rodados localmente. Nada aqui vai para a `main` sozinho - o commit
+# do bot fica no ramo de rascunho, e quem traz o resultado revisa o que traz.
+
+name: Gerar código
+
+on:
+  push:
+    branches: ['gerar/**']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gerar:
+    name: Gerar e publicar em gerado/
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup do Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.2
+          channel: stable
+          cache: true
+
+      - name: Dependências
+        run: flutter pub get
+
+      # Pasta de plataforma que ainda não existe no projeto sai do modelo do
+      # próprio Flutter, gerada à parte e copiada: `flutter create .` dentro
+      # do projeto mexeria em arquivos que já são nossos.
+      - name: Plataformas que faltam
+        run: |
+          faltam=""
+          for p in macos web; do
+            [ -d "$p" ] || faltam="$faltam,$p"
+          done
+          faltam="${faltam#,}"
+          if [ -n "$faltam" ]; then
+            flutter create --platforms="$faltam" --org br.com --project-name fonar_app "$RUNNER_TEMP/modelo"
+            for p in ${faltam//,/ }; do
+              cp -R "$RUNNER_TEMP/modelo/$p" "$p"
+            done
+          fi
+
+      # O banco local: o código gerado das tabelas e, quando o
+      # `schemaVersion` subiu, o formato novo e os esquemas do teste de
+      # migração (ver o comentário de `schemaVersion` em banco_local.dart).
+      - name: Banco local
+        run: |
+          dart run build_runner build --delete-conflicting-outputs
+          versao=$(grep -oP 'int get schemaVersion => \K[0-9]+' lib/core/banco/banco_local.dart)
+          if [ ! -f "drift_schemas/drift_schema_v$versao.json" ]; then
+            dart run drift_dev schema dump lib/core/banco/banco_local.dart drift_schemas/
+            dart run drift_dev schema generate drift_schemas/ test/core/migracoes/
+          fi
+
+      - name: Ícones
+        run: dart run tool/compilar_icones.dart
+
+      - name: Formatação
+        run: dart format .
+
+      - name: Publicar em gerado/
+        run: |
+          nome="${GITHUB_REF_NAME#gerar/}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "gerado/$nome"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nada a gerar: o ramo já está em dia."
+          else
+            git diff --cached --stat
+            git commit -q -m "chore: código gerado a partir de $GITHUB_SHA"
+          fi
+          git push -f origin "HEAD:refs/heads/gerado/$nome"

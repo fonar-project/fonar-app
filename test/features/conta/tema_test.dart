@@ -29,7 +29,7 @@ void main() {
   group('migração do banco para a versão atual', () {
     final verificador = SchemaVerifier(GeneratedHelper());
 
-    for (final de in [1, 2, 3]) {
+    for (final de in [1, 2, 3, 4]) {
       test('da versão $de para a atual, igual a um banco novo', () async {
         final conexao = await verificador.startAt(de);
         final banco = BancoLocal(conexao);

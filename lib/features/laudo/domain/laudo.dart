@@ -3,20 +3,31 @@ import 'dart:typed_data';
 import '../../analise/domain/resultado_da_analise.dart';
 import '../../cape_v/domain/avaliacao_cape_v.dart';
 
-/// O laudo de uma sessão, como o profissional o gerou.
+/// Um laudo EMITIDO, como o profissional o gerou (US38).
 ///
 /// O aplicativo reúne o que o servidor mediu e o que o profissional
 /// registrou; a CONCLUSÃO é escrita por ele, com as palavras dele. O FONAR não
 /// emite diagnóstico, e não há texto automático nenhum no laudo que pareça
 /// um.
+///
+/// Um laudo emitido não muda nem some (ADR-018 da API): emitir de novo cria
+/// outro, com código próprio, que diz qual substitui — no registro e no
+/// próprio documento. O anterior continua guardado, como foi entregue.
 class Laudo {
   const Laudo({
+    required this.id,
     required this.analiseId,
     required this.pacienteId,
     required this.conclusao,
     required this.geradoEm,
     required this.pdf,
+    this.substitui,
+    this.enviadoEm,
   });
+
+  /// O código do documento (UUID), gerado na emissão. Os oito primeiros
+  /// caracteres vão impressos ([codigo]).
+  final String id;
 
   /// A análise — e portanto a sessão — a que o laudo se refere.
   final String analiseId;
@@ -29,22 +40,39 @@ class Laudo {
 
   /// O documento como foi gerado. Compartilhar e imprimir usam ESTE arquivo,
   /// e não um novo montado na hora: se a CAPE-V ou o cadastro mudarem
-  /// depois, o laudo que já saiu não muda junto sem ninguém gerar de novo.
+  /// depois, o laudo que já saiu não muda junto.
   final Uint8List pdf;
+
+  /// O código ([id]) do laudo desta análise que este substitui, se houver.
+  final String? substitui;
+
+  /// Quando a cópia chegou à API. Nulo: por enquanto, só neste aparelho.
+  final DateTime? enviadoEm;
+
+  /// O que vai impresso no documento e aparece na tela.
+  String get codigo => codigoDoDocumento(id);
 }
 
-/// TODO(jurídico): gerar de novo SUBSTITUI o laudo anterior da sessão. Se um
-/// laudo já entregue ao paciente precisar ficar guardado como foi, este
-/// repositório passa a guardar as versões — e a tela, a mostrar qual é a
-/// vigente.
+/// Os oito primeiros caracteres do código, em maiúsculas — o que o PDF
+/// imprime (ADR-018 da API). O código inteiro fica no registro.
+String codigoDoDocumento(String id) => id.substring(0, 8).toUpperCase();
+
+/// Onde os laudos ficam.
+///
+/// Só se acrescenta: [registrar] nunca substitui um laudo, e não há como
+/// alterar nem apagar um. Quem leva os laudos de um paciente é a eliminação
+/// dele, pela API.
 abstract interface class RepositorioLaudos {
-  /// O último laudo gerado para esta análise, ou `null`.
+  /// O vigente desta análise — o emitido por último —, ou `null`.
   Future<Laudo?> daAnalise(String analiseId);
 
-  /// Registra, substituindo o anterior da mesma análise.
+  /// Todos os emitidos para esta análise, do mais recente ao mais antigo.
+  Future<List<Laudo>> emitidosDaAnalise(String analiseId);
+
+  /// Acrescenta um laudo emitido. Código repetido é erro, nunca sobrescrita.
   Future<void> registrar(Laudo laudo);
 
-  /// Os laudos gerados para as análises de [pacienteId], em qualquer ordem.
+  /// O vigente de cada análise de [pacienteId], em qualquer ordem.
   Future<List<Laudo>> doPaciente(String pacienteId);
 }
 

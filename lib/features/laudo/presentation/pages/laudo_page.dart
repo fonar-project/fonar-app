@@ -2,12 +2,14 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../app/router/trilhas.dart';
 import '../../../../app/app_estrutura.dart';
+import '../../../../core/config/app_config.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_movimento.dart';
@@ -31,6 +33,7 @@ import '../../../cape_v/domain/avaliacao_cape_v.dart';
 import '../../../consentimento/data/repositorio_consentimento_local.dart';
 import '../../../pacientes/data/repositorio_pacientes_local.dart';
 import '../../../pacientes/domain/paciente.dart';
+import '../../data/espectrograma_do_laudo.dart';
 import '../../data/saida_do_laudo.dart';
 import '../../domain/conteudo_do_laudo.dart';
 import '../../domain/laudo.dart';
@@ -239,22 +242,35 @@ class _LaudoState extends ConsumerState<_Laudo> {
     });
   }
 
-  ConteudoDoLaudo _montar(String conclusao, DateTime? geradoEm) =>
-      montarConteudo(
-        resultado: widget.resultado,
-        paciente: widget.paciente,
-        capeV: widget.capeV,
-        conclusao: conclusao,
-        profissional: ref.read(profissionalAtualProvider),
-        catalogo: ref.read(catalogoDeReferenciasProvider),
-        geradoEm: geradoEm,
-      );
+  ConteudoDoLaudo _montar(
+    String conclusao, {
+    DateTime? geradoEm,
+    String? id,
+    Laudo? anterior,
+    EspectrogramaDoLaudo espectrograma = EspectrogramaDoLaudo.nenhum,
+  }) => montarConteudo(
+    resultado: widget.resultado,
+    paciente: widget.paciente,
+    capeV: widget.capeV,
+    conclusao: conclusao,
+    profissional: ref.read(profissionalAtualProvider),
+    catalogo: ref.read(catalogoDeReferenciasProvider),
+    geradoEm: geradoEm,
+    codigo: id == null ? null : codigoDoDocumento(id),
+    substitui: anterior == null
+        ? null
+        : (codigo: anterior.codigo, emitidoEm: anterior.geradoEm),
+    espectrograma: espectrograma.imagem,
+    espectrogramaIndisponivel: espectrograma.indisponivel,
+  );
+
+  /// De onde vem o espectrograma da análise, que entra no documento.
+  String? get _caminhoDoEspectrograma => widget.resultado.espectrogramaUrl;
 
   Future<void> _gerar() async {
-    // Gerar de novo APAGA o PDF anterior — é o mesmo registro, uma versão só
-    // (ver `PENDENCIAS.md`: versionar laudo entregue é decisão jurídica
-    // aberta). Enquanto for assim, substituir é destrutivo e pergunta antes,
-    // com o mesmo diálogo do resto do aplicativo.
+    // Gerar de novo emite OUTRO documento; o de agora continua guardado como
+    // foi (US38, ADR-018 da API). Ainda assim pergunta antes: o número muda,
+    // e o documento novo passa a ser o vigente.
     if (widget.estado.laudo != null) {
       final substituir = await appConfirmar(
         context,
@@ -270,12 +286,22 @@ class _LaudoState extends ConsumerState<_Laudo> {
         .gerar(
           pacienteId: widget.pacienteId,
           conclusao: _conclusao.text,
-          montar: (geradoEm) => _montar(_conclusao.text, geradoEm),
+          montar: (emissao) async => _montar(
+            _conclusao.text,
+            geradoEm: emissao.geradoEm,
+            id: emissao.id,
+            anterior: emissao.anterior,
+            espectrograma: await ref.read(
+              espectrogramaDoLaudoProvider(_caminhoDoEspectrograma).future,
+            ),
+          ),
         );
   }
 
-  Future<void> _enviar({required bool imprimir}) async {
-    final laudo = widget.estado.laudo;
+  /// Leva o PDF de [qual] — o vigente, se nulo — para fora do aplicativo,
+  /// como foi emitido.
+  Future<void> _enviar({required bool imprimir, Laudo? qual}) async {
+    final laudo = qual ?? widget.estado.laudo;
     if (laudo == null || _saindo) return;
     setState(() {
       _saindo = true;
@@ -284,6 +310,7 @@ class _LaudoState extends ConsumerState<_Laudo> {
     final saida = ref.read(saidaDoLaudoProvider);
     final nome = AppStrings.laudoNomeDoArquivo(
       widget.resultado.realizadaEm ?? laudo.geradoEm,
+      laudo.codigo,
     );
     try {
       if (imprimir) {
@@ -303,15 +330,16 @@ class _LaudoState extends ConsumerState<_Laudo> {
   /// O `PdfPreview` remonta a imagem sempre que recebe uma função nova; sem
   /// esta guarda, qualquer reconstrução da tela — um foco, um hover — o faria
   /// rasterizar o A4 de novo.
-  Future<Uint8List> Function() _previa() {
+  Future<Uint8List> Function() _previa(EspectrogramaDoLaudo espectrograma) {
     final laudo = widget.estado.laudo;
     final gerado = laudo != null && laudo.conclusao == _textoDaPrevia.trim();
     final chave = (
       _textoDaPrevia,
-      laudo?.geradoEm,
+      laudo?.id,
       widget.capeV?.registradaEm,
       widget.resultado.id,
       widget.paciente.nome,
+      espectrograma.imagem?.length,
     );
     if (chave != _chaveDaPrevia || _gerarPrevia == null) {
       _chaveDaPrevia = chave;
@@ -320,13 +348,26 @@ class _LaudoState extends ConsumerState<_Laudo> {
       // rascunho do que seria gerado agora.
       _gerarPrevia = gerado
           ? () async => laudo.pdf
-          : () => gerador(_montar(_textoDaPrevia, null));
+          : () => gerador(
+              _montar(
+                _textoDaPrevia,
+                anterior: laudo,
+                espectrograma: espectrograma,
+              ),
+            );
     }
     return _gerarPrevia!;
   }
 
   @override
   Widget build(BuildContext context) {
+    // Vigiado sempre, e não só na prévia: mantém a imagem baixada até a
+    // emissão, que a espera se ainda não chegou.
+    final espectrograma =
+        ref
+            .watch(espectrogramaDoLaudoProvider(_caminhoDoEspectrograma))
+            .value ??
+        EspectrogramaDoLaudo.nenhum;
     final conferencia = conferirLaudo(
       temConsentimento: widget.temConsentimento,
       resultado: widget.resultado,
@@ -347,10 +388,15 @@ class _LaudoState extends ConsumerState<_Laudo> {
       aoGerar: _gerar,
       aoCompartilhar: () => _enviar(imprimir: false),
       aoImprimir: () => _enviar(imprimir: true),
+      aoCompartilharAnterior: (laudo) => _enviar(imprimir: false, qual: laudo),
       resumo: expandida
           ? null
           : _Resumo(
-              conteudo: _montar(_conclusao.text, widget.estado.laudo?.geradoEm),
+              conteudo: _montar(
+                _conclusao.text,
+                geradoEm: widget.estado.laudo?.geradoEm,
+                id: widget.estado.laudo?.id,
+              ),
             ),
     );
 
@@ -384,7 +430,7 @@ class _LaudoState extends ConsumerState<_Laudo> {
             child: Semantics(
               label: AppStrings.laudoPreviaTitulo,
               container: true,
-              child: ref.watch(previaDoPdfProvider)(_previa()),
+              child: ref.watch(previaDoPdfProvider)(_previa(espectrograma)),
             ),
           ),
         ),
@@ -414,6 +460,7 @@ class _Painel extends StatelessWidget {
     required this.aoGerar,
     required this.aoCompartilhar,
     required this.aoImprimir,
+    required this.aoCompartilharAnterior,
     required this.resumo,
   });
 
@@ -427,6 +474,7 @@ class _Painel extends StatelessWidget {
   final VoidCallback aoGerar;
   final VoidCallback aoCompartilhar;
   final VoidCallback aoImprimir;
+  final void Function(Laudo laudo) aoCompartilharAnterior;
 
   /// Só fora do desktop, no lugar da pré-visualização A4.
   final Widget? resumo;
@@ -468,6 +516,11 @@ class _Painel extends StatelessWidget {
           linhas: 8,
           capitalizacao: TextCapitalization.sentences,
           somenteLeitura: estado.gerando,
+          // O limite que a API aceita: mais que isso, a cópia do laudo
+          // ficaria só no aparelho.
+          formatadores: [
+            LengthLimitingTextInputFormatter(AppStrings.laudoConclusaoMaximo),
+          ],
         ),
         const SizedBox(height: AppSpacing.lg),
         AppBotao.primario(
@@ -505,6 +558,7 @@ class _Painel extends StatelessWidget {
                       child: AppSituacao(
                         icone: NomeIcone.confirmacao,
                         titulo: AppStrings.laudoGeradoEm(
+                          laudo.codigo,
                           AppStrings.data(laudo.geradoEm),
                           AppStrings.hora(laudo.geradoEm),
                         ),
@@ -535,10 +589,84 @@ class _Painel extends StatelessWidget {
                         titulo: AppStrings.laudoErroSaida,
                       ),
                     ],
+                    // Sem servidor (modo de exemplo), não há cópia a esperar.
+                    if (AppConfig.apiConfigurada) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        laudo.enviadoEm == null
+                            ? AppStrings.laudoSoNoAparelho
+                            : AppStrings.laudoNoServidor,
+                        style: secundario,
+                      ),
+                    ],
                   ],
                 ),
         ),
+        if (estado.anteriores.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.lg),
+          _Titulo(AppStrings.laudoAnterioresTitulo),
+          for (final anterior in estado.anteriores)
+            _LaudoAnterior(
+              laudo: anterior,
+              saindo: saindo,
+              aoCompartilhar: () => aoCompartilharAnterior(anterior),
+            ),
+        ],
       ],
+    );
+  }
+}
+
+/// Um laudo que o vigente substituiu. Continua guardado e sai como foi
+/// emitido — o número e a data dizem qual é.
+class _LaudoAnterior extends StatelessWidget {
+  const _LaudoAnterior({
+    required this.laudo,
+    required this.saindo,
+    required this.aoCompartilhar,
+  });
+
+  final Laudo laudo;
+  final bool saindo;
+  final VoidCallback aoCompartilhar;
+
+  @override
+  Widget build(BuildContext context) {
+    final textos = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          MergeSemantics(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  AppStrings.laudoAnterior(
+                    laudo.codigo,
+                    AppStrings.data(laudo.geradoEm),
+                    AppStrings.hora(laudo.geradoEm),
+                  ),
+                  style: textos.titleSmall,
+                ),
+                Text(
+                  AppStrings.laudoAnteriorSubstituido,
+                  style: textos.bodySmall?.copyWith(
+                    color: context.cores.secundario,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          AppBotao.secundario(
+            rotulo: AppStrings.laudoCompartilhar,
+            aoTocar: saindo ? null : aoCompartilhar,
+            motivoDesabilitado: AppStrings.laudoGerando,
+          ),
+        ],
+      ),
     );
   }
 }

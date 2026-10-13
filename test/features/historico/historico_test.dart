@@ -111,6 +111,7 @@ Future<GoRouter> _abrir(
   for (final id in comLaudo) {
     await laudos.registrar(
       Laudo(
+        id: 'laudo-$id',
         analiseId: id,
         pacienteId: id == 'an-2' ? 'p-bia' : 'p-ana',
         conclusao: 'conclusão (teste)',
@@ -189,6 +190,7 @@ void main() {
       final laudos = RepositorioLaudosEmMemoria();
       await laudos.registrar(
         Laudo(
+          id: 'laudo-an-1',
           analiseId: 'an-1',
           pacienteId: 'p-ana',
           conclusao: 'c',

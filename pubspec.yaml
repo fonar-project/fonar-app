@@ -141,6 +141,16 @@ dependencies:
   # analisa áudio: guardam texto, datas e o caminho dos WAV.
   drift: ^2.35.0
   drift_flutter: ^0.3.1
+
+  # "Salvar como" do laudo em PDF no desktop (US38). Antes, compartilhar no
+  # Windows gravava o PDF na pasta TEMP do usuário e o abria de lá, onde ele
+  # ficava — dado pessoal sensível largado fora da área do app. Agora o
+  # profissional escolhe onde salvar, e nada fica para trás. No celular, a
+  # folha de compartilhar do sistema continua (o `printing`).
+  #
+  # Pacote oficial do time do Flutter, federado (Windows, macOS, Linux e
+  # web), licença BSD-3. Não toca em áudio.
+  file_selector: ^1.0.3
 dev_dependencies:
   flutter_test:
     sdk: flutter

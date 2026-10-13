@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../../analise/domain/faixa_de_referencia.dart';
 import '../../analise/domain/leitura_do_resultado.dart';
 import '../../analise/domain/resultado_da_analise.dart';
@@ -23,6 +25,10 @@ class ConteudoDoLaudo {
     required this.profissional,
     required this.geradoEm,
     required this.exemplo,
+    this.codigo,
+    this.substitui,
+    this.espectrograma,
+    this.espectrogramaIndisponivel = false,
   });
 
   /// De quem é o laudo. O controlador confere com o paciente da tela antes
@@ -52,6 +58,22 @@ class ConteudoDoLaudo {
   final bool exemplo;
 
   bool get rascunho => geradoEm == null;
+
+  /// O número do documento (os oito primeiros caracteres do código), que
+  /// vai impresso. Nulo na pré-visualização.
+  final String? codigo;
+
+  /// O laudo desta análise que este substitui, com o número e quando foi
+  /// emitido: o documento diz qual veio antes (ADR-018 da API).
+  final ({String codigo, DateTime emitidoEm})? substitui;
+
+  /// O espectrograma da vogal: a imagem PRONTA do servidor, baixada antes de
+  /// emitir. O aplicativo não desenha espectrograma.
+  final Uint8List? espectrograma;
+
+  /// A análise tem espectrograma, mas o servidor não o entregou a tempo: o
+  /// documento diz que ele ficou de fora, em vez de omitir em silêncio.
+  final bool espectrogramaIndisponivel;
 }
 
 /// Reúne o conteúdo do laudo de [resultado] para [paciente].
@@ -69,6 +91,10 @@ ConteudoDoLaudo montarConteudo({
   required Profissional profissional,
   required CatalogoDeReferencias catalogo,
   required DateTime? geradoEm,
+  String? codigo,
+  ({String codigo, DateTime emitidoEm})? substitui,
+  Uint8List? espectrograma,
+  bool espectrogramaIndisponivel = false,
 }) {
   daPaciente(resultado, paciente.id);
   return ConteudoDoLaudo(
@@ -89,5 +115,9 @@ ConteudoDoLaudo montarConteudo({
     profissional: profissional,
     geradoEm: geradoEm,
     exemplo: resultado.exemplo,
+    codigo: codigo,
+    substitui: substitui,
+    espectrograma: espectrograma,
+    espectrogramaIndisponivel: espectrogramaIndisponivel,
   );
 }

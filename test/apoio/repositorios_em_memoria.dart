@@ -191,22 +191,45 @@ class RepositorioCapeVEmMemoria implements RepositorioCapeV {
       _porAnalise[avaliacao.analiseId] = avaliacao;
 }
 
+/// Só acrescenta, como o de verdade: código repetido é erro.
 class RepositorioLaudosEmMemoria implements RepositorioLaudos {
   RepositorioLaudosEmMemoria();
 
-  final _porAnalise = <String, Laudo>{};
+  final _emitidos = <Laudo>[];
+
+  /// Do mais recente ao mais antigo, como o banco ordena.
+  List<Laudo> _daAnalise(String analiseId) =>
+      [
+        for (final l in _emitidos)
+          if (l.analiseId == analiseId) l,
+      ]..sort((a, b) {
+        final porData = b.geradoEm.compareTo(a.geradoEm);
+        return porData != 0 ? porData : b.id.compareTo(a.id);
+      });
 
   @override
-  Future<Laudo?> daAnalise(String analiseId) async => _porAnalise[analiseId];
+  Future<Laudo?> daAnalise(String analiseId) async =>
+      _daAnalise(analiseId).firstOrNull;
 
   @override
-  Future<void> registrar(Laudo laudo) async =>
-      _porAnalise[laudo.analiseId] = laudo;
+  Future<List<Laudo>> emitidosDaAnalise(String analiseId) async =>
+      _daAnalise(analiseId);
+
+  @override
+  Future<void> registrar(Laudo laudo) async {
+    if (_emitidos.any((l) => l.id == laudo.id)) {
+      throw StateError('laudo ${laudo.id} já registrado');
+    }
+    _emitidos.add(laudo);
+  }
 
   @override
   Future<List<Laudo>> doPaciente(String pacienteId) async => [
-    for (final l in _porAnalise.values)
-      if (l.pacienteId == pacienteId) l,
+    for (final analise in {
+      for (final l in _emitidos)
+        if (l.pacienteId == pacienteId) l.analiseId,
+    })
+      _daAnalise(analise).first,
   ];
 }
 
