@@ -31,9 +31,11 @@ import '../widgets/campos_do_paciente.dart';
 /// em duas colunas obriga o olho a zigue-zaguear, e com o paciente ao lado o
 /// profissional preenche de cima para baixo sem procurar o próximo campo.
 ///
-/// TODO(equipe): decisões tomadas sem o protótipo da tela 02, a confirmar:
-/// - queixa principal obrigatória (a lista de pacientes sempre a mostra);
-/// - salvar segue direto para o consentimento, e não para o perfil.
+/// Duas decisões da equipe, confirmadas na US39:
+/// - a queixa principal é obrigatória: a lista de pacientes sempre a mostra,
+///   e é o que o profissional procura para lembrar quem é quem;
+/// - salvar segue direto para o consentimento, e não para o perfil: sem ele
+///   nada se grava, e é o próximo passo de toda avaliação.
 ///
 /// Salvar confere antes se o paciente já existe (ver `possivelDuplicado`), e
 /// sair com o formulário preenchido pergunta antes (ver `confirmarSaida`).

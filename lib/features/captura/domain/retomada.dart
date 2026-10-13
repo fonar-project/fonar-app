@@ -11,8 +11,9 @@ import 'amostra.dart';
 ///   análise combina as tarefas: juntar a vogal de ontem com a fala de hoje
 ///   daria uma medida de voz nenhuma.
 ///
-/// TODO(equipe): "mesmo dia" é decisão de implementação — confirmar com a
-/// orientação se é o que define uma consulta.
+/// "Mesmo dia" é decisão da equipe, confirmada na US39: é a unidade que
+/// separa uma consulta da outra no consultório, e a que garante que a vogal
+/// e a fala combinadas na análise (o AVQI) são da mesma voz.
 Map<TarefaDeGravacao, Amostra>? sessaoARetomar({
   required List<Amostra> ultimaSessao,
   required Set<String> sessoesNaFila,

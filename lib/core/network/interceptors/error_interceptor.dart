@@ -16,9 +16,10 @@ import '../../error/app_exception.dart';
 /// ```
 ///
 /// A API de análise manda o motivo da recusa num código estável
-/// ([codigoDaApi]); hoje só o `consentimento_ausente` muda o que o app faz.
-/// TODO: extrair os campos inválidos para [FalhaDeValidacao.camposComErro],
-/// quando alguma tela de formulário falar com a API.
+/// ([codigoDaApi]). O `consentimento_ausente` muda o que o app faz; os que
+/// dizem respeito a um campo de formulário vão para
+/// [FalhaDeValidacao.camposComErro] ([camposDaRecusa]), para a tela marcar o
+/// campo certo.
 class ErrorInterceptor extends Interceptor {
   const ErrorInterceptor();
 
@@ -49,7 +50,10 @@ class ErrorInterceptor extends Interceptor {
     return switch (status) {
       // 413: arquivo grande demais; 415: não é WAV PCM. Repetir o mesmo
       // envio repetiria a recusa.
-      400 || 413 || 415 || 422 => FalhaDeValidacao(causa: err),
+      400 ||
+      413 ||
+      415 ||
+      422 => FalhaDeValidacao(camposComErro: camposDaRecusa(err), causa: err),
       401 => NaoAutorizado(causa: err),
       403 => Proibido(causa: err),
       404 => NaoEncontrado(causa: err),
@@ -75,4 +79,44 @@ String? codigoDaApi(DioException err) {
   if (detalhe is! Map) return null;
   final codigo = detalhe['codigo'];
   return codigo is String ? codigo : null;
+}
+
+/// O campo do corpo da requisição a que cada código de recusa da API se
+/// refere. Os nomes são os do corpo que a API recebe (`/v1/profissionais/eu`,
+/// o laudo).
+const _campoPorCodigo = {
+  'nome_invalido': 'nome',
+  'regiao_invalida': 'crefono_regiao',
+  'numero_invalido': 'crefono_numero',
+  'termos_nao_aceitos': 'versao_termos',
+  'conclusao_invalida': 'conclusao',
+};
+
+/// Campo -> motivo, a partir do corpo de uma recusa.
+///
+/// Dois formatos: o da API (`{"detail": {"codigo", "mensagem"}}`, com o
+/// código em [_campoPorCodigo]) e o da validação do próprio FastAPI, quando
+/// falta um campo ou o tipo não serve
+/// (`{"detail": [{"loc": ["body", "campo"], "msg": "..."}]}`). O motivo é o
+/// texto que a API mandou, em português.
+Map<String, String> camposDaRecusa(DioException err) {
+  final corpo = err.response?.data;
+  if (corpo is! Map) return const {};
+  final detalhe = corpo['detail'];
+  if (detalhe is Map) {
+    final campo = _campoPorCodigo[detalhe['codigo']];
+    final mensagem = detalhe['mensagem'];
+    if (campo == null) return const {};
+    return {campo: mensagem is String ? mensagem : '${detalhe['codigo']}'};
+  }
+  if (detalhe is List) {
+    return {
+      for (final item in detalhe)
+        if (item is Map &&
+            item['loc'] is List &&
+            (item['loc'] as List).isNotEmpty)
+          '${(item['loc'] as List).last}': '${item['msg'] ?? ''}',
+    };
+  }
+  return const {};
 }

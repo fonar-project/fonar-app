@@ -27,6 +27,7 @@ import '../../features/pacientes/presentation/pages/paciente_detalhe_page.dart';
 import '../../features/pacientes/presentation/pages/pacientes_list_page.dart';
 import '../app_estrutura.dart';
 import 'app_routes.dart';
+import 'erro_de_rota_page.dart';
 import 'saida_protegida.dart';
 
 /// Roteador do app.
@@ -226,7 +227,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
 
-    // TODO: tela de erro própria, em pt-BR, no lugar da padrão do go_router.
+    // Endereço que não leva a tela nenhuma: em português, com o caminho de
+    // volta. Quem não tem sessão nem chega aqui — o redirect leva à entrada.
+    errorBuilder: (context, state) => const ErroDeRotaPage(),
   );
 });
 

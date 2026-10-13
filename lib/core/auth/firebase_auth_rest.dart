@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../config/app_config.dart';
 import '../error/app_exception.dart';
+import '../network/dio_client.dart';
 import '../network/interceptors/error_interceptor.dart';
 import '../relogio.dart';
 import 'credencial.dart';
@@ -264,7 +265,10 @@ final firebaseAuthRestProvider = Provider<FirebaseAuthRest?>((ref) {
   );
   // Um Dio só do Firebase, sem o `AuthInterceptor`: estas chamadas são as
   // que OBTÊM o token, e o interceptor pediria um token para fazê-las.
-  dio.interceptors.add(const ErrorInterceptor());
+  dio.interceptors.addAll([
+    ...interceptorsComuns(ref),
+    const ErrorInterceptor(),
+  ]);
   ref.onDispose(dio.close);
   return FirebaseAuthRest(dio, chave: chave, agora: ref.watch(relogioProvider));
 });

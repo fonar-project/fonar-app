@@ -1,10 +1,22 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/fonte_de_token.dart';
 import '../config/app_config.dart';
+import 'alcance_do_servidor.dart';
 import 'interceptors/auth_interceptor.dart';
 import 'interceptors/error_interceptor.dart';
+import 'interceptors/log_interceptor.dart';
+
+/// O que todo cliente HTTP do app leva, entre o token e a tradução do erro:
+/// o log, só em desenvolvimento, e o alcance do servidor (US06), que alimenta
+/// o indicador de conexão. Os três clientes — a API, o Firestore e o login —
+/// usam a mesma lista.
+List<Interceptor> interceptorsComuns(Ref ref) => [
+  if (kDebugMode) LogDeRequisicao(),
+  AlcanceInterceptor(() => ref.read(servidorInalcancavelProvider.notifier)),
+];
 
 /// Cliente HTTP único do app.
 ///
@@ -32,11 +44,9 @@ final dioProvider = Provider<Dio>((ref) {
   // a falha do auth quando não há token que sirva.
   dio.interceptors.addAll([
     AuthInterceptor(ref.watch(fonteDeTokenProvider)),
+    ...interceptorsComuns(ref),
     const ErrorInterceptor(),
   ]);
-
-  // TODO: adicionar log de requisição só em debug, com o header Authorization
-  // ocultado. Nada de corpo de resposta em log: pode conter dado de paciente.
 
   ref.onDispose(dio.close);
   return dio;

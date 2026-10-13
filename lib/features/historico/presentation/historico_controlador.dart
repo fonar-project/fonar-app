@@ -8,8 +8,11 @@ import '../domain/entrada_do_historico.dart';
 /// Todas as avaliações de todos os pacientes deste aparelho, na ordem do
 /// histórico — ver [montarHistorico].
 ///
-/// Pergunta paciente por paciente, em paralelo.
-/// TODO(backend): com a API, uma consulta só (`GET /analises`, paginada).
+/// Pergunta paciente por paciente, em paralelo. Uma consulta só para todos
+/// os pacientes pediria à API um `collection_group`, que a arquitetura dela
+/// proíbe (o isolamento é pelo caminho de cada profissional); por paciente,
+/// em paralelo, é o mesmo número de leituras no servidor, e cada uma fica
+/// dentro da árvore de quem pergunta (decisão da US39).
 final historicoProvider = FutureProvider.autoDispose<List<EntradaDoHistorico>>((
   ref,
 ) async {

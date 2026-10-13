@@ -1343,10 +1343,10 @@ class _Conclusao extends StatelessWidget {
   }
 }
 
-/// O aparelho não usou o formato pedido. Não bloqueia — ainda não se sabe
-/// quais ajustes a análise tolera —, mas não passa calado.
-///
-/// TODO(backend): decidir com a API de análise quais ajustes bloqueiam.
+/// O aparelho não usou o formato pedido. Aqui, na aferição, só informa: quem
+/// decide é a conferência de cada gravação, que invalida o que a análise não
+/// recebe (`ProblemaNaAmostra.formatoForaDoAceito`) e só avisa do resto
+/// (US39).
 class _Ajuste extends StatelessWidget {
   const _Ajuste({required this.ajuste});
 
@@ -1461,4 +1461,6 @@ String mensagemDoProblema(ProblemaNaAmostra problema) => switch (problema) {
   ProblemaNaAmostra.semSinal => AppStrings.problemaSemSinal,
   ProblemaNaAmostra.saturou => AppStrings.problemaSaturou,
   ProblemaNaAmostra.formatoAjustado => AppStrings.problemaFormatoAjustado,
+  ProblemaNaAmostra.formatoForaDoAceito =>
+    AppStrings.problemaFormatoForaDoAceito,
 };

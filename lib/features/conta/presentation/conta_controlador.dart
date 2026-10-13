@@ -104,6 +104,14 @@ class ContaControlador extends Notifier<EstadoDaConta> {
               .definir(profissional);
           if (ref.mounted) state = const EstadoDaConta(salvo: true);
           return true;
+        } on FalhaDeValidacao catch (e) {
+          // A API recusou um campo: o motivo dela, e não um erro genérico.
+          if (ref.mounted) {
+            state = EstadoDaConta(
+              erroGeral: e.camposComErro.values.firstOrNull ?? e.mensagem,
+            );
+          }
+          return false;
         } on AppException catch (e) {
           if (ref.mounted) state = EstadoDaConta(erroGeral: e.mensagem);
           return false;

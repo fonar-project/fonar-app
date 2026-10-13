@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/network/alcance_do_servidor.dart';
 import '../core/network/conexao.dart';
 import '../design_system/breakpoints.dart';
 import '../design_system/tokens/app_cores.dart';
@@ -215,6 +216,7 @@ class _BarraLateral extends ConsumerWidget {
                         children: [
                           AppIndicadorConexao(
                             online: ref.watch(conexaoOnlineProvider),
+                            semServidor: ref.watch(semAcessoAoServidorProvider),
                             sobreFundoEscuro: true,
                           ),
                           const SizedBox(height: AppSpacing.xs),

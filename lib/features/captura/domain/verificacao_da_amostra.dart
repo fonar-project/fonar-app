@@ -37,6 +37,13 @@ enum ProblemaNaAmostra {
   /// escreve zeros no disco, só o arquivo denuncia.
   semSinal,
 
+  /// O arquivo saiu num formato que a análise não recebe: mais de um canal,
+  /// ou taxa fora de [VerificacaoDaAmostra.taxaMinimaDaAnalise] a
+  /// [VerificacaoDaAmostra.taxaMaximaDaAnalise] (o que a API aceita,
+  /// `domain/audio.py`). Enviar só traria a recusa, depois de o paciente ter
+  /// ido embora: a conferência invalida na hora, para gravar de novo.
+  formatoForaDoAceito,
+
   // ------------------------------------------ só avisam, não invalidam --
 
   /// Houve pico no máximo digital: a onda foi cortada, e o corte altera o
@@ -44,13 +51,16 @@ enum ProblemaNaAmostra {
   /// importar —, mas o profissional precisa saber para decidir regravar.
   saturou,
 
-  /// O aparelho gravou com outra taxa ou outro número de canais.
+  /// O aparelho gravou com outra taxa ou outro número de canais, mas num
+  /// formato que a análise aceita.
   ///
   /// Duas evidências levam aqui, e basta uma: o cabeçalho do WAV que saiu e o
   /// aviso do próprio aparelho durante a gravação (`Gravador.ajuste`). A
   /// segunda cobre o gravador que escreve no cabeçalho o que foi PEDIDO.
   ///
-  /// TODO(backend): decidir com a API de análise se isto invalida.
+  /// Decisão (US39): só avisa. A API analisa qualquer taxa de 8 kHz a 192 kHz
+  /// em mono, e o motor do Praat mede na taxa que receber; o que ela não
+  /// aceita é [formatoForaDoAceito], que invalida.
   formatoAjustado;
 
   /// Com este problema a amostra não pode seguir para a análise.
@@ -67,6 +77,12 @@ abstract final class VerificacaoDaAmostra {
   /// Critério TÉCNICO, não clínico: quanto cada tarefa deve durar é decisão
   /// do protocolo clínico e não está codificada aqui.
   static const duracaoMinima = Duration(seconds: 1);
+
+  /// O que a análise recebe (`domain/audio.py` da API): mono, de 8 kHz a
+  /// 192 kHz.
+  static const canaisDaAnalise = 1;
+  static const taxaMinimaDaAnalise = 8000;
+  static const taxaMaximaDaAnalise = 192000;
 
   /// Bytes de áudio que a janela precisa ter para o silêncio ser julgado.
   ///
@@ -151,6 +167,11 @@ abstract final class VerificacaoDaAmostra {
               canaisPedidos: canaisPedidos,
             ) ??
             true);
+    // O que a análise recusaria: não adianta enviar.
+    final foraDoAceito =
+        cabecalho.canais != canaisDaAnalise ||
+        cabecalho.taxaDeAmostragem < taxaMinimaDaAnalise ||
+        cabecalho.taxaDeAmostragem > taxaMaximaDaAnalise;
     // Duas evidências de microfone mudo, cada uma de uma fonte: o plugin
     // (as leituras) e o disco (os bytes). Pedir as duas deixaria passar a
     // falha em que só uma acusa, e é justamente ela que preocupa.
@@ -171,7 +192,10 @@ abstract final class VerificacaoDaAmostra {
       if (!curta && mudo) ProblemaNaAmostra.semSinal,
       if (leituras.any((l) => zonaDe(l) == ZonaDeNivel.saturando))
         ProblemaNaAmostra.saturou,
-      if (formatoTrocado) ProblemaNaAmostra.formatoAjustado,
+      if (foraDoAceito)
+        ProblemaNaAmostra.formatoForaDoAceito
+      else if (formatoTrocado)
+        ProblemaNaAmostra.formatoAjustado,
     ];
     return problemas;
   }

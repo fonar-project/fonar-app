@@ -12,9 +12,20 @@ abstract final class AppStrings {
   /// Nome exibido ao usuário.
   static const appTitle = 'FONAR';
 
+  // ------------------------------------------------------- rota de erro --
+  static const rotaNaoEncontradaTitulo = 'Esta tela não existe';
+  static const rotaNaoEncontradaTexto =
+      'O endereço pode ter mudado, ou o que ele mostrava não está mais neste '
+      'aparelho.';
+  static const rotaVoltarAoInicio = 'Voltar aos pacientes';
+
   // ------------------------------------------------------------- conexão --
   static const conexaoOnline = 'Online';
   static const conexaoOffline = 'Sem conexão';
+
+  /// Há rede, mas a última chamada não chegou ao servidor — Wi-Fi com portal
+  /// cativo, por exemplo (US06).
+  static const conexaoSemServidor = 'Sem acesso ao servidor';
 
   // ---------------------------------------------------- status de medida --
   // O vocabulário descreve a MEDIDA comparada à faixa de referência, nunca o
@@ -502,6 +513,10 @@ abstract final class AppStrings {
   static const problemaSaturou =
       'Houve saturação: a voz passou do máximo do microfone. Se possível, '
       'afaste um pouco o microfone e grave de novo.';
+  static const problemaFormatoForaDoAceito =
+      'O aparelho gravou num formato que a análise não aceita (mais de um '
+      'canal, ou taxa fora do intervalo). Grave de novo; se repetir, avise o '
+      'suporte antes de usar este aparelho em consulta.';
   static const problemaFormatoAjustado =
       'O aparelho gravou com taxa ou canais diferentes dos pedidos. Avise o '
       'suporte antes de usar este aparelho em consulta.';

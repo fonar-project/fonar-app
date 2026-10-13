@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/gravacao_em_andamento.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/relogio.dart';
 import 'sessao.dart';
@@ -43,6 +44,10 @@ class BloqueioPorInatividade extends Notifier<bool> {
       // toda a espera da saída (revisão de 24/09).
       return estavaBloqueado;
     }
+    // O fim de uma gravação conta como uso: a contagem recomeça dali.
+    ref.listen(gravacaoEmAndamentoProvider, (_, gravando) {
+      if (!gravando) registrarAtividade();
+    });
     _ultimaAtividade = _agora();
     _armar();
     return false;
@@ -59,6 +64,13 @@ class BloqueioPorInatividade extends Notifier<bool> {
   /// relógio pode não ter rodado enquanto o sistema segurava o app.
   void conferir() {
     if (state || _relogio == null) return;
+    // Gravando: o profissional está com o paciente, sem tocar na tela. Não
+    // bloqueia no meio — a gravação não se repete.
+    if (ref.read(gravacaoEmAndamentoProvider)) {
+      _ultimaAtividade = _agora();
+      _armar();
+      return;
+    }
     final passou = _agora().difference(_ultimaAtividade);
     if (passou >= _limite) {
       _relogio?.cancel();
