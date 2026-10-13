@@ -105,7 +105,8 @@ class LaudosNaApi implements Sincronizavel {
     );
     consulta.orderBy([
       OrderingTerm.asc(laudos.geradoEm),
-      OrderingTerm.asc(laudos.id),
+      // A ordem de gravação desempata a mesma hora (ver o repositório).
+      OrderingTerm.asc(const CustomExpression<int>('laudos.rowid')),
     ]);
     final porId = <String, Laudo>{};
     for (final linha in await consulta.get()) {

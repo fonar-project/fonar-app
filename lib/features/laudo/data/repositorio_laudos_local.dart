@@ -26,14 +26,19 @@ class RepositorioLaudosLocal implements RepositorioLaudos {
 
   final BancoLocal _banco;
 
+  /// A ordem em que os laudos foram gravados neste aparelho: desempata duas
+  /// emissões com a mesma hora — um relógio parado, um ajuste de fuso. O
+  /// código (UUID) é aleatório e não serve para isso.
+  static const _ordemDeGravacao = CustomExpression<int>('rowid');
+
   SimpleSelectStatement<$LaudosTable, LinhaDoLaudo> _daAnalise(
     String analiseId,
   ) => _banco.select(_banco.laudos)
     ..where((l) => l.analiseId.equals(analiseId))
-    // O mais recente primeiro; o id desempata duas emissões no mesmo instante.
+    // O mais recente primeiro.
     ..orderBy([
       (l) => OrderingTerm.desc(l.geradoEm),
-      (l) => OrderingTerm.desc(l.id),
+      (_) => OrderingTerm.desc(_ordemDeGravacao),
     ]);
 
   @override
@@ -70,7 +75,7 @@ class RepositorioLaudosLocal implements RepositorioLaudos {
               ..where((l) => l.pacienteId.equals(pacienteId))
               ..orderBy([
                 (l) => OrderingTerm.asc(l.geradoEm),
-                (l) => OrderingTerm.asc(l.id),
+                (_) => OrderingTerm.asc(_ordemDeGravacao),
               ]))
             .get();
     // Do mais antigo ao mais recente: o último de cada análise fica.

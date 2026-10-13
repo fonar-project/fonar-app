@@ -197,15 +197,19 @@ class RepositorioLaudosEmMemoria implements RepositorioLaudos {
 
   final _emitidos = <Laudo>[];
 
-  /// Do mais recente ao mais antigo, como o banco ordena.
-  List<Laudo> _daAnalise(String analiseId) =>
-      [
-        for (final l in _emitidos)
-          if (l.analiseId == analiseId) l,
-      ]..sort((a, b) {
-        final porData = b.geradoEm.compareTo(a.geradoEm);
-        return porData != 0 ? porData : b.id.compareTo(a.id);
-      });
+  /// Do mais recente ao mais antigo, como o banco ordena: a hora, e a
+  /// ordem de gravação no empate.
+  List<Laudo> _daAnalise(String analiseId) {
+    final daAnalise = [
+      for (final (ordem, l) in _emitidos.indexed)
+        if (l.analiseId == analiseId) (ordem, l),
+    ];
+    daAnalise.sort((a, b) {
+      final porData = b.$2.geradoEm.compareTo(a.$2.geradoEm);
+      return porData != 0 ? porData : b.$1.compareTo(a.$1);
+    });
+    return [for (final (_, l) in daAnalise) l];
+  }
 
   @override
   Future<Laudo?> daAnalise(String analiseId) async =>

@@ -570,6 +570,18 @@ void main() {
       expect((await repositorio.daAnalise('an-1'))!.pdf, [1]);
     });
 
+    test('na mesma hora, o gravado por último é o vigente', () async {
+      final repositorio = RepositorioLaudosLocal(_banco());
+      // Códigos em ordem contrária à de gravação: o desempate não é o código.
+      await repositorio.registrar(laudo('z-primeiro', 'an-1', 'p1', [1]));
+      await repositorio.registrar(laudo('a-segundo', 'an-1', 'p1', [2]));
+
+      expect((await repositorio.daAnalise('an-1'))!.id, 'a-segundo');
+      expect([for (final l in await repositorio.doPaciente('p1')) l.id], [
+        'a-segundo',
+      ]);
+    });
+
     test('marcar enviado muda só a hora do envio', () async {
       final repositorio = RepositorioLaudosLocal(_banco());
       await repositorio.registrar(laudo('l-1', 'an-1', 'p1', [7]));
