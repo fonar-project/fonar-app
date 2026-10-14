@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
@@ -8,7 +9,9 @@ import 'package:fonar_app/features/auth/data/sessao.dart';
 import 'package:fonar_app/core/error/app_exception.dart';
 import 'package:fonar_app/core/network/conexao.dart';
 import 'package:fonar_app/core/relogio.dart';
+import 'package:fonar_app/features/captura/data/gravador_record.dart';
 import 'package:fonar_app/features/captura/domain/amostra.dart';
+import 'package:fonar_app/features/captura/domain/gravador.dart';
 import 'package:fonar_app/features/consentimento/data/repositorio_consentimento_local.dart';
 import 'package:fonar_app/features/consentimento/domain/repositorio_consentimento.dart';
 import 'package:fonar_app/features/fila/data/envio_de_analise_api.dart';
@@ -80,12 +83,28 @@ final _amostra = Amostra(
   problemas: const [],
 );
 
+/// Os arquivos das amostras, de mentira: só anota o que foi apagado.
+class _Arquivos implements ArquivosDeAmostra {
+  final apagados = <String>[];
+
+  @override
+  Future<void> apagar(String caminho) async => apagados.add(caminho);
+
+  @override
+  Future<({Uint8List inicio, int tamanho})?> ler(String caminho) async => null;
+
+  @override
+  Future<String> novoCaminho(String pacienteId, TarefaDeGravacao tarefa) =>
+      throw UnimplementedError();
+}
+
 class _Fila {
-  _Fila(this.container, this.envio, this.rede);
+  _Fila(this.container, this.envio, this.rede, this.arquivos);
 
   final ProviderContainer container;
   final _Envio envio;
   final NotifierProvider<_Rede, bool> rede;
+  final _Arquivos arquivos;
   var agora = DateTime(2026, 9, 23, 10);
 
   FilaControlador get controlador =>
@@ -129,11 +148,13 @@ Future<_Fila> _montar(
   RepositorioConsentimento? consentimento,
 }) async {
   final envio = _Envio();
+  final arquivos = _Arquivos();
   final rede = NotifierProvider<_Rede, bool>(() => _Rede(online));
   late _Fila fila;
   final container = ProviderContainer(
     overrides: [
       envioDeAnaliseProvider.overrideWithValue(envio),
+      arquivosDeAmostraProvider.overrideWithValue(arquivos),
       // Profissional com a sessão aberta: sem ela a fila não envia.
       sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
       repositorioFilaProvider.overrideWithValue(
@@ -146,7 +167,7 @@ Future<_Fila> _montar(
       relogioProvider.overrideWithValue(() => fila.agora),
     ],
   );
-  fila = _Fila(container, envio, rede);
+  fila = _Fila(container, envio, rede, arquivos);
   // Mantém a fila viva, como o FonarApp faz.
   container.listen(filaControladorProvider, (_, _) {});
   await container.read(filaControladorProvider.future);
@@ -253,6 +274,21 @@ void main() {
       expect(fila.item.situacao, SituacaoDoEnvio.enviado);
       expect(fila.item.analiseId, 'analise-1');
       expect(fila.item.tentativas, 1);
+      // US44: no servidor, o WAV sai deste aparelho — o registro fica.
+      expect(fila.arquivos.apagados, [_amostra.caminho]);
+      expect(fila.item.amostras.single.id, _amostra.id);
+    });
+
+    _testarFila('o WAV só sai depois de o envio chegar ao servidor', (
+      tester,
+      fila,
+    ) async {
+      fila.envio.falharCom(const FalhaNoServidor());
+      await fila.enfileirar();
+      await tester.pump();
+
+      expect(fila.item.situacao, isNot(SituacaoDoEnvio.enviado));
+      expect(fila.arquivos.apagados, isEmpty);
     });
 
     _testarFila('offline: fica na fila e sobe quando a rede volta', (

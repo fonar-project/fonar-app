@@ -191,9 +191,13 @@ class GravadorRecord implements Gravador {
 
 /// As amostras ficam em `<área privada do app>/amostras/<paciente>/`.
 ///
-/// TODO(LGPD): o WAV fica sem criptografia na área privada. A área privada
-/// protege de outros aplicativos, não de quem tem o aparelho desbloqueado ou
-/// o disco do computador. Decidir se precisa cifrar em repouso.
+/// Decisão (US44): o WAV não é cifrado no aparelho — ele fica aqui só até
+/// subir. Chegou ao servidor, sai (`FilaControlador`), e ouvir de novo vem
+/// da API; o que fica é o registro, no banco, que é cifrado. Entre a
+/// gravação e o envio, a área privada do app o separa dos outros
+/// aplicativos. Cifrar o arquivo também exigiria decifrá-lo para conferir,
+/// enviar e tocar, e a cópia decifrada é justamente o que não se quer no
+/// disco; o mínimo necessário (LGPD, art. 6º, III) protege mais.
 class ArquivosDeAmostraLocais implements ArquivosDeAmostra {
   const ArquivosDeAmostraLocais();
 

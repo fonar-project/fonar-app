@@ -7,6 +7,7 @@ import '../../../core/error/app_exception.dart';
 import '../../../core/network/conexao.dart';
 import '../../../core/relogio.dart';
 import '../../auth/data/sessao.dart';
+import '../../captura/data/gravador_record.dart';
 import '../../captura/domain/amostra.dart';
 import '../../consentimento/data/repositorio_consentimento_local.dart';
 import '../data/envio_de_analise_api.dart';
@@ -201,6 +202,24 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
     }
   }
 
+  /// Apaga deste aparelho os WAV de um envio que chegou ao servidor (US44).
+  ///
+  /// A voz do paciente não precisa ficar em dois lugares: o servidor a
+  /// guarda (e a análise a usa de lá), e ouvir de novo vem da API
+  /// (`gravacoesParaOuvirProvider`). Menos cópia de dado de saúde no
+  /// aparelho é menos para proteger — a LGPD pede o mínimo necessário
+  /// (art. 6º, III). O registro da amostra fica: diz o que foi gravado.
+  /// Falhar aqui não desfaz o envio; o arquivo sai na próxima vez.
+  Future<void> _apagarGravacoesEnviadas(ItemDaFila item) async {
+    if (!ref.mounted) return;
+    final arquivos = ref.read(arquivosDeAmostraProvider);
+    for (final amostra in item.amostras) {
+      try {
+        await arquivos.apagar(amostra.caminho);
+      } catch (_) {}
+    }
+  }
+
   ItemDaFila _semConsentimento(ItemDaFila item) => item.copiar(
     situacao: SituacaoDoEnvio.semConsentimento,
     proximaTentativa: () => null,
@@ -298,6 +317,7 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
             ultimaFalha: () => null,
           ),
         );
+        await _apagarGravacoesEnviadas(item);
       } catch (erro) {
         if (!ref.mounted) return;
         // O contrato é lançar só AppException. Se outra coisa escapar, o item

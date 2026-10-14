@@ -26,9 +26,11 @@ String caminhoNaApi(String pacienteId, String sessaoId, String amostraId) =>
 
 /// As gravações de uma análise que se pode ouvir, por tarefa (US13, US40).
 ///
-/// A deste aparelho, se ainda estiver aqui (achada pelo envio da fila);
-/// senão, a do servidor, pelo id que a análise traz — a gravação feita em
-/// outro aparelho da mesma conta também se ouve, buscada quando se toca.
+/// A do servidor, pelo id que a análise traz — a gravação feita em outro
+/// aparelho da mesma conta também se ouve, buscada quando se toca. Desde a
+/// US44, o WAV enviado sai deste aparelho, e o servidor é onde ele está. A
+/// deste aparelho (achada pelo envio da fila) só vale quando a análise não
+/// diz a gravação — no modo de exemplo, sem servidor.
 final gravacoesParaOuvirProvider = Provider.autoDispose
     .family<Map<TarefaDeGravacao, GravacaoParaOuvir>, ChaveDaAnalise>((
       ref,
@@ -39,14 +41,16 @@ final gravacoesParaOuvirProvider = Provider.autoDispose
           ref.watch(analiseProvider(chave)).value?.gravacoes ?? const {};
       return {
         for (final tarefa in TarefaDeGravacao.values)
-          if (locais[tarefa] case final amostra?)
+          if (noServidor[tarefa] case final id?)
+            tarefa: GravacaoParaOuvir(
+              caminho: caminhoNaApi(chave.pacienteId, chave.analiseId, id),
+              // A duração, quem sabe é a amostra daqui, se ela estiver.
+              duracao: locais[tarefa]?.duracao,
+            )
+          else if (locais[tarefa] case final amostra?)
             tarefa: GravacaoParaOuvir(
               caminho: amostra.caminho,
               duracao: amostra.duracao,
-            )
-          else if (noServidor[tarefa] case final id?)
-            tarefa: GravacaoParaOuvir(
-              caminho: caminhoNaApi(chave.pacienteId, chave.analiseId, id),
             ),
       };
     });
