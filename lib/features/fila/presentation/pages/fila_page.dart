@@ -232,9 +232,7 @@ class _CartaoDoEnvio extends ConsumerWidget {
         motivoDesabilitado: AppStrings.filaEntrarExigeConexao,
       ),
       SituacaoDoEnvio.aguardandoNovaTentativa ||
-      SituacaoDoEnvio.recusado ||
-      // Sem consentimento novo, a conferência de antes do envio para de novo.
-      SituacaoDoEnvio.semConsentimento => AppBotao.secundario(
+      SituacaoDoEnvio.recusado => AppBotao.secundario(
         rotulo: item.situacao == SituacaoDoEnvio.aguardandoNovaTentativa
             ? AppStrings.filaTentarAgora
             : AppStrings.filaTentarDeNovo,

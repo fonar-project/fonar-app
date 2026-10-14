@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/auth/senha_sem_rede.dart';
 import '../../../core/error/app_exception.dart';
 import '../../../l10n/app_strings.dart';
 import '../../auth/data/profissional_atual.dart';
@@ -134,9 +135,14 @@ class ContaControlador extends Notifier<EstadoDaConta> {
     if (state.salvando || state.saindo) return false;
     state = const EstadoDaConta(saindo: true);
     final container = ref.container;
+    // Lidos antes das esperas: a tela que pediu a saída fecha no meio delas.
+    final senhas = container.read(senhaSemRedeProvider);
+    final autenticacao = container.read(repositorioAutenticacaoProvider);
     container.read(sessaoProvider.notifier).encerrar();
+    // O verificador da senha sem rede sai junto com a credencial (US43).
+    await senhas.esquecer();
     try {
-      await ref.read(repositorioAutenticacaoProvider).sair();
+      await autenticacao.sair();
     } on AppException catch (e) {
       if (ref.mounted) state = EstadoDaConta(erroGeral: e.mensagem);
       return false;

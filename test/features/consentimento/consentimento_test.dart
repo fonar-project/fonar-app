@@ -97,6 +97,38 @@ void main() {
       expect(r.nomeDoResponsavel, isNull);
       expect(r.concordancia, ProblemaNoConsentimento.concordanciaNaoMarcada);
     });
+
+    // US43: menor de idade só é autorizado pelo responsável legal.
+    test('paciente menor de idade não autoriza por si', () {
+      final r = _invalido(
+        validarConsentimento(
+          quemAutoriza: QuemAutoriza.paciente,
+          nomeDoResponsavel: '',
+          concordou: true,
+          menorDeIdade: true,
+        ),
+      );
+      expect(r.quemAutoriza, ProblemaNoConsentimento.menorExigeResponsavel);
+
+      final pedido = _pedido(
+        validarConsentimento(
+          quemAutoriza: QuemAutoriza.responsavelLegal,
+          nomeDoResponsavel: 'Maria de Teste',
+          concordou: true,
+          menorDeIdade: true,
+        ),
+      );
+      expect(pedido.quemAutoriza, QuemAutoriza.responsavelLegal);
+    });
+
+    test('menor de idade é quem ainda não fez 18 anos', () {
+      final hoje = DateTime(2026, 10, 14);
+      expect(ehMenorDeIdade(DateTime(2008, 10, 15), hoje), isTrue);
+      expect(ehMenorDeIdade(DateTime(2008, 10, 14), hoje), isFalse);
+      expect(ehMenorDeIdade(DateTime(1990, 1, 1), hoje), isFalse);
+      // Sem data de nascimento, não se presume.
+      expect(ehMenorDeIdade(null, hoje), isFalse);
+    });
   });
 
   group('RepositorioConsentimentoPlaceholder', () {

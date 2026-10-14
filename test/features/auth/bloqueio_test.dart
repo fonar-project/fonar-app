@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fonar_app/app/router/app_router.dart';
 import 'package:fonar_app/app/router/app_routes.dart';
+import 'package:fonar_app/core/auth/senha_sem_rede.dart';
 import 'package:fonar_app/core/error/app_exception.dart';
 import 'package:fonar_app/core/network/conexao.dart';
 import 'package:fonar_app/core/relogio.dart';
@@ -26,6 +27,7 @@ import 'package:fonar_app/l10n/app_strings.dart';
 
 import '../../apoio/banco_em_memoria.dart';
 import '../../apoio/repositorios_em_memoria.dart';
+import '../../apoio/senha_sem_rede_em_memoria.dart';
 import '../../apoio/sessao_de_teste.dart';
 
 const _limite = Duration(minutes: 5);
@@ -110,6 +112,9 @@ Future<_Cena> _abrir(
       repositorioAutenticacaoProvider.overrideWithValue(autenticacao),
       // O cofre do sistema não existe no teste.
       tokenStorageProvider.overrideWithValue(TokenStorageEmMemoria()),
+      senhaSemRedeProvider.overrideWithValue(
+        SenhaSemRedeEmMemoria({contaDeTeste.uid: 'certa'}),
+      ),
       pacientesProvider.overrideWith(
         (ref) async => const [
           Paciente(
@@ -267,17 +272,24 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  _testar('sem conexão: diz que não confere a senha, como o login '
-      'offline', (tester) async {
+  // US43: sem conexão, a senha é conferida com a guardada na última
+  // entrada com rede — antes, desbloqueava sem senha nenhuma.
+  _testar('sem conexão: confere a senha guardada no aparelho', (tester) async {
     final c = await _abrir(tester, online: false);
     await _passar(tester, c, _limite);
     await tester.pump();
 
     expect(find.text(AppStrings.bloqueioOfflineTitulo), findsOneWidget);
-    expect(_campo(AppStrings.loginCampoSenha), findsNothing);
 
-    await _tocar(tester, AppStrings.bloqueioContinuarOffline);
+    await tester.enterText(_campo(AppStrings.loginCampoSenha), 'errada');
+    await _tocar(tester, AppStrings.bloqueioDesbloquear);
+    expect(c.bloqueado, isTrue);
+    expect(find.text(AppStrings.bloqueioSenhaNaoConfere), findsOneWidget);
+
+    await tester.enterText(_campo(AppStrings.loginCampoSenha), 'certa');
+    await _tocar(tester, AppStrings.bloqueioDesbloquear);
     expect(c.bloqueado, isFalse);
+    // Nada foi à rede.
     expect(c.autenticacao.pedidos, isEmpty);
   });
 

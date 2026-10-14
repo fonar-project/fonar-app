@@ -111,40 +111,36 @@ class _TelaDeBloqueioState extends ConsumerState<TelaDeBloqueio> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  if (online) ...[
-                    AppCampoTexto(
-                      rotulo: AppStrings.loginCampoSenha,
-                      controlador: _senha,
-                      foco: _foco,
-                      erro: estado.erro,
-                      ocultarTexto: true,
-                      autoCorrecao: false,
-                      somenteLeitura: estado.conferindo,
-                      acaoDeEntrada: TextInputAction.done,
-                      autopreenchimento: const [AutofillHints.password],
-                      aoEnviar: (_) => _desbloquear(),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    AppBotao.primario(
-                      rotulo: estado.conferindo
-                          ? AppStrings.bloqueioConferindo
-                          : AppStrings.bloqueioDesbloquear,
-                      aoTocar: _desbloquear,
-                      ocupaLargura: true,
-                    ),
-                  ] else ...[
+                  // Sem conexão, a mesma senha, conferida com a da última
+                  // entrada com rede neste aparelho (US43).
+                  if (!online) ...[
                     const AppSituacao(
                       icone: NomeIcone.informacao,
                       titulo: AppStrings.bloqueioOfflineTitulo,
                       texto: AppStrings.bloqueioOfflineTexto,
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    AppBotao.primario(
-                      rotulo: AppStrings.bloqueioContinuarOffline,
-                      aoTocar: _desbloquear,
-                      ocupaLargura: true,
-                    ),
                   ],
+                  AppCampoTexto(
+                    rotulo: AppStrings.loginCampoSenha,
+                    controlador: _senha,
+                    foco: _foco,
+                    erro: estado.erro,
+                    ocultarTexto: true,
+                    autoCorrecao: false,
+                    somenteLeitura: estado.conferindo,
+                    acaoDeEntrada: TextInputAction.done,
+                    autopreenchimento: const [AutofillHints.password],
+                    aoEnviar: (_) => _desbloquear(),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  AppBotao.primario(
+                    rotulo: estado.conferindo
+                        ? AppStrings.bloqueioConferindo
+                        : AppStrings.bloqueioDesbloquear,
+                    aoTocar: _desbloquear,
+                    ocupaLargura: true,
+                  ),
                   const SizedBox(height: AppSpacing.sm),
                   AppBotao.secundario(
                     rotulo: AppStrings.bloqueioSair,

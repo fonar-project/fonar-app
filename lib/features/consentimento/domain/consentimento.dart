@@ -1,15 +1,30 @@
+import '../../pacientes/domain/novo_paciente.dart';
+
 /// Quem deu a autorização.
 ///
 /// Nem sempre é o próprio paciente: criança, por exemplo, é autorizada pelo
 /// responsável legal. Registrar QUEM autorizou é parte do registro — um
 /// consentimento sem essa informação não serve de prova de nada.
 ///
-/// TODO(jurídico): confirmar com orientação jurídica quando o responsável é
-/// obrigatório e se o registro precisa de mais dados dele (documento,
-/// parentesco).
+/// Decisão (US43), a conservadora: paciente com menos de [maioridade] anos
+/// é autorizado pelo responsável legal, sempre — a LGPD pede o consentimento
+/// de um dos pais ou do responsável para o dado de criança (art. 14), e
+/// voz vinculada a paciente é dado de saúde (art. 11); para o adolescente,
+/// o mais seguro é o mesmo. Do responsável, o registro guarda o nome, e ele
+/// declara no próprio termo que tem a responsabilidade legal pelo paciente.
 ///
-/// Vale também para a retirada: quem pede é o paciente ou o responsável.
+/// A retirada, não: quem pede é o paciente ou o responsável, de qualquer
+/// idade — o termo promete que ela pode acontecer a qualquer momento, e o
+/// titular do dado é o paciente.
 enum QuemAutoriza { paciente, responsavelLegal }
+
+/// A partir de que idade o paciente autoriza por si.
+const maioridade = 18;
+
+/// O paciente nascido em [nascimento] é menor de idade em [hoje]? Sem data
+/// de nascimento no cadastro, não se sabe — e não se presume.
+bool ehMenorDeIdade(DateTime? nascimento, DateTime hoje) =>
+    nascimento != null && idadeEntre(nascimento, hoje) < maioridade;
 
 /// Consentimento registrado para um paciente.
 ///
@@ -41,6 +56,9 @@ class Consentimento {
 /// O que pode impedir o registro.
 enum ProblemaNoConsentimento {
   quemAutorizaNaoEscolhido,
+
+  /// O paciente é menor de idade e "o próprio paciente" foi escolhido.
+  menorExigeResponsavel,
   nomeDoResponsavelVazio,
 
   /// A caixa de concordância não foi marcada. Registrar sem ela seria
@@ -89,17 +107,24 @@ final class ConsentimentoInvalido extends ResultadoDoConsentimento {
 /// para "o próprio paciente", o nome é descartado: guardar dado pessoal de
 /// quem não participou do registro é justamente o que a LGPD pede para não
 /// fazer.
+///
+/// [menorDeIdade]: o paciente tem menos de [maioridade] anos — então só o
+/// responsável legal autoriza ([ehMenorDeIdade]).
 ResultadoDoConsentimento validarConsentimento({
   required QuemAutoriza? quemAutoriza,
   required String nomeDoResponsavel,
   required bool concordou,
+  bool menorDeIdade = false,
 }) {
   final nome = nomeDoResponsavel.trim().replaceAll(RegExp(r'\s+'), ' ');
   final exigeNome = quemAutoriza == QuemAutoriza.responsavelLegal;
 
-  final problemaQuem = quemAutoriza == null
-      ? ProblemaNoConsentimento.quemAutorizaNaoEscolhido
-      : null;
+  final problemaQuem = switch (quemAutoriza) {
+    null => ProblemaNoConsentimento.quemAutorizaNaoEscolhido,
+    QuemAutoriza.paciente when menorDeIdade =>
+      ProblemaNoConsentimento.menorExigeResponsavel,
+    _ => null,
+  };
   final problemaNome = exigeNome && nome.isEmpty
       ? ProblemaNoConsentimento.nomeDoResponsavelVazio
       : null;
@@ -136,9 +161,20 @@ ResultadoDoConsentimento validarConsentimento({
 /// o bloqueio da gravação no roteador volta a valer sozinho, e os envios do
 /// paciente que ainda estão na fila param.
 ///
-/// TODO(jurídico): o que fazer com as gravações, análises e laudos feitos
-/// antes da retirada — hoje continuam no aparelho, e os envios parados só
-/// sobem se o profissional pedir depois de um consentimento novo.
+/// Decisão (US43), a conservadora:
+///
+/// - **O que foi feito antes fica.** Gravações, análises, CAPE-V e laudos de
+///   antes da retirada continuam no aparelho e no servidor: são o registro
+///   do atendimento (prontuário), que o profissional tem o dever de guardar,
+///   e a retirada não desfaz o que foi feito enquanto o consentimento valia
+///   (LGPD, art. 8º, § 5º, e art. 16, I).
+/// - **Nada novo acontece com eles.** A gravação que ainda não tinha subido
+///   não sobe mais — nem com um consentimento novo, que vale para o que for
+///   gravado depois dele. Ela fica no aparelho, parada.
+/// - **Apagar é outro pedido.** Se o paciente pedir a eliminação dos dados
+///   (art. 18, VI), o perfil dele tem "Eliminar os dados do paciente", que
+///   apaga tudo, aqui e no servidor — decisão do profissional, que pesa o
+///   pedido contra o dever de guarda.
 class RetiradaDeConsentimento {
   const RetiradaDeConsentimento({
     required this.pacienteId,

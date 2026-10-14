@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/error/app_exception.dart';
+import '../../../core/relogio.dart';
 import '../../../l10n/app_strings.dart';
 import '../data/repositorio_consentimento_local.dart';
 import '../domain/consentimento.dart';
@@ -62,10 +63,14 @@ class RegistroConsentimentoControlador extends Notifier<EstadoRegistro> {
 
   /// Confere e registra. Devolve `true` se registrou; o motivo de não ter
   /// registrado fica no estado. A navegação fica com a tela.
+  ///
+  /// [nascimento]: a do cadastro do paciente — menor de idade só é
+  /// autorizado pelo responsável legal (US43). Nula: idade desconhecida.
   Future<bool> registrar({
     required QuemAutoriza? quemAutoriza,
     required String nomeDoResponsavel,
     required bool concordou,
+    DateTime? nascimento,
   }) async {
     // Toque duplo registraria duas vezes.
     if (state.registrando) return false;
@@ -74,6 +79,7 @@ class RegistroConsentimentoControlador extends Notifier<EstadoRegistro> {
       quemAutoriza: quemAutoriza,
       nomeDoResponsavel: nomeDoResponsavel,
       concordou: concordou,
+      menorDeIdade: ehMenorDeIdade(nascimento, ref.read(relogioProvider)()),
     );
 
     final PedidoDeConsentimento pedido;
@@ -127,6 +133,8 @@ String? _mensagem(ProblemaNoConsentimento? problema) => switch (problema) {
   null => null,
   ProblemaNoConsentimento.quemAutorizaNaoEscolhido =>
     AppStrings.consentimentoEscolhaQuem,
+  ProblemaNoConsentimento.menorExigeResponsavel =>
+    AppStrings.consentimentoMenorExigeResponsavel,
   ProblemaNoConsentimento.nomeDoResponsavelVazio =>
     AppStrings.consentimentoInformeResponsavel,
   ProblemaNoConsentimento.concordanciaNaoMarcada =>

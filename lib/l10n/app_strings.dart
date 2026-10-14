@@ -192,20 +192,42 @@ abstract final class AppStrings {
   static const consentimentoMostreAoPaciente =
       'Mostre esta tela ao paciente, ou leia o termo em voz alta.';
 
-  // TODO(jurídico): TEXTO PROVISÓRIO do termo, escrito para o fluxo funcionar
-  // — não foi revisado juridicamente e não deve ir para produção assim. Ao
-  // trocar, mude também `versaoAtualDoTermo` no repositório de consentimento.
-  static const consentimentoTermoTitulo =
-      'Termo de consentimento (texto provisório)';
+  // O termo de consentimento (US43), escrito sobre a LGPD: consentimento
+  // específico e em destaque para dado de saúde (art. 11, I) e para a
+  // transferência internacional (art. 33, VIII), com finalidade, guarda,
+  // direitos e retirada. Ao mudar qualquer palavra, mude também
+  // `versaoAtualDoTermo` (repositório de consentimento): cada registro diz
+  // com qual texto a pessoa concordou. Revisão jurídica recomendada antes
+  // do uso com pacientes (PENDENCIAS.md).
+  static const consentimentoTermoTitulo = 'Termo de consentimento';
   static const consentimentoTermoItens = [
-    'Sua voz será gravada durante esta consulta.',
-    'A gravação é enviada a um servidor, que calcula medidas acústicas da '
-        'voz. O profissional usa essas medidas como apoio à avaliação; o '
-        'sistema não emite diagnóstico.',
-    'A gravação e as medidas ficam vinculadas ao seu cadastro. Voz é dado '
-        'pessoal sensível e é tratada conforme a LGPD.',
+    'O que é gravado: a sua voz, durante esta consulta — uma vogal '
+        'sustentada e uma fala curta. Junto ficam o seu cadastro (nome, data '
+        'de nascimento, sexo e queixa), as medidas calculadas a partir da '
+        'gravação e a avaliação do profissional.',
+    'Para quê: avaliar a sua voz e acompanhar a evolução dela nas próximas '
+        'consultas. As medidas apoiam o julgamento do profissional que '
+        'atende você; o sistema não faz diagnóstico.',
+    'Quem é responsável: o profissional que atende você. O FONAR é a '
+        'ferramenta que ele usa, e trata os dados só para isso, em nome '
+        'dele. Os dados não são vendidos nem usados para outra finalidade.',
+    'Onde ficam: a gravação é enviada por conexão cifrada a servidores do '
+        'Google Cloud, onde as medidas são calculadas. O cadastro e as '
+        'medidas ficam no Brasil (São Paulo); o arquivo da gravação fica nos '
+        'Estados Unidos. Concordar inclui essa transferência.',
+    'Por quanto tempo: enquanto forem necessários ao seu atendimento e pelo '
+        'tempo em que o profissional tem o dever de guardar o registro dele '
+        '(prontuário).',
+    'Seus direitos: pedir ao profissional para ver, corrigir ou eliminar os '
+        'seus dados, e saber com quem eles são compartilhados (LGPD, art. '
+        '18). Voz ligada a você é dado pessoal sensível.',
     'Você pode retirar este consentimento a qualquer momento, pedindo ao '
-        'profissional.',
+        'profissional. A partir daí nada novo é gravado ou analisado; o que '
+        'já foi feito continua no registro do atendimento, a não ser que '
+        'você peça a eliminação.',
+    'Não concordar não impede o atendimento: só a gravação e as medidas '
+        'acústicas deixam de ser feitas. Quem autoriza como responsável '
+        'legal declara ter essa responsabilidade pelo paciente.',
   ];
 
   static const consentimentoCampoQuem = 'Quem autoriza';
@@ -214,6 +236,29 @@ abstract final class AppStrings {
   static const consentimentoQuemApoio =
       'Quando o paciente não pode autorizar sozinho — por exemplo, uma '
       'criança —, quem autoriza é o responsável legal.';
+  // US43: eliminação dos dados, a pedido do paciente (LGPD, art. 18, VI).
+  static const perfilEliminarTitulo = 'Eliminar os dados do paciente';
+  static const perfilEliminarTexto =
+      'A pedido do paciente (LGPD, art. 18). Apaga para sempre, neste '
+      'aparelho e no servidor, o cadastro, os consentimentos, as gravações, '
+      'as análises, a CAPE-V e os laudos.';
+  static const perfilEliminarAcao = 'Eliminar os dados';
+  static String perfilEliminarConfirmarTitulo(String nome) =>
+      'Eliminar os dados de $nome?';
+  static const perfilEliminarConfirmarTexto =
+      'Não dá para desfazer: nada volta, nem do servidor. Antes, pese o '
+      'pedido contra o dever de guardar o registro do atendimento '
+      '(prontuário).';
+  static const perfilEliminarConfirmar = 'Eliminar';
+  static const perfilEliminarCancelar = 'Manter os dados';
+  static const perfilEliminando = 'Eliminando…';
+  static const perfilEliminarExigeConexao =
+      'A eliminação exige conexão: o que está no servidor sai junto.';
+
+  static const consentimentoQuemApoioMenor =
+      'Paciente menor de 18 anos: quem autoriza é o responsável legal.';
+  static const consentimentoMenorExigeResponsavel =
+      'Paciente menor de 18 anos: a autorização é do responsável legal.';
   static const consentimentoCampoResponsavel = 'Nome do responsável legal';
   static const consentimentoConcordancia =
       'Quem autoriza leu ou ouviu o termo e concorda com a gravação e com o '
@@ -609,8 +654,10 @@ abstract final class AppStrings {
   static const filaVerResultado = 'Ver resultado';
   static const filaSemConsentimento = 'Parado: consentimento retirado';
   static const filaSemConsentimentoTexto =
-      'O consentimento deste paciente foi retirado, e a gravação não sobe. '
-      'Só com um novo consentimento registrado dá para tentar de novo.';
+      'O consentimento sob o qual esta gravação foi feita foi retirado, e ela '
+      'não sobe mais — um consentimento novo vale para o que for gravado '
+      'depois dele. Ela fica guardada neste aparelho, como parte do registro '
+      'do atendimento.';
 
   /// "4,2 s". Decimal com vírgula, como se escreve em português.
   static String segundos(Duration d) =>
@@ -1215,11 +1262,13 @@ abstract final class AppStrings {
   static const bloqueioInformeSenha = 'Informe a senha para desbloquear.';
   static const bloqueioSenhaNaoConfere =
       'A senha não confere. Confira e tente de novo.';
-  static const bloqueioOfflineTitulo = 'Sem conexão para conferir a senha';
+  static const bloqueioOfflineTitulo = 'Desbloqueio sem conexão';
   static const bloqueioOfflineTexto =
-      'Como no modo offline do login, o desbloqueio não confere a senha '
-      'enquanto não houver conexão.';
-  static const bloqueioContinuarOffline = 'Continuar em modo offline';
+      'A senha é conferida com a da última entrada com conexão neste '
+      'aparelho.';
+  static const bloqueioSemRedeSemSenhaGuardada =
+      'Sem conexão, não há senha guardada neste aparelho para conferir. '
+      'Conecte-se para desbloquear, ou saia da conta.';
   static const bloqueioSair = 'Sair da conta';
   static const loginInformeEmail = 'Informe o e-mail.';
   static const loginInformeSenha = 'Informe a senha.';
@@ -1260,7 +1309,13 @@ abstract final class AppStrings {
       '${pacientes == 1 ? 'paciente salvo' : 'pacientes salvos'}. Dá para '
       'gravar e revisar; o envio para análise aguarda a conexão voltar.';
   static const loginEntrarOffline = 'Entrar em modo offline';
-  static String loginOfflineComo(String email) => 'Entra como $email.';
+  static String loginOfflineComo(String email) =>
+      'Entra como $email, com a senha dessa conta.';
+  static const loginSemRedeSenhaNaoConfere =
+      'A senha não confere com a da última entrada neste aparelho.';
+  static const loginSemRedeSemSenhaGuardada =
+      'Esta conta ainda não entrou com conexão desde que o FONAR passou a '
+      'conferir a senha sem rede. Conecte-se e entre uma vez para habilitar.';
   static const loginOfflineSemContaTexto =
       'O modo offline entra com a conta da última entrada com senha neste '
       'aparelho, e ainda não houve nenhuma. Conecte-se e entre uma vez para '
@@ -1307,15 +1362,35 @@ abstract final class AppStrings {
   static const cadastroTermosRotulo =
       'Li e aceito os termos de uso e a política de privacidade do FONAR.';
 
-  /// PLACEHOLDER jurídico — o texto final dos termos ainda não existe. Ao
-  /// trocar, mude também `versaoDosTermos` (`cadastro/domain/cadastro.dart`).
-  static const cadastroTermosTexto =
-      'Versão provisória. O FONAR é ferramenta de apoio à decisão e não emite '
-      'diagnóstico. Os dados dos pacientes que você cadastrar ficam sob a sua '
-      'responsabilidade profissional, e a gravação de voz só acontece com o '
-      'consentimento do paciente. A equipe confere a sua inscrição no Crefono. '
-      'O texto completo dos termos e da política de privacidade ainda está '
-      'sendo escrito.';
+  /// Os termos de uso e a política de privacidade (US43), em itens, como o
+  /// termo do paciente. Ao mudar qualquer palavra, mude também
+  /// `versaoDosTermos` (`cadastro/domain/cadastro.dart`): a API grava a
+  /// versão aceita, com a data. Revisão jurídica recomendada (PENDENCIAS.md).
+  static const cadastroTermosTitulo = 'Termos de uso e política de privacidade';
+  static const cadastroTermosItens = [
+    'O FONAR é ferramenta de apoio à decisão clínica e não emite '
+        'diagnóstico. As medidas acústicas vêm do motor do Praat, software '
+        'independente da Universidade de Amsterdam; a interpretação é sua. '
+        'Uma medida só aparece classificada quando há faixa de referência '
+        'validada para ela.',
+    'Os dados dos seus pacientes são de sua responsabilidade (você é o '
+        'controlador, na LGPD): registrar o consentimento antes de gravar, '
+        'atender os pedidos deles e guardar o registro do atendimento como o '
+        'seu conselho exige. O FONAR trata esses dados em seu nome, só para '
+        'o serviço.',
+    'Os seus dados — nome, e-mail e inscrição no Crefono — servem para '
+        'identificar você, para a equipe conferir a inscrição e para assinar '
+        'os laudos.',
+    'Onde ficam: no Google Cloud (Firebase). Cadastros, medidas e laudos no '
+        'Brasil (São Paulo); os arquivos de gravação nos Estados Unidos. '
+        'Tudo trafega cifrado, e cada conta só alcança os próprios '
+        'pacientes.',
+    'A sua senha protege dado de saúde, inclusive sem conexão: guarde-a em '
+        'sigilo e mantenha o aparelho com bloqueio de tela.',
+    'O FONAR é um projeto acadêmico (TCC de Engenharia de Software, '
+        'PUC-Campinas), oferecido sem garantia de disponibilidade contínua. '
+        'Se estes termos mudarem, o aplicativo pede um novo aceite.',
+  ];
   static const registroInformeNome = 'Informe o nome completo.';
   static const cadastroNomeLongo = 'O nome passa de 200 caracteres.';
   static const cadastroInformeRegiao =

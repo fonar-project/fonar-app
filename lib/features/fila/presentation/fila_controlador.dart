@@ -165,6 +165,9 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
     final item = _itens.where((i) => i.id == id).firstOrNull;
     if (item == null || !item.pendente) return;
     if (item.situacao == SituacaoDoEnvio.enviando) return;
+    // Gravada sob um consentimento que foi retirado: não sobe mais, nem
+    // com um consentimento novo (US43, ver `RetiradaDeConsentimento`).
+    if (item.situacao == SituacaoDoEnvio.semConsentimento) return;
     await _salvar(
       item.copiar(
         situacao: SituacaoDoEnvio.naFila,

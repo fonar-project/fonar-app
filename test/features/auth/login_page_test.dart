@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:fonar_app/core/auth/senha_sem_rede.dart';
 import 'package:fonar_app/app/router/app_routes.dart';
 import 'package:fonar_app/core/error/app_exception.dart';
 import 'package:fonar_app/core/network/conexao.dart';
@@ -17,6 +18,7 @@ import 'package:fonar_app/features/auth/domain/repositorio_autenticacao.dart';
 import 'package:fonar_app/features/auth/presentation/pages/login_page.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 
+import '../../apoio/senha_sem_rede_em_memoria.dart';
 import '../../apoio/sessao_de_teste.dart';
 
 /// Repositório controlável pelo teste.
@@ -108,6 +110,9 @@ Future<void> _abrir(
           repositorio ?? _RepositorioFalso(),
         ),
         loginDeExemploProvider.overrideWithValue(deExemplo),
+        senhaSemRedeProvider.overrideWithValue(
+          SenhaSemRedeEmMemoria({contaDeTeste.uid: 'certa'}),
+        ),
       ],
       child: MaterialApp.router(theme: AppTheme.claro, routerConfig: roteador),
     ),
@@ -478,9 +483,28 @@ void main() {
         findsOneWidget,
       );
 
+      // Com a senha da conta (US43): o aviso vem antes do formulário, e o
+      // campo dele é o primeiro — o do formulário fica desligado sem rede.
+      await tester.enterText(find.byType(TextField).first, 'certa');
       await tester.tap(find.text(AppStrings.loginEntrarOffline));
       await tester.pumpAndSettle();
       expect(find.text(_telaDePacientes), findsOneWidget);
+    });
+
+    // US43: antes, o modo offline entrava sem senha nenhuma.
+    testWidgets('modo offline com a senha errada não entra', (tester) async {
+      await _abrir(tester, online: false, pacientesEmCache: 5);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(AppStrings.loginEntrarOffline));
+      await tester.pumpAndSettle();
+      expect(find.text(AppStrings.loginInformeSenha), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField).first, 'errada');
+      await tester.tap(find.text(AppStrings.loginEntrarOffline));
+      await tester.pumpAndSettle();
+      expect(find.text(AppStrings.loginSemRedeSenhaNaoConfere), findsOneWidget);
+      expect(find.text(_telaDePacientes), findsNothing);
     });
 
     testWidgets('sem entrada com senha anterior, o modo offline não abre', (

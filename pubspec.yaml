@@ -162,6 +162,12 @@ dependencies:
   # Só é importado por `lib/core/navegador/navegador_web.dart`, que não
   # compila fora do navegador. NÃO analisa áudio: lê bytes e propriedades.
   web: ^1.1.1
+
+  # O verificador da senha sem rede (US43): o HMAC-SHA256 sobre o qual o
+  # PBKDF2 da RFC 8018 é composto (`core/auth/senha_sem_rede.dart`). Pacote
+  # do time do Dart, já trazido por outros; aqui passa a direto. Licença
+  # BSD-3. Não toca em áudio.
+  crypto: ^3.0.6
 dev_dependencies:
   flutter_test:
     sdk: flutter

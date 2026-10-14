@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/auth/senha_sem_rede.dart';
 import '../../../core/error/app_exception.dart';
 import '../../../core/network/conexao.dart';
 import '../../../l10n/app_strings.dart';
@@ -18,13 +21,10 @@ class EstadoDoDesbloqueio {
 
 /// Desbloqueia com a senha do profissional desta sessão.
 ///
-/// Sem conexão, a senha não tem com quem ser conferida — e o app vale a
-/// mesma regra do "entrar em modo offline" do login, que também não
-/// confere. A tela diz isso com todas as letras, em vez de pedir uma senha
-/// que ninguém confere.
-///
-/// TODO(jurídico): conferir sem rede por uma credencial local (PIN do app
-/// ou biometria do aparelho)? — ver `PENDENCIAS.md`.
+/// Com conexão, quem confere é o Firebase. Sem conexão (US43), o verificador
+/// que a última entrada com rede guardou no aparelho ([SenhaSemRede]) — a
+/// mesma senha, nunca um atalho. Sem verificador desta conta, sem rede não
+/// se desbloqueia: o profissional espera a conexão ou sai da conta.
 class DesbloqueioControlador extends Notifier<EstadoDoDesbloqueio> {
   @override
   EstadoDoDesbloqueio build() => const EstadoDoDesbloqueio();
@@ -32,13 +32,15 @@ class DesbloqueioControlador extends Notifier<EstadoDoDesbloqueio> {
   Future<bool> desbloquear(String senha) async {
     if (state.conferindo) return false;
     final online = ref.read(conexaoOnlineProvider);
-    if (online && senha.isEmpty) {
+    if (senha.isEmpty) {
       state = const EstadoDoDesbloqueio(erro: AppStrings.bloqueioInformeSenha);
       return false;
     }
 
     state = const EstadoDoDesbloqueio(conferindo: true);
     final container = ref.container;
+    // Lido antes das esperas: a tela pode fechar no meio delas.
+    final senhas = ref.read(senhaSemRedeProvider);
     String? erro;
     final conta = ref.read(sessaoProvider);
     if (online && conta != null) {
@@ -52,6 +54,9 @@ class DesbloqueioControlador extends Notifier<EstadoDoDesbloqueio> {
         if (conferida.uid != conta.uid) {
           erro = AppStrings.bloqueioSenhaNaoConfere;
         }
+        if (erro == null) {
+          unawaited(senhas.lembrar(conta.uid, senha));
+        }
       } on CredencialInvalida {
         erro = AppStrings.bloqueioSenhaNaoConfere;
       } on AppException catch (e) {
@@ -59,6 +64,15 @@ class DesbloqueioControlador extends Notifier<EstadoDoDesbloqueio> {
       } catch (_) {
         erro = AppStrings.erroDesconhecido;
       }
+    } else if (conta != null) {
+      erro = switch (await senhas.conferir(conta.uid, senha)) {
+        ConferenciaSemRede.confere => null,
+        ConferenciaSemRede.naoConfere => AppStrings.bloqueioSenhaNaoConfere,
+        ConferenciaSemRede.semRegistro =>
+          AppStrings.bloqueioSemRedeSemSenhaGuardada,
+      };
+    } else {
+      erro = AppStrings.erroDesconhecido;
     }
 
     if (erro == null) {

@@ -243,6 +243,14 @@ texto de interface pode sugerir o contrário.
 fica bloqueada enquanto não houver consentimento registrado, e o bloqueio é
 técnico — aplicado no roteador — não um aviso na tela.
 
+Decisões jurídicas da US43, todas pelo lado conservador — não afrouxe sem
+orientação jurídica: paciente menor de 18 anos só é autorizado pelo
+responsável legal; gravação feita sob consentimento retirado não sobe mais,
+nem com consentimento novo (o que já foi feito fica como prontuário);
+eliminação dos dados só a pedido do paciente, aqui e no servidor; e sem
+conexão a senha é conferida por um verificador PBKDF2 no cofre — nunca se
+entra nem se desbloqueia sem senha.
+
 Todo dado exibido em desenvolvimento é placeholder e deve ser identificável
 como tal.
 

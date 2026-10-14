@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/auth/senha_sem_rede.dart';
 import '../../../core/error/app_exception.dart';
 import '../../../l10n/app_strings.dart';
 import '../../cadastro/presentation/entrada.dart';
@@ -14,6 +17,7 @@ class EstadoLogin {
     this.erroEmail,
     this.erroSenha,
     this.erroGeral,
+    this.erroSemRede,
   });
 
   final bool carregando;
@@ -25,6 +29,9 @@ class EstadoLogin {
 
   /// Falha que não pertence a um campo — rede, servidor, conta pausada.
   final String? erroGeral;
+
+  /// O que dizer no campo de senha da entrada sem rede (US43).
+  final String? erroSemRede;
 }
 
 /// Em que pé está o pedido de redefinição de senha.
@@ -56,6 +63,7 @@ class LoginControlador extends Notifier<EstadoLogin> {
     }
 
     state = const EstadoLogin(carregando: true);
+    final senhas = ref.read(senhaSemRedeProvider);
     EstadoLogin resultado;
     ContaAutenticada? conta;
     try {
@@ -80,8 +88,12 @@ class LoginControlador extends Notifier<EstadoLogin> {
       return null;
     }
 
-    // A senha conferiu; falta saber em que pé está o cadastro. O botão
-    // continua em "Entrando…" enquanto a API responde.
+    // A senha conferiu: o verificador dela fica no aparelho, para a entrada
+    // e o desbloqueio sem rede (US43). Não segura a entrada.
+    unawaited(senhas.lembrar(conta.uid, senha));
+
+    // Falta saber em que pé está o cadastro. O botão continua em
+    // "Entrando…" enquanto a API responde.
     final destino = await conferirCadastro(ref);
     if (!ref.mounted) return null;
     state = resultado;
@@ -98,20 +110,48 @@ class LoginControlador extends Notifier<EstadoLogin> {
 
   /// Entra sem conexão, com a conta da última entrada com senha neste
   /// aparelho. A sessão abre do mesmo jeito: a fila espera a rede, não um
-  /// novo login. Devolve `false` se não há conta guardada.
-  Future<bool> entrarOffline() async {
+  /// novo login. Devolve `false` se não entrou.
+  ///
+  /// A [senha] é conferida com o verificador que a última entrada com rede
+  /// guardou (US43, [SenhaSemRede]). Antes, entrava sem senha nenhuma: os
+  /// dados de saúde do aparelho abriam para quem o tivesse na mão.
+  Future<bool> entrarOffline(String senha) async {
+    if (state.carregando) return false;
+    if (senha.isEmpty) {
+      state = const EstadoLogin(erroSemRede: AppStrings.loginInformeSenha);
+      return false;
+    }
+    state = const EstadoLogin(carregando: true);
+    final senhas = ref.read(senhaSemRedeProvider);
     final ContaAutenticada? conta;
+    final ConferenciaSemRede conferencia;
     try {
       conta = await ref.read(repositorioAutenticacaoProvider).contaGuardada();
+      conferencia = conta == null
+          ? ConferenciaSemRede.semRegistro
+          : await senhas.conferir(conta.uid, senha);
     } catch (_) {
       if (ref.mounted) {
         state = const EstadoLogin(erroGeral: AppStrings.erroDesconhecido);
       }
       return false;
     }
-    if (conta == null || !ref.mounted) return false;
-    ref.read(sessaoProvider.notifier).abrir(conta);
-    return true;
+    if (!ref.mounted) return false;
+    switch (conferencia) {
+      case ConferenciaSemRede.confere when conta != null:
+        state = const EstadoLogin();
+        ref.read(sessaoProvider.notifier).abrir(conta);
+        return true;
+      case ConferenciaSemRede.naoConfere:
+        state = const EstadoLogin(
+          erroSemRede: AppStrings.loginSemRedeSenhaNaoConfere,
+        );
+      case _:
+        state = const EstadoLogin(
+          erroSemRede: AppStrings.loginSemRedeSemSenhaGuardada,
+        );
+    }
+    return false;
   }
 }
 

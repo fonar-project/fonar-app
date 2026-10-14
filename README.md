@@ -80,6 +80,15 @@ conta, e sair apaga a credencial do aparelho. Quando o Firebase não renova
 mais a sessão (senha trocada, conta desativada), a fila mostra "Entrar de
 novo", e o envio sobe sozinho depois da entrada.
 
+As **decisões jurídicas** (US43) seguem o lado conservador: sem conexão, a
+entrada e o desbloqueio conferem a senha com um verificador guardado no cofre
+na última entrada com rede (PBKDF2, nunca a senha); paciente menor de 18 anos
+só é autorizado pelo responsável legal; a gravação feita sob um consentimento
+retirado não sobe mais, nem com um consentimento novo; e o perfil tem
+**eliminar os dados do paciente**, a pedido dele (LGPD, art. 18), que apaga
+tudo aqui e no servidor. O termo de consentimento e os termos de uso estão
+escritos sobre a LGPD, com revisão jurídica recomendada (`PENDENCIAS.md`).
+
 Com **mais de um aparelho** (US40), o que um registra aparece no outro: os
 pacientes da conta e os consentimentos descem do Firebase na abertura, quando
 a conexão volta e quando alguém entra; a CAPE-V e os laudos, quando o perfil

@@ -70,13 +70,10 @@ final class SemCadastro extends SituacaoDoCadastro {
   const SemCadastro();
 }
 
-/// A versão dos termos de uso que o formulário mostra. Vai para a API, que
-/// grava com a data do aceite.
-///
-/// TODO(jurídico): o texto dos termos de uso e da política de privacidade
-/// ainda não existe — o formulário mostra o resumo provisório
-/// (`AppStrings.cadastroTermosTexto`). Ao trocar o texto, mude a versão.
-const versaoDosTermos = 'provisorio-2026-10-11';
+/// A versão dos termos de uso e da política de privacidade que o formulário
+/// mostra (`AppStrings.cadastroTermosItens`). Vai para a API, que grava com
+/// a data do aceite. Ao mudar o texto, mude a versão.
+const versaoDosTermos = '2026-10-14';
 
 /// As regiões do Crefono e os estados de cada uma — a mesma tabela da API
 /// (`REGIOES_CREFONO`, em `domain/models.py` do `fonar-api`), como o
