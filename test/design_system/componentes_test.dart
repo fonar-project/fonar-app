@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
@@ -466,6 +467,78 @@ void main() {
 
       expect(find.text('Usamos para enviar o laudo'), findsNothing);
       expect(find.text('Informe um e-mail válido'), findsOneWidget);
+    });
+
+    group('senha: o olho (US46)', () {
+      bool escondida(WidgetTester tester) =>
+          tester.widget<TextField>(find.byType(TextField)).obscureText;
+
+      testWidgets('começa escondida; o olho mostra e volta a esconder', (
+        tester,
+      ) async {
+        final senha = TextEditingController(text: 'segredo-1');
+        addTearDown(senha.dispose);
+        await tester.pumpWidget(
+          _tela(
+            AppCampoTexto(
+              rotulo: 'Senha',
+              controlador: senha,
+              ocultarTexto: true,
+            ),
+          ),
+        );
+        expect(escondida(tester), isTrue);
+
+        await tester.tap(find.byTooltip(AppStrings.campoMostrarSenha));
+        await tester.pump();
+        expect(escondida(tester), isFalse);
+        expect(find.byTooltip(AppStrings.campoOcultarSenha), findsOneWidget);
+
+        await tester.tap(find.byTooltip(AppStrings.campoOcultarSenha));
+        await tester.pump();
+        expect(escondida(tester), isTrue);
+        // Mostrar e esconder não mexem no que foi digitado.
+        expect(senha.text, 'segredo-1');
+      });
+
+      testWidgets('campo que não é senha não tem olho', (tester) async {
+        await tester.pumpWidget(_tela(const AppCampoTexto(rotulo: 'E-mail')));
+        expect(find.byType(IconButton), findsNothing);
+      });
+
+      testWidgets('desabilitado, sem olho', (tester) async {
+        await tester.pumpWidget(
+          _tela(
+            const AppCampoTexto(
+              rotulo: 'Senha',
+              ocultarTexto: true,
+              habilitado: false,
+            ),
+          ),
+        );
+        expect(find.byType(IconButton), findsNothing);
+      });
+
+      testWidgets('leitor de tela: o campo continua um só, e mostrar a senha '
+          'é ação dele', (tester) async {
+        final semantica = tester.ensureSemantics();
+        await tester.pumpWidget(
+          _tela(const AppCampoTexto(rotulo: 'Senha', ocultarTexto: true)),
+        );
+
+        expect(
+          tester.getSemantics(find.byType(EditableText)),
+          isSemantics(
+            label: 'Senha',
+            isTextField: true,
+            isObscured: true,
+            customActions: [
+              const CustomSemanticsAction(label: AppStrings.campoMostrarSenha),
+            ],
+          ),
+        );
+        semantica.dispose();
+      });
     });
   });
 

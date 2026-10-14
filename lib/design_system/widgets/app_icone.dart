@@ -59,7 +59,12 @@ enum NomeIcone {
   estadoSemConexao('estado-sem-conexao'),
 
   // Documento emitido: o laudo em PDF.
-  documento('documento');
+  documento('documento'),
+
+  // Campo de senha (US46): o desenho diz o que o toque FAZ — o olho mostra a
+  // senha escondida; o olho cortado volta a escondê-la.
+  mostrarSenha('mostrar-senha'),
+  ocultarSenha('ocultar-senha');
 
   const NomeIcone(this.arquivo);
 

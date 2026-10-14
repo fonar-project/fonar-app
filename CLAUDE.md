@@ -223,7 +223,7 @@ varre toda rota do celular pequeno (360×640) ao Full HD, e uma vez com
 movimento reduzido.
 
 ## Ícones
-20 SVG em `assets/icons/`, 24x24, `currentColor`, sem width/height fixos.
+22 SVG em `assets/icons/`, 24x24, `currentColor`, sem width/height fixos.
 Índice de uso em `assets/icons/README.md`.
 
 - Nenhuma tela importa SVG direto. Tudo passa pelo componente único de ícone
