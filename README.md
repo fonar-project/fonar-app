@@ -54,7 +54,8 @@ O caminho de uma avaliação, na ordem em que o profissional passa por ele:
    no perfil para enviar ou descartar (US19).
 7. **Vê o resultado** (US07): as medidas, classificadas só se houver faixa de
    referência validada — hoje nenhuma há, e o app diz isso. O **espectrograma**
-   abre em tela cheia, deitado no celular (US17). AVQI e CPPS vêm em
+   abre em tela cheia, deitado no celular (US17), e a pinça amplia sem a
+   página rolar junto (US55). AVQI e CPPS vêm em
    destaque, as demais medidas menores, e o próximo passo — CAPE-V ou laudo —
    fica num rodapé fixo (US27).
 8. **Registra a CAPE-V** (US08) numa régua de 100 mm, ouvindo a amostra — no

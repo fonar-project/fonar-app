@@ -57,8 +57,53 @@ class _EspectrogramaPageState extends ConsumerState<EspectrogramaPage> {
   final _area = GlobalKey();
   final _foco = FocusNode(debugLabel: 'espectrograma');
 
+  // A rolagem e a pinça disputam o mesmo gesto, e a rolagem ganhava: o
+  // primeiro dedo que andava na vertical antes do segundo encostar levava a
+  // página, e não havia zoom (US55). Então a rolagem só existe quando é
+  // preciso — e, mesmo aí, trava com dois dedos na tela e com a imagem
+  // ampliada, quando arrastar é percorrer a imagem.
+
+  /// O conteúdo passa da altura da tela — com o texto do sistema grande — e
+  /// a página precisa rolar. No caso normal tudo cabe, e a rolagem fica
+  /// desligada.
+  var _precisaRolar = false;
+
+  /// Dedos na tela agora. Com dois ou mais, é pinça.
+  var _dedos = 0;
+
+  var _ampliada = false;
+
+  bool get _rola => _precisaRolar && _dedos < 2 && !_ampliada;
+
+  @override
+  void initState() {
+    super.initState();
+    _visao.addListener(_aoMudarAVisao);
+  }
+
+  void _aoMudarAVisao() {
+    final ampliada = _visao.value.getMaxScaleOnAxis() > 1.001;
+    if (ampliada != _ampliada) setState(() => _ampliada = ampliada);
+  }
+
+  void _contarDedo(int mais) {
+    final pinca = _dedos >= 2;
+    _dedos = (_dedos + mais).clamp(0, 10);
+    if ((_dedos >= 2) != pinca) setState(() {});
+  }
+
+  bool _aoMedir(ScrollMetricsNotification aviso) {
+    final metricas = aviso.metrics;
+    final precisa = metricas.maxScrollExtent > metricas.minScrollExtent;
+    if (aviso.depth == 0 && precisa != _precisaRolar) {
+      setState(() => _precisaRolar = precisa);
+    }
+    return false;
+  }
+
   @override
   void dispose() {
+    _visao.removeListener(_aoMudarAVisao);
     _visao.dispose();
     _foco.dispose();
     super.dispose();
@@ -170,7 +215,15 @@ class _EspectrogramaPageState extends ConsumerState<EspectrogramaPage> {
 
             final Widget conteudo = switch (analise) {
               AsyncData(value: ResultadoDaAnalise(:final espectrogramaUrl?)) =>
-                _visor(espectrogramaUrl, compacta: compacta),
+                Listener(
+                  onPointerDown: (_) => _contarDedo(1),
+                  onPointerUp: (_) => _contarDedo(-1),
+                  onPointerCancel: (_) => _contarDedo(-1),
+                  child: NotificationListener<ScrollMetricsNotification>(
+                    onNotification: _aoMedir,
+                    child: _visor(espectrogramaUrl, compacta: compacta),
+                  ),
+                ),
               AsyncData() => AppEstado.central(
                 titulo: AppStrings.resultadoEspectrogramaIndisponivel,
                 acao: AppBotao.secundario(
@@ -244,6 +297,8 @@ class _EspectrogramaPageState extends ConsumerState<EspectrogramaPage> {
     // o texto do sistema grande: aí a imagem mantém um mínimo legível, em
     // vez de sumir espremida entre as dicas e os botões.
     return CustomScrollView(
+      // Ver `_rola`: desligada, nenhum gesto na imagem vira rolagem.
+      physics: _rola ? null : const NeverScrollableScrollPhysics(),
       slivers: [
         SliverFillRemaining(
           hasScrollBody: false,

@@ -127,6 +127,44 @@ double _escala(WidgetTester tester) => tester
     .value
     .getMaxScaleOnAxis();
 
+double _rolagem(WidgetTester tester) => tester
+    .state<ScrollableState>(
+      find.descendant(
+        of: find.byType(EspectrogramaPage),
+        matching: find.byType(Scrollable),
+      ),
+    )
+    .position
+    .pixels;
+
+/// Pinça na imagem. Com [primeiroAndaAntes], o primeiro dedo encosta e anda
+/// na vertical antes do segundo — o caso em que a rolagem roubava o gesto
+/// (US55).
+Future<void> _pincar(
+  WidgetTester tester, {
+  bool primeiroAndaAntes = false,
+}) async {
+  final centro = tester.getCenter(find.byType(InteractiveViewer));
+  final primeiro = await tester.startGesture(centro + const Offset(0, -10));
+  if (primeiroAndaAntes) {
+    await primeiro.moveBy(const Offset(0, -12));
+    await tester.pump();
+    await primeiro.moveBy(const Offset(0, -12));
+  }
+  await tester.pump();
+  final segundo = await tester.startGesture(centro + const Offset(0, 10));
+  await tester.pump();
+  // Como na mão: um dedo parado, o outro abrindo — a rolagem, se estiver
+  // ligada, vê só um arrasto para baixo.
+  for (var i = 0; i < 6; i++) {
+    await segundo.moveBy(const Offset(0, 12));
+    await tester.pump();
+  }
+  await primeiro.up();
+  await segundo.up();
+  await tester.pumpAndSettle();
+}
+
 bool _habilitado(WidgetTester tester, String rotulo) {
   final botao = find.ancestor(
     of: find.text(rotulo),
@@ -283,6 +321,80 @@ void main() {
     expect(_escala(tester), closeTo(6, 0.001));
     expect(_habilitado(tester, AppStrings.espectrogramaAproximar), isFalse);
     expect(find.text(AppStrings.espectrogramaNoMaximo), findsOneWidget);
+  });
+
+  group('pinça e rolagem (US55)', () {
+    testWidgets('tudo cabe: a pinça amplia, e a página não rola', (
+      tester,
+    ) async {
+      await _abrir(tester, rota: AppRoutes.espectrogramaNome);
+
+      await _pincar(tester, primeiroAndaAntes: true);
+
+      expect(_escala(tester), greaterThan(1.2));
+      expect(_rolagem(tester), 0);
+    });
+
+    testWidgets('texto em 200%, sem ampliar: a página ainda rola', (
+      tester,
+    ) async {
+      await _abrir(
+        tester,
+        rota: AppRoutes.espectrogramaNome,
+        tamanho: const Size(390, 640),
+        escala: 2,
+      );
+
+      await tester.drag(
+        find.text(AppStrings.espectrogramaGireAparelho),
+        const Offset(0, -200),
+      );
+      await tester.pumpAndSettle();
+
+      expect(_rolagem(tester), greaterThan(0));
+    });
+
+    // Aqui a página precisa rolar com um dedo, então um dedo que já andou na
+    // vertical é rolagem. Com dois dedos na imagem, a rolagem trava.
+    testWidgets('texto em 200%: a pinça amplia, e a página não rola', (
+      tester,
+    ) async {
+      await _abrir(
+        tester,
+        rota: AppRoutes.espectrogramaNome,
+        tamanho: const Size(390, 640),
+        escala: 2,
+      );
+
+      await _pincar(tester);
+
+      expect(_escala(tester), greaterThan(1.2));
+      expect(_rolagem(tester), 0);
+    });
+
+    testWidgets('ampliada, arrastar na vertical percorre a imagem e não rola', (
+      tester,
+    ) async {
+      await _abrir(
+        tester,
+        rota: AppRoutes.espectrogramaNome,
+        tamanho: const Size(390, 640),
+        escala: 2,
+      );
+      final visao = tester
+          .widget<InteractiveViewer>(find.byType(InteractiveViewer))
+          .transformationController!;
+      visao.value = Matrix4.diagonal3Values(2, 2, 1);
+      await tester.pump();
+      final rolagem = _rolagem(tester);
+      final antes = visao.value.getTranslation().y;
+
+      await tester.drag(find.byType(InteractiveViewer), const Offset(0, -60));
+      await tester.pumpAndSettle();
+
+      expect(visao.value.getTranslation().y, lessThan(antes));
+      expect(_rolagem(tester), rolagem);
+    });
   });
 
   for (final (nome, tamanho) in [
