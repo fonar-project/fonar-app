@@ -12,6 +12,7 @@ import 'package:fonar_app/design_system/widgets/app_estado.dart';
 import 'package:fonar_app/design_system/widgets/app_fundo.dart';
 import 'package:fonar_app/design_system/widgets/app_icone.dart';
 import 'package:fonar_app/design_system/widgets/app_indicador_conexao.dart';
+import 'package:fonar_app/design_system/widgets/app_simbolo.dart';
 import 'package:fonar_app/design_system/widgets/app_status_medida.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 
@@ -539,6 +540,59 @@ void main() {
         );
         semantica.dispose();
       });
+    });
+  });
+
+  group('AppSimbolo', () {
+    testWidgets('desenha no tamanho pedido', (tester) async {
+      await tester.pumpWidget(
+        _tela(const AppSimbolo(cor: AppColors.roxoProfundo, tamanho: 40)),
+      );
+      expect(
+        tester.getSize(
+          find.descendant(
+            of: find.byType(AppSimbolo),
+            matching: find.byType(CustomPaint),
+          ),
+        ),
+        const Size(40, 40),
+      );
+    });
+
+    testWidgets('é decorativo: o leitor de tela lê só o nome ao lado', (
+      tester,
+    ) async {
+      final semantica = tester.ensureSemantics();
+      await tester.pumpWidget(
+        _tela(
+          const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppSimbolo(cor: AppColors.roxoProfundo),
+              Text(AppStrings.appTitle),
+            ],
+          ),
+        ),
+      );
+
+      expect(
+        find.descendant(
+          of: find.byType(AppSimbolo),
+          matching: find.byType(ExcludeSemantics),
+        ),
+        findsOneWidget,
+      );
+      expect(find.bySemanticsLabel(AppStrings.appTitle), findsOneWidget);
+      semantica.dispose();
+    });
+
+    test('repinta só quando a cor muda', () {
+      final roxo = PintorDoSimbolo(AppColors.roxoProfundo);
+      expect(
+        roxo.shouldRepaint(PintorDoSimbolo(AppColors.roxoProfundo)),
+        isFalse,
+      );
+      expect(roxo.shouldRepaint(PintorDoSimbolo(AppColors.creme)), isTrue);
     });
   });
 

@@ -1,5 +1,7 @@
 # FONAR — aplicativo
 
+<img src="marca/fonar-assinatura.svg" alt="FONAR" width="260">
+
 > [!IMPORTANT]
 > **`flutter run` abre o FONAR de verdade**, sem nenhum `--dart-define`: o
 > login e o "Criar conta" no **Firebase Authentication** do projeto

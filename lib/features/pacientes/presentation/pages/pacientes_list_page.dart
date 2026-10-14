@@ -13,6 +13,7 @@ import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/tokens/app_typography.dart';
 import '../../../../design_system/widgets/app_botao.dart';
+import '../../../../design_system/widgets/app_simbolo.dart';
 import '../../../../design_system/widgets/app_estado.dart';
 import '../../../../design_system/widgets/app_fundo.dart';
 import '../../../../design_system/widgets/app_icone.dart';
@@ -253,15 +254,22 @@ class _LayoutCompacto extends ConsumerWidget {
                     children: [
                       Semantics(
                         header: true,
-                        child: Text(
-                          AppStrings.appTitle,
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                fontSize: 19,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.95,
-                                color: context.cores.acento,
-                              ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AppSimbolo(cor: context.cores.acento, tamanho: 26),
+                            const SizedBox(width: AppSpacing.xs),
+                            Text(
+                              AppStrings.appTitle,
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(
+                                    fontSize: 19,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.95,
+                                    color: context.cores.acento,
+                                  ),
+                            ),
+                          ],
                         ),
                       ),
                       AppIndicadorConexao(

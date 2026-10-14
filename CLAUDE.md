@@ -222,6 +222,14 @@ tudo rola junto. A matriz de layout (`test/app/matriz_de_layout_test.dart`)
 varre toda rota do celular pequeno (360×640) ao Full HD, e uma vez com
 movimento reduzido.
 
+## Marca
+O símbolo (US47) é a onda de voz que vira ondas de sonar — fono + sonar.
+Arquivos-fonte e onde cada ícone de plataforma está: `marca/README.md`. Na
+tela, `AppSimbolo` (desenhado em código, com a cor do tema), sempre ao lado
+do nome FONAR escrito; no laudo, `simboloDoFonarSvg`. A marca NÃO entra em
+`assets/icons/`: aquela pasta é de ícone de interface, espelhada com a
+landing.
+
 ## Ícones
 22 SVG em `assets/icons/`, 24x24, `currentColor`, sem width/height fixos.
 Índice de uso em `assets/icons/README.md`.

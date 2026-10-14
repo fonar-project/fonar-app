@@ -6,6 +6,7 @@ import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_indicador_conexao.dart';
+import '../../../../design_system/widgets/app_simbolo.dart';
 import '../../../../l10n/app_strings.dart';
 
 /// A moldura das telas de entrada — entrar, criar conta, confirmar o
@@ -279,15 +280,25 @@ class _Marca extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cor = context.cores.sobrePrimaria;
     return Semantics(
       header: true,
-      child: Text(
-        AppStrings.appTitle,
-        style: Theme.of(context).textTheme.displaySmall?.copyWith(
-          fontSize: tamanho,
-          letterSpacing: tamanho * 0.05,
-          color: context.cores.sobrePrimaria,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AppSimbolo(cor: cor, tamanho: tamanho * 1.3),
+          SizedBox(width: tamanho * 0.25),
+          Flexible(
+            child: Text(
+              AppStrings.appTitle,
+              style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                fontSize: tamanho,
+                letterSpacing: tamanho * 0.05,
+                color: cor,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
