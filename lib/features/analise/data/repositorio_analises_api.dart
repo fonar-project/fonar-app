@@ -136,7 +136,7 @@ ResultadoDaAnalise analiseDaApi(Map<Object?, Object?> corpo) {
           'id': final String id,
           'tipo_tarefa': final String tipo,
         })
-          if (tarefaDaApi(tipo) case final tarefa?) tarefa: id,
+          ?tarefaDaApi(tipo): id,
     },
     id: corpo['id'] as String,
     pacienteId: pacienteId,

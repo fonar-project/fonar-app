@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/banco/banco_local.dart';
@@ -59,8 +58,8 @@ class DescidaDoFirestore {
     this._firestore,
     this._dio,
     this._banco, {
-    required DateTime Function() agora,
-  }) : _agora = agora;
+    required this._agora,
+  });
 
   final FirestoreRest _firestore;
   final Dio _dio;
