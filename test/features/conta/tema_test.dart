@@ -25,11 +25,12 @@ import '../../apoio/sessao_de_teste.dart';
 
 void main() {
   // Cada versão já distribuída chega à atual igual a um banco novo. A 3
-  // trouxe as preferências (o tema); a 4, o dono de cada envio (US32).
+  // trouxe as preferências (o tema); a 4, o dono de cada envio (US32); a 5,
+  // o laudo que não se sobrescreve (US38); a 6, os WAV do navegador (US42).
   group('migração do banco para a versão atual', () {
     final verificador = SchemaVerifier(GeneratedHelper());
 
-    for (final de in [1, 2, 3, 4]) {
+    for (final de in [1, 2, 3, 4, 5]) {
       test('da versão $de para a atual, igual a um banco novo', () async {
         final conexao = await verificador.startAt(de);
         final banco = BancoLocal(conexao);

@@ -1,7 +1,9 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fonar_app/features/captura/domain/ajuste_de_configuracao.dart';
 import 'package:fonar_app/features/captura/domain/cabecalho_wav.dart';
+import 'package:fonar_app/features/captura/domain/processamento_automatico.dart';
 import 'package:fonar_app/features/captura/domain/verificacao_da_amostra.dart';
 
 import 'wav_de_teste.dart';
@@ -13,6 +15,7 @@ List<ProblemaNaAmostra> _verificar(
   Uint8List arquivo, {
   List<double>? leituras,
   int? tamanho,
+  AjusteDeConfiguracao? ajuste,
 }) => VerificacaoDaAmostra.verificar(
   cabecalho: lerCabecalhoWav(arquivo),
   inicioDoArquivo: arquivo,
@@ -21,6 +24,7 @@ List<ProblemaNaAmostra> _verificar(
   taxaPedida: 44100,
   canaisPedidos: 1,
   bitsPedidos: 16,
+  ajuste: ajuste,
 );
 
 void main() {
@@ -148,6 +152,29 @@ void main() {
       );
       expect(p, [ProblemaNaAmostra.formatoAjustado]);
       expect(ProblemaNaAmostra.formatoAjustado.invalida, isFalse);
+    });
+
+    // US42: o arquivo não mostra que passou por ganho automático ou
+    // supressão de ruído — só o aviso do aparelho denuncia.
+    test('invalida: o aparelho manteve o processamento automático', () {
+      final p = _verificar(
+        wavDeTeste(duracao: const Duration(seconds: 3)),
+        ajuste: const AjusteDeConfiguracao(
+          taxaDeAmostragem: 44100,
+          canais: 1,
+          processamentoLigado: {ProcessamentoAutomatico.supressaoDeRuido},
+        ),
+      );
+      expect(p, [ProblemaNaAmostra.processamentoLigado]);
+      expect(ProblemaNaAmostra.processamentoLigado.invalida, isTrue);
+    });
+
+    test('aviso só de processamento desligado não acusa nada', () {
+      final p = _verificar(
+        wavDeTeste(duracao: const Duration(seconds: 3)),
+        ajuste: const AjusteDeConfiguracao(taxaDeAmostragem: 44100, canais: 1),
+      );
+      expect(p, isEmpty);
     });
 
     // US39: o que a API recusaria invalida na hora — enviar só traria a

@@ -1,15 +1,23 @@
 import 'dart:io';
 
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fonar_app/core/error/app_exception.dart';
+import 'package:fonar_app/core/network/dio_client.dart';
 import 'package:fonar_app/core/network/interceptors/error_interceptor.dart';
+import 'package:fonar_app/features/captura/data/arquivos_de_amostra_no_navegador.dart';
+import 'package:fonar_app/features/captura/data/gravador_record.dart';
 import 'package:fonar_app/features/captura/domain/amostra.dart';
 import 'package:fonar_app/features/fila/data/envio_de_analise_api.dart';
 import 'package:fonar_app/features/fila/domain/item_da_fila.dart';
 import 'package:fonar_app/features/fila/domain/repositorio_fila.dart';
+import 'package:fonar_app/features/sincronizacao/data/sincronizacao_firestore.dart';
 import 'package:fonar_app/features/sincronizacao/domain/sincronizacao.dart';
 
+import '../../apoio/banco_em_memoria.dart';
 import '../../apoio/http_falso.dart';
 
 const _paciente = '0f8b7e5c-3c1a-4d2e-9f00-1a2b3c4d5e6f';
@@ -147,6 +155,72 @@ void main() {
       throwsA(isA<EnvioCancelado>()),
     );
     expect(servidor.feitas, isEmpty);
+  });
+
+  // US42: no navegador o WAV mora no banco local, e o envio o lê de lá.
+  group('no navegador', () {
+    ({EnvioDeAnalise envio, AdaptadorFalso servidor}) montarNoNavegador(
+      ArquivosDeAmostraNoNavegador arquivos,
+      List<RespostaFalsa> respostas,
+    ) {
+      final servidor = AdaptadorFalso(respostas);
+      final container = ProviderContainer(
+        overrides: [
+          arquivosDeAmostraProvider.overrideWithValue(arquivos),
+          dioProvider.overrideWithValue(
+            Dio(BaseOptions(baseUrl: 'https://api.test'))
+              ..httpClientAdapter = servidor
+              ..interceptors.add(const ErrorInterceptor()),
+          ),
+          sincronizacaoProvider.overrideWithValue(_Sincronizacao([])),
+        ],
+      );
+      addTearDown(container.dispose);
+      return (
+        envio: container.read(envioDeAnaliseProvider),
+        servidor: servidor,
+      );
+    }
+
+    test(
+      'o WAV sai do banco local, com o mesmo nome e os mesmos bytes',
+      () async {
+        final banco = bancoEmMemoria();
+        addTearDown(banco.close);
+        final arquivos = ArquivosDeAmostraNoNavegador(banco);
+        for (final a in amostras) {
+          await arquivos.guardar(
+            a.caminho,
+            Uint8List.fromList(File(a.caminho).readAsBytesSync()),
+          );
+          File(a.caminho).deleteSync();
+        }
+        final m = montarNoNavegador(arquivos, [
+          const RespostaFalsa(201, {}),
+          const RespostaFalsa(201, {}),
+        ]);
+
+        expect(await m.envio.enviar(item()), _sessao);
+
+        expect(m.servidor.feitas, hasLength(2));
+        final corpo = m.servidor.feitas.first.corpo;
+        expect(corpo, contains('name="arquivo"; filename="a1.wav"'));
+        expect(corpo, contains('RIFF'));
+        expect(_campos(corpo)['plataforma'], startsWith('web-'));
+      },
+    );
+
+    test('gravação que não está no banco não vai, e não volta', () async {
+      final banco = bancoEmMemoria();
+      addTearDown(banco.close);
+      final m = montarNoNavegador(ArquivosDeAmostraNoNavegador(banco), []);
+
+      await expectLater(
+        m.envio.enviar(item()),
+        throwsA(isA<GravacaoNaoEncontrada>()),
+      );
+      expect(m.servidor.feitas, isEmpty);
+    });
   });
 
   group('recusas da API', () {

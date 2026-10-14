@@ -50,3 +50,9 @@ app.*.map.json
 # Chave do Firebase e URL da API por ambiente (--dart-define-from-file).
 # Ver "Conectar ao Firebase" no README.
 dart_defines.json
+
+# O banco local da versão web (US42): baixados da release do drift que o
+# pubspec.lock fixou, por tool/preparar_web.sh. Não se versiona binário que
+# tem de acompanhar a versão de um pacote.
+/web/sqlite3.wasm
+/web/drift_worker.js

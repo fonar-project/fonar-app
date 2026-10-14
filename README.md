@@ -16,8 +16,9 @@ fonoaudiólogos. O uso previsto é durante a consulta, com o paciente presente.
 
 TCC de Engenharia de Software, PUC-Campinas.
 
-**Codebase único para Android e Windows.** Não há funcionalidade exclusiva de
-plataforma: as duas rodam exatamente o mesmo conjunto de recursos.
+**Codebase único para Android, Windows, macOS (US41) e o navegador (US42, a
+versão do iPhone).** Não há funcionalidade exclusiva de plataforma: todas
+rodam exatamente o mesmo conjunto de recursos.
 
 ---
 
@@ -269,7 +270,7 @@ comentário de `schemaVersion`, em `lib/core/banco/banco_local.dart`.
 
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda a cada push e a
 cada pull request, com o mesmo Flutter 3.47.2 da tabela de pré-requisitos, em
-quatro jobs. Nenhum publica artefato — quem publica é o `release.yml`, por tag
+cinco jobs. Nenhum publica artefato — quem publica é o `release.yml`, por tag
 (ver [Distribuição](#distribuição)).
 
 #### `verificacao`, em `ubuntu-latest`
@@ -319,6 +320,14 @@ dizer qual Visual Studio foi usado.
 Pelo mesmo motivo do `build-windows`: o Gradle e o Xcode também não passam
 pelos testes. O Android compila em debug (sem precisar da chave de release),
 no Ubuntu com o JDK 17; o macOS, em debug, no `macos-latest`.
+
+#### `build-web`
+
+O mesmo, para o navegador (US42): baixa o banco do navegador
+(`tool/preparar_web.sh`), roda `flutter build web` como o release roda e gera
+a lista do modo offline (`tool/lista_offline.py`). Os testes rodam na VM do
+Dart, onde `lib/core/navegador/navegador_web.dart` nem compila; só este job
+o compila.
 
 Ao subir a versão do Flutter, mude em todos os lugares: na tabela de
 pré-requisitos, nos `flutter-version` dos jobs do `ci.yml` e do `gerar.yml`, e
@@ -484,12 +493,52 @@ page aponta para o último release — o link não muda a cada versão:
 | Windows 10 e 11 | `FONAR-Windows.zip` | a pasta do `flutter build windows --release`; descompacta e abre `fonar_app.exe` |
 | macOS | `FONAR-macOS.zip` | o `FONAR.app`, empacotado com `ditto` |
 | Android | `FONAR-Android.apk` | o APK de release, instalado direto |
-| iPhone e iPad | — | a versão web, instalada pelo Safari (US42) |
+| iPhone e iPad | — | a versão web, em <https://fonar-project.github.io/fonar-app/>, adicionada à Tela de Início pelo Safari (US42) |
 
 **Publicar uma versão:** na `main` atualizada, `git tag v1.0.0` e
 `git push origin v1.0.0`. O [`release.yml`](.github/workflows/release.yml)
-compila as três plataformas, cada uma na sua máquina, e publica o release com
-as instruções de primeira abertura. A versão do app é a da tag.
+compila as três plataformas, cada uma na sua máquina, publica o release com
+as instruções de primeira abertura e põe a versão web no GitHub Pages. A
+versão do app é a da tag.
+
+### A versão web (iPhone e iPad)
+
+Não há conta paga de desenvolvedor da Apple, e sem ela não se instala app
+nativo no iPhone. A versão do iPhone é, por isso, **o mesmo app compilado
+para o navegador**, publicada no GitHub Pages e adicionada à Tela de Início
+pelo Safari (*Compartilhar → Adicionar à Tela de Início*). Mesmas telas,
+mesmas regras, mesma API.
+
+- **A trava da captura.** No navegador, quem decide o processamento do
+  microfone é o navegador. Antes de medir o ruído, o app abre o microfone com
+  ganho automático, supressão de ruído e cancelamento de eco desligados e lê
+  o que o navegador **diz ter aplicado** (`getSettings()`); a cada gravação,
+  confere de novo pelo aviso do `record`. Se algum ficou ligado — ou se o
+  cancelamento de eco nem é relatado —, a gravação não abre, e a tela diz o
+  que ficou ligado (`naoConfirmadosDesligados`, em
+  `captura/domain/processamento_automatico.dart`). O Safari relata só o
+  cancelamento de eco, porque nele os três são um processamento só; essa
+  premissa está nas conferências de aparelho do `PENDENCIAS.md`.
+- **Os dados.** O banco local é o mesmo SQLite, compilado para WebAssembly
+  (`web/sqlite3.wasm`, num worker, `web/drift_worker.js`), guardado no
+  armazenamento da página; os WAV moram nele (tabela `audios_do_navegador`),
+  porque não há pasta de arquivos. Os dois binários não são versionados:
+  `bash tool/preparar_web.sh` os baixa da release do drift que o
+  `pubspec.lock` fixou. O app pede ao navegador para não limpar esses dados
+  sozinho, e não abre a gravação se o navegador não oferecer onde guardá-los.
+- **Sem internet.** O `web/servico_offline.js` guarda a versão inteira na
+  primeira abertura; daí em diante a página abre sem rede, e a fila sobe
+  quando a conexão volta. A lista do que guardar sai do build
+  (`python3 tool/lista_offline.py build/web`).
+- **Uma vez, à mão:** ligar o GitHub Pages do repositório em *Settings →
+  Pages → Source: GitHub Actions*. Sem isso, o job da versão web falha e o
+  resto do release sai igual. A API só aceita chamada do navegador vinda de
+  `https://fonar-project.github.io` (CORS, no `web/main.py` da API).
+
+Para rodar na sua máquina: `bash tool/preparar_web.sh` e `flutter run -d
+chrome`. Para servir o build, `flutter build web --base-href /fonar-app/
+--no-web-resources-cdn` e um servidor estático em `build/web` — e
+`FONAR_ORIGENS_WEB` na API, se ela também for a local.
 
 **Sem assinatura de código, de propósito.** Não há certificado de assinatura
 para o Windows nem conta paga de desenvolvedor da Apple. Por isso:
@@ -558,11 +607,13 @@ flutter doctor --android-licenses
 Responda `y` em cada uma. São várias. Se o comando não abrir, é sinal de que o
 Flutter ainda não achou o SDK — resolva o item anterior primeiro.
 
-### Chrome com `[X]`, e tudo bem
+### Chrome com `[X]`
 
-O `flutter doctor` reclama do Chrome ausente porque verifica também o alvo web.
-**Web não é alvo deste projeto** — só Android e Windows foram gerados. Pode
-ignorar. O que precisa estar verde é Flutter, Android toolchain e Visual Studio.
+O `flutter doctor` reclama do Chrome ausente porque verifica o alvo web. A
+versão web (US42) é alvo do projeto, mas só precisa do Chrome quem for rodá-la
+na própria máquina (`flutter run -d chrome`); o build dela roda no CI. Para
+Android e Windows, o que precisa estar verde é Flutter, Android toolchain e
+Visual Studio.
 
 ---
 
@@ -583,6 +634,8 @@ lib/
 │   ├── auth/              Firebase Auth pela API REST, credencial e token
 │   ├── config/            URL da API, chave do Firebase, timeouts e versão
 │   ├── error/             AppException selado; erro traduzido para o usuário
+│   ├── navegador/         o que só o navegador responde (US42), por
+│   │                      importação condicional
 │   ├── network/           cliente Dio, interceptors e estado da conexão
 │   ├── offline/           se dá para entrar sem conexão
 │   ├── storage/           o token, no cofre do sistema
@@ -612,6 +665,10 @@ test/
 ├── apoio/                 banco em memória e repositórios falsos
 ├── core/migracoes/        o formato de cada versão do banco (gerado)
 └── …                      o mesmo desenho de lib/
+
+web/                       a página da versão web (US42): index.html,
+                           manifest, o service worker do modo offline
+tool/                      ícones, anotações do CI e o preparo da versão web
 ```
 
 **Divisão por feature, não por camada.** Cada pasta em `features/` se divide em

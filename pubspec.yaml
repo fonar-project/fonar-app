@@ -151,6 +151,17 @@ dependencies:
   # Pacote oficial do time do Flutter, federado (Windows, macOS, Linux e
   # web), licença BSD-3. Não toca em áudio.
   file_selector: ^1.0.3
+
+  # A versão para o iPhone roda no navegador (US42), e três coisas só o
+  # navegador sabe responder: o WAV que o `record_web` entrega como endereço
+  # `blob:`, o que o navegador diz ter aplicado ao microfone (o processamento
+  # automático tem de estar DESLIGADO — regra de captura) e o pedido para não
+  # limpar os dados da página. É a ponte oficial do time do Dart para as
+  # APIs da web, já trazida pelos plugins web do `record` e do
+  # `audioplayers`; aqui só passa a ser dependência direta. Licença BSD-3.
+  # Só é importado por `lib/core/navegador/navegador_web.dart`, que não
+  # compila fora do navegador. NÃO analisa áudio: lê bytes e propriedades.
+  web: ^1.1.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

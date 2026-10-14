@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <!--
+    O FONAR no navegador (US42), a versão para o iPhone. Publicada no GitHub
+    Pages em /fonar-app/; o `flutter build web --base-href /fonar-app/`
+    troca o marcador abaixo.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta name="description" content="FONAR — avaliação vocal clínica para fonoaudiólogos.">
+  <meta name="theme-color" content="#40085E">
+
+  <!-- Aberto pelo ícone da Tela de Início do iPhone, sem a barra do Safari. -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <!-- Barra de status opaca: a página começa abaixo dela. Com a translúcida,
+       o conteúdo passaria por baixo da barra, e o Flutter no navegador não
+       recebe a área segura do iPhone para desviar. -->
+
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="FONAR">
+  <!-- Ícones provisórios, os do modelo do Flutter, até chegar a logo do
+       FONAR (PENDENCIAS.md). -->
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>FONAR</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* O creme da marca enquanto o app carrega, em vez da tela branca. */
+    html, body { margin: 0; background: #FFF7EB; }
+    @media (prefers-color-scheme: dark) {
+      html, body { background: #17131F; }
+    }
+  </style>
+</head>
+<body>
+  <script src="flutter_bootstrap.js" async></script>
+  <script>
+    // Guarda a versão inteira no aparelho para abrir sem internet: a
+    // gravação funciona offline, e o consultório nem sempre tem sinal.
+    // Ver servico_offline.js.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('servico_offline.js')
+          .then(function (registro) { registro.update(); })
+          .catch(function () {});
+      });
+    }
+  </script>
+</body>
+</html>

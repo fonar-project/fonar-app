@@ -4377,6 +4377,279 @@ class PreferenciasCompanion extends UpdateCompanion<LinhaDePreferencia> {
   }
 }
 
+class $AudiosDoNavegadorTable extends AudiosDoNavegador
+    with TableInfo<$AudiosDoNavegadorTable, LinhaDoAudioDoNavegador> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AudiosDoNavegadorTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _caminhoMeta = const VerificationMeta(
+    'caminho',
+  );
+  @override
+  late final GeneratedColumn<String> caminho = GeneratedColumn<String>(
+    'caminho',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _wavMeta = const VerificationMeta('wav');
+  @override
+  late final GeneratedColumn<Uint8List> wav = GeneratedColumn<Uint8List>(
+    'wav',
+    aliasedName,
+    false,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _gravadoEmMeta = const VerificationMeta(
+    'gravadoEm',
+  );
+  @override
+  late final GeneratedColumn<DateTime> gravadoEm = GeneratedColumn<DateTime>(
+    'gravado_em',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [caminho, wav, gravadoEm];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'audios_do_navegador';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LinhaDoAudioDoNavegador> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('caminho')) {
+      context.handle(
+        _caminhoMeta,
+        caminho.isAcceptableOrUnknown(data['caminho']!, _caminhoMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_caminhoMeta);
+    }
+    if (data.containsKey('wav')) {
+      context.handle(
+        _wavMeta,
+        wav.isAcceptableOrUnknown(data['wav']!, _wavMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_wavMeta);
+    }
+    if (data.containsKey('gravado_em')) {
+      context.handle(
+        _gravadoEmMeta,
+        gravadoEm.isAcceptableOrUnknown(data['gravado_em']!, _gravadoEmMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_gravadoEmMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {caminho};
+  @override
+  LinhaDoAudioDoNavegador map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LinhaDoAudioDoNavegador(
+      caminho: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}caminho'],
+      )!,
+      wav: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}wav'],
+      )!,
+      gravadoEm: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}gravado_em'],
+      )!,
+    );
+  }
+
+  @override
+  $AudiosDoNavegadorTable createAlias(String alias) {
+    return $AudiosDoNavegadorTable(attachedDatabase, alias);
+  }
+}
+
+class LinhaDoAudioDoNavegador extends DataClass
+    implements Insertable<LinhaDoAudioDoNavegador> {
+  final String caminho;
+  final Uint8List wav;
+  final DateTime gravadoEm;
+  const LinhaDoAudioDoNavegador({
+    required this.caminho,
+    required this.wav,
+    required this.gravadoEm,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['caminho'] = Variable<String>(caminho);
+    map['wav'] = Variable<Uint8List>(wav);
+    map['gravado_em'] = Variable<DateTime>(gravadoEm);
+    return map;
+  }
+
+  AudiosDoNavegadorCompanion toCompanion(bool nullToAbsent) {
+    return AudiosDoNavegadorCompanion(
+      caminho: Value(caminho),
+      wav: Value(wav),
+      gravadoEm: Value(gravadoEm),
+    );
+  }
+
+  factory LinhaDoAudioDoNavegador.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LinhaDoAudioDoNavegador(
+      caminho: serializer.fromJson<String>(json['caminho']),
+      wav: serializer.fromJson<Uint8List>(json['wav']),
+      gravadoEm: serializer.fromJson<DateTime>(json['gravadoEm']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'caminho': serializer.toJson<String>(caminho),
+      'wav': serializer.toJson<Uint8List>(wav),
+      'gravadoEm': serializer.toJson<DateTime>(gravadoEm),
+    };
+  }
+
+  LinhaDoAudioDoNavegador copyWith({
+    String? caminho,
+    Uint8List? wav,
+    DateTime? gravadoEm,
+  }) => LinhaDoAudioDoNavegador(
+    caminho: caminho ?? this.caminho,
+    wav: wav ?? this.wav,
+    gravadoEm: gravadoEm ?? this.gravadoEm,
+  );
+  LinhaDoAudioDoNavegador copyWithCompanion(AudiosDoNavegadorCompanion data) {
+    return LinhaDoAudioDoNavegador(
+      caminho: data.caminho.present ? data.caminho.value : this.caminho,
+      wav: data.wav.present ? data.wav.value : this.wav,
+      gravadoEm: data.gravadoEm.present ? data.gravadoEm.value : this.gravadoEm,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LinhaDoAudioDoNavegador(')
+          ..write('caminho: $caminho, ')
+          ..write('wav: $wav, ')
+          ..write('gravadoEm: $gravadoEm')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(caminho, $driftBlobEquality.hash(wav), gravadoEm);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LinhaDoAudioDoNavegador &&
+          other.caminho == this.caminho &&
+          $driftBlobEquality.equals(other.wav, this.wav) &&
+          other.gravadoEm == this.gravadoEm);
+}
+
+class AudiosDoNavegadorCompanion
+    extends UpdateCompanion<LinhaDoAudioDoNavegador> {
+  final Value<String> caminho;
+  final Value<Uint8List> wav;
+  final Value<DateTime> gravadoEm;
+  final Value<int> rowid;
+  const AudiosDoNavegadorCompanion({
+    this.caminho = const Value.absent(),
+    this.wav = const Value.absent(),
+    this.gravadoEm = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AudiosDoNavegadorCompanion.insert({
+    required String caminho,
+    required Uint8List wav,
+    required DateTime gravadoEm,
+    this.rowid = const Value.absent(),
+  }) : caminho = Value(caminho),
+       wav = Value(wav),
+       gravadoEm = Value(gravadoEm);
+  static Insertable<LinhaDoAudioDoNavegador> custom({
+    Expression<String>? caminho,
+    Expression<Uint8List>? wav,
+    Expression<DateTime>? gravadoEm,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (caminho != null) 'caminho': caminho,
+      if (wav != null) 'wav': wav,
+      if (gravadoEm != null) 'gravado_em': gravadoEm,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AudiosDoNavegadorCompanion copyWith({
+    Value<String>? caminho,
+    Value<Uint8List>? wav,
+    Value<DateTime>? gravadoEm,
+    Value<int>? rowid,
+  }) {
+    return AudiosDoNavegadorCompanion(
+      caminho: caminho ?? this.caminho,
+      wav: wav ?? this.wav,
+      gravadoEm: gravadoEm ?? this.gravadoEm,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (caminho.present) {
+      map['caminho'] = Variable<String>(caminho.value);
+    }
+    if (wav.present) {
+      map['wav'] = Variable<Uint8List>(wav.value);
+    }
+    if (gravadoEm.present) {
+      map['gravado_em'] = Variable<DateTime>(gravadoEm.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AudiosDoNavegadorCompanion(')
+          ..write('caminho: $caminho, ')
+          ..write('wav: $wav, ')
+          ..write('gravadoEm: $gravadoEm, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$BancoLocal extends GeneratedDatabase {
   _$BancoLocal(QueryExecutor e) : super(e);
   $BancoLocalManager get managers => $BancoLocalManager(this);
@@ -4395,6 +4668,8 @@ abstract class _$BancoLocal extends GeneratedDatabase {
   late final $NotasCapeVTable notasCapeV = $NotasCapeVTable(this);
   late final $LaudosTable laudos = $LaudosTable(this);
   late final $PreferenciasTable preferencias = $PreferenciasTable(this);
+  late final $AudiosDoNavegadorTable audiosDoNavegador =
+      $AudiosDoNavegadorTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4410,6 +4685,7 @@ abstract class _$BancoLocal extends GeneratedDatabase {
     notasCapeV,
     laudos,
     preferencias,
+    audiosDoNavegador,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -7623,6 +7899,192 @@ typedef $$PreferenciasTableProcessedTableManager =
       LinhaDePreferencia,
       PrefetchHooks Function()
     >;
+typedef $$AudiosDoNavegadorTableCreateCompanionBuilder =
+    AudiosDoNavegadorCompanion Function({
+      required String caminho,
+      required Uint8List wav,
+      required DateTime gravadoEm,
+      Value<int> rowid,
+    });
+typedef $$AudiosDoNavegadorTableUpdateCompanionBuilder =
+    AudiosDoNavegadorCompanion Function({
+      Value<String> caminho,
+      Value<Uint8List> wav,
+      Value<DateTime> gravadoEm,
+      Value<int> rowid,
+    });
+
+class $$AudiosDoNavegadorTableFilterComposer
+    extends Composer<_$BancoLocal, $AudiosDoNavegadorTable> {
+  $$AudiosDoNavegadorTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get caminho => $composableBuilder(
+    column: $table.caminho,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get wav => $composableBuilder(
+    column: $table.wav,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get gravadoEm => $composableBuilder(
+    column: $table.gravadoEm,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AudiosDoNavegadorTableOrderingComposer
+    extends Composer<_$BancoLocal, $AudiosDoNavegadorTable> {
+  $$AudiosDoNavegadorTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get caminho => $composableBuilder(
+    column: $table.caminho,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Uint8List> get wav => $composableBuilder(
+    column: $table.wav,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get gravadoEm => $composableBuilder(
+    column: $table.gravadoEm,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AudiosDoNavegadorTableAnnotationComposer
+    extends Composer<_$BancoLocal, $AudiosDoNavegadorTable> {
+  $$AudiosDoNavegadorTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get caminho =>
+      $composableBuilder(column: $table.caminho, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get wav =>
+      $composableBuilder(column: $table.wav, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get gravadoEm =>
+      $composableBuilder(column: $table.gravadoEm, builder: (column) => column);
+}
+
+class $$AudiosDoNavegadorTableTableManager
+    extends
+        RootTableManager<
+          _$BancoLocal,
+          $AudiosDoNavegadorTable,
+          LinhaDoAudioDoNavegador,
+          $$AudiosDoNavegadorTableFilterComposer,
+          $$AudiosDoNavegadorTableOrderingComposer,
+          $$AudiosDoNavegadorTableAnnotationComposer,
+          $$AudiosDoNavegadorTableCreateCompanionBuilder,
+          $$AudiosDoNavegadorTableUpdateCompanionBuilder,
+          (
+            LinhaDoAudioDoNavegador,
+            BaseReferences<
+              _$BancoLocal,
+              $AudiosDoNavegadorTable,
+              LinhaDoAudioDoNavegador
+            >,
+          ),
+          LinhaDoAudioDoNavegador,
+          PrefetchHooks Function()
+        > {
+  $$AudiosDoNavegadorTableTableManager(
+    _$BancoLocal db,
+    $AudiosDoNavegadorTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AudiosDoNavegadorTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AudiosDoNavegadorTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AudiosDoNavegadorTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> caminho = const Value.absent(),
+                Value<Uint8List> wav = const Value.absent(),
+                Value<DateTime> gravadoEm = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AudiosDoNavegadorCompanion(
+                caminho: caminho,
+                wav: wav,
+                gravadoEm: gravadoEm,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String caminho,
+                required Uint8List wav,
+                required DateTime gravadoEm,
+                Value<int> rowid = const Value.absent(),
+              }) => AudiosDoNavegadorCompanion.insert(
+                caminho: caminho,
+                wav: wav,
+                gravadoEm: gravadoEm,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$AudiosDoNavegadorTable, LinhaDoAudioDoNavegador>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$BancoLocal,
+                    $AudiosDoNavegadorTable,
+                    LinhaDoAudioDoNavegador
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AudiosDoNavegadorTableProcessedTableManager =
+    ProcessedTableManager<
+      _$BancoLocal,
+      $AudiosDoNavegadorTable,
+      LinhaDoAudioDoNavegador,
+      $$AudiosDoNavegadorTableFilterComposer,
+      $$AudiosDoNavegadorTableOrderingComposer,
+      $$AudiosDoNavegadorTableAnnotationComposer,
+      $$AudiosDoNavegadorTableCreateCompanionBuilder,
+      $$AudiosDoNavegadorTableUpdateCompanionBuilder,
+      (
+        LinhaDoAudioDoNavegador,
+        BaseReferences<
+          _$BancoLocal,
+          $AudiosDoNavegadorTable,
+          LinhaDoAudioDoNavegador
+        >,
+      ),
+      LinhaDoAudioDoNavegador,
+      PrefetchHooks Function()
+    >;
 
 class $BancoLocalManager {
   final _$BancoLocal _db;
@@ -7650,4 +8112,6 @@ class $BancoLocalManager {
       $$LaudosTableTableManager(_db, _db.laudos);
   $$PreferenciasTableTableManager get preferencias =>
       $$PreferenciasTableTableManager(_db, _db.preferencias);
+  $$AudiosDoNavegadorTableTableManager get audiosDoNavegador =>
+      $$AudiosDoNavegadorTableTableManager(_db, _db.audiosDoNavegador);
 }

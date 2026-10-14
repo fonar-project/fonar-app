@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -26,6 +27,7 @@ part 'banco_local.g.dart';
     NotasCapeV,
     Laudos,
     Preferencias,
+    AudiosDoNavegador,
   ],
 )
 class BancoLocal extends _$BancoLocal {
@@ -36,11 +38,24 @@ class BancoLocal extends _$BancoLocal {
   /// do usuário: dado de paciente não vai para lá.
   ///
   /// TODO(jurídico): o arquivo não é cifrado — mesma pendência dos WAV.
+  ///
+  /// No navegador (US42), o SQLite roda compilado para WebAssembly, num
+  /// worker, e o arquivo mora no armazenamento da origem (OPFS ou
+  /// IndexedDB, o que o navegador tiver). O `sqlite3.wasm` e o
+  /// `drift_worker.js` não são versionados: `tool/preparar_web.sh` os baixa
+  /// da release do drift que o `pubspec.lock` fixou.
   factory BancoLocal.doAparelho() => BancoLocal(
     driftDatabase(
       name: 'fonar',
       native: const DriftNativeOptions(
         databaseDirectory: getApplicationSupportDirectory,
+      ),
+      web: DriftWebOptions(
+        sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+        driftWorker: Uri.parse('drift_worker.js'),
+        onResult: (resultado) => bancoSoNaMemoria.value =
+            resultado.chosenImplementation ==
+            WasmStorageImplementation.inMemory,
       ),
     ),
   );
@@ -52,7 +67,7 @@ class BancoLocal extends _$BancoLocal {
   /// `drift_schemas/` guarda o formato de cada versão já distribuída; é com
   /// ele que se testa que o banco de quem atualiza o app chega inteiro.
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -84,6 +99,10 @@ class BancoLocal extends _$BancoLocal {
           ),
         );
       }
+      if (de < 6) {
+        // US42: os WAV gravados no navegador.
+        await m.createTable(audiosDoNavegador);
+      }
     },
     // O SQLite vem com chave estrangeira DESLIGADA; sem isto, nada impediria
     // apagar a amostra de um envio, e o envio subiria sem o arquivo.
@@ -101,6 +120,14 @@ const uuidV4Sql =
     "substr(hex(randomblob(2)), 2) || '-' || "
     "substr('89ab', 1 + (abs(random()) % 4), 1) || "
     "substr(hex(randomblob(2)), 2) || '-' || hex(randomblob(6)))";
+
+/// O navegador não ofereceu onde guardar o banco, e ele abriu só na memória
+/// da página (US42): nada do que se fizer sobrevive a fechá-la.
+///
+/// Acontece em navegador sem IndexedDB nem OPFS — alguns modos de navegação
+/// privada. Fora do navegador, sempre falso. A aferição não libera a
+/// gravação assim: a voz do paciente se perderia antes de subir.
+final bancoSoNaMemoria = ValueNotifier<bool>(false);
 
 /// O banco, aberto na primeira consulta e fechado junto do app.
 ///

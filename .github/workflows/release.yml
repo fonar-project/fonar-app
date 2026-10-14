@@ -1,10 +1,15 @@
-# Publica uma versão do FONAR para baixar (US41): Windows, macOS e Android,
-# num release do GitHub. A landing page aponta para o "latest" deste
-# repositório, então o link de download não muda a cada versão:
+# Publica uma versão do FONAR (US41): Windows, macOS e Android num release
+# do GitHub, e a versão web (US42, a do iPhone) no GitHub Pages. A landing
+# page aponta para o "latest" deste repositório, então o link de download não
+# muda a cada versão:
 #
 #     https://github.com/fonar-project/fonar-app/releases/latest/download/FONAR-Windows.zip
 #     https://github.com/fonar-project/fonar-app/releases/latest/download/FONAR-macOS.zip
 #     https://github.com/fonar-project/fonar-app/releases/latest/download/FONAR-Android.apk
+#     https://fonar-project.github.io/fonar-app/
+#
+# A versão web exige o GitHub Pages ligado UMA vez, à mão: Settings > Pages >
+# Source: GitHub Actions. Sem isso, só o job dela falha; o release sai igual.
 #
 # Para publicar, na `main` atualizada:
 #
@@ -159,6 +164,54 @@ jobs:
           path: FONAR-macOS.zip
           if-no-files-found: error
 
+  web:
+    name: Versão web (GitHub Pages)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.publicar.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSAO }}
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      # O SQLite em WebAssembly e o worker do banco, da release do drift que
+      # o pubspec.lock fixou.
+      - name: Banco local no navegador
+        run: bash tool/preparar_web.sh
+
+      # `--no-web-resources-cdn`: o CanvasKit sai junto, da mesma origem, e
+      # o service worker o guarda para abrir sem internet. Do CDN, a página
+      # não abriria offline.
+      - name: Build
+        run: |
+          flutter build web --release \
+            --base-href /fonar-app/ \
+            --no-web-resources-cdn \
+            --build-name "${GITHUB_REF_NAME#v}" \
+            --build-number "${{ github.run_number }}" \
+            --dart-define=FONAR_VERSAO="${GITHUB_REF_NAME}"
+          python3 tool/lista_offline.py build/web
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: build/web
+
+      - id: publicar
+        uses: actions/deploy-pages@v5
+
   release:
     name: Publicar o release
     needs: [android, windows, macos]
@@ -183,7 +236,7 @@ jobs:
           | Windows 10 ou 11 | \`FONAR-Windows.zip\` | Descompacte e abra \`fonar_app.exe\`. O Windows pode mostrar "O Windows protegeu o computador": clique em **Mais informações** e em **Executar assim mesmo**. |
           | macOS | \`FONAR-macOS.zip\` | Descompacte e arraste o FONAR para Aplicativos. Na primeira abertura, o macOS bloqueia: abra **Ajustes > Privacidade e Segurança** e clique em **Abrir Mesmo Assim**. |
           | Android | \`FONAR-Android.apk\` | Abra o arquivo no celular e permita instalar apps desta fonte. |
-          | iPhone e iPad | — | Pela versão web, no Safari: **Compartilhar > Adicionar à Tela de Início**. |
+          | iPhone e iPad | — | Abra https://fonar-project.github.io/fonar-app/ no Safari e toque em **Compartilhar > Adicionar à Tela de Início**. Abra sempre pelo ícone. |
 
           O FONAR é ferramenta de apoio à decisão clínica e não emite diagnóstico.
           EOF

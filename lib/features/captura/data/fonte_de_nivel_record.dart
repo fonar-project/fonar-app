@@ -1,15 +1,20 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:record/record.dart';
 
+import '../../../core/navegador/navegador.dart';
 import '../domain/ajuste_de_configuracao.dart';
 import '../domain/fonte_de_nivel.dart';
+import '../domain/processamento_automatico.dart';
 import 'configuracao_de_captura.dart';
 
 /// Uma fonte nova a cada uso: cada aferição abre e fecha o próprio recorder.
 final fonteDeNivelProvider = Provider.autoDispose<FonteDeNivel>((ref) {
-  final fonte = FonteDeNivelRecord();
+  final fonte = FonteDeNivelRecord(
+    conferirNavegador: kIsWeb ? processamentoDoNavegador : null,
+  );
   // Sair da tela fecha o microfone. Microfone aberto sem ninguém olhando é
   // exatamente o que não pode acontecer com dado de saúde.
   ref.onDispose(fonte.fechar);
@@ -29,14 +34,28 @@ final fonteDeNivelProvider = Provider.autoDispose<FonteDeNivel>((ref) {
 /// o microfone bloqueado pela privacidade do Windows, e se o
 /// `setOnConfigChanged` dispara quando o aparelho troca a taxa.
 class FonteDeNivelRecord implements FonteDeNivel {
-  FonteDeNivelRecord();
+  FonteDeNivelRecord({this.conferirNavegador});
+
+  /// No navegador (US42), a conferência própria do processamento automático,
+  /// feita antes de a aferição abrir o microfone. Nula no aparelho.
+  ///
+  /// Existe porque o aviso do `record_web` não basta: propriedade que o
+  /// navegador não relata volta como foi PEDIDA, desligada — e não relatar
+  /// não é evidência de nada. Ver `naoConfirmadosDesligados`.
+  final Future<Set<ProcessamentoAutomatico>> Function()? conferirNavegador;
 
   AudioRecorder? _gravador;
   StreamSubscription<List<int>>? _bytes;
   AjusteDeConfiguracao? _ajuste;
+  Set<ProcessamentoAutomatico> _doNavegador = const {};
 
   @override
-  AjusteDeConfiguracao? get ajuste => _ajuste;
+  AjusteDeConfiguracao? get ajuste => AjusteDeConfiguracao.juntar(
+    _ajuste,
+    _doNavegador,
+    taxaPedida: ConfiguracaoDeCaptura.taxaDeAmostragem,
+    canaisPedidos: ConfiguracaoDeCaptura.canais,
+  );
 
   @override
   Future<bool> pedirPermissao() async {
@@ -48,12 +67,13 @@ class FonteDeNivelRecord implements FonteDeNivel {
   Future<Stream<double>> abrir(Duration intervalo) async {
     final gravador = _gravador ??= AudioRecorder();
     _ajuste = null;
-    await gravador.setOnConfigChanged((usada) {
-      _ajuste = AjusteDeConfiguracao(
-        taxaDeAmostragem: usada.sampleRate,
-        canais: usada.numChannels,
-      );
-    });
+    _doNavegador = const {};
+    if (conferirNavegador case final conferir?) {
+      _doNavegador = await conferir();
+    }
+    await gravador.setOnConfigChanged(
+      (usada) => _ajuste = ConfiguracaoDeCaptura.ajusteDe(usada),
+    );
 
     final audio = await gravador.startStream(
       ConfiguracaoDeCaptura.para(ConfiguracaoDeCaptura.formatoDaAfericao),
@@ -78,4 +98,18 @@ class FonteDeNivelRecord implements FonteDeNivel {
       await gravador.dispose();
     }
   }
+}
+
+/// A conferência do navegador (US42): o que ele relata da faixa de áudio
+/// aberta com o pedido da captura, julgado por `naoConfirmadosDesligados`.
+Future<Set<ProcessamentoAutomatico>> processamentoDoNavegador() async {
+  final relatado = await processamentoRelatadoPeloNavegador(
+    taxaDeAmostragem: ConfiguracaoDeCaptura.taxaDeAmostragem,
+    canais: ConfiguracaoDeCaptura.canais,
+  );
+  return naoConfirmadosDesligados(
+    ganho: relatado.ganho,
+    ruido: relatado.ruido,
+    eco: relatado.eco,
+  );
 }

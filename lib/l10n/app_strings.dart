@@ -360,6 +360,35 @@ abstract final class AppStrings {
   static const capturaBloqueadaMicrofone =
       'A gravação fica bloqueada até o microfone captar som.';
 
+  // US42: no navegador, o processamento automático pode ficar ligado.
+  static const capturaProcessamentoLigado =
+      'O processamento automático do microfone ficou ligado';
+
+  /// [ligados]: os nomes de [processamentoGanhoAutomatico] e afins, na
+  /// ordem em que aparecem.
+  static String capturaProcessamentoLigadoTexto(List<String> ligados) =>
+      'Este aparelho manteve ligado, ou não confirmou ter desligado: '
+      '${_lista(ligados)}. Esse ajuste automático muda justamente o que a '
+      'análise mede, e por isso a gravação fica bloqueada aqui. Use o FONAR '
+      'instalado no computador ou no Android, ou tente outro navegador.';
+  static const processamentoGanhoAutomatico = 'ganho automático';
+  static const processamentoSupressaoDeRuido = 'supressão de ruído';
+  static const processamentoCancelamentoDeEco = 'cancelamento de eco';
+
+  static const capturaSemArmazenamento = 'Este navegador não guarda os dados';
+  static const capturaSemArmazenamentoTexto =
+      'O navegador não deu ao FONAR onde guardar os dados (acontece em '
+      'algumas janelas privadas), e a gravação se perderia ao fechar a '
+      'página. Abra o FONAR numa janela comum ou pelo ícone na tela de '
+      'início.';
+
+  /// "a", "a e b", "a, b e c".
+  static String _lista(List<String> itens) => switch (itens) {
+    [] => '',
+    [final unico] => unico,
+    [...final inicio, final ultimo] => '${inicio.join(', ')} e $ultimo',
+  };
+
   // --------------------------------------------------- gravação guiada --
   // Uma etapa por vez, como no protótipo: o ruído da sala e depois cada
   // tarefa, com a instrução grande para o paciente ler de longe.
@@ -513,6 +542,11 @@ abstract final class AppStrings {
   static const problemaSaturou =
       'Houve saturação: a voz passou do máximo do microfone. Se possível, '
       'afaste um pouco o microfone e grave de novo.';
+  static const problemaProcessamentoLigado =
+      'O aparelho manteve ligado o processamento automático do microfone '
+      '(ganho, supressão de ruído ou cancelamento de eco), que muda o que a '
+      'análise mede. Esta gravação não serve; grave no FONAR instalado no '
+      'computador ou no Android.';
   static const problemaFormatoForaDoAceito =
       'O aparelho gravou num formato que a análise não aceita (mais de um '
       'canal, ou taxa fora do intervalo). Grave de novo; se repetir, avise o '

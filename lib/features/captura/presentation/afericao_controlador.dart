@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/banco/banco_local.dart';
 import '../../reproducao/presentation/reproducao_controlador.dart';
 import '../data/fonte_de_nivel_record.dart';
 import '../domain/ajuste_de_configuracao.dart';
@@ -49,12 +50,18 @@ final class AfericaoConcluida extends EstadoDaAfericao {
     this.ajuste,
     this.microfoneLiberado = true,
     this.demorouParaLiberar = false,
+    this.bancoSoNaMemoria = false,
   });
 
   final ResultadoDaAfericao resultado;
 
-  /// O que o aparelho mudou do formato pedido, se mudou.
+  /// O que o aparelho mudou do pedido, se mudou: o formato, ou o
+  /// processamento automático que ficou ligado.
   final AjusteDeConfiguracao? ajuste;
+
+  /// O navegador não deu onde guardar os dados (US42, `bancoSoNaMemoria`):
+  /// a gravação se perderia ao fechar a página.
+  final bool bancoSoNaMemoria;
 
   /// O microfone da aferição já foi fechado.
   ///
@@ -67,11 +74,18 @@ final class AfericaoConcluida extends EstadoDaAfericao {
   /// não terminou. A tela avisa; os botões continuam travados.
   final bool demorouParaLiberar;
 
-  /// A gravação pode começar? Não com o microfone mudo, e não antes de o
-  /// microfone da aferição ser liberado.
+  /// O processamento automático do microfone ficou ligado (US42): a
+  /// captura não serve para a análise, e a gravação não abre.
+  bool get processamentoLigado => ajuste?.manteveProcessamento ?? false;
+
+  /// A gravação pode começar? Não com o microfone mudo, nem com o
+  /// processamento automático ligado, nem sem onde guardar a gravação — e
+  /// não antes de o microfone da aferição ser liberado.
   bool get liberaGravacao =>
       microfoneLiberado &&
-      resultado.conclusao != ConclusaoDaAfericao.microfoneMudo;
+      resultado.conclusao != ConclusaoDaAfericao.microfoneMudo &&
+      !processamentoLigado &&
+      !bancoSoNaMemoria;
 }
 
 /// Conduz a aferição: permissão, microfone aberto por
@@ -162,6 +176,7 @@ class AfericaoControlador extends Notifier<EstadoDaAfericao> {
             ajuste: ajuste,
             microfoneLiberado: liberado,
             demorouParaLiberar: demorou,
+            bancoSoNaMemoria: bancoSoNaMemoria.value,
           );
 
     // O resultado aparece já; os botões esperam o microfone fechar.

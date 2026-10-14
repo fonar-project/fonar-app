@@ -7,10 +7,14 @@
 #   nunca invoca o MSVC, o Gradle ou o Xcode — quebra de compilação nativa
 #   passa pelos testes inteirinha, como já passou duas vezes no Windows (ATL
 #   faltando e `just_audio_windows` contra o MSVC do Visual Studio 2026).
+# - `build-web`: o mesmo para o navegador (US42). Os testes rodam na VM do
+#   Dart, onde `lib/core/navegador/navegador_web.dart` nem é compilado — só
+#   o build web o compila.
 #
 # A versão do Flutter é a mesma da máquina de referência documentada no README.
-# Se atualizar o Flutter do projeto, atualize os três lugares juntos: os dois
-# `flutter-version` daqui e a tabela do README.
+# Se atualizar o Flutter do projeto, atualize todos os lugares juntos: os
+# `flutter-version` daqui, o do release.yml, o do gerar.yml e a tabela do
+# README.
 
 name: CI
 
@@ -220,3 +224,30 @@ jobs:
 
       - name: Build do macOS
         run: flutter build macos --debug
+
+  build-web:
+    name: Build da versão web
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup do Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.2
+          channel: stable
+          cache: true
+
+      - name: Dependências
+        run: flutter pub get
+
+      # Os mesmos passos do release.yml, sem publicar: confere que compila,
+      # que o banco do navegador baixa na versão certa e que a lista do
+      # modo offline sai.
+      - name: Build da versão web
+        run: |
+          bash tool/preparar_web.sh
+          flutter build web --release --base-href /fonar-app/ --no-web-resources-cdn
+          python3 tool/lista_offline.py build/web

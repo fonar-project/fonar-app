@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fonar_app/core/banco/banco_local.dart';
 import 'package:fonar_app/core/network/conexao.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/features/captura/data/fonte_de_nivel_record.dart';
 import 'package:fonar_app/features/captura/domain/ajuste_de_configuracao.dart';
 import 'package:fonar_app/features/captura/domain/afericao_de_ruido.dart';
 import 'package:fonar_app/features/captura/domain/fonte_de_nivel.dart';
+import 'package:fonar_app/features/captura/domain/processamento_automatico.dart';
 import 'package:fonar_app/features/captura/presentation/afericao_controlador.dart';
 import 'package:fonar_app/features/captura/presentation/pages/captura_page.dart';
 import 'package:fonar_app/features/captura/presentation/widgets/medidor_de_nivel.dart';
@@ -340,6 +342,57 @@ void main() {
 
     expect(find.text(AppStrings.afericaoFalhou), findsOneWidget);
     expect(fonte.fechamentos, greaterThanOrEqualTo(1));
+  });
+
+  // US42: no navegador, o processamento automático pode ficar ligado. A
+  // medição acontece, mas a gravação não abre, e a tela diz o que ficou
+  // ligado — por escrito, não só pelo ícone.
+  testWidgets('processamento automático ligado bloqueia a gravação', (
+    tester,
+  ) async {
+    await _abrir(
+      tester,
+      fonte: _FonteFalsa(
+        ajuste: const AjusteDeConfiguracao(
+          taxaDeAmostragem: 44100,
+          canais: 1,
+          processamentoLigado: {
+            ProcessamentoAutomatico.cancelamentoDeEco,
+            ProcessamentoAutomatico.ganhoAutomatico,
+          },
+        ),
+      ),
+    );
+
+    await _medir(tester);
+
+    expect(find.text(AppStrings.capturaProcessamentoLigado), findsOneWidget);
+    expect(
+      find.text(
+        AppStrings.capturaProcessamentoLigadoTexto([
+          AppStrings.processamentoGanhoAutomatico,
+          AppStrings.processamentoCancelamentoDeEco,
+        ]),
+      ),
+      findsOneWidget,
+    );
+    // Só o processamento: o formato é o pedido, e o aviso dele não aparece.
+    expect(find.text(AppStrings.afericaoAjusteTitulo), findsNothing);
+    expect(find.text(AppStrings.capturaContinuar), findsNothing);
+    await tester.tap(find.text(AppStrings.tarefaVogalCurta));
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.capturaIniciarGravacao), findsNothing);
+  });
+
+  testWidgets('sem onde guardar os dados, a gravação não abre', (tester) async {
+    bancoSoNaMemoria.value = true;
+    addTearDown(() => bancoSoNaMemoria.value = false);
+    await _abrir(tester);
+
+    await _medir(tester);
+
+    expect(find.text(AppStrings.capturaSemArmazenamento), findsOneWidget);
+    expect(find.text(AppStrings.capturaContinuar), findsNothing);
   });
 
   testWidgets('formato trocado pelo aparelho aparece, com o pedido e o usado', (

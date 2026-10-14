@@ -11,8 +11,8 @@
 
 ## Contexto
 Aplicativo de avaliação vocal clínica usado por fonoaudiólogos durante a
-consulta. Codebase único para Android, Windows e macOS (US41). TCC de Engenharia de
-Software, PUC-Campinas.
+consulta. Codebase único para Android, Windows, macOS (US41) e navegador (US42,
+a versão do iPhone). TCC de Engenharia de Software, PUC-Campinas.
 
 O usuário é profissional de saúde sem formação técnica em computação,
 frequentemente com o paciente sentado ao lado e pouco tempo. Em algumas telas
@@ -61,6 +61,14 @@ Ao implementar captura, obrigatoriamente:
 
 Esse processamento automático altera exatamente as propriedades do sinal que
 a análise mede. É o requisito que justifica termos app nativo em vez de web.
+
+A versão no navegador (US42) existe só porque não há conta paga da Apple
+para instalar app no iPhone, e vem com uma TRAVA: antes de medir o ruído, o
+app lê o que o navegador diz ter aplicado à faixa de áudio (`getSettings()`),
+e a cada gravação confere de novo pelo aviso do `record`. Processamento
+relatado ligado — ou cancelamento de eco não relatado — bloqueia a gravação
+e diz o porquê (`naoConfirmadosDesligados`). Não afrouxe essa regra para a
+web "funcionar": sem a trava, a versão web não pode gravar.
 
 Risco documentado em `lib/core/permissions/microphone_permission.dart`: no
 Windows, app Win32 desempacotado não declara capacidade de microfone, e a
@@ -144,13 +152,15 @@ regra de processamento de áudio acima barra GPL dentro do executável.
 Reproduzir não é analisar — a troca mexe só em quem toca o WAV, nunca em quem
 mede —, mas a restrição de licença vale para o executável inteiro.
 
-O job de `flutter build windows` no CI segue sendo o único que compila código
-nativo. Teste nenhum pega: os 842 rodam no Ubuntu.
+Os jobs `build-*` do CI (Windows, Android, macOS e web) são os únicos que
+compilam cada plataforma. Teste nenhum pega quebra de compilação delas: a
+suíte roda na VM do Dart, no Ubuntu.
 
 ## Offline
-A fila de sincronização vale para AS DUAS plataformas. Queda de conexão em
-consultório é tão comum quanto ausência de sinal em campo. Gravação funciona
-offline; análise exige conexão.
+A fila de sincronização vale para TODAS as plataformas, a web inclusive (o
+`web/servico_offline.js` guarda a versão inteira para abrir sem rede). Queda
+de conexão em consultório é tão comum quanto ausência de sinal em campo.
+Gravação funciona offline; análise exige conexão.
 
 ## Design system
 Paleta:
@@ -260,6 +270,13 @@ PLACEHOLDER, e
 identificado como tal, só o modo de exemplo (`AppConfig.exemplo`): o login
 que aceita qualquer e-mail e senha, e os resultados e os pacientes "de
 Exemplo", que aparecem por cima do banco sem serem gravados nele.
+
+O app sai para baixar pelo GitHub Releases (US41: Windows, macOS e APK do
+Android, sem assinatura de código) e, para o iPhone, como versão web no
+GitHub Pages (US42), pelo `release.yml`, a cada tag `v*`. Na web, o banco
+local é o SQLite em WebAssembly e os WAV moram nele (`audios_do_navegador`);
+tudo o que só o navegador sabe responder passa por `core/navegador/`, com
+importação condicional — nenhum outro arquivo importa `package:web`.
 
 O que falta e de quem depende está em `PENDENCIAS.md` — ao resolver um item,
 apague a linha de lá e o `TODO` do código, no mesmo commit.
