@@ -61,7 +61,8 @@ O caminho de uma avaliação, na ordem em que o profissional passa por ele:
    celular, cada escala abre em tela cheia, para marcar deitado (US28), e a
    avaliação sobe para o Firebase quando há rede (US37) —, vê a
    **evolução** entre sessões (US09) — com um modo para mostrar ao paciente — e
-   gera o **laudo em PDF** (US10).
+   gera o **laudo em PDF** (US10) — no desktop, ao lado da pré-visualização
+   A4, que só é refeita quando o documento muda, sem piscar (US53).
 
 Em volta disso: o **perfil do paciente** (US12) reúne dados, consentimento,
 sessões, laudos e fila; o **histórico** (US23) lista as avaliações de todos os
