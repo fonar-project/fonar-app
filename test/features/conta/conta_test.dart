@@ -10,6 +10,7 @@ import 'package:fonar_app/app/app_estrutura.dart';
 import 'package:fonar_app/app/licencas.dart';
 import 'package:fonar_app/app/router/app_router.dart';
 import 'package:fonar_app/app/router/app_routes.dart';
+import 'package:fonar_app/core/auth/senha_sem_rede.dart';
 import 'package:fonar_app/core/error/app_exception.dart';
 import 'package:fonar_app/core/network/conexao.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
@@ -32,6 +33,7 @@ import 'package:fonar_app/l10n/app_strings.dart';
 
 import '../../apoio/banco_em_memoria.dart';
 import '../../apoio/repositorios_em_memoria.dart';
+import '../../apoio/senha_sem_rede_em_memoria.dart';
 import '../../apoio/sessao_de_teste.dart';
 
 const _perfil = Profissional(nome: 'Fon.ª Teste', registro: 'CRFa 0-00000');
@@ -120,6 +122,9 @@ Future<(GoRouter, _Conta, ProviderContainer)> _abrir(
       bancoDeTeste(),
       repositorioFilaProvider.overrideWithValue(fila),
       repositorioDaContaProvider.overrideWithValue(c),
+      // O cofre do sistema não existe no teste de tela: lá, apagar o
+      // verificador ficaria esperando uma resposta que não vem.
+      senhaSemRedeProvider.overrideWithValue(SenhaSemRedeEmMemoria()),
       repositorioAutenticacaoProvider.overrideWithValue(c),
       sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
     ],
