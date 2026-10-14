@@ -293,6 +293,7 @@ class _FormularioState extends ConsumerState<_Formulario> {
           quemAutoriza: _quem,
           nomeDoResponsavel: _responsavel.text,
           concordou: _concordou,
+          nascimento: widget.paciente.dataDeNascimento,
         );
     if (!mounted) return;
 
