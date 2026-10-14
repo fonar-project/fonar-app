@@ -358,6 +358,23 @@ entra e logo depois de cada registro; registrar de novo substitui a de lá,
 a não ser que a de lá seja mais nova. Nada desce: o que outro aparelho
 registrou não aparece aqui.
 
+O **laudo emitido** não muda nem some (US38, ADR-018 da API). Cada emissão
+é um documento com número próprio — os oito primeiros caracteres de um
+UUID, impressos no PDF e no nome do arquivo —, e emitir de novo cria outro,
+que diz, impresso, qual substitui. O anterior continua guardado e sai como
+foi emitido. A cópia de cada laudo sobe para a API
+(`POST /v1/pacientes/{p}/sessoes/{s}/laudos`, com o PDF byte a byte), do
+mesmo jeito que a CAPE-V: só os de sessão enviada pela conta na sessão, ao
+abrir o app, quando a rede volta, quando alguém entra e logo depois de cada
+emissão (`lib/features/laudo/data/laudos_na_api.dart`). A tela diz se a
+cópia já está no servidor. O PDF leva o espectrograma da vogal, a imagem
+que a API calculou; se ela não vier, o documento diz que ficou de fora.
+
+Para tirar o PDF do aplicativo, o desktop usa "Salvar como"
+(`file_selector`): nada fica na pasta temporária. No celular, a folha de
+compartilhar do sistema precisa de um arquivo no cache, e ele é apagado na
+abertura seguinte (`limparPdfsCompartilhados`).
+
 Fora do modo de exemplo, os resultados também vêm da API
 (`lib/features/analise/data/repositorio_analises_api.dart`): a análise da
 sessão e a evolução do paciente, com os valores do motor da gravação da

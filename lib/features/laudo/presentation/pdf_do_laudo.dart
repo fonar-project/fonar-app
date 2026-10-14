@@ -19,9 +19,12 @@ import '../domain/conteudo_do_laudo.dart';
 /// medida vai em TEXTO, não em cor — o laudo é impresso em preto e branco com
 /// frequência, e nem na tela a cor sozinha basta.
 ///
-/// TODO(equipe): o espectrograma não entra — é imagem do servidor, e o
-/// contrato do resultado ainda não existe. Quando existir, baixar a imagem
-/// antes de gerar e embutir no documento.
+/// O espectrograma da vogal entra como a imagem PRONTA que o servidor
+/// calculou, baixada antes de emitir ([ConteudoDoLaudo.espectrograma]). Sem
+/// ela, o documento diz que ficou de fora.
+///
+/// Cada página leva o número do documento: um laudo emitido não muda, e
+/// emitir de novo gera outro, que diz qual substitui (US38, ADR-018 da API).
 ///
 /// TODO(clínico): título, seções e ordem seguem a tela de resultado; conferir
 /// com o modelo de laudo que a orientação espera.
@@ -53,7 +56,7 @@ Future<Uint8List> gerarPdfDoLaudo(ConteudoDoLaudo conteudo) async {
         bulletStyle: _corpo(regular, negrito),
       ),
       header: (context) => _cabecalho(conteudo, context),
-      footer: _rodape,
+      footer: (context) => _rodape(conteudo, context),
       build: (context) => [
         if (conteudo.exemplo) _faixaDeAviso(AppStrings.laudoDocExemplo),
         if (conteudo.rascunho) _faixaDeAviso(AppStrings.laudoDocRascunho),
@@ -70,6 +73,7 @@ Future<Uint8List> gerarPdfDoLaudo(ConteudoDoLaudo conteudo) async {
               style: const pw.TextStyle(fontSize: 9.5, color: _secundario),
             ),
           ),
+        ..._espectrograma(conteudo),
         if (conteudo.qualidade.isNotEmpty) ...[
           _secao(AppStrings.laudoDocQualidade),
           for (final MapEntry(key: tarefa, value: q)
@@ -136,7 +140,7 @@ pw.Widget _cabecalho(ConteudoDoLaudo conteudo, pw.Context context) =>
       ),
     );
 
-pw.Widget _rodape(pw.Context context) => pw.Container(
+pw.Widget _rodape(ConteudoDoLaudo conteudo, pw.Context context) => pw.Container(
   margin: const pw.EdgeInsets.only(top: 16),
   padding: const pw.EdgeInsets.only(top: 8),
   decoration: pw.BoxDecoration(
@@ -153,7 +157,11 @@ pw.Widget _rodape(pw.Context context) => pw.Container(
       ),
       pw.SizedBox(width: 16),
       pw.Text(
-        AppStrings.laudoDocPagina(context.pageNumber, context.pagesCount),
+        AppStrings.laudoDocPagina(
+          conteudo.codigo,
+          context.pageNumber,
+          context.pagesCount,
+        ),
         style: const pw.TextStyle(fontSize: 8, color: _secundario),
       ),
     ],
@@ -202,6 +210,17 @@ pw.Widget _identificacao(ConteudoDoLaudo c) {
   return pw.Table(
     columnWidths: const {0: pw.FixedColumnWidth(130), 1: pw.FlexColumnWidth()},
     children: [
+      if (c.codigo case final codigo?)
+        linha(AppStrings.laudoDocDocumento, AppStrings.laudoDocNumero(codigo)),
+      if (c.substitui case (:final codigo, :final emitidoEm))
+        linha(
+          AppStrings.laudoDocSubstitui,
+          AppStrings.laudoDocSubstituiTexto(
+            codigo,
+            AppStrings.data(emitidoEm),
+            AppStrings.hora(emitidoEm),
+          ),
+        ),
       linha(AppStrings.laudoDocPaciente, c.nomeDoPaciente),
       linha(
         AppStrings.laudoDocNascimento,
@@ -340,21 +359,51 @@ List<pw.Widget> _capeV(AvaliacaoCapeV? avaliacao) {
   ];
 }
 
+/// A imagem que o servidor calculou, ou o aviso de que ela ficou de fora.
+List<pw.Widget> _espectrograma(ConteudoDoLaudo c) {
+  final imagem = c.espectrograma;
+  if (imagem == null && !c.espectrogramaIndisponivel) return const [];
+  return [
+    _secao(AppStrings.laudoDocEspectrograma),
+    if (imagem != null) ...[
+      pw.Image(pw.MemoryImage(imagem), height: 170, fit: pw.BoxFit.contain),
+      pw.Padding(
+        padding: const pw.EdgeInsets.only(top: 4),
+        child: pw.Text(
+          AppStrings.laudoDocEspectrogramaLegenda,
+          style: const pw.TextStyle(fontSize: 9, color: _secundario),
+        ),
+      ),
+    ] else
+      pw.Text(
+        AppStrings.laudoDocEspectrogramaIndisponivel,
+        style: const pw.TextStyle(color: _secundario),
+      ),
+  ];
+}
+
 pw.Widget _assinatura(ConteudoDoLaudo c) {
   final gerado = c.geradoEm;
+  final codigo = c.codigo;
   return pw.Column(
     crossAxisAlignment: pw.CrossAxisAlignment.start,
     children: [
       pw.Container(width: 220, height: 0.8, color: _texto),
+      pw.SizedBox(height: 2),
+      pw.Text(
+        AppStrings.laudoDocAssinatura,
+        style: const pw.TextStyle(fontSize: 8.5, color: _secundario),
+      ),
       pw.SizedBox(height: 4),
       pw.Text(
         c.profissional.nome,
         style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
       ),
       pw.Text(c.profissional.registro),
-      if (gerado != null)
+      if (gerado != null && codigo != null)
         pw.Text(
           AppStrings.laudoDocGeradoEm(
+            codigo,
             AppStrings.data(gerado),
             AppStrings.hora(gerado),
           ),

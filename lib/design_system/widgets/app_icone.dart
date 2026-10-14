@@ -56,7 +56,10 @@ enum NomeIcone {
   // Fila de sincronização e conexão.
   passoPendente('passo-pendente'),
   estadoOnline('estado-online'),
-  estadoSemConexao('estado-sem-conexao');
+  estadoSemConexao('estado-sem-conexao'),
+
+  // Documento emitido: o laudo em PDF.
+  documento('documento');
 
   const NomeIcone(this.arquivo);
 

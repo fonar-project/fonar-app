@@ -15,6 +15,9 @@ name: CI
 
 on:
   push:
+    # Os ramos de rascunho do workflow "Gerar código" (gerar.yml) não são
+    # trabalho a conferir: o que sai deles volta para o ramo de verdade.
+    branches-ignore: ['gerar/**', 'gerado/**']
   pull_request:
 
 # Push novo na mesma referência cancela a execução anterior, que já está

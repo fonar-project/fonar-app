@@ -3652,6 +3652,15 @@ class $LaudosTable extends Laudos with TableInfo<$LaudosTable, LinhaDoLaudo> {
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $LaudosTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _analiseIdMeta = const VerificationMeta(
     'analiseId',
   );
@@ -3705,13 +3714,38 @@ class $LaudosTable extends Laudos with TableInfo<$LaudosTable, LinhaDoLaudo> {
     type: DriftSqlType.blob,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _substituiMeta = const VerificationMeta(
+    'substitui',
+  );
+  @override
+  late final GeneratedColumn<String> substitui = GeneratedColumn<String>(
+    'substitui',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _enviadoEmMeta = const VerificationMeta(
+    'enviadoEm',
+  );
+  @override
+  late final GeneratedColumn<DateTime> enviadoEm = GeneratedColumn<DateTime>(
+    'enviado_em',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
+    id,
     analiseId,
     pacienteId,
     conclusao,
     geradoEm,
     pdf,
+    substitui,
+    enviadoEm,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3725,6 +3759,11 @@ class $LaudosTable extends Laudos with TableInfo<$LaudosTable, LinhaDoLaudo> {
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
     if (data.containsKey('analise_id')) {
       context.handle(
         _analiseIdMeta,
@@ -3765,15 +3804,31 @@ class $LaudosTable extends Laudos with TableInfo<$LaudosTable, LinhaDoLaudo> {
     } else if (isInserting) {
       context.missing(_pdfMeta);
     }
+    if (data.containsKey('substitui')) {
+      context.handle(
+        _substituiMeta,
+        substitui.isAcceptableOrUnknown(data['substitui']!, _substituiMeta),
+      );
+    }
+    if (data.containsKey('enviado_em')) {
+      context.handle(
+        _enviadoEmMeta,
+        enviadoEm.isAcceptableOrUnknown(data['enviado_em']!, _enviadoEmMeta),
+      );
+    }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {analiseId};
+  Set<GeneratedColumn> get $primaryKey => {id};
   @override
   LinhaDoLaudo map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return LinhaDoLaudo(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
       analiseId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}analise_id'],
@@ -3794,6 +3849,14 @@ class $LaudosTable extends Laudos with TableInfo<$LaudosTable, LinhaDoLaudo> {
         DriftSqlType.blob,
         data['${effectivePrefix}pdf'],
       )!,
+      substitui: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}substitui'],
+      ),
+      enviadoEm: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}enviado_em'],
+      ),
     );
   }
 
@@ -3804,36 +3867,61 @@ class $LaudosTable extends Laudos with TableInfo<$LaudosTable, LinhaDoLaudo> {
 }
 
 class LinhaDoLaudo extends DataClass implements Insertable<LinhaDoLaudo> {
+  /// O código do documento (UUID), impresso no PDF.
+  final String id;
   final String analiseId;
   final String pacienteId;
   final String conclusao;
   final DateTime geradoEm;
   final Uint8List pdf;
+
+  /// O código do laudo desta análise que este substitui.
+  final String? substitui;
+
+  /// Quando a cópia chegou à API. Nulo: só neste aparelho, por enquanto.
+  final DateTime? enviadoEm;
   const LinhaDoLaudo({
+    required this.id,
     required this.analiseId,
     required this.pacienteId,
     required this.conclusao,
     required this.geradoEm,
     required this.pdf,
+    this.substitui,
+    this.enviadoEm,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
     map['analise_id'] = Variable<String>(analiseId);
     map['paciente_id'] = Variable<String>(pacienteId);
     map['conclusao'] = Variable<String>(conclusao);
     map['gerado_em'] = Variable<DateTime>(geradoEm);
     map['pdf'] = Variable<Uint8List>(pdf);
+    if (!nullToAbsent || substitui != null) {
+      map['substitui'] = Variable<String>(substitui);
+    }
+    if (!nullToAbsent || enviadoEm != null) {
+      map['enviado_em'] = Variable<DateTime>(enviadoEm);
+    }
     return map;
   }
 
   LaudosCompanion toCompanion(bool nullToAbsent) {
     return LaudosCompanion(
+      id: Value(id),
       analiseId: Value(analiseId),
       pacienteId: Value(pacienteId),
       conclusao: Value(conclusao),
       geradoEm: Value(geradoEm),
       pdf: Value(pdf),
+      substitui: substitui == null && nullToAbsent
+          ? const Value.absent()
+          : Value(substitui),
+      enviadoEm: enviadoEm == null && nullToAbsent
+          ? const Value.absent()
+          : Value(enviadoEm),
     );
   }
 
@@ -3843,40 +3931,53 @@ class LinhaDoLaudo extends DataClass implements Insertable<LinhaDoLaudo> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return LinhaDoLaudo(
+      id: serializer.fromJson<String>(json['id']),
       analiseId: serializer.fromJson<String>(json['analiseId']),
       pacienteId: serializer.fromJson<String>(json['pacienteId']),
       conclusao: serializer.fromJson<String>(json['conclusao']),
       geradoEm: serializer.fromJson<DateTime>(json['geradoEm']),
       pdf: serializer.fromJson<Uint8List>(json['pdf']),
+      substitui: serializer.fromJson<String?>(json['substitui']),
+      enviadoEm: serializer.fromJson<DateTime?>(json['enviadoEm']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
       'analiseId': serializer.toJson<String>(analiseId),
       'pacienteId': serializer.toJson<String>(pacienteId),
       'conclusao': serializer.toJson<String>(conclusao),
       'geradoEm': serializer.toJson<DateTime>(geradoEm),
       'pdf': serializer.toJson<Uint8List>(pdf),
+      'substitui': serializer.toJson<String?>(substitui),
+      'enviadoEm': serializer.toJson<DateTime?>(enviadoEm),
     };
   }
 
   LinhaDoLaudo copyWith({
+    String? id,
     String? analiseId,
     String? pacienteId,
     String? conclusao,
     DateTime? geradoEm,
     Uint8List? pdf,
+    Value<String?> substitui = const Value.absent(),
+    Value<DateTime?> enviadoEm = const Value.absent(),
   }) => LinhaDoLaudo(
+    id: id ?? this.id,
     analiseId: analiseId ?? this.analiseId,
     pacienteId: pacienteId ?? this.pacienteId,
     conclusao: conclusao ?? this.conclusao,
     geradoEm: geradoEm ?? this.geradoEm,
     pdf: pdf ?? this.pdf,
+    substitui: substitui.present ? substitui.value : this.substitui,
+    enviadoEm: enviadoEm.present ? enviadoEm.value : this.enviadoEm,
   );
   LinhaDoLaudo copyWithCompanion(LaudosCompanion data) {
     return LinhaDoLaudo(
+      id: data.id.present ? data.id.value : this.id,
       analiseId: data.analiseId.present ? data.analiseId.value : this.analiseId,
       pacienteId: data.pacienteId.present
           ? data.pacienteId.value
@@ -3884,99 +3985,132 @@ class LinhaDoLaudo extends DataClass implements Insertable<LinhaDoLaudo> {
       conclusao: data.conclusao.present ? data.conclusao.value : this.conclusao,
       geradoEm: data.geradoEm.present ? data.geradoEm.value : this.geradoEm,
       pdf: data.pdf.present ? data.pdf.value : this.pdf,
+      substitui: data.substitui.present ? data.substitui.value : this.substitui,
+      enviadoEm: data.enviadoEm.present ? data.enviadoEm.value : this.enviadoEm,
     );
   }
 
   @override
   String toString() {
     return (StringBuffer('LinhaDoLaudo(')
+          ..write('id: $id, ')
           ..write('analiseId: $analiseId, ')
           ..write('pacienteId: $pacienteId, ')
           ..write('conclusao: $conclusao, ')
           ..write('geradoEm: $geradoEm, ')
-          ..write('pdf: $pdf')
+          ..write('pdf: $pdf, ')
+          ..write('substitui: $substitui, ')
+          ..write('enviadoEm: $enviadoEm')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode => Object.hash(
+    id,
     analiseId,
     pacienteId,
     conclusao,
     geradoEm,
     $driftBlobEquality.hash(pdf),
+    substitui,
+    enviadoEm,
   );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is LinhaDoLaudo &&
+          other.id == this.id &&
           other.analiseId == this.analiseId &&
           other.pacienteId == this.pacienteId &&
           other.conclusao == this.conclusao &&
           other.geradoEm == this.geradoEm &&
-          $driftBlobEquality.equals(other.pdf, this.pdf));
+          $driftBlobEquality.equals(other.pdf, this.pdf) &&
+          other.substitui == this.substitui &&
+          other.enviadoEm == this.enviadoEm);
 }
 
 class LaudosCompanion extends UpdateCompanion<LinhaDoLaudo> {
+  final Value<String> id;
   final Value<String> analiseId;
   final Value<String> pacienteId;
   final Value<String> conclusao;
   final Value<DateTime> geradoEm;
   final Value<Uint8List> pdf;
+  final Value<String?> substitui;
+  final Value<DateTime?> enviadoEm;
   final Value<int> rowid;
   const LaudosCompanion({
+    this.id = const Value.absent(),
     this.analiseId = const Value.absent(),
     this.pacienteId = const Value.absent(),
     this.conclusao = const Value.absent(),
     this.geradoEm = const Value.absent(),
     this.pdf = const Value.absent(),
+    this.substitui = const Value.absent(),
+    this.enviadoEm = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   LaudosCompanion.insert({
+    required String id,
     required String analiseId,
     required String pacienteId,
     required String conclusao,
     required DateTime geradoEm,
     required Uint8List pdf,
+    this.substitui = const Value.absent(),
+    this.enviadoEm = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : analiseId = Value(analiseId),
+  }) : id = Value(id),
+       analiseId = Value(analiseId),
        pacienteId = Value(pacienteId),
        conclusao = Value(conclusao),
        geradoEm = Value(geradoEm),
        pdf = Value(pdf);
   static Insertable<LinhaDoLaudo> custom({
+    Expression<String>? id,
     Expression<String>? analiseId,
     Expression<String>? pacienteId,
     Expression<String>? conclusao,
     Expression<DateTime>? geradoEm,
     Expression<Uint8List>? pdf,
+    Expression<String>? substitui,
+    Expression<DateTime>? enviadoEm,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
+      if (id != null) 'id': id,
       if (analiseId != null) 'analise_id': analiseId,
       if (pacienteId != null) 'paciente_id': pacienteId,
       if (conclusao != null) 'conclusao': conclusao,
       if (geradoEm != null) 'gerado_em': geradoEm,
       if (pdf != null) 'pdf': pdf,
+      if (substitui != null) 'substitui': substitui,
+      if (enviadoEm != null) 'enviado_em': enviadoEm,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
   LaudosCompanion copyWith({
+    Value<String>? id,
     Value<String>? analiseId,
     Value<String>? pacienteId,
     Value<String>? conclusao,
     Value<DateTime>? geradoEm,
     Value<Uint8List>? pdf,
+    Value<String?>? substitui,
+    Value<DateTime?>? enviadoEm,
     Value<int>? rowid,
   }) {
     return LaudosCompanion(
+      id: id ?? this.id,
       analiseId: analiseId ?? this.analiseId,
       pacienteId: pacienteId ?? this.pacienteId,
       conclusao: conclusao ?? this.conclusao,
       geradoEm: geradoEm ?? this.geradoEm,
       pdf: pdf ?? this.pdf,
+      substitui: substitui ?? this.substitui,
+      enviadoEm: enviadoEm ?? this.enviadoEm,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3984,6 +4118,9 @@ class LaudosCompanion extends UpdateCompanion<LinhaDoLaudo> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
     if (analiseId.present) {
       map['analise_id'] = Variable<String>(analiseId.value);
     }
@@ -3999,6 +4136,12 @@ class LaudosCompanion extends UpdateCompanion<LinhaDoLaudo> {
     if (pdf.present) {
       map['pdf'] = Variable<Uint8List>(pdf.value);
     }
+    if (substitui.present) {
+      map['substitui'] = Variable<String>(substitui.value);
+    }
+    if (enviadoEm.present) {
+      map['enviado_em'] = Variable<DateTime>(enviadoEm.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4008,11 +4151,14 @@ class LaudosCompanion extends UpdateCompanion<LinhaDoLaudo> {
   @override
   String toString() {
     return (StringBuffer('LaudosCompanion(')
+          ..write('id: $id, ')
           ..write('analiseId: $analiseId, ')
           ..write('pacienteId: $pacienteId, ')
           ..write('conclusao: $conclusao, ')
           ..write('geradoEm: $geradoEm, ')
           ..write('pdf: $pdf, ')
+          ..write('substitui: $substitui, ')
+          ..write('enviadoEm: $enviadoEm, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -7065,19 +7211,25 @@ typedef $$NotasCapeVTableProcessedTableManager =
       PrefetchHooks Function({bool analiseId})
     >;
 typedef $$LaudosTableCreateCompanionBuilder = LaudosCompanion Function({
+  required String id,
   required String analiseId,
   required String pacienteId,
   required String conclusao,
   required DateTime geradoEm,
   required Uint8List pdf,
+  Value<String?> substitui,
+  Value<DateTime?> enviadoEm,
   Value<int> rowid,
 });
 typedef $$LaudosTableUpdateCompanionBuilder = LaudosCompanion Function({
+  Value<String> id,
   Value<String> analiseId,
   Value<String> pacienteId,
   Value<String> conclusao,
   Value<DateTime> geradoEm,
   Value<Uint8List> pdf,
+  Value<String?> substitui,
+  Value<DateTime?> enviadoEm,
   Value<int> rowid,
 });
 
@@ -7089,6 +7241,11 @@ class $$LaudosTableFilterComposer extends Composer<_$BancoLocal, $LaudosTable> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get analiseId => $composableBuilder(
     column: $table.analiseId,
     builder: (column) => ColumnFilters(column),
@@ -7113,6 +7270,16 @@ class $$LaudosTableFilterComposer extends Composer<_$BancoLocal, $LaudosTable> {
     column: $table.pdf,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<String> get substitui => $composableBuilder(
+    column: $table.substitui,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get enviadoEm => $composableBuilder(
+    column: $table.enviadoEm,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$LaudosTableOrderingComposer
@@ -7124,6 +7291,11 @@ class $$LaudosTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get analiseId => $composableBuilder(
     column: $table.analiseId,
     builder: (column) => ColumnOrderings(column),
@@ -7148,6 +7320,16 @@ class $$LaudosTableOrderingComposer
     column: $table.pdf,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get substitui => $composableBuilder(
+    column: $table.substitui,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get enviadoEm => $composableBuilder(
+    column: $table.enviadoEm,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$LaudosTableAnnotationComposer
@@ -7159,6 +7341,9 @@ class $$LaudosTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
   GeneratedColumn<String> get analiseId =>
       $composableBuilder(column: $table.analiseId, builder: (column) => column);
 
@@ -7175,6 +7360,12 @@ class $$LaudosTableAnnotationComposer
 
   GeneratedColumn<Uint8List> get pdf =>
       $composableBuilder(column: $table.pdf, builder: (column) => column);
+
+  GeneratedColumn<String> get substitui =>
+      $composableBuilder(column: $table.substitui, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get enviadoEm =>
+      $composableBuilder(column: $table.enviadoEm, builder: (column) => column);
 }
 
 class $$LaudosTableTableManager
@@ -7208,34 +7399,46 @@ class $$LaudosTableTableManager
               $$LaudosTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
+                Value<String> id = const Value.absent(),
                 Value<String> analiseId = const Value.absent(),
                 Value<String> pacienteId = const Value.absent(),
                 Value<String> conclusao = const Value.absent(),
                 Value<DateTime> geradoEm = const Value.absent(),
                 Value<Uint8List> pdf = const Value.absent(),
+                Value<String?> substitui = const Value.absent(),
+                Value<DateTime?> enviadoEm = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => LaudosCompanion(
+                id: id,
                 analiseId: analiseId,
                 pacienteId: pacienteId,
                 conclusao: conclusao,
                 geradoEm: geradoEm,
                 pdf: pdf,
+                substitui: substitui,
+                enviadoEm: enviadoEm,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
+                required String id,
                 required String analiseId,
                 required String pacienteId,
                 required String conclusao,
                 required DateTime geradoEm,
                 required Uint8List pdf,
+                Value<String?> substitui = const Value.absent(),
+                Value<DateTime?> enviadoEm = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => LaudosCompanion.insert(
+                id: id,
                 analiseId: analiseId,
                 pacienteId: pacienteId,
                 conclusao: conclusao,
                 geradoEm: geradoEm,
                 pdf: pdf,
+                substitui: substitui,
+                enviadoEm: enviadoEm,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

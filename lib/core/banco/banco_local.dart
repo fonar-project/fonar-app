@@ -52,7 +52,7 @@ class BancoLocal extends _$BancoLocal {
   /// `drift_schemas/` guarda o formato de cada versão já distribuída; é com
   /// ele que se testa que o banco de quem atualiza o app chega inteiro.
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -71,12 +71,36 @@ class BancoLocal extends _$BancoLocal {
         // US32: de quem é cada envio da fila.
         await m.addColumn(envios, envios.profissionalId);
       }
+      if (de < 5) {
+        // US38: o laudo emitido não se sobrescreve (ADR-018 da API). A
+        // chave passa da análise para o código do documento, e cada laudo
+        // que já existia ganha um código - os PDFs dele, de antes, não o
+        // trazem impresso, e continuam como foram.
+        await m.alterTable(
+          TableMigration(
+            laudos,
+            columnTransformer: {laudos.id: const CustomExpression(uuidV4Sql)},
+            newColumns: [laudos.id, laudos.substitui, laudos.enviadoEm],
+          ),
+        );
+      }
     },
     // O SQLite vem com chave estrangeira DESLIGADA; sem isto, nada impediria
     // apagar a amostra de um envio, e o envio subiria sem o arquivo.
     beforeOpen: (_) => customStatement('PRAGMA foreign_keys = ON'),
   );
 }
+
+/// Um UUID versão 4 em SQL, para dar id a linha que já existia numa
+/// migração: o mesmo formato de `novoId` (`novo_id.dart`), minúsculo e com
+/// hífens.
+///
+/// Avaliado uma vez por linha copiada.
+const uuidV4Sql =
+    "lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-4' || "
+    "substr(hex(randomblob(2)), 2) || '-' || "
+    "substr('89ab', 1 + (abs(random()) % 4), 1) || "
+    "substr(hex(randomblob(2)), 2) || '-' || hex(randomblob(6)))";
 
 /// O banco, aberto na primeira consulta e fechado junto do app.
 ///

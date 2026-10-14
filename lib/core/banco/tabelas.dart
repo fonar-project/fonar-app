@@ -161,17 +161,30 @@ class NotasCapeV extends Table {
   Set<Column<Object>> get primaryKey => {analiseId, parametro};
 }
 
-/// O último laudo gerado para cada análise, com o PDF como saiu.
+/// Os laudos EMITIDOS, cada um com o PDF como saiu (US38, ADR-018 da API).
+///
+/// Uma linha por emissão, e nenhuma é alterada nem apagada pelo app: emitir
+/// de novo acrescenta outra, que diz em [substitui] qual veio antes. O
+/// vigente de uma análise é o de [geradoEm] mais recente. O único campo que
+/// muda depois é [enviadoEm], que não é o documento.
 @DataClassName('LinhaDoLaudo')
 class Laudos extends Table {
+  /// O código do documento (UUID), impresso no PDF.
+  TextColumn get id => text()();
   TextColumn get analiseId => text()();
   TextColumn get pacienteId => text()();
   TextColumn get conclusao => text()();
   DateTimeColumn get geradoEm => dateTime()();
   BlobColumn get pdf => blob()();
 
+  /// O código do laudo desta análise que este substitui.
+  TextColumn get substitui => text().nullable()();
+
+  /// Quando a cópia chegou à API. Nulo: só neste aparelho, por enquanto.
+  DateTimeColumn get enviadoEm => dateTime().nullable()();
+
   @override
-  Set<Column<Object>> get primaryKey => {analiseId};
+  Set<Column<Object>> get primaryKey => {id};
 }
 
 /// Preferências deste aparelho, como chave e valor — hoje, só o tema (US30).

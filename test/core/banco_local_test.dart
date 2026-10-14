@@ -516,36 +516,94 @@ void main() {
   });
 
   group('laudos', () {
-    Laudo laudo(String analiseId, String pacienteId, List<int> bytes) => Laudo(
+    Laudo laudo(
+      String id,
+      String analiseId,
+      String pacienteId,
+      List<int> bytes, {
+      DateTime? em,
+      String? substitui,
+    }) => Laudo(
+      id: id,
       analiseId: analiseId,
       pacienteId: pacienteId,
       conclusao: 'conclusão do profissional (teste)',
-      geradoEm: DateTime(2026, 9, 23, 12),
+      geradoEm: em ?? DateTime(2026, 9, 23, 12),
       pdf: Uint8List.fromList(bytes),
+      substitui: substitui,
     );
 
-    test('o PDF volta byte a byte, e gerar de novo substitui', () async {
+    test('o PDF volta byte a byte; emitir de novo acrescenta, e o anterior '
+        'fica como estava', () async {
       final repositorio = RepositorioLaudosLocal(_banco());
-      await repositorio.registrar(laudo('an-1', 'p1', [1, 2, 3]));
+      await repositorio.registrar(laudo('l-1', 'an-1', 'p1', [1, 2, 3]));
       await repositorio.registrar(
-        laudo('an-1', 'p1', [0x25, 0x50, 0x44, 0x46]),
+        laudo(
+          'l-2',
+          'an-1',
+          'p1',
+          [0x25, 0x50, 0x44, 0x46],
+          em: DateTime(2026, 9, 24, 9),
+          substitui: 'l-1',
+        ),
       );
 
-      final lido = (await repositorio.daAnalise('an-1'))!;
-      expect(lido.pdf, [0x25, 0x50, 0x44, 0x46]);
-      expect(lido.conclusao, 'conclusão do profissional (teste)');
-      expect(lido.geradoEm, DateTime(2026, 9, 23, 12));
+      final vigente = (await repositorio.daAnalise('an-1'))!;
+      expect(vigente.id, 'l-2');
+      expect(vigente.pdf, [0x25, 0x50, 0x44, 0x46]);
+      expect(vigente.substitui, 'l-1');
+      expect(vigente.enviadoEm, isNull);
+      final emitidos = await repositorio.emitidosDaAnalise('an-1');
+      expect([for (final l in emitidos) l.id], ['l-2', 'l-1']);
+      expect(emitidos.last.pdf, [1, 2, 3]);
+      expect(emitidos.last.geradoEm, DateTime(2026, 9, 23, 12));
       expect(await repositorio.daAnalise('an-2'), isNull);
     });
 
-    test('os do paciente, e só os dele', () async {
+    test('o mesmo código não se registra duas vezes', () async {
       final repositorio = RepositorioLaudosLocal(_banco());
-      await repositorio.registrar(laudo('an-1', 'p1', [1]));
-      await repositorio.registrar(laudo('an-2', 'p1', [2]));
-      await repositorio.registrar(laudo('an-3', 'p2', [3]));
+      await repositorio.registrar(laudo('l-1', 'an-1', 'p1', [1]));
+      await expectLater(
+        repositorio.registrar(laudo('l-1', 'an-1', 'p1', [2])),
+        throwsA(anything),
+      );
+      expect((await repositorio.daAnalise('an-1'))!.pdf, [1]);
+    });
+
+    test('na mesma hora, o gravado por último é o vigente', () async {
+      final repositorio = RepositorioLaudosLocal(_banco());
+      // Códigos em ordem contrária à de gravação: o desempate não é o código.
+      await repositorio.registrar(laudo('z-primeiro', 'an-1', 'p1', [1]));
+      await repositorio.registrar(laudo('a-segundo', 'an-1', 'p1', [2]));
+
+      expect((await repositorio.daAnalise('an-1'))!.id, 'a-segundo');
+      expect(
+        [for (final l in await repositorio.doPaciente('p1')) l.id],
+        ['a-segundo'],
+      );
+    });
+
+    test('marcar enviado muda só a hora do envio', () async {
+      final repositorio = RepositorioLaudosLocal(_banco());
+      await repositorio.registrar(laudo('l-1', 'an-1', 'p1', [7]));
+      await repositorio.marcarEnviado('l-1', DateTime.utc(2026, 9, 25, 10));
+
+      final lido = (await repositorio.daAnalise('an-1'))!;
+      expect(lido.enviadoEm, DateTime.utc(2026, 9, 25, 10));
+      expect(lido.pdf, [7]);
+    });
+
+    test('do paciente, só os dele, e só o vigente de cada análise', () async {
+      final repositorio = RepositorioLaudosLocal(_banco());
+      await repositorio.registrar(laudo('l-1', 'an-1', 'p1', [1]));
+      await repositorio.registrar(
+        laudo('l-1b', 'an-1', 'p1', [9], em: DateTime(2026, 9, 24)),
+      );
+      await repositorio.registrar(laudo('l-2', 'an-2', 'p1', [2]));
+      await repositorio.registrar(laudo('l-3', 'an-3', 'p2', [3]));
 
       final doP1 = await repositorio.doPaciente('p1');
-      expect([for (final l in doP1) l.analiseId]..sort(), ['an-1', 'an-2']);
+      expect([for (final l in doP1) l.id]..sort(), ['l-1b', 'l-2']);
     });
   });
 }

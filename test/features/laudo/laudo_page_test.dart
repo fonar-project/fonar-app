@@ -278,18 +278,20 @@ void main() {
 
     await _tocar(tester, find.text(AppStrings.laudoGerar));
 
+    final laudo = (await m.laudos.daAnalise('an-1'))!;
+    expect(laudo.conclusao, 'Conclusão de teste.');
+    expect(laudo.substitui, isNull);
     expect(
-      find.text(AppStrings.laudoGeradoEm('02 jul 2026', '11:05')),
+      find.text(AppStrings.laudoGeradoEm(laudo.codigo, '02 jul 2026', '11:05')),
       findsOneWidget,
     );
     final gerado = m.gerador.conteudos.last;
     expect(gerado.conclusao, 'Conclusão de teste.');
     expect(gerado.geradoEm, DateTime(2026, 7, 2, 11, 5));
     expect(gerado.capeV, isNotNull);
-    expect(
-      (await m.laudos.daAnalise('an-1'))?.conclusao,
-      'Conclusão de teste.',
-    );
+    // O número que vai impresso é o do laudo registrado.
+    expect(gerado.codigo, laudo.codigo);
+    expect(gerado.substitui, isNull);
 
     await _tocar(tester, find.text(AppStrings.laudoCompartilhar));
     await _tocar(tester, find.text(AppStrings.laudoImprimir));
@@ -299,7 +301,10 @@ void main() {
       utf8.decode(m.saida.chamadas.first.$2),
       '%PDF-teste Conclusão de teste.',
     );
-    expect(m.saida.chamadas.first.$3, 'laudo-fonar-2026-07-02.pdf');
+    expect(
+      m.saida.chamadas.first.$3,
+      'laudo-fonar-2026-07-02-${laudo.codigo}.pdf',
+    );
   });
 
   testWidgets('mudar a conclusão depois de gerar avisa para gerar de novo', (
@@ -316,9 +321,10 @@ void main() {
   });
 
   // Achado 5.2 da revisão de 24/09: gerar de novo sobrescrevia o PDF anterior
-  // sem perguntar nada. O laudo tem UMA versão só (ver `PENDENCIAS.md`), então
-  // substituir é destrutivo — e usa o mesmo diálogo do resto do aplicativo.
-  group('gerar de novo substitui o anterior', () {
+  // sem perguntar nada. Desde a US38 (ADR-018 da API), emitir de novo cria
+  // OUTRO documento e o anterior continua guardado — ainda assim pergunta
+  // antes, com o mesmo diálogo do resto do aplicativo.
+  group('gerar de novo emite outro laudo', () {
     testWidgets('a primeira geração não pergunta nada', (tester) async {
       final m = await _abrir(tester, capeV: _capeV);
       await _escrever(tester, 'Primeira versão.');
@@ -363,12 +369,12 @@ void main() {
       expect(m.gerador.conteudos, hasLength(1));
     });
 
-    testWidgets('confirmado, o PDF novo toma o lugar do anterior', (
-      tester,
-    ) async {
+    testWidgets('confirmado, o novo é o vigente e o anterior continua '
+        'guardado, como foi', (tester) async {
       final m = await _abrir(tester, capeV: _capeV);
       await _escrever(tester, 'Primeira versão.');
       await _tocar(tester, find.text(AppStrings.laudoGerar));
+      final primeiro = (await m.laudos.daAnalise('an-1'))!;
       await _escrever(tester, 'Segunda versão.');
 
       await _tocar(tester, find.text(AppStrings.laudoGerar));
@@ -376,8 +382,24 @@ void main() {
 
       expect(m.gerador.conteudos, hasLength(2));
       expect(m.gerador.conteudos.last.conclusao, 'Segunda versão.');
-      expect((await m.laudos.daAnalise('an-1'))?.conclusao, 'Segunda versão.');
+      final vigente = (await m.laudos.daAnalise('an-1'))!;
+      expect(vigente.conclusao, 'Segunda versão.');
+      expect(vigente.id, isNot(primeiro.id));
+      expect(vigente.substitui, primeiro.id);
+      // O documento novo diz, impresso, qual veio antes.
+      expect(m.gerador.conteudos.last.substitui?.codigo, primeiro.codigo);
+      final emitidos = await m.laudos.emitidosDaAnalise('an-1');
+      expect([for (final l in emitidos) l.id], [vigente.id, primeiro.id]);
+      expect(utf8.decode(emitidos.last.pdf), '%PDF-teste Primeira versão.');
       expect(find.text(AppStrings.laudoTextoMudou), findsNothing);
+
+      // E aparece na tela, com o número e o caminho para sair como foi.
+      expect(find.text(AppStrings.laudoAnterioresTitulo), findsOneWidget);
+      await _tocar(tester, find.text(AppStrings.laudoCompartilhar).last);
+      expect(
+        utf8.decode(m.saida.chamadas.single.$2),
+        '%PDF-teste Primeira versão.',
+      );
     });
   });
 
@@ -388,6 +410,7 @@ void main() {
       tester,
       capeV: _capeV,
       laudoExistente: Laudo(
+        id: '0f8b7e5c-3c1a-4d2e-9f00-1a2b3c4d5e6f',
         analiseId: 'an-1',
         pacienteId: 'p1',
         conclusao: 'Texto salvo.',
@@ -398,6 +421,14 @@ void main() {
 
     expect(find.text('Texto salvo.'), findsWidgets);
     expect(find.text(AppStrings.laudoCompartilhar), findsOneWidget);
+  });
+
+  testWidgets('a conclusão para no limite que a API aceita', (tester) async {
+    await _abrir(tester, capeV: _capeV);
+    await _escrever(tester, 'x' * (AppStrings.laudoConclusaoMaximo + 50));
+
+    final campo = tester.widget<TextField>(find.byType(TextField));
+    expect(campo.controller!.text, hasLength(AppStrings.laudoConclusaoMaximo));
   });
 
   testWidgets('sem consentimento: pendente, com o caminho para registrar', (

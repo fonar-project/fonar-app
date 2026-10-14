@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fonar_app/features/analise/data/catalogo_de_referencias_vazio.dart';
@@ -72,6 +73,10 @@ final _paciente = Paciente(
 );
 
 const _profissional = Profissional(nome: 'Fon. Teste', registro: 'CRFa teste');
+
+/// Um PNG válido de 1×1 pixel, no lugar da imagem que o servidor manda.
+const _pngDeUmPixel =
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -223,12 +228,23 @@ void main() {
     });
   });
 
+  test('o número do documento: os oito primeiros do código, em maiúsculas', () {
+    expect(
+      codigoDoDocumento('0f8b7e5c-3c1a-4d2e-9f00-1a2b3c4d5e6f'),
+      '0F8B7E5C',
+    );
+  });
+
   group('PDF', () {
     ConteudoDoLaudo conteudo({
       AvaliacaoCapeV? capeV,
       String conclusao = 'Conclusão de teste.',
       Paciente? paciente,
       bool exemplo = false,
+      String? codigo,
+      ({String codigo, DateTime emitidoEm})? substitui,
+      List<int>? espectrograma,
+      bool espectrogramaIndisponivel = false,
     }) => montarConteudo(
       resultado: _resultado(amostraRuim: true, exemplo: exemplo),
       // Sem sexo nem nascimento: o cadastro mínimo.
@@ -245,6 +261,12 @@ void main() {
       profissional: _profissional,
       catalogo: _Catalogo(),
       geradoEm: DateTime(2026, 7, 2, 11),
+      codigo: codigo,
+      substitui: substitui,
+      espectrograma: espectrograma == null
+          ? null
+          : Uint8List.fromList(espectrograma),
+      espectrogramaIndisponivel: espectrogramaIndisponivel,
     );
 
     bool ehPdf(List<int> bytes) =>
@@ -256,6 +278,29 @@ void main() {
       );
       expect(ehPdf(pdf), isTrue);
     });
+
+    test('com o número, o documento que substitui e o espectrograma', () async {
+      final pdf = await gerarPdfDoLaudo(
+        conteudo(
+          capeV: _capeV,
+          paciente: _paciente,
+          codigo: 'ABCD1234',
+          substitui: (codigo: 'EF567890', emitidoEm: DateTime(2026, 7, 1, 10)),
+          espectrograma: base64Decode(_pngDeUmPixel),
+        ),
+      );
+      expect(ehPdf(pdf), isTrue);
+    });
+
+    test(
+      'espectrograma que não veio: o documento diz que ficou de fora',
+      () async {
+        final pdf = await gerarPdfDoLaudo(
+          conteudo(codigo: 'ABCD1234', espectrogramaIndisponivel: true),
+        );
+        expect(ehPdf(pdf), isTrue);
+      },
+    );
 
     test('mínimo: sem cadastro completo, sem CAPE-V, de exemplo', () async {
       final pdf = await gerarPdfDoLaudo(conteudo(exemplo: true));

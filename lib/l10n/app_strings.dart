@@ -899,29 +899,45 @@ abstract final class AppStrings {
   static const laudoIrParaCapeV = 'Registrar CAPE-V';
 
   static const laudoCampoConclusao = 'Conclusão do profissional';
+
+  /// O mesmo limite da API (`TAMANHO_MAXIMO_CONCLUSAO`).
+  static const laudoConclusaoMaximo = 10000;
   static const laudoConclusaoApoio =
       'Escrita por você. O FONAR não escreve nem sugere conclusão.';
 
   static const laudoGerar = 'Gerar laudo';
   static const laudoGerando = 'Gerando…';
 
-  /// Gerar de novo substitui o PDF anterior, e é o mesmo botão — por isso
-  /// pergunta antes. Ver `appConfirmar`.
-  static const laudoSubstituirTitulo = 'Substituir o laudo já gerado?';
+  /// Gerar de novo emite OUTRO documento, e é o mesmo botão — por isso
+  /// pergunta antes. O de agora não é apagado (US38, ADR-018 da API). Ver
+  /// `appConfirmar`.
+  static const laudoSubstituirTitulo = 'Emitir um novo laudo?';
   static const laudoSubstituirTexto =
-      'O PDF que está guardado é apagado, e um novo é gerado no lugar dele. '
-      'Não dá para voltar ao anterior. Se o laudo de antes já foi entregue, '
-      'salve o arquivo antes de gerar de novo.';
-  static const laudoSubstituir = 'Gerar de novo';
+      'O laudo de agora continua guardado como foi emitido. O novo recebe '
+      'outro número e diz, no próprio documento, que substitui o anterior.';
+  static const laudoSubstituir = 'Emitir novo laudo';
   static const laudoManterOAtual = 'Manter o atual';
   static const laudoGerarBloqueado =
       'Resolva os itens pendentes da conferência para gerar.';
-  static String laudoGeradoEm(String data, String hora) =>
-      'Laudo gerado em $data, às $hora.';
+  static String laudoGeradoEm(String codigo, String data, String hora) =>
+      'Laudo nº $codigo emitido em $data, às $hora.';
+
+  /// Onde está a cópia do laudo emitido (ADR-018 da API).
+  static const laudoNoServidor = 'Cópia guardada no servidor.';
+  static const laudoSoNoAparelho =
+      'Por enquanto só neste aparelho. A cópia sobe para o servidor quando '
+      'houver conexão.';
+
+  /// Os laudos que o vigente substituiu: continuam guardados e saem como
+  /// foram emitidos.
+  static const laudoAnterioresTitulo = 'Laudos anteriores desta sessão';
+  static String laudoAnterior(String codigo, String data, String hora) =>
+      'Nº $codigo — emitido em $data, às $hora';
+  static const laudoAnteriorSubstituido = 'Substituído pelo laudo seguinte.';
   static const laudoTextoMudou =
       'A conclusão mudou depois da última geração. Gere de novo para o PDF '
       'incluir a mudança.';
-  static const laudoCompartilhar = 'Abrir ou compartilhar o PDF';
+  static const laudoCompartilhar = 'Salvar ou compartilhar o PDF';
   static const laudoImprimir = 'Imprimir ou salvar em PDF';
   static const laudoErroGerar =
       'Não foi possível gerar o laudo. Tente de novo.';
@@ -964,22 +980,44 @@ abstract final class AppStrings {
   static const laudoDocColunaSentido = 'Sentido';
   static const laudoDocComentarios = 'Comentários';
   static const laudoDocConclusao = 'Conclusão do profissional';
-  static String laudoDocGeradoEm(String data, String hora) =>
-      'Gerado em $data, às $hora.';
+  static String laudoDocGeradoEm(String codigo, String data, String hora) =>
+      'Documento nº $codigo, emitido em $data, às $hora.';
+  static const laudoDocDocumento = 'Documento';
+  static String laudoDocNumero(String codigo) => 'Nº $codigo';
+  static const laudoDocSubstitui = 'Substitui';
+  static String laudoDocSubstituiTexto(
+    String codigo,
+    String data,
+    String hora,
+  ) => 'O documento nº $codigo, emitido em $data, às $hora.';
+  static const laudoDocAssinatura = 'Assinatura do profissional responsável';
+  static const laudoDocEspectrograma = 'Espectrograma da vogal sustentada';
+  static const laudoDocEspectrogramaLegenda =
+      'Imagem calculada no servidor com o motor do Praat. Apoio visual, não '
+      'medida clínica.';
+  static const laudoDocEspectrogramaIndisponivel =
+      'Não incluído: o servidor não respondeu no momento da emissão.';
 
   /// Rodapé de toda página: de onde vêm as medidas e de quem é a conclusão.
   static const laudoDocRodape =
       'Medidas acústicas calculadas no servidor com o motor do Praat. '
       'Ferramenta de apoio à decisão: a interpretação e a conclusão são do '
       'profissional que assina.';
-  static String laudoDocPagina(int atual, int total) =>
-      'Página $atual de $total';
+  static String laudoDocPagina(String? codigo, int atual, int total) =>
+      codigo == null
+      ? 'Página $atual de $total'
+      : 'Documento nº $codigo · Página $atual de $total';
 
   /// Sem o nome do paciente, de propósito: o nome do arquivo aparece em
-  /// pasta, e-mail e histórico de compartilhamento.
-  static String laudoNomeDoArquivo(DateTime d) =>
-      'laudo-fonar-${d.year}-${d.month.toString().padLeft(2, '0')}-'
-      '${d.day.toString().padLeft(2, '0')}.pdf';
+  /// pasta, e-mail e histórico de compartilhamento. Com o número do
+  /// documento, para dois laudos da mesma sessão não se confundirem.
+  static String laudoNomeDoArquivo(DateTime d, String codigo) =>
+      '$laudoPrefixoDoArquivo${d.year}-${d.month.toString().padLeft(2, '0')}-'
+      '${d.day.toString().padLeft(2, '0')}-$codigo.pdf';
+
+  /// O começo do nome de todo PDF de laudo — é por ele que a limpeza da
+  /// pasta temporária os reconhece.
+  static const laudoPrefixoDoArquivo = 'laudo-fonar-';
 
   // --------------------------------------------------------------- conta --
   static const contaSeusDados = 'Seus dados';
