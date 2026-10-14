@@ -178,6 +178,13 @@ class _CartaoDaSessao extends ConsumerWidget {
     // Fail-closed, como a gravação: só com consentimento em vigor.
     final comConsentimento =
         ref.watch(consentimentoProvider(pacienteId)).value != null;
+    final motivoDoEnvio = sessao.semArquivo.isNotEmpty
+        ? AppStrings.naoEnviadasFaltaArquivo
+        : !sessao.completa
+        ? AppStrings.naoEnviadasIncompleta
+        : !comConsentimento
+        ? AppStrings.naoEnviadasSemConsentimento
+        : AppStrings.naoEnviadasOcupada;
     final inicio = sessao.gravadaEm;
 
     return Container(
@@ -236,13 +243,7 @@ class _CartaoDaSessao extends ConsumerWidget {
                         nomeDoPaciente: nomeDoPaciente,
                       )
                     : null,
-                motivoDesabilitado: sessao.semArquivo.isNotEmpty
-                    ? AppStrings.naoEnviadasFaltaArquivo
-                    : !sessao.completa
-                    ? AppStrings.naoEnviadasIncompleta
-                    : !comConsentimento
-                    ? AppStrings.naoEnviadasSemConsentimento
-                    : AppStrings.naoEnviadasOcupada,
+                motivoDesabilitado: motivoDoEnvio,
               ),
               AppBotao.secundario(
                 rotulo: estado.ocupada == sessao.sessaoId
@@ -263,6 +264,9 @@ class _CartaoDaSessao extends ConsumerWidget {
                         if (confirmou) await controlador.descartar(sessao);
                       },
                 motivoDesabilitado: AppStrings.naoEnviadasOcupada,
+                // Parados os dois pelo mesmo motivo, o Enviar do lado já o
+                // mostra.
+                motivoVisivel: motivoDoEnvio != AppStrings.naoEnviadasOcupada,
               ),
             ],
           ),

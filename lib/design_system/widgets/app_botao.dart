@@ -38,6 +38,8 @@ class AppBotao extends StatelessWidget {
     this.variante = VarianteBotao.primario,
     this.icone,
     this.motivoDesabilitado,
+    this.motivoVisivel = true,
+    this.carregando = false,
     this.ocupaLargura = false,
     super.key,
   }) : assert(
@@ -53,6 +55,8 @@ class AppBotao extends StatelessWidget {
     required VoidCallback? aoTocar,
     NomeIcone? icone,
     String? motivoDesabilitado,
+    bool motivoVisivel = true,
+    bool carregando = false,
     bool ocupaLargura = false,
     Key? key,
   }) : this(
@@ -61,6 +65,8 @@ class AppBotao extends StatelessWidget {
          variante: VarianteBotao.primario,
          icone: icone,
          motivoDesabilitado: motivoDesabilitado,
+         motivoVisivel: motivoVisivel,
+         carregando: carregando,
          ocupaLargura: ocupaLargura,
          key: key,
        );
@@ -71,6 +77,8 @@ class AppBotao extends StatelessWidget {
     required VoidCallback? aoTocar,
     NomeIcone? icone,
     String? motivoDesabilitado,
+    bool motivoVisivel = true,
+    bool carregando = false,
     bool ocupaLargura = false,
     Key? key,
   }) : this(
@@ -79,6 +87,8 @@ class AppBotao extends StatelessWidget {
          variante: VarianteBotao.secundario,
          icone: icone,
          motivoDesabilitado: motivoDesabilitado,
+         motivoVisivel: motivoVisivel,
+         carregando: carregando,
          ocupaLargura: ocupaLargura,
          key: key,
        );
@@ -98,6 +108,22 @@ class AppBotao extends StatelessWidget {
   /// Por que o botão está desabilitado. Aparece abaixo dele e vai para o
   /// leitor de tela. Ex.: "Disponível depois de registrar o consentimento".
   final String? motivoDesabilitado;
+
+  /// Desenhar [motivoDesabilitado] embaixo do botão.
+  ///
+  /// `false` só quando o mesmo motivo já está na tela, ao lado: o botão
+  /// irmão o mostra, ou um aviso logo acima diz o mesmo. Vários botões parados
+  /// pelo mesmo motivo dizem o motivo UMA vez — três "Conferindo…" não
+  /// explicam mais que um (US49). O motivo continua obrigatório e continua
+  /// sendo anunciado pelo leitor de tela, neste botão.
+  ///
+  /// Quando o rótulo já é o motivo ("Salvando…"), ele não se repete embaixo,
+  /// sem precisar deste parâmetro.
+  final bool motivoVisivel;
+
+  /// A ação está em andamento: um indicador pequeno no lugar do [icone],
+  /// ao lado do rótulo que diz o que está acontecendo ("Conferindo…").
+  final bool carregando;
 
   /// Esticar até a largura do pai. Usado no mobile, onde o botão principal
   /// ocupa a linha inteira.
@@ -129,29 +155,32 @@ class AppBotao extends StatelessWidget {
     if (!_desabilitado || motivo.isEmpty) return comLargura;
 
     // O motivo é anunciado junto do rótulo, para o leitor de tela não ler
-    // "botão desabilitado" e parar aí.
-    return Semantics(
-      hint: motivo,
-      child: Column(
-        crossAxisAlignment: ocupaLargura
-            ? CrossAxisAlignment.stretch
-            : CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          comLargura,
-          const SizedBox(height: AppSpacing.xs),
-          ExcludeSemantics(
-            child: Text(
-              motivo,
-              // O tom vem do fundo declarado em volta: este mesmo motivo
-              // aparece sobre o creme e dentro de faixa de aviso lavanda, e o
-              // token claro cai para 4,48:1 na segunda.
-              style: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(color: AppFundo.secundarioDe(context)),
-            ),
+    // "botão desabilitado" e parar aí. Fundido no nó do botão: um `Semantics`
+    // só por fora deixava a dica num nó vizinho, que o leitor não lê junto.
+    final anunciado = MergeSemantics(
+      child: Semantics(hint: motivo, child: comLargura),
+    );
+    if (!motivoVisivel || motivo == rotulo.trim()) return anunciado;
+
+    return Column(
+      crossAxisAlignment: ocupaLargura
+          ? CrossAxisAlignment.stretch
+          : CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        anunciado,
+        const SizedBox(height: AppSpacing.xs),
+        ExcludeSemantics(
+          child: Text(
+            motivo,
+            // O tom vem do fundo declarado em volta: este mesmo motivo
+            // aparece sobre o creme e dentro de faixa de aviso lavanda, e o
+            // token claro cai para 4,48:1 na segunda.
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: AppFundo.secundarioDe(context)),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -250,14 +279,34 @@ class AppBotao extends StatelessWidget {
     // Centralizado: se o rótulo quebrar linha, a segunda linha não pode
     // grudar na esquerda de um botão centralizado.
     final texto = Text(rotulo, textAlign: TextAlign.center);
-    if (icone == null) return texto;
+    final antes = carregando
+        ? const _Andamento()
+        : icone == null
+        ? null
+        : AppIcone(nome: icone!, tamanho: 20);
+    if (antes == null) return texto;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        AppIcone(nome: icone!, tamanho: 20),
+        antes,
         const SizedBox(width: AppSpacing.xs),
         Flexible(child: texto),
       ],
     );
   }
+}
+
+/// O indicador do botão em andamento, na cor do rótulo — o botão a passa
+/// para os ícones dele, habilitado ou não.
+class _Andamento extends StatelessWidget {
+  const _Andamento();
+
+  @override
+  Widget build(BuildContext context) => SizedBox.square(
+    dimension: 18,
+    child: CircularProgressIndicator(
+      strokeWidth: 2,
+      color: IconTheme.of(context).color,
+    ),
+  );
 }

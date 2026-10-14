@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../../design_system/breakpoints.dart';
@@ -86,6 +88,57 @@ class LinkDaEntrada extends StatelessWidget {
   }
 }
 
+/// A largura do formulário na largura expandida, a partir da [area] à
+/// direita da marca: acompanha a janela, de 440 a 640 (US49). Num monitor
+/// Full HD, 440 px deixava o formulário perdido no meio do painel.
+double larguraDoFormulario(double area) => (area * 0.55).clamp(440, 640);
+
+/// Dois campos curtos lado a lado quando cabem — senha e confirmação, por
+/// exemplo —, um embaixo do outro quando não.
+///
+/// Decide pela largura que o formulário tem, e não pela da tela: o mesmo
+/// formulário fica estreito no celular e numa janela pequena. Com o texto do
+/// sistema ampliado cada campo precisa de mais largura, e em 200% eles nunca
+/// ficam lado a lado.
+class CamposLadoALado extends StatelessWidget {
+  const CamposLadoALado({
+    required this.primeiro,
+    required this.segundo,
+    super.key,
+  });
+
+  final Widget primeiro;
+  final Widget segundo;
+
+  /// O que dois campos pedem juntos, no texto em 100%.
+  static const larguraMinima = 520.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final minima = MediaQuery.textScalerOf(context).scale(larguraMinima);
+    return LayoutBuilder(
+      builder: (context, restricoes) => restricoes.maxWidth >= minima
+          ? Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: primeiro),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(child: segundo),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                primeiro,
+                const SizedBox(height: AppSpacing.md),
+                segundo,
+              ],
+            ),
+    );
+  }
+}
+
 /// Desktop e tablet em paisagem: marca à esquerda, formulário à direita.
 class _LayoutExpandido extends StatelessWidget {
   const _LayoutExpandido({required this.online, required this.formulario});
@@ -94,8 +147,8 @@ class _LayoutExpandido extends StatelessWidget {
   final Widget formulario;
 
   static const _larguraDoPainel = 560.0;
-  static const _larguraDoFormulario = 440.0;
   static const _margemDoPainel = 60.0;
+  static const _margemVertical = AppSpacing.xl - 2;
 
   @override
   Widget build(BuildContext context) {
@@ -149,35 +202,63 @@ class _LayoutExpandido extends StatelessWidget {
         Expanded(
           child: SafeArea(
             left: false,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: _margemDoPainel,
-                vertical: AppSpacing.xl - 2,
-              ),
-              child: Column(
-                children: [
-                  Align(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    _margemDoPainel,
+                    _margemVertical,
+                    _margemDoPainel,
+                    0,
+                  ),
+                  child: Align(
                     alignment: Alignment.centerRight,
                     child: AppIndicadorConexao(online: online),
                   ),
-                  Expanded(
-                    child: Center(
-                      child: SingleChildScrollView(
+                ),
+                Expanded(
+                  // A rolagem ocupa o painel inteiro, e a barra fica na borda
+                  // da janela — dentro de um `Center`, ela encolhia para a
+                  // largura do formulário e a barra colava nos campos (US49).
+                  // O formulário vai centrado dentro dela, na vertical também
+                  // quando cabe.
+                  child: LayoutBuilder(
+                    builder: (context, area) {
+                      final largura = larguraDoFormulario(area.maxWidth);
+                      return SingleChildScrollView(
                         padding: const EdgeInsets.symmetric(
+                          horizontal: _margemDoPainel,
                           vertical: AppSpacing.lg,
                         ),
                         child: ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            maxWidth: _larguraDoFormulario,
+                          constraints: BoxConstraints(
+                            minHeight: math.max(
+                              0,
+                              area.maxHeight - 2 * AppSpacing.lg,
+                            ),
                           ),
-                          child: formulario,
+                          child: Center(
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(maxWidth: largura),
+                              child: formulario,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
-                  const _AvisoApoioDecisao(),
-                ],
-              ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    _margemDoPainel,
+                    0,
+                    _margemDoPainel,
+                    _margemVertical,
+                  ),
+                  child: _AvisoApoioDecisao(),
+                ),
+              ],
             ),
           ),
         ),

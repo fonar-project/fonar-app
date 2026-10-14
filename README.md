@@ -34,7 +34,9 @@ O caminho de uma avaliação, na ordem em que o profissional passa por ele:
    offline com a conta da última entrada, se houver pacientes no aparelho.
    Ainda não tem conta? **Cria pelo app** (US34): e-mail, senha e a inscrição
    no Crefono; confirma o e-mail e já usa, enquanto a equipe confere a
-   inscrição.
+   inscrição. No desktop, o formulário da entrada cresce com a janela e rola
+   pela borda dela, e um botão parado pelo mesmo motivo de outro não repete
+   o motivo — o leitor de tela o anuncia em cada um (US49).
 2. **Cadastra o paciente** (US02) — ou corrige os dados depois (US20). Salvar
    avisa se já existe alguém com o mesmo nome e nascimento, e sair com o
    formulário preenchido pergunta antes (US21).

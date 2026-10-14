@@ -579,6 +579,8 @@ class _Painel extends StatelessWidget {
                           rotulo: AppStrings.laudoImprimir,
                           aoTocar: saindo ? null : aoImprimir,
                           motivoDesabilitado: AppStrings.laudoGerando,
+                          // O mesmo motivo do botão do lado, que o mostra.
+                          motivoVisivel: false,
                         ),
                       ],
                     ),
