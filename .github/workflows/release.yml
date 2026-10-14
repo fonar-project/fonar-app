@@ -10,6 +10,10 @@
 #
 # A versão web exige o GitHub Pages ligado UMA vez, à mão: Settings > Pages >
 # Source: GitHub Actions. Sem isso, só o job dela falha; o release sai igual.
+# O `deploy-pages` desiste depois de 10 minutos (o máximo dele) se o Pages não
+# terminar de publicar — aconteceu na v1.0.0, a primeira publicação. Aí, na
+# execução: "Re-run failed jobs" (o pacote tem um nome por tentativa, para a
+# re-execução não esbarrar no da anterior).
 #
 # Para publicar, na `main` atualizada:
 #
@@ -205,12 +209,18 @@ jobs:
 
       - uses: actions/configure-pages@v6
 
+      # Um nome por tentativa: re-executar o job sobe o pacote de novo, e o
+      # deploy-pages recusa a execução com dois pacotes de mesmo nome (foi o
+      # que aconteceu ao re-executar a v1.0.0).
       - uses: actions/upload-pages-artifact@v4
         with:
+          name: github-pages-${{ github.run_attempt }}
           path: build/web
 
       - id: publicar
         uses: actions/deploy-pages@v5
+        with:
+          artifact_name: github-pages-${{ github.run_attempt }}
 
   release:
     name: Publicar o release
@@ -219,10 +229,23 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # Um por um, pelo nome: baixar "todos" trazia junto o pacote da versão
+      # web (o `github-pages`, quando o job dela terminava antes), que ia
+      # parar no release como `artifact.tar`.
       - uses: actions/download-artifact@v7
         with:
+          name: android
           path: arquivos
-          merge-multiple: true
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: windows
+          path: arquivos
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: macos
+          path: arquivos
 
       - name: Publicar
         env:
