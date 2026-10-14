@@ -32,7 +32,18 @@ class FilaPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final fila = ref.watch(filaControladorProvider);
+    // Só os envios da conta que está na sessão (e os sem dono, de antes da
+    // US32): num aparelho compartilhado, o que outra conta gravou é dela, e
+    // espera ela entrar (US40).
+    final conta = ref.watch(sessaoProvider)?.uid ?? '';
+    final fila = ref
+        .watch(filaControladorProvider)
+        .whenData(
+          (itens) => [
+            for (final i in itens)
+              if (i.deQuem(conta)) i,
+          ],
+        );
     final online = ref.watch(conexaoOnlineProvider);
 
     return AppEstrutura(
@@ -155,16 +166,8 @@ class _CartaoDoEnvio extends ConsumerWidget {
     void tentar() =>
         ref.read(filaControladorProvider.notifier).tentarAgora(item.id);
     final motivo = item.ultimaFalha ?? '';
-    // Gravado por outra conta neste aparelho: não sobe nesta sessão.
-    final deOutraConta =
-        item.pendente && !item.deQuem(ref.watch(sessaoProvider)?.uid ?? '');
 
     final (icone, titulo, texto) = switch (item.situacao) {
-      _ when deOutraConta => (
-        NomeIcone.passoPendente,
-        AppStrings.filaDeOutraConta,
-        AppStrings.filaDeOutraContaTexto,
-      ),
       SituacaoDoEnvio.naFila when !online => (
         NomeIcone.passoPendente,
         AppStrings.filaAguardandoConexao,
@@ -216,7 +219,6 @@ class _CartaoDoEnvio extends ConsumerWidget {
     };
 
     final Widget? acao = switch (item.situacao) {
-      _ when deOutraConta => null,
       // Tentar de novo falharia igual: o Firebase não renova mais a sessão.
       // Entrar de novo, com a senha, devolve o envio à fila sozinho.
       SituacaoDoEnvio.aguardandoLogin => AppBotao.secundario(

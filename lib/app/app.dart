@@ -9,6 +9,7 @@ import '../features/conta/data/preferencia_de_tema_local.dart';
 import '../features/conta/domain/tema_escolhido.dart';
 import '../features/fila/presentation/fila_controlador.dart';
 import '../features/laudo/presentation/sincronizacao_dos_laudos_controlador.dart';
+import '../features/sincronizacao/presentation/descida_controlador.dart';
 import '../l10n/app_strings.dart';
 import 'router/app_router.dart';
 
@@ -27,6 +28,9 @@ class FonarApp extends ConsumerWidget {
     ref.listen(sincronizacaoCapeVControladorProvider, (_, _) {});
     // E a cópia de cada laudo emitido, para a API (ADR-018 da API).
     ref.listen(sincronizacaoDosLaudosControladorProvider, (_, _) {});
+    // E o caminho de volta (US40): o que outro aparelho da mesma conta
+    // cadastrou ou registrou desce para este.
+    ref.listen(descidaDaContaControladorProvider, (_, _) {});
     // Os WAV que sobraram sem registro (regravação, descarte que falhou no
     // meio) saem na abertura.
     ref.listen(limpezaDeWavSemRegistroProvider, (_, _) {});

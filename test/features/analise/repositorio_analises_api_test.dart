@@ -7,6 +7,7 @@ import 'package:fonar_app/features/analise/data/repositorio_analises_api.dart';
 import 'package:fonar_app/features/analise/domain/faixa_de_referencia.dart';
 import 'package:fonar_app/features/analise/domain/leitura_do_resultado.dart';
 import 'package:fonar_app/features/analise/domain/resultado_da_analise.dart';
+import 'package:fonar_app/features/captura/domain/amostra.dart';
 import 'package:fonar_app/features/historico/domain/evolucao_da_medida.dart';
 import 'package:fonar_app/features/pacientes/domain/novo_paciente.dart';
 
@@ -141,6 +142,12 @@ void main() {
       '/v1/pacientes/$_paciente/sessoes/$_sessao/amostras/a1/espectrograma',
     );
     expect(resultado.medidas.map((x) => x.medida), MedidaAcustica.values);
+    // US40: o id de cada gravação no servidor, para ouvir a feita em outro
+    // aparelho.
+    expect(resultado.gravacoes, {
+      TarefaDeGravacao.vogalSustentada: 'a1',
+      TarefaDeGravacao.falaEncadeada: 'a2',
+    });
   });
 
   test('faixa provisória não classifica: o valor aparece sem faixa', () async {

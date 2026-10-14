@@ -66,6 +66,7 @@ class ResultadoDaAnalise {
     this.espectrogramaUrl,
     this.motivoDaFalha,
     this.exemplo = false,
+    this.gravacoes = const {},
   });
 
   final String id;
@@ -84,6 +85,11 @@ class ResultadoDaAnalise {
 
   /// Quando [SituacaoDaAnalise.falhou].
   final String? motivoDaFalha;
+
+  /// O id, no servidor, da gravação de cada tarefa (US40): é por ele que se
+  /// ouve a gravação feita em outro aparelho
+  /// (`GET .../amostras/{id}/audio`).
+  final Map<TarefaDeGravacao, String> gravacoes;
 
   /// Dado de desenvolvimento, fictício. A tela avisa, para que nenhuma
   /// captura de tela o faça passar por resultado de verdade.

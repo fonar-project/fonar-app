@@ -33,6 +33,7 @@ import '../../../laudo/domain/laudo.dart';
 import '../../data/repositorio_pacientes_local.dart';
 import '../../domain/novo_paciente.dart';
 import '../../domain/paciente.dart';
+import '../../../sincronizacao/presentation/descida_controlador.dart';
 
 /// Tela 02 — perfil do paciente (US12).
 ///
@@ -199,6 +200,9 @@ class _DadosEAcoes extends ConsumerWidget {
     final secundario = textos.bodyMedium?.copyWith(
       color: context.cores.secundario,
     );
+    // O que outro aparelho registrou para este paciente (CAPE-V, laudos)
+    // desce enquanto o perfil está aberto (US40); o que mudar aparece sozinho.
+    ref.watch(descidaDoPacienteProvider(paciente.id));
     final consentimento = ref.watch(consentimentoProvider(paciente.id));
     final retirada = ref.watch(retiradaEmVigorProvider(paciente.id)).value;
     // Fail-closed: só "registrado" libera a gravação; carregando e erro, não.

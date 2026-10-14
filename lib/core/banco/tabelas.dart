@@ -22,6 +22,20 @@ class Pacientes extends Table {
   DateTimeColumn get dataDeNascimento => dateTime().nullable()();
   DateTimeColumn get cadastradoEm => dateTime()();
 
+  /// A conta (id do Firebase) de quem o paciente é (US40). Só ela o vê
+  /// neste aparelho. Nulo nos cadastrados antes da US40: a conta que entrar
+  /// primeiro os adota (`adotarPacientesSemDono`).
+  TextColumn get profissionalId => text().nullable()();
+
+  /// Quando os dados foram mudados NESTE aparelho (cadastro ou correção).
+  /// Mais novo que [sincronizadoEm]: a mudança ainda não subiu, e o que
+  /// desce do Firebase não a sobrescreve.
+  DateTimeColumn get alteradoEm => dateTime().nullable()();
+
+  /// Quando o aparelho e o Firebase tinham, pela última vez, os mesmos dados
+  /// deste paciente — na subida (envio) ou na descida.
+  DateTimeColumn get sincronizadoEm => dateTime().nullable()();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }

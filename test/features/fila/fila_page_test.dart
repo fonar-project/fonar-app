@@ -272,9 +272,9 @@ void main() {
     expect(find.byType(FilaPage), findsOneWidget);
   });
 
-  testWidgets('envio de outra conta diz que espera ela entrar, sem ação', (
-    tester,
-  ) async {
+  // US40: num aparelho compartilhado, o que outra conta gravou é dela — nem
+  // aparece na fila de quem está na sessão.
+  testWidgets('envio de outra conta não aparece na fila desta', (tester) async {
     await _abrir(
       tester,
       itens: [
@@ -287,10 +287,8 @@ void main() {
       ],
     );
 
-    expect(find.text(AppStrings.filaDeOutraConta), findsOneWidget);
-    expect(find.text(AppStrings.filaDeOutraContaTexto), findsOneWidget);
-    expect(find.text(AppStrings.filaEntrarDeNovo), findsNothing);
-    expect(find.text(AppStrings.filaTentarDeNovo), findsNothing);
+    expect(find.text('Paciente Quatro de Teste'), findsNothing);
+    expect(find.text(AppStrings.filaVaziaTitulo), findsOneWidget);
   });
 
   testWidgets('sem conexão: aviso no topo e tentar desabilitado com motivo', (

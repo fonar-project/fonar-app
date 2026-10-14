@@ -7,6 +7,7 @@ import '../../../core/banco/novo_id.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/error/app_exception.dart';
 import '../../../core/relogio.dart';
+import '../../auth/data/sessao.dart';
 import '../../historico/domain/evolucao_da_medida.dart';
 import '../domain/novo_paciente.dart';
 import '../domain/paciente.dart';
@@ -20,13 +21,16 @@ final repositorioPacientesProvider = Provider<RepositorioPacientes>(
     // Os de exemplo existem para os resultados de exemplo: com a API de
     // verdade, nenhum dos dois aparece.
     exemplos: AppConfig.apiConfigurada ? const [] : pacientesDeExemplo,
+    conta: () => ref.read(sessaoProvider)?.uid,
   ),
 );
 
-/// Lista de pacientes da tela, já carregada.
-final pacientesProvider = FutureProvider<List<Paciente>>(
-  (ref) => ref.watch(repositorioPacientesProvider).listar(),
-);
+/// Lista de pacientes da tela, já carregada — os da conta que está na
+/// sessão. Trocar de conta carrega de novo.
+final pacientesProvider = FutureProvider<List<Paciente>>((ref) {
+  ref.watch(sessaoProvider.select((s) => s?.uid));
+  return ref.watch(repositorioPacientesProvider).listar();
+});
 
 /// Um paciente pelo id, ou `null` se ele não estiver neste aparelho.
 ///
@@ -44,31 +48,54 @@ final pacienteProvider = FutureProvider.family<Paciente?, String>((
   return null;
 });
 
-/// Os pacientes cadastrados neste aparelho, no banco local.
+/// Os pacientes da conta, no banco local.
 ///
 /// O cadastro sobe para o Firebase antes de cada envio para a análise
-/// (US33, `SincronizacaoFirestore`), e as correções feitas aqui vão junto.
-/// TODO(backend): o que outro aparelho cadastrou não desce para este.
+/// (US33, `SincronizacaoFirestore`), e as correções feitas aqui vão junto. O
+/// que outro aparelho cadastrou desce para este (US40, `DescidaDoFirestore`).
+///
+/// **Cada paciente é de uma conta** (US40). Num aparelho compartilhado, quem
+/// entra vê só os pacientes dela: o cadastro leva a conta da sessão, e a
+/// lista e a correção só alcançam os dela. O paciente sem dono — cadastrado
+/// antes da US40 — aparece para qualquer conta até ser adotado, o que
+/// acontece na primeira entrada depois da atualização.
 class RepositorioPacientesLocal implements RepositorioPacientes {
   RepositorioPacientesLocal(
     this._banco, {
     required this._agora,
     this.exemplos = const [],
-  });
+    String? Function()? conta,
+  }) : _conta = conta ?? _semConta;
 
   final BancoLocal _banco;
   final DateTime Function() _agora;
 
+  /// A conta da sessão. Nula só fora de uma sessão (os testes de banco): aí
+  /// a lista não filtra por conta.
+  final String? Function() _conta;
+
+  static String? _semConta() => null;
+
   /// Mostrados depois dos cadastrados, e nunca gravados no banco.
   final List<Paciente> exemplos;
 
+  /// Os pacientes que a conta [conta] alcança: os dela e os sem dono.
+  static Expression<bool> daConta($PacientesTable p, String? conta) =>
+      conta == null
+      ? const Constant(true)
+      : p.profissionalId.equals(conta) | p.profissionalId.isNull();
+
   @override
   Future<List<Paciente>> listar() async {
+    final conta = _conta();
+    if (conta != null) await adotarPacientesSemDono(_banco, conta);
     final linhas =
-        await (_banco.select(_banco.pacientes)..orderBy([
-              (p) => OrderingTerm.desc(p.cadastradoEm),
-              (p) => OrderingTerm.desc(p.rowId),
-            ]))
+        await (_banco.select(_banco.pacientes)
+              ..where((p) => daConta(p, conta))
+              ..orderBy([
+                (p) => OrderingTerm.desc(p.cadastradoEm),
+                (p) => OrderingTerm.desc(p.rowId),
+              ]))
             .get();
     final ultimas = await _ultimaGravacaoPorPaciente();
     return [
@@ -122,15 +149,18 @@ class RepositorioPacientesLocal implements RepositorioPacientes {
 
   @override
   Future<Paciente> atualizar(String id, NovoPaciente dados) async {
+    final conta = _conta();
     final alteradas =
         await (_banco.update(
           _banco.pacientes,
-        )..where((p) => p.id.equals(id))).write(
+        )..where((p) => p.id.equals(id) & daConta(p, conta))).write(
           PacientesCompanion(
             nome: Value(dados.nome),
             queixa: Value(dados.queixa),
             sexo: Value(dados.sexo.name),
             dataDeNascimento: Value(dados.dataDeNascimento),
+            // A correção ainda não subiu: o que descer não a sobrescreve.
+            alteradoEm: Value(_agora()),
           ),
         );
     if (alteradas == 0) throw const NaoEncontrado();
@@ -165,8 +195,29 @@ class RepositorioPacientesLocal implements RepositorioPacientes {
             sexo: Value(novo.sexo.name),
             dataDeNascimento: Value(novo.dataDeNascimento),
             cadastradoEm: _agora(),
+            profissionalId: Value(_conta()),
+            alteradoEm: Value(_agora()),
           ),
         );
     return paciente;
   }
 }
+
+/// Dá dono aos pacientes cadastrados antes da US40, que não têm: o de quem
+/// gravou a primeira sessão dele, se houver; senão, a [conta] que está
+/// entrando. Devolve quantos foram adotados.
+///
+/// Antes da US40 o aparelho não separava por conta; a gravação já dizia de
+/// quem era (`Envios.profissionalId`, desde a US32), e é ela que decide
+/// primeiro. Roda a cada lista — depois da primeira vez, não acha ninguém.
+Future<int> adotarPacientesSemDono(BancoLocal banco, String conta) =>
+    banco.customUpdate(
+      'UPDATE pacientes SET profissional_id = COALESCE(('
+      'SELECT e.profissional_id FROM envios e '
+      'WHERE e.paciente_id = pacientes.id AND e.profissional_id IS NOT NULL '
+      'ORDER BY e.posicao LIMIT 1'
+      '), ?) WHERE profissional_id IS NULL',
+      variables: [Variable.withString(conta)],
+      updates: {banco.pacientes},
+      updateKind: UpdateKind.update,
+    );

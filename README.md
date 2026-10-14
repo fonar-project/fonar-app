@@ -80,6 +80,16 @@ conta, e sair apaga a credencial do aparelho. Quando o Firebase não renova
 mais a sessão (senha trocada, conta desativada), a fila mostra "Entrar de
 novo", e o envio sobe sozinho depois da entrada.
 
+Com **mais de um aparelho** (US40), o que um registra aparece no outro: os
+pacientes da conta e os consentimentos descem do Firebase na abertura, quando
+a conexão volta e quando alguém entra; a CAPE-V e os laudos, quando o perfil
+do paciente abre; e a gravação feita em outro aparelho se ouve pela API. Uma
+retirada de consentimento feita num aparelho passa a bloquear a gravação no
+outro. A descida só acrescenta ou atualiza o que não foi mudado aqui — nunca
+apaga, e nunca passa por cima de uma correção que ainda não subiu. Num
+**aparelho compartilhado**, cada paciente é de uma conta: quem entra vê só os
+seus, e a fila só os envios dela.
+
 A numeração das US03 a US10 foi deduzida das telas do protótipo — confira com
 o backlog antes de citar no texto do TCC (ver `PENDENCIAS.md`).
 

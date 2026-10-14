@@ -271,6 +271,15 @@ identificado como tal, só o modo de exemplo (`AppConfig.exemplo`): o login
 que aceita qualquer e-mail e senha, e os resultados e os pacientes "de
 Exemplo", que aparecem por cima do banco sem serem gravados nele.
 
+O caminho de volta também existe (US40, `sincronizacao/data/descida_firestore.dart`):
+os pacientes da conta e o livro de consentimentos de cada um descem na
+abertura, quando a conexão volta e quando alguém entra; CAPE-V e laudos,
+quando o perfil do paciente abre; a gravação feita em outro aparelho se ouve
+pela API. A descida nunca apaga nem passa por cima de mudança daqui que não
+subiu. Cada paciente é de uma conta (`Pacientes.profissionalId`): num
+aparelho compartilhado, quem entra só vê os seus, e a fila só mostra os
+envios dela.
+
 O app sai para baixar pelo GitHub Releases (US41: Windows, macOS e APK do
 Android, sem assinatura de código) e, para o iPhone, como versão web no
 GitHub Pages (US42), pelo `release.yml`, a cada tag `v*`. Na web, o banco

@@ -67,7 +67,7 @@ class BancoLocal extends _$BancoLocal {
   /// `drift_schemas/` guarda o formato de cada versão já distribuída; é com
   /// ele que se testa que o banco de quem atualiza o app chega inteiro.
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -102,6 +102,18 @@ class BancoLocal extends _$BancoLocal {
       if (de < 6) {
         // US42: os WAV gravados no navegador.
         await m.createTable(audiosDoNavegador);
+      }
+      if (de < 7) {
+        // US40: de quem é cada paciente, e o que já está igual no Firebase.
+        await m.addColumn(pacientes, pacientes.profissionalId);
+        await m.addColumn(pacientes, pacientes.alteradoEm);
+        await m.addColumn(pacientes, pacientes.sincronizadoEm);
+        // Sem saber o que já subiu, toda correção de antes conta como por
+        // subir: o que descer não passa por cima dela. O próximo envio de
+        // cada paciente acerta a marca.
+        await customStatement(
+          'UPDATE pacientes SET alterado_em = cadastrado_em',
+        );
       }
     },
     // O SQLite vem com chave estrangeira DESLIGADA; sem isto, nada impediria

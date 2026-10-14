@@ -9,6 +9,7 @@ import 'app/licencas.dart';
 import 'core/config/app_config.dart';
 import 'core/navegador/navegador.dart';
 import 'features/laudo/data/saida_do_laudo.dart';
+import 'features/reproducao/data/reprodutor_audioplayers.dart';
 
 void main() {
   // No modo de exemplo (ou com a chave do Firebase apagada no build), o app
@@ -27,6 +28,8 @@ void main() {
   // O PDF que o compartilhamento do celular deixou no cache (laudo é dado
   // pessoal sensível): sai na abertura seguinte, sem segurar a tela.
   unawaited(limparPdfsCompartilhados());
+  // E a gravação baixada para ouvir que o app fechado no meio deixou.
+  unawaited(limparGravacoesBaixadas());
   // No navegador (US42), o banco local mora no armazenamento da página, que o
   // navegador pode limpar sozinho quando falta espaço — com gravações que
   // ainda não subiram. Pedir para não limpar.
