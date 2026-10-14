@@ -78,7 +78,9 @@ entrada quem não entrou, cada envio da fila leva o id de quem gravou e só sobe
 na sessão dessa pessoa, o nome e o registro que vão no laudo são guardados por
 conta, e sair apaga a credencial do aparelho. Quando o Firebase não renova
 mais a sessão (senha trocada, conta desativada), a fila mostra "Entrar de
-novo", e o envio sobe sozinho depois da entrada.
+novo", e o envio sobe sozinho depois da entrada. A senha se troca na própria
+conta (US45): o app confere a atual, troca no Firebase e guarda a credencial
+nova — e a nova passa a valer também sem conexão.
 
 As **decisões jurídicas** (US43) seguem o lado conservador: sem conexão, a
 entrada e o desbloqueio conferem a senha com um verificador guardado no cofre

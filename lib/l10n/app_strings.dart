@@ -1195,6 +1195,26 @@ abstract final class AppStrings {
   static const contaCancelar = 'Cancelar';
   static const contaSaindo = 'Saindo…';
 
+  // Troca de senha (US45).
+  static const contaSenhaTitulo = 'Senha';
+  static const contaSenhaApoio =
+      'A senha nova vale para entrar em qualquer aparelho e, neste, também '
+      'sem conexão. Nos outros aparelhos, a conta pede para entrar de novo.';
+  static const contaSenhaTrocar = 'Trocar a senha';
+  static const contaSenhaTrocando = 'Trocando…';
+  static const contaSenhaCampoAtual = 'Senha atual';
+  static const contaSenhaCampoNova = 'Senha nova';
+  static const contaSenhaCampoConfirmacao = 'Repita a senha nova';
+  static const contaSenhaInformeAtual = 'Informe a senha atual.';
+  static const contaSenhaAtualNaoConfere =
+      'A senha atual não confere. Confira e tente de novo.';
+  static const contaSenhaNovaIgual = 'A senha nova é igual à atual.';
+  static const contaSenhaTrocada = 'Senha trocada.';
+  static const contaSenhaPrecisaConexao = 'Trocar a senha precisa de conexão.';
+  static const contaSenhaExemplo =
+      'No modo de exemplo, a entrada aceita qualquer senha: não há senha '
+      'para trocar.';
+
   // ----------------------------------------------------- tendência AVQI --
   // TODO(clínico): "melhorando" e "piorando" vêm do protótipo e aguardam
   // revisão — é leitura da evolução, e o limiar do que conta como mudança

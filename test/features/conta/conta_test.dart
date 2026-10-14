@@ -23,7 +23,9 @@ import 'package:fonar_app/features/auth/domain/profissional.dart';
 import 'package:fonar_app/features/auth/presentation/pages/login_page.dart';
 import 'package:fonar_app/features/captura/domain/amostra.dart';
 import 'package:fonar_app/features/conta/data/repositorio_da_conta_local.dart';
+import 'package:fonar_app/features/conta/data/troca_de_senha_firebase.dart';
 import 'package:fonar_app/features/conta/domain/dados_do_profissional.dart';
+import 'package:fonar_app/features/conta/domain/troca_de_senha.dart';
 import 'package:fonar_app/features/conta/presentation/conta_controlador.dart';
 import 'package:fonar_app/features/conta/presentation/pages/conta_page.dart';
 import 'package:fonar_app/features/fila/data/repositorio_fila_local.dart';
@@ -72,6 +74,24 @@ class _Conta implements RepositorioDaConta, RepositorioAutenticacao {
   Future<void> pedirRedefinicaoDeSenha(String email) async {}
 }
 
+/// A troca de senha que só anota o pedido, e lança [falha] se houver.
+class _Troca implements TrocaDeSenha {
+  _Troca({this.falha});
+
+  final Object? falha;
+  final pedidos = <(String, String)>[];
+
+  @override
+  Future<void> trocar({
+    required ContaAutenticada conta,
+    required String atual,
+    required String nova,
+  }) async {
+    pedidos.add((atual, nova));
+    if (falha case final falha?) throw falha;
+  }
+}
+
 ItemDaFila _envio(String id) => ItemDaFila(
   id: 'envio-$id',
   pacienteId: 'p1',
@@ -100,6 +120,8 @@ Future<(GoRouter, _Conta, ProviderContainer)> _abrir(
   int envios = 0,
   Size tamanho = const Size(390, 1800),
   double escala = 1,
+  TrocaDeSenha? troca,
+  bool online = false,
 }) async {
   tester.view.physicalSize = tamanho;
   tester.view.devicePixelRatio = 1;
@@ -117,8 +139,9 @@ Future<(GoRouter, _Conta, ProviderContainer)> _abrir(
   final container = ProviderContainer(
     retry: (_, _) => null,
     overrides: [
-      // Sem rede: a fila não tenta enviar, e os envios ficam pendentes.
-      conexaoOnlineProvider.overrideWithValue(false),
+      // Sem rede, salvo pedido: a fila não tenta enviar, e os envios ficam
+      // pendentes.
+      conexaoOnlineProvider.overrideWithValue(online),
       bancoDeTeste(),
       repositorioFilaProvider.overrideWithValue(fila),
       repositorioDaContaProvider.overrideWithValue(c),
@@ -127,6 +150,8 @@ Future<(GoRouter, _Conta, ProviderContainer)> _abrir(
       senhaSemRedeProvider.overrideWithValue(SenhaSemRedeEmMemoria()),
       repositorioAutenticacaoProvider.overrideWithValue(c),
       sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
+      // Sem ela, é o modo de exemplo: não há senha para trocar.
+      if (troca != null) trocaDeSenhaProvider.overrideWithValue(troca),
     ],
   );
   addTearDown(container.dispose);
@@ -395,6 +420,135 @@ void main() {
           container.read(profissionalAtualProvider).nome,
           isNot('Da sessão'),
         );
+      });
+    });
+
+    group('senha (US45)', () {
+      Future<void> preencher(
+        WidgetTester tester, {
+        required String atual,
+        required String nova,
+        required String confirmacao,
+      }) async {
+        await tester.enterText(_campo(AppStrings.contaSenhaCampoAtual), atual);
+        await tester.enterText(_campo(AppStrings.contaSenhaCampoNova), nova);
+        await tester.enterText(
+          _campo(AppStrings.contaSenhaCampoConfirmacao),
+          confirmacao,
+        );
+        await tester.pump();
+      }
+
+      testWidgets('modo de exemplo: não há senha para trocar', (tester) async {
+        await _abrir(tester);
+
+        expect(find.text(AppStrings.contaSenhaExemplo), findsOneWidget);
+        expect(find.text(AppStrings.contaSenhaTrocar), findsNothing);
+      });
+
+      testWidgets('sem conexão, o botão diz por que não troca', (tester) async {
+        await _abrir(tester, troca: _Troca());
+
+        expect(_habilitado(tester, AppStrings.contaSenhaTrocar), isFalse);
+        expect(find.text(AppStrings.contaSenhaPrecisaConexao), findsOneWidget);
+      });
+
+      testWidgets('troca, e a senha não fica em campo nenhum', (tester) async {
+        final troca = _Troca();
+        await _abrir(tester, troca: troca, online: true);
+
+        await _tocar(tester, find.text(AppStrings.contaSenhaTrocar));
+        await preencher(
+          tester,
+          atual: 'antiga-senha',
+          nova: 'nova-senha-1',
+          confirmacao: 'nova-senha-1',
+        );
+        await _tocar(tester, find.text(AppStrings.contaSenhaTrocar));
+
+        expect(troca.pedidos, [('antiga-senha', 'nova-senha-1')]);
+        expect(find.text(AppStrings.contaSenhaTrocada), findsOneWidget);
+        expect(find.text(AppStrings.contaSenhaCampoAtual), findsNothing);
+        expect(find.text('nova-senha-1'), findsNothing);
+      });
+
+      testWidgets('formulário com problema: diz no campo e não envia', (
+        tester,
+      ) async {
+        final troca = _Troca();
+        await _abrir(tester, troca: troca, online: true);
+
+        await _tocar(tester, find.text(AppStrings.contaSenhaTrocar));
+        await preencher(tester, atual: '', nova: 'curta', confirmacao: '');
+        await _tocar(tester, find.text(AppStrings.contaSenhaTrocar));
+
+        expect(troca.pedidos, isEmpty);
+        expect(find.text(AppStrings.contaSenhaInformeAtual), findsOneWidget);
+        expect(find.text(AppStrings.cadastroSenhaCurta), findsOneWidget);
+      });
+
+      testWidgets('a atual que não confere fica dita, com o formulário', (
+        tester,
+      ) async {
+        await _abrir(
+          tester,
+          troca: _Troca(falha: const CredencialInvalida()),
+          online: true,
+        );
+
+        await _tocar(tester, find.text(AppStrings.contaSenhaTrocar));
+        await preencher(
+          tester,
+          atual: 'errada-senha',
+          nova: 'nova-senha-1',
+          confirmacao: 'nova-senha-1',
+        );
+        await _tocar(tester, find.text(AppStrings.contaSenhaTrocar));
+
+        expect(find.text(AppStrings.contaSenhaAtualNaoConfere), findsOneWidget);
+        expect(find.text(AppStrings.contaSenhaTrocada), findsNothing);
+        expect(find.text(AppStrings.contaSenhaCampoAtual), findsOneWidget);
+      });
+
+      testWidgets('cancelar fecha e esquece o que foi digitado', (
+        tester,
+      ) async {
+        final troca = _Troca();
+        await _abrir(tester, troca: troca, online: true);
+
+        await _tocar(tester, find.text(AppStrings.contaSenhaTrocar));
+        await preencher(
+          tester,
+          atual: 'antiga-senha',
+          nova: 'nova-senha-1',
+          confirmacao: 'nova-senha-1',
+        );
+        await _tocar(tester, find.text(AppStrings.contaCancelar));
+        expect(find.text(AppStrings.contaSenhaCampoAtual), findsNothing);
+
+        await _tocar(tester, find.text(AppStrings.contaSenhaTrocar));
+        expect(_texto(tester, AppStrings.contaSenhaCampoAtual), isEmpty);
+        expect(_texto(tester, AppStrings.contaSenhaCampoNova), isEmpty);
+        expect(troca.pedidos, isEmpty);
+      });
+
+      testWidgets('aberta, com erro, no celular e texto 2x: sem estouro', (
+        tester,
+      ) async {
+        await _abrir(
+          tester,
+          tamanho: const Size(360, 640),
+          escala: 2,
+          troca: _Troca(),
+          online: true,
+        );
+
+        await _tocar(tester, find.text(AppStrings.contaSenhaTrocar));
+        await preencher(tester, atual: '', nova: 'curta', confirmacao: 'x');
+        await _tocar(tester, find.text(AppStrings.contaSenhaTrocar));
+
+        expect(tester.takeException(), isNull);
+        expect(find.text(AppStrings.cadastroSenhaCurta), findsOneWidget);
       });
     });
 

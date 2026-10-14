@@ -322,4 +322,76 @@ void main() {
       );
     });
   });
+
+  group('trocar a senha', () {
+    test('troca no Identity Toolkit e devolve a credencial nova', () async {
+      final servidor = AdaptadorFalso([
+        const RespostaFalsa(200, {
+          'localId': 'uid-1',
+          'email': 'fono@exemplo.com',
+          'idToken': 'token-2',
+          'refreshToken': 'renova-2',
+          'expiresIn': '3600',
+        }),
+      ]);
+
+      final nova = await _cliente(servidor)
+          .trocarSenha(_credencial, 'senha-nova-1');
+
+      final pedido = servidor.feitas.single;
+      expect(
+        pedido.uri.toString(),
+        'https://identitytoolkit.googleapis.com/v1/accounts:update'
+        '?key=chave-de-teste',
+      );
+      expect(pedido.json, {
+        'idToken': 'token-1',
+        'password': 'senha-nova-1',
+        'returnSecureToken': true,
+      });
+      expect(nova.uid, 'uid-1');
+      expect(nova.email, 'fono@exemplo.com');
+      expect(nova.idToken, 'token-2');
+      expect(nova.refreshToken, 'renova-2');
+      expect(nova.expiraEm, _agora.add(const Duration(hours: 1)));
+    });
+
+    test('senha fraca é dita', () async {
+      await expectLater(
+        _cliente(AdaptadorFalso([erroDoFirebase('WEAK_PASSWORD')]))
+            .trocarSenha(_credencial, 'curta'),
+        throwsA(isA<SenhaFraca>()),
+      );
+    });
+
+    for (final codigo in [
+      'INVALID_ID_TOKEN',
+      'TOKEN_EXPIRED',
+      'CREDENTIAL_TOO_OLD_LOGIN_AGAIN',
+    ]) {
+      test('$codigo: só entrando de novo', () async {
+        await expectLater(
+          _cliente(AdaptadorFalso([erroDoFirebase(codigo)]))
+              .trocarSenha(_credencial, 'senha-nova-1'),
+          throwsA(isA<NaoAutorizado>()),
+        );
+      });
+    }
+
+    test('credencial nova de outra conta é recusada', () async {
+      await expectLater(
+        _cliente(
+          AdaptadorFalso([
+            const RespostaFalsa(200, {
+              'localId': 'outra',
+              'idToken': 'token-2',
+              'refreshToken': 'renova-2',
+              'expiresIn': '3600',
+            }),
+          ]),
+        ).trocarSenha(_credencial, 'senha-nova-1'),
+        throwsA(isA<NaoAutorizado>()),
+      );
+    });
+  });
 }

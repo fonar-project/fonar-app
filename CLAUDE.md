@@ -125,6 +125,10 @@ Token Service (README). O login de EXEMPLO só existe no modo de exemplo
   que conduz o primeiro acesso: e-mail por verificar → formulário → entra.
   O credenciamento (pendente ou credenciado) é da equipe, não bloqueia nada,
   e o app só o mostra. `features/cadastro/`.
+- Trocar a senha (US45) é na Conta: confere a atual (`signInWithPassword`),
+  troca (`accounts:update`), guarda a credencial nova — os tokens de
+  renovação de antes deixam de valer — e o verificador da senha sem rede.
+  `conta/data/troca_de_senha_firebase.dart`.
 
 ### Reprodução de áudio — por que é o `audioplayers` (dívida encerrada)
 Até 24/09/2026 a reprodução era `just_audio` + `just_audio_windows`. O plugin
