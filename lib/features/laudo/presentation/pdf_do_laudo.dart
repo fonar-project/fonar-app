@@ -3,6 +3,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../../../design_system/tokens/app_colors.dart';
+import '../../../design_system/widgets/app_simbolo.dart';
 import '../../../l10n/app_strings.dart';
 import '../../analise/domain/leitura_do_resultado.dart';
 import '../../analise/domain/resultado_da_analise.dart';
@@ -127,14 +128,21 @@ pw.Widget _cabecalho(ConteudoDoLaudo conteudo, pw.Context context) =>
               color: _roxo,
             ),
           ),
-          pw.Text(
-            AppStrings.appTitle,
-            style: pw.TextStyle(
-              fontSize: 11,
-              fontWeight: pw.FontWeight.bold,
-              letterSpacing: 1,
-              color: _roxo,
-            ),
+          pw.Row(
+            mainAxisSize: pw.MainAxisSize.min,
+            children: [
+              pw.SvgImage(svg: simboloDoFonarSvg, width: 16, height: 16),
+              pw.SizedBox(width: 3),
+              pw.Text(
+                AppStrings.appTitle,
+                style: pw.TextStyle(
+                  fontSize: 11,
+                  fontWeight: pw.FontWeight.bold,
+                  letterSpacing: 1,
+                  color: _roxo,
+                ),
+              ),
+            ],
           ),
         ],
       ),

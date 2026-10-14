@@ -9,6 +9,7 @@ import '../design_system/tokens/app_cores.dart';
 import '../design_system/tokens/app_spacing.dart';
 import '../design_system/widgets/app_fundo.dart';
 import '../design_system/widgets/app_indicador_conexao.dart';
+import '../design_system/widgets/app_simbolo.dart';
 import '../design_system/widgets/app_toque.dart';
 import '../features/auth/data/profissional_atual.dart';
 import '../l10n/app_strings.dart';
@@ -179,14 +180,22 @@ class _BarraLateral extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              AppStrings.appTitle,
-                              style: textos.titleLarge?.copyWith(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 1.1,
-                                color: creme,
-                              ),
+                            Row(
+                              children: [
+                                AppSimbolo(cor: creme, tamanho: 30),
+                                const SizedBox(width: AppSpacing.xs),
+                                Flexible(
+                                  child: Text(
+                                    AppStrings.appTitle,
+                                    style: textos.titleLarge?.copyWith(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 1.1,
+                                      color: creme,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                             Text(
                               AppStrings.loginSubtitulo,
