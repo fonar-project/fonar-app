@@ -22,6 +22,14 @@
 # A versão do app (`--build-name`) é a da tag, sem o "v"; o número do build é
 # o número desta execução.
 #
+# O APK sai em dois (US54). O `FONAR-Android.apk`, o do link da landing, é só
+# de 64 bits (arm64): o APK com as três arquiteturas tinha uns 69 MB, e o
+# celular ficava parado em 100% verificando o arquivo. O
+# `FONAR-Android-32bits.apk` é para celular de entrada com sistema de 32 bits
+# (os Android Go, por exemplo), que não instala o de 64. Os dois com o mesmo
+# `versionCode`: `--target-platform` não mexe nele — o `--split-per-abi`,
+# que soma um deslocamento por arquitetura, ficou de fora de propósito.
+#
 # A chave do APK vem dos secrets FONAR_ANDROID_KEYSTORE_BASE64,
 # FONAR_KEYSTORE_SENHA, FONAR_CHAVE_ALIAS e FONAR_CHAVE_SENHA (ver
 # "Distribuição" no README). Sem eles, o APK sai com a chave de debug e o
@@ -86,16 +94,40 @@ jobs:
           FONAR_CHAVE_ALIAS: ${{ secrets.FONAR_CHAVE_ALIAS }}
           FONAR_CHAVE_SENHA: ${{ secrets.FONAR_CHAVE_SENHA }}
         run: |
-          flutter build apk --release \
-            --build-name "${GITHUB_REF_NAME#v}" \
-            --build-number "${{ github.run_number }}" \
-            --dart-define=FONAR_VERSAO="${GITHUB_REF_NAME}"
-          cp build/app/outputs/flutter-apk/app-release.apk FONAR-Android.apk
+          apk() {
+            flutter build apk --release \
+              --target-platform "$1" \
+              --build-name "${GITHUB_REF_NAME#v}" \
+              --build-number "${{ github.run_number }}" \
+              --dart-define=FONAR_VERSAO="${GITHUB_REF_NAME}"
+            cp build/app/outputs/flutter-apk/app-release.apk "$2"
+          }
+          apk android-arm64 FONAR-Android.apk
+          apk android-arm FONAR-Android-32bits.apk
+
+      # O tamanho fica no log, e cada APK só pode ter as bibliotecas nativas
+      # da sua arquitetura: uma pasta de outra (de um plugin, por exemplo)
+      # faria o aparelho dela instalar um APK sem o motor do Flutter.
+      - name: Conferir os APK
+        run: |
+          confere() {
+            ls -lh "$1"
+            unzip -l "$1" | grep -E 'lib/[^/]+/[^/]+\.so$' | awk '{print $4}' | sort
+            outras=$(unzip -l "$1" | grep -E 'lib/[^/]+/' | grep -v "lib/$2/" | awk '{print $4}' | tr '\n' ' ' || true)
+            if [ -n "$outras" ]; then
+              echo "::error title=Arquitetura a mais em $1::$outras"
+              exit 1
+            fi
+          }
+          confere FONAR-Android.apk arm64-v8a
+          confere FONAR-Android-32bits.apk armeabi-v7a
 
       - uses: actions/upload-artifact@v6
         with:
           name: android
-          path: FONAR-Android.apk
+          path: |
+            FONAR-Android.apk
+            FONAR-Android-32bits.apk
           if-no-files-found: error
 
   windows:
@@ -258,7 +290,8 @@ jobs:
           |---|---|---|
           | Windows 10 ou 11 | \`FONAR-Windows.zip\` | Descompacte e abra \`fonar_app.exe\`. O Windows pode mostrar "O Windows protegeu o computador": clique em **Mais informações** e em **Executar assim mesmo**. |
           | macOS | \`FONAR-macOS.zip\` | Descompacte e arraste o FONAR para Aplicativos. Na primeira abertura, o macOS bloqueia: abra **Ajustes > Privacidade e Segurança** e clique em **Abrir Mesmo Assim**. |
-          | Android | \`FONAR-Android.apk\` | Abra o arquivo no celular e permita instalar apps desta fonte. |
+          | Android | \`FONAR-Android.apk\` | Toque no download concluído (ou abra **Arquivos > Downloads**) e permita instalar apps desta fonte. Pode ficar alguns segundos em 100% enquanto o celular verifica o arquivo. |
+          | Android de entrada (sistema de 32 bits) | \`FONAR-Android-32bits.apk\` | Só se o \`FONAR-Android.apk\` disser que o app não é compatível com o celular. |
           | iPhone e iPad | — | Abra https://fonar-project.github.io/fonar-app/ no Safari e toque em **Compartilhar > Adicionar à Tela de Início**. Abra sempre pelo ícone. |
 
           O FONAR é ferramenta de apoio à decisão clínica e não emite diagnóstico.
