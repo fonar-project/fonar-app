@@ -22,6 +22,7 @@ import '../../data/configuracao_de_captura.dart';
 import '../../domain/afericao_de_ruido.dart';
 import '../../domain/amostra.dart';
 import '../../domain/ajuste_de_configuracao.dart';
+import '../../domain/processamento_automatico.dart';
 import '../../domain/verificacao_da_amostra.dart';
 import '../afericao_controlador.dart';
 import '../gravacao_controlador.dart';
@@ -469,6 +470,8 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
         :final microfoneLiberado,
         :final demorouParaLiberar,
         :final liberaGravacao,
+        :final processamentoLigado,
+        :final bancoSoNaMemoria,
       ) =>
         _Palco(
           corpo: [
@@ -479,9 +482,27 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _Conclusao(resultado: resultado),
-                  if (ajuste != null) ...[
+                  if (ajuste != null &&
+                      !ajuste.confere(
+                        taxaPedida: ConfiguracaoDeCaptura.taxaDeAmostragem,
+                        canaisPedidos: ConfiguracaoDeCaptura.canais,
+                      )) ...[
                     const SizedBox(height: AppSpacing.md),
                     _Ajuste(ajuste: ajuste),
+                  ],
+                  // O processamento automático muda o que a análise mede:
+                  // com ele ligado, a gravação não abre (US42).
+                  if (ajuste != null && processamentoLigado) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    _ProcessamentoLigado(ligados: ajuste.processamentoLigado),
+                  ],
+                  if (bancoSoNaMemoria) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    const AppSituacao(
+                      icone: NomeIcone.negacao,
+                      titulo: AppStrings.capturaSemArmazenamento,
+                      texto: AppStrings.capturaSemArmazenamentoTexto,
+                    ),
                   ],
                   if (demorouParaLiberar) ...[
                     const SizedBox(height: AppSpacing.md),
@@ -1365,6 +1386,39 @@ class _Ajuste extends StatelessWidget {
   );
 }
 
+/// O aparelho manteve ligado, ou não confirmou ter desligado, o
+/// processamento automático do microfone (US42). Bloqueia: a captura
+/// mudaria exatamente o que a análise mede.
+class _ProcessamentoLigado extends StatelessWidget {
+  const _ProcessamentoLigado({required this.ligados});
+
+  final Set<ProcessamentoAutomatico> ligados;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    liveRegion: true,
+    child: AppSituacao(
+      icone: NomeIcone.negacao,
+      titulo: AppStrings.capturaProcessamentoLigado,
+      texto: AppStrings.capturaProcessamentoLigadoTexto([
+        for (final p in ProcessamentoAutomatico.values)
+          if (ligados.contains(p)) nomeDoProcessamento(p),
+      ]),
+    ),
+  );
+}
+
+/// O nome que o profissional lê para cada processamento.
+String nomeDoProcessamento(ProcessamentoAutomatico processamento) =>
+    switch (processamento) {
+      ProcessamentoAutomatico.ganhoAutomatico =>
+        AppStrings.processamentoGanhoAutomatico,
+      ProcessamentoAutomatico.supressaoDeRuido =>
+        AppStrings.processamentoSupressaoDeRuido,
+      ProcessamentoAutomatico.cancelamentoDeEco =>
+        AppStrings.processamentoCancelamentoDeEco,
+    };
+
 /// O fechamento do microfone passou do tempo esperado.
 class _MicrofoneDemorando extends StatelessWidget {
   const _MicrofoneDemorando();
@@ -1463,4 +1517,6 @@ String mensagemDoProblema(ProblemaNaAmostra problema) => switch (problema) {
   ProblemaNaAmostra.formatoAjustado => AppStrings.problemaFormatoAjustado,
   ProblemaNaAmostra.formatoForaDoAceito =>
     AppStrings.problemaFormatoForaDoAceito,
+  ProblemaNaAmostra.processamentoLigado =>
+    AppStrings.problemaProcessamentoLigado,
 };

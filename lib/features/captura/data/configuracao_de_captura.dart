@@ -1,11 +1,16 @@
 import 'package:record/record.dart';
 
+import '../domain/ajuste_de_configuracao.dart';
+import '../domain/processamento_automatico.dart';
+
 /// A configuração de captura do projeto, fixada em UM lugar.
 ///
 /// Regra da captura no CLAUDE.md: desligar todo processamento automático e
 /// fixar formato. Ganho automático, supressão de ruído e cancelamento de eco
 /// alteram exatamente as propriedades do sinal que a análise mede — é o
-/// requisito que justifica o app nativo em vez de web.
+/// requisito que justifica o app nativo em vez de web. A versão no navegador
+/// (US42) só grava se o navegador relatar os três desligados
+/// (`naoConfirmadosDesligados`).
 ///
 /// Pedir não garante receber. O que o aparelho de fato usou é conferido pelo
 /// `setOnConfigChanged` do recorder — nas DUAS capturas, a da aferição
@@ -43,6 +48,25 @@ abstract final class ConfiguracaoDeCaptura {
   /// (`VerificacaoDaAmostra.verificar`, parâmetro `bitsPedidos`). Trocar o
   /// encoder obriga a trocar este número no mesmo commit.
   static const bitsPorAmostra = 16;
+
+  /// O que o `setOnConfigChanged` avisou, no tipo do domínio.
+  ///
+  /// No navegador, o `record_web` lê a faixa de áudio aberta
+  /// (`getSettings()`) e devolve ganho, supressão de ruído e cancelamento de
+  /// eco como o navegador os relata — é por aqui que se descobre o
+  /// processamento que ficou ligado. Propriedade não relatada volta como foi
+  /// pedida (desligada), e por isso a aferição no navegador confere também
+  /// por conta própria (`naoConfirmadosDesligados`).
+  static AjusteDeConfiguracao ajusteDe(RecordConfig usada) =>
+      AjusteDeConfiguracao(
+        taxaDeAmostragem: usada.sampleRate,
+        canais: usada.numChannels,
+        processamentoLigado: {
+          if (usada.autoGain) ProcessamentoAutomatico.ganhoAutomatico,
+          if (usada.noiseSuppress) ProcessamentoAutomatico.supressaoDeRuido,
+          if (usada.echoCancel) ProcessamentoAutomatico.cancelamentoDeEco,
+        },
+      );
 
   static RecordConfig para(AudioEncoder formato) => RecordConfig(
     encoder: formato,

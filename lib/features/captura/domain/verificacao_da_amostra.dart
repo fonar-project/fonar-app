@@ -44,6 +44,14 @@ enum ProblemaNaAmostra {
   /// ido embora: a conferência invalida na hora, para gravar de novo.
   formatoForaDoAceito,
 
+  /// O aparelho avisou ter mantido ligado — ou não confirmou ter desligado —
+  /// o ganho automático, a supressão de ruído ou o cancelamento de eco
+  /// (`AjusteDeConfiguracao.processamentoLigado`). Esse processamento muda
+  /// exatamente o que a análise mede, e o arquivo não mostra que passou por
+  /// ele: só o aviso denuncia. Acontece no navegador (US42); no aparelho, o
+  /// pedido é repassado como foi feito.
+  processamentoLigado,
+
   // ------------------------------------------ só avisam, não invalidam --
 
   /// Houve pico no máximo digital: a onda foi cortada, e o corte altera o
@@ -196,6 +204,8 @@ abstract final class VerificacaoDaAmostra {
         ProblemaNaAmostra.formatoForaDoAceito
       else if (formatoTrocado)
         ProblemaNaAmostra.formatoAjustado,
+      if (ajuste?.manteveProcessamento ?? false)
+        ProblemaNaAmostra.processamentoLigado,
     ];
     return problemas;
   }

@@ -1,19 +1,30 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
 import '../../../core/banco/banco_local.dart';
+import '../../../core/navegador/navegador.dart';
 import '../domain/ajuste_de_configuracao.dart';
 import '../domain/amostra.dart';
 import '../domain/gravador.dart';
+import 'arquivos_de_amostra_no_navegador.dart';
 import 'configuracao_de_captura.dart';
 
 /// Um gravador novo a cada tela; sair dela descarta o que estiver no meio.
 final gravadorProvider = Provider.autoDispose<Gravador>((ref) {
-  final gravador = GravadorRecord();
+  final arquivos = ref.watch(arquivosDeAmostraProvider);
+  final gravador = GravadorRecord(
+    // No navegador o `record` não escreve arquivo: entrega um endereço
+    // `blob:` com o WAV, e é daqui que ele vai para o banco local.
+    guardarSaida: arquivos is ArquivosDeAmostraNoNavegador
+        ? (caminho, saida) async =>
+              arquivos.guardar(caminho, await lerEnderecoTemporario(saida))
+        : null,
+  );
   // Sair no meio de uma gravação não pode deixar o microfone aberto nem um
   // arquivo pela metade para trás — nem deixar o gravador ser reaberto por
   // uma inicialização que termine depois.
@@ -21,8 +32,12 @@ final gravadorProvider = Provider.autoDispose<Gravador>((ref) {
   return gravador;
 });
 
+/// No aparelho, arquivos na área privada do app; no navegador (US42), o
+/// banco local.
 final arquivosDeAmostraProvider = Provider<ArquivosDeAmostra>(
-  (ref) => const ArquivosDeAmostraLocais(),
+  (ref) => kIsWeb
+      ? ArquivosDeAmostraNoNavegador(ref.watch(bancoLocalProvider))
+      : const ArquivosDeAmostraLocais(),
 );
 
 /// Na abertura do app, os WAV que nenhum registro aponta saem (US39) — ver
@@ -33,6 +48,10 @@ final limpezaDeWavSemRegistroProvider = FutureProvider<int>((ref) async {
     final registrados = {
       for (final a in await banco.select(banco.amostras).get()) a.caminho,
     };
+    final arquivos = ref.read(arquivosDeAmostraProvider);
+    if (arquivos is ArquivosDeAmostraNoNavegador) {
+      return await arquivos.apagarSemRegistro(registrados);
+    }
     return await apagarWavsSemRegistro(registrados);
   } catch (_) {
     // Limpar é cuidado, não condição para abrir: fica para a próxima vez.
@@ -85,7 +104,15 @@ Future<int> apagarWavsSemRegistro(
 /// daqui não é confiado: o controlador lê o arquivo de volta e confere o
 /// cabeçalho (`VerificacaoDaAmostra.verificar`).
 class GravadorRecord implements Gravador {
-  GravadorRecord();
+  GravadorRecord({this.guardarSaida});
+
+  /// Quem guarda o que o `record` entregou ao parar, quando ele não escreve
+  /// o arquivo sozinho — no navegador, um endereço `blob:` (US42). Nulo no
+  /// aparelho, onde o WAV já está no caminho pedido quando o `stop` volta.
+  ///
+  /// [parar] só volta depois de guardar: quem para em seguida lê o caminho
+  /// para conferir o que saiu.
+  final Future<void> Function(String caminho, String saida)? guardarSaida;
 
   AudioRecorder? _gravador;
   String? _caminho;
@@ -113,12 +140,9 @@ class GravadorRecord implements Gravador {
     // ninguém está mais ouvindo. Até a US05 isto existia só na aferição, e a
     // gravação dependia só do cabeçalho do WAV para saber o que saiu.
     _ajuste = null;
-    await gravador.setOnConfigChanged((usada) {
-      _ajuste = AjusteDeConfiguracao(
-        taxaDeAmostragem: usada.sampleRate,
-        canais: usada.numChannels,
-      );
-    });
+    await gravador.setOnConfigChanged(
+      (usada) => _ajuste = ConfiguracaoDeCaptura.ajusteDe(usada),
+    );
     await gravador.start(
       ConfiguracaoDeCaptura.para(ConfiguracaoDeCaptura.formatoDaGravacao),
       path: caminho,
@@ -131,10 +155,15 @@ class GravadorRecord implements Gravador {
 
   @override
   Future<void> parar() async {
+    final caminho = _caminho;
     _caminho = null;
     // O ajuste NÃO é limpo aqui: quem acabou de parar é justamente quem vai
     // conferir o que saiu.
-    await _gravador?.stop();
+    final saida = await _gravador?.stop();
+    final guardar = guardarSaida;
+    if (guardar != null && caminho != null && saida != null) {
+      await guardar(caminho, saida);
+    }
   }
 
   /// Descarta e não deixa mais abrir. É o fim da vida deste gravador — o

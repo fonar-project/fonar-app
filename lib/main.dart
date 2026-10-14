@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app/app.dart';
 import 'app/licencas.dart';
 import 'core/config/app_config.dart';
+import 'core/navegador/navegador.dart';
 import 'features/laudo/data/saida_do_laudo.dart';
 
 void main() {
@@ -26,4 +27,8 @@ void main() {
   // O PDF que o compartilhamento do celular deixou no cache (laudo é dado
   // pessoal sensível): sai na abertura seguinte, sem segurar a tela.
   unawaited(limparPdfsCompartilhados());
+  // No navegador (US42), o banco local mora no armazenamento da página, que o
+  // navegador pode limpar sozinho quando falta espaço — com gravações que
+  // ainda não subiram. Pedir para não limpar.
+  if (kIsWeb) unawaited(pedirArmazenamentoPersistente());
 }

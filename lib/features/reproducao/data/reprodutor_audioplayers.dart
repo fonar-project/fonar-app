@@ -1,13 +1,22 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../captura/data/arquivos_de_amostra_no_navegador.dart';
+import '../../captura/data/gravador_record.dart';
 import '../domain/reprodutor.dart';
 
 /// Um reprodutor por tela; sair dela solta o áudio.
 final reprodutorProvider = Provider.autoDispose<Reprodutor>((ref) {
-  final reprodutor = ReprodutorAudioplayers();
+  final arquivos = ref.watch(arquivosDeAmostraProvider);
+  final reprodutor = ReprodutorAudioplayers(
+    // No navegador (US42), a gravação está no banco local.
+    lerDoNavegador: arquivos is ArquivosDeAmostraNoNavegador
+        ? arquivos.lerTudo
+        : null,
+  );
   ref.onDispose(reprodutor.fechar);
   return reprodutor;
 });
@@ -19,7 +28,7 @@ final reprodutorProvider = Provider.autoDispose<Reprodutor>((ref) {
 /// Só REPRODUZ: não analisa, não mede. Ver a regra de processamento de áudio
 /// no CLAUDE.md.
 class ReprodutorAudioplayers implements Reprodutor {
-  ReprodutorAudioplayers() {
+  ReprodutorAudioplayers({this.lerDoNavegador}) {
     // Erro no meio da reprodução chega como erro do fluxo de eventos: o
     // pacote repassa para cá o que a camada nativa mandou.
     _eventos = _player.eventStream.listen(
@@ -27,6 +36,10 @@ class ReprodutorAudioplayers implements Reprodutor {
       onError: (Object erro, StackTrace _) => _avisarFalha(erro),
     );
   }
+
+  /// No navegador (US42), onde a gravação não é arquivo: os bytes do WAV
+  /// guardado no banco local. Nulo no aparelho, que toca do disco.
+  final Future<Uint8List?> Function(String caminho)? lerDoNavegador;
 
   final _player = AudioPlayer();
   final _falhas = StreamController<Object>.broadcast();
@@ -47,10 +60,16 @@ class ReprodutorAudioplayers implements Reprodutor {
   @override
   Future<Duration?> abrir(String caminho) async {
     await _configurado;
-    // `setSourceDeviceFile` só volta depois de o arquivo estar preparado, e
-    // é por isso que a duração já pode ser perguntada aqui. Arquivo ilegível
+    // `setSource...` só volta depois de o áudio estar preparado, e é por
+    // isso que a duração já pode ser perguntada aqui. Arquivo ilegível
     // levanta erro daqui mesmo, antes de qualquer tentativa de tocar.
-    await _player.setSourceDeviceFile(caminho);
+    if (lerDoNavegador case final ler?) {
+      final wav = await ler(caminho);
+      if (wav == null) throw StateError('Gravação não encontrada.');
+      await _player.setSourceBytes(wav, mimeType: 'audio/wav');
+    } else {
+      await _player.setSourceDeviceFile(caminho);
+    }
     return _player.getDuration();
   }
 

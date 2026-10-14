@@ -2,21 +2,50 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/error/app_exception.dart';
+import '../../../core/navegador/navegador.dart';
 import '../../../core/network/dio_client.dart';
+import '../../captura/data/arquivos_de_amostra_no_navegador.dart';
+import '../../captura/data/gravador_record.dart';
 import '../../captura/domain/amostra.dart';
 import '../../sincronizacao/data/sincronizacao_firestore.dart';
 import '../../sincronizacao/domain/sincronizacao.dart';
 import '../domain/item_da_fila.dart';
 import '../domain/repositorio_fila.dart';
 
-final envioDeAnaliseProvider = Provider<EnvioDeAnalise>(
-  (ref) => EnvioDeAnaliseApi(
-    ref.watch(dioProvider),
-    ref.watch(sincronizacaoProvider),
-  ),
+final envioDeAnaliseProvider = Provider<EnvioDeAnalise>((ref) {
+  final dio = ref.watch(dioProvider);
+  final sincronizacao = ref.watch(sincronizacaoProvider);
+  final arquivos = ref.watch(arquivosDeAmostraProvider);
+  if (arquivos is ArquivosDeAmostraNoNavegador) {
+    // No navegador (US42), o WAV mora no banco local, não no disco.
+    return EnvioDeAnaliseApi(
+      dio,
+      sincronizacao,
+      existe: (caminho) async => await arquivos.ler(caminho) != null,
+      arquivo: (caminho, nome) async {
+        final wav = await arquivos.lerTudo(caminho);
+        if (wav == null) throw GravacaoNaoEncontrada(causa: caminho);
+        return MultipartFile.fromBytes(
+          wav,
+          filename: nome,
+          contentType: EnvioDeAnaliseApi.tipoWav,
+        );
+      },
+      plataforma: _plataformaDoNavegador,
+    );
+  }
+  return EnvioDeAnaliseApi(dio, sincronizacao);
+});
+
+/// No navegador, o sistema é "web", com o sistema por baixo que o próprio
+/// Flutter deduz do navegador, e a versão é como o navegador se apresenta.
+({String sistema, String versao}) _plataformaDoNavegador() => (
+  sistema: 'web-${defaultTargetPlatform.name}',
+  versao: descricaoDoNavegador(),
 );
 
 /// Envia a sessão para a API de análise (repositório `fonar-api`).
@@ -43,8 +72,12 @@ class EnvioDeAnaliseApi implements EnvioDeAnalise {
     this._dio,
     this._sincronizacao, {
     this.existe = _existeNoDisco,
+    this.arquivo = _doDisco,
     this.plataforma = _plataformaDoAparelho,
   });
+
+  /// O tipo com que o WAV vai no multipart.
+  static final tipoWav = DioMediaType('audio', 'wav');
 
   final Dio _dio;
   final Sincronizacao _sincronizacao;
@@ -52,6 +85,11 @@ class EnvioDeAnaliseApi implements EnvioDeAnalise {
   /// O arquivo está no disco? Parâmetro para o teste poder responder sem
   /// disco; em produção é sempre [_existeNoDisco].
   final Future<bool> Function(String caminho) existe;
+
+  /// O WAV de [caminho] como parte do multipart, com o [nome] dado. Em
+  /// produção no aparelho, [_doDisco], que lê o arquivo aos pedaços; no
+  /// navegador, os bytes do banco local.
+  final Future<MultipartFile> Function(String caminho, String nome) arquivo;
 
   /// Sistema e versão do aparelho, que vão com cada gravação como metadado
   /// de captura. Parâmetro para o teste; em produção, [_plataformaDoAparelho].
@@ -61,6 +99,9 @@ class EnvioDeAnaliseApi implements EnvioDeAnalise {
   final ({String sistema, String versao}) Function() plataforma;
 
   static Future<bool> _existeNoDisco(String caminho) => File(caminho).exists();
+
+  static Future<MultipartFile> _doDisco(String caminho, String nome) =>
+      MultipartFile.fromFile(caminho, filename: nome, contentType: tipoWav);
 
   static ({String sistema, String versao}) _plataformaDoAparelho() => (
     sistema: Platform.operatingSystem,
@@ -119,11 +160,7 @@ class EnvioDeAnaliseApi implements EnvioDeAnalise {
   ) async {
     final aparelho = plataforma();
     final corpo = FormData.fromMap({
-      'arquivo': await MultipartFile.fromFile(
-        amostra.caminho,
-        filename: '${amostra.id}.wav',
-        contentType: DioMediaType('audio', 'wav'),
-      ),
+      'arquivo': await arquivo(amostra.caminho, '${amostra.id}.wav'),
       'amostra_id': amostra.id,
       'tipo_tarefa': tipoDaTarefa(amostra.tarefa),
       'plataforma': aparelho.sistema,

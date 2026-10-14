@@ -187,6 +187,24 @@ class Laudos extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+/// Os WAV gravados no navegador (US42), com o caminho que a amostra aponta.
+///
+/// No aparelho a gravação é um arquivo na área privada do app, e esta tabela
+/// fica vazia. No navegador não há pasta de arquivos: o `record` entrega o
+/// WAV em memória, e ele mora aqui até subir, com a mesma vida que o arquivo
+/// teria — apagado no descarte, na regravação, na retirada do consentimento
+/// e na limpeza dos sem registro. [caminho] é o mesmo texto de
+/// `Amostra.caminho`, para o resto do app não saber a diferença.
+@DataClassName('LinhaDoAudioDoNavegador')
+class AudiosDoNavegador extends Table {
+  TextColumn get caminho => text()();
+  BlobColumn get wav => blob()();
+  DateTimeColumn get gravadoEm => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {caminho};
+}
+
 /// Preferências deste aparelho, como chave e valor — hoje, só o tema (US30).
 ///
 /// Ficam no aparelho, não na conta: consultório com luz forte e casa à noite
