@@ -1262,7 +1262,7 @@ abstract final class AppStrings {
   static const bloqueioInformeSenha = 'Informe a senha para desbloquear.';
   static const bloqueioSenhaNaoConfere =
       'A senha não confere. Confira e tente de novo.';
-  static const bloqueioOfflineTitulo = 'Sem conexão';
+  static const bloqueioOfflineTitulo = 'Desbloqueio sem conexão';
   static const bloqueioOfflineTexto =
       'A senha é conferida com a da última entrada com conexão neste '
       'aparelho.';

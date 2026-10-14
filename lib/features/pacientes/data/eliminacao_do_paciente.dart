@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/banco/banco_local.dart';
@@ -32,7 +31,7 @@ final eliminacaoDoPacienteProvider = Provider<EliminacaoDoPaciente>(
 ///
 /// Irreversível. Quem pergunta antes é a tela.
 class EliminacaoDoPaciente {
-  EliminacaoDoPaciente(this._banco, this._arquivos, {Dio? dio}) : _dio = dio;
+  EliminacaoDoPaciente(this._banco, this._arquivos, {this._dio});
 
   final BancoLocal _banco;
   final ArquivosDeAmostra _arquivos;

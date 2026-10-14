@@ -135,11 +135,14 @@ class ContaControlador extends Notifier<EstadoDaConta> {
     if (state.salvando || state.saindo) return false;
     state = const EstadoDaConta(saindo: true);
     final container = ref.container;
+    // Lidos antes das esperas: a tela que pediu a saída fecha no meio delas.
+    final senhas = container.read(senhaSemRedeProvider);
+    final autenticacao = container.read(repositorioAutenticacaoProvider);
     container.read(sessaoProvider.notifier).encerrar();
     // O verificador da senha sem rede sai junto com a credencial (US43).
-    await ref.read(senhaSemRedeProvider).esquecer();
+    await senhas.esquecer();
     try {
-      await ref.read(repositorioAutenticacaoProvider).sair();
+      await autenticacao.sair();
     } on AppException catch (e) {
       if (ref.mounted) state = EstadoDaConta(erroGeral: e.mensagem);
       return false;

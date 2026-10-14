@@ -99,18 +99,14 @@ Future<Uint8List> pbkdf2NoNavegador(
         ['deriveBits'.toJS].toJS,
       )
       .toDart;
-  final bits = await subtle
-      .deriveBits(
-        web.Pbkdf2Params(
-          name: 'PBKDF2',
-          salt: Uint8List.fromList(sal).toJS,
-          iterations: iteracoes,
-          hash: 'SHA-256'.toJS,
-        ),
-        chave,
-        tamanho * 8,
-      )
-      .toDart;
+  // O `package:web` 1.1 não traz o dicionário `Pbkdf2Params`: o objeto vai
+  // montado com os mesmos campos que a especificação do WebCrypto define.
+  final parametros = JSObject()
+    ..setProperty('name'.toJS, 'PBKDF2'.toJS)
+    ..setProperty('salt'.toJS, Uint8List.fromList(sal).toJS)
+    ..setProperty('iterations'.toJS, iteracoes.toJS)
+    ..setProperty('hash'.toJS, 'SHA-256'.toJS);
+  final bits = await subtle.deriveBits(parametros, chave, tamanho * 8).toDart;
   return bits.toDart.asUint8List();
 }
 
