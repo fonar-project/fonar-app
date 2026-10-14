@@ -58,12 +58,12 @@ class SincronizacaoFirestore implements Sincronizacao {
     final conta = uid();
     if (conta == null) throw const NaoAutorizado();
     final base = 'profissionais/$conta/pacientes/${item.pacienteId}';
-    await _paciente(base, item.pacienteId);
+    await _paciente(base, item.pacienteId, conta);
     await _consentimentos(base, item.pacienteId);
     await _sessao(base, item);
   }
 
-  Future<void> _paciente(String base, String pacienteId) async {
+  Future<void> _paciente(String base, String pacienteId, String conta) async {
     final linha = await (_banco.select(
       _banco.pacientes,
     )..where((p) => p.id.equals(pacienteId))).getSingleOrNull();
@@ -95,21 +95,36 @@ class SincronizacaoFirestore implements Sincronizacao {
     final existente = await _firestore.ler(base);
     if (existente == null) {
       await _firestore.criar(base, campos, horaDoServidor: ['criado_em']);
-      return;
+    } else {
+      final mudou = camposEditaveisDoPaciente.any(
+        (c) => existente[c] != campos[c],
+      );
+      // Os dados do paciente podem ter sido corrigidos no aparelho (US20).
+      if (mudou) {
+        await _firestore.atualizar(
+          base,
+          campos,
+          mascara: camposEditaveisDoPaciente,
+        );
+      }
     }
-    const editaveis = [
-      'nome',
-      'data_nascimento',
-      'sexo_referencia',
-      'queixa_principal',
-    ];
-    final mudou = editaveis.any((c) => existente[c] != campos[c]);
-    // Os dados do paciente podem ter sido corrigidos no aparelho (US20).
-    if (mudou) await _firestore.atualizar(base, campos, mascara: editaveis);
+    // Aparelho e Firebase iguais (US40): a partir daqui, o que descer pode
+    // atualizar este paciente — até a próxima correção feita aqui. A marca é
+    // a da mudança que subiu, e não a hora de agora: uma correção feita
+    // durante o envio continua por subir.
+    await (_banco.update(
+      _banco.pacientes,
+    )..where((p) => p.id.equals(pacienteId))).write(
+      PacientesCompanion(
+        sincronizadoEm: Value(linha.alteradoEm ?? DateTime.now()),
+        // Sem dono (antes da US40): é de quem o mandou para a análise.
+        profissionalId: Value(linha.profissionalId ?? conta),
+      ),
+    );
   }
 
   Future<void> _consentimentos(String base, String pacienteId) async {
-    final locais = await _livroLocal(pacienteId);
+    final locais = await livroDeConsentimentoLocal(_banco, pacienteId);
     final colecao = '$base/consentimentos';
     final remotos = await _firestore.listar(colecao);
     remotos.sort(
@@ -148,46 +163,6 @@ class SincronizacaoFirestore implements Sincronizacao {
     }
   }
 
-  /// Os consentimentos e as retiradas do paciente como um livro só, na
-  /// ordem em que foram gravados: cada retirada logo depois do
-  /// consentimento que ela retira.
-  Future<List<_Registro>> _livroLocal(String pacienteId) async {
-    final consentimentos =
-        await (_banco.select(_banco.consentimentos)
-              ..where((c) => c.pacienteId.equals(pacienteId))
-              ..orderBy([(c) => OrderingTerm.asc(c.id)]))
-            .get();
-    // Retirada sem consentimento no banco é a de um consentimento de
-    // exemplo, que nunca sobe.
-    final retiradas =
-        await (_banco.select(_banco.retiradasDeConsentimento)..where(
-              (r) =>
-                  r.pacienteId.equals(pacienteId) &
-                  r.consentimentoId.isNotNull(),
-            ))
-            .get();
-    final retiradaDe = {for (final r in retiradas) r.consentimentoId!: r};
-    return [
-      for (final c in consentimentos) ...[
-        _Registro(
-          tipo: 'concessao',
-          data: c.registradoEm,
-          versaoDoTermo: c.versaoDoTermo,
-          quem: c.quemAutoriza,
-          nome: c.nomeDoResponsavel,
-        ),
-        if (retiradaDe[c.id] case final r?)
-          _Registro(
-            tipo: 'retirada',
-            data: r.retiradaEm,
-            versaoDoTermo: c.versaoDoTermo,
-            quem: r.quemPediu,
-            nome: r.nomeDoResponsavel,
-          ),
-      ],
-    ];
-  }
-
   Future<void> _sessao(String base, ItemDaFila item) async {
     final caminho = '$base/sessoes/${item.sessaoId}';
     if (await _firestore.ler(caminho) != null) return;
@@ -218,14 +193,68 @@ class SincronizacaoFirestore implements Sincronizacao {
       };
 }
 
+/// Os consentimentos e as retiradas do paciente como um livro só, na
+/// ordem em que foram gravados: cada retirada logo depois do
+/// consentimento que ela retira.
+Future<List<RegistroDoLivro>> livroDeConsentimentoLocal(
+  BancoLocal banco,
+  String pacienteId,
+) async {
+  final consentimentos =
+      await (banco.select(banco.consentimentos)
+            ..where((c) => c.pacienteId.equals(pacienteId))
+            ..orderBy([(c) => OrderingTerm.asc(c.id)]))
+          .get();
+  // Retirada sem consentimento no banco é a de um consentimento de
+  // exemplo, que nunca sobe.
+  final retiradas =
+      await (banco.select(banco.retiradasDeConsentimento)..where(
+            (r) =>
+                r.pacienteId.equals(pacienteId) & r.consentimentoId.isNotNull(),
+          ))
+          .get();
+  final retiradaDe = {for (final r in retiradas) r.consentimentoId!: r};
+  return [
+    for (final c in consentimentos) ...[
+      RegistroDoLivro(
+        tipo: 'concessao',
+        data: c.registradoEm,
+        versaoDoTermo: c.versaoDoTermo,
+        quem: c.quemAutoriza,
+        nome: c.nomeDoResponsavel,
+        consentimentoId: c.id,
+      ),
+      if (retiradaDe[c.id] case final r?)
+        RegistroDoLivro(
+          tipo: 'retirada',
+          data: r.retiradaEm,
+          versaoDoTermo: c.versaoDoTermo,
+          quem: r.quemPediu,
+          nome: r.nomeDoResponsavel,
+          consentimentoId: c.id,
+        ),
+    ],
+  ];
+}
+
+/// Os campos do documento do paciente que o aparelho corrige (US20) — os
+/// que sobem e os que descem.
+const camposEditaveisDoPaciente = [
+  'nome',
+  'data_nascimento',
+  'sexo_referencia',
+  'queixa_principal',
+];
+
 /// Um registro do livro de consentimentos, no formato do Firestore.
-class _Registro {
-  _Registro({
+class RegistroDoLivro {
+  RegistroDoLivro({
     required this.tipo,
     required this.data,
     required this.versaoDoTermo,
     required String quem,
     required String? nome,
+    this.consentimentoId,
   }) : declarante = quem == QuemAutoriza.responsavelLegal.name
            ? 'responsavel_legal'
            : 'paciente',
@@ -242,4 +271,8 @@ class _Registro {
   final String versaoDoTermo;
   final String declarante;
   final String? nomeDoResponsavel;
+
+  /// O consentimento do banco local a que o registro se refere: o dado, na
+  /// concessão; o retirado, na retirada.
+  final int? consentimentoId;
 }

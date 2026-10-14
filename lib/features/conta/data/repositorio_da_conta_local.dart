@@ -10,8 +10,10 @@ import '../domain/dados_do_profissional.dart';
 /// O nome e o registro de cada profissional, no banco local, na tabela de
 /// preferências do aparelho — uma linha por conta, pelo id do Firebase.
 ///
-/// TODO(backend): sobe para o Firebase junto com a sincronização. Até lá,
-/// quem usa dois aparelhos preenche os dados em cada um.
+/// É a CÓPIA, para o laudo sair sem rede: a fonte é o cadastro na API
+/// (`/v1/profissionais/eu`, US34), que a Conta corrige e que vale em todo
+/// aparelho da conta (`ProfissionalAtual`). Sem a API (modo de exemplo),
+/// é só o daqui.
 class RepositorioDaContaLocal implements RepositorioDaConta {
   RepositorioDaContaLocal(this._banco);
 

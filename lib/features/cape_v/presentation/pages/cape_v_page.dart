@@ -28,8 +28,8 @@ import '../../../analise/data/repositorio_analises_placeholder.dart';
 import '../../../analise/domain/resultado_da_analise.dart';
 import '../../../analise/presentation/aviso_de_outro_paciente.dart';
 import '../../../captura/domain/amostra.dart';
-import '../../../fila/presentation/fila_controlador.dart';
 import '../../../pacientes/data/repositorio_pacientes_local.dart';
+import '../../../reproducao/data/gravacoes_para_ouvir.dart';
 import '../../../reproducao/presentation/widgets/player_de_amostra.dart';
 import '../../../sincronizacao/data/sincronizacao_firestore.dart';
 import '../../domain/avaliacao_cape_v.dart';
@@ -205,8 +205,11 @@ class _FormularioState extends ConsumerState<_Formulario> {
   void _abrir(ParametroCapeV parametro) => Navigator.of(context).push(
     MaterialPageRoute<void>(
       fullscreenDialog: true,
-      builder: (_) =>
-          _EscalaEmTelaCheia(analiseId: widget.analiseId, inicial: parametro),
+      builder: (_) => _EscalaEmTelaCheia(
+        pacienteId: widget.pacienteId,
+        analiseId: widget.analiseId,
+        inicial: parametro,
+      ),
     ),
   );
 
@@ -230,7 +233,13 @@ class _FormularioState extends ConsumerState<_Formulario> {
       // Fora da rolagem no desktop: ouve-se enquanto se marca.
       topo: compacta
           ? null
-          : _Faixa(embaixo: true, child: _Ouvir(analiseId: widget.analiseId)),
+          : _Faixa(
+              embaixo: true,
+              child: _Ouvir(
+                pacienteId: widget.pacienteId,
+                analiseId: widget.analiseId,
+              ),
+            ),
       padding: EdgeInsets.symmetric(
         horizontal: lateral,
         vertical: AppSpacing.lg,
@@ -242,7 +251,10 @@ class _FormularioState extends ConsumerState<_Formulario> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (compacta) ...[
-                _Ouvir(analiseId: widget.analiseId),
+                _Ouvir(
+                  pacienteId: widget.pacienteId,
+                  analiseId: widget.analiseId,
+                ),
                 const SizedBox(height: AppSpacing.md),
               ],
               Text(
@@ -351,7 +363,9 @@ class _Faixa extends StatelessWidget {
 /// A amostra que se avalia, para ouvir enquanto se marca. Com as duas
 /// tarefas no aparelho, escolhe-se qual.
 class _Ouvir extends ConsumerStatefulWidget {
-  const _Ouvir({required this.analiseId});
+  const _Ouvir({required this.pacienteId, required this.analiseId});
+
+  final String pacienteId;
 
   final String analiseId;
 
@@ -364,7 +378,12 @@ class _OuvirState extends ConsumerState<_Ouvir> {
 
   @override
   Widget build(BuildContext context) {
-    final audios = ref.watch(amostrasDaAnaliseProvider(widget.analiseId));
+    final audios = ref.watch(
+      gravacoesParaOuvirProvider((
+        pacienteId: widget.pacienteId,
+        analiseId: widget.analiseId,
+      )),
+    );
     if (audios.isEmpty) {
       return Text(
         AppStrings.resultadoAudioIndisponivel,
@@ -681,8 +700,13 @@ class _LinhaCompacta extends CustomPainter {
 /// Um parâmetro por vez, com a régua na largura toda — deitado, de ponta a
 /// ponta da tela. Anterior e próximo percorrem os seis sem voltar à lista.
 class _EscalaEmTelaCheia extends ConsumerStatefulWidget {
-  const _EscalaEmTelaCheia({required this.analiseId, required this.inicial});
+  const _EscalaEmTelaCheia({
+    required this.pacienteId,
+    required this.analiseId,
+    required this.inicial,
+  });
 
+  final String pacienteId;
   final String analiseId;
   final ParametroCapeV inicial;
 
@@ -844,7 +868,10 @@ class _EscalaEmTelaCheiaState extends ConsumerState<_EscalaEmTelaCheia> {
                         ),
                         const SizedBox(height: AppSpacing.md),
                       ],
-                      _Ouvir(analiseId: widget.analiseId),
+                      _Ouvir(
+                        pacienteId: widget.pacienteId,
+                        analiseId: widget.analiseId,
+                      ),
                       const SizedBox(height: AppSpacing.md),
                       Center(
                         child: nota.valor == null

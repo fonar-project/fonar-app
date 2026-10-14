@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../core/error/app_exception.dart';
+import '../../captura/domain/amostra.dart';
 import '../../historico/domain/evolucao_da_medida.dart';
 import '../domain/faixa_de_referencia.dart';
 import '../domain/resultado_da_analise.dart';
@@ -129,6 +130,14 @@ ResultadoDaAnalise analiseDaApi(Map<Object?, Object?> corpo) {
   final sessaoId = (corpo['sessao_id'] ?? corpo['id']) as String;
   final amostraDaVogal = (vogal?['amostra'] as Map?)?['id'];
   return ResultadoDaAnalise(
+    gravacoes: {
+      for (final a in amostras)
+        if (a['amostra'] case {
+          'id': final String id,
+          'tipo_tarefa': final String tipo,
+        })
+          ?tarefaDaApi(tipo): id,
+    },
     id: corpo['id'] as String,
     pacienteId: pacienteId,
     situacao: completa
@@ -178,3 +187,10 @@ FaixaDeReferencia? _faixaValidada(Object? faixa, double escala) {
     procedencia: populacao.isEmpty ? fonte : '$fonte — $populacao',
   );
 }
+
+/// A tarefa pelo nome que a API usa (`tipoDaTarefa`, ao contrário).
+TarefaDeGravacao? tarefaDaApi(String tipo) => switch (tipo) {
+  'vogal_sustentada' => TarefaDeGravacao.vogalSustentada,
+  'fala_encadeada' => TarefaDeGravacao.falaEncadeada,
+  _ => null,
+};

@@ -21,10 +21,13 @@ import 'package:fonar_app/features/cape_v/presentation/apresentacao_cape_v.dart'
 import 'package:fonar_app/features/cape_v/presentation/cape_v_controlador.dart';
 import 'package:fonar_app/features/cape_v/presentation/pages/cape_v_page.dart';
 import 'package:fonar_app/features/cape_v/presentation/sincronizacao_cape_v_controlador.dart';
+import 'package:fonar_app/features/captura/domain/amostra.dart';
 import 'package:fonar_app/features/fila/data/repositorio_fila_local.dart';
 import 'package:fonar_app/features/historico/domain/evolucao_da_medida.dart';
 import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_local.dart';
 import 'package:fonar_app/features/pacientes/domain/paciente.dart';
+import 'package:fonar_app/features/reproducao/data/gravacoes_para_ouvir.dart';
+import 'package:fonar_app/features/reproducao/presentation/widgets/player_de_amostra.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 
 import '../../apoio/repositorios_em_memoria.dart';
@@ -36,8 +39,9 @@ Map<ParametroCapeV, NotaCapeV> _todasSemDesvio() => {
 
 /// Análises de teste: [dono] é o paciente a quem todas pertencem.
 class _Analises implements RepositorioAnalises {
-  _Analises({this.dono = 'p1'});
+  _Analises({this.dono = 'p1', this.gravacoes = const {}});
   final String dono;
+  final Map<TarefaDeGravacao, String> gravacoes;
 
   @override
   Future<ResultadoDaAnalise> buscar(
@@ -47,6 +51,7 @@ class _Analises implements RepositorioAnalises {
     id: analiseId,
     pacienteId: dono,
     situacao: SituacaoDaAnalise.concluida,
+    gravacoes: gravacoes,
   );
 
   @override
@@ -74,6 +79,8 @@ Future<RepositorioCapeVEmMemoria> _abrir(
   double escala = 1,
   // Com ela, a sincronização fica viva, como o `FonarApp` a mantém.
   SincronizacaoDaCapeV? sincronizacao,
+  // As gravações que a análise do servidor traz (US40).
+  Map<TarefaDeGravacao, String> gravacoes = const {},
 }) async {
   tester.view.physicalSize = tamanho;
   tester.view.devicePixelRatio = 1;
@@ -91,7 +98,7 @@ Future<RepositorioCapeVEmMemoria> _abrir(
       overrides: [
         repositorioCapeVProvider.overrideWithValue(repositorio),
         repositorioAnalisesProvider.overrideWithValue(
-          _Analises(dono: donoDaAnalise),
+          _Analises(dono: donoDaAnalise, gravacoes: gravacoes),
         ),
         relogioProvider.overrideWithValue(() => DateTime(2026, 9, 23, 11)),
         conexaoOnlineProvider.overrideWithValue(true),
@@ -234,6 +241,21 @@ void main() {
   });
 
   group('tela', () {
+    // US40: a gravação feita em outro aparelho não está neste, mas a
+    // análise do servidor diz qual é — e ela se ouve de lá.
+    testWidgets('a gravação feita noutro aparelho se ouve pelo servidor', (
+      tester,
+    ) async {
+      await _abrir(tester, gravacoes: {TarefaDeGravacao.vogalSustentada: 'a1'});
+
+      expect(find.text(AppStrings.resultadoAudioIndisponivel), findsNothing);
+      final player = tester.widget<PlayerDeAmostra>(
+        find.byType(PlayerDeAmostra),
+      );
+      expect(player.caminho, caminhoNaApi('p1', 'an-1', 'a1'));
+      expect(player.caminho, startsWith(prefixoDaApi));
+    });
+
     testWidgets('começa sem nada marcado — nem zero', (tester) async {
       await _abrir(tester);
 

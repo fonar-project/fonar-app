@@ -597,10 +597,6 @@ abstract final class AppStrings {
   static const filaEntrarDeNovo = 'Entrar de novo';
   static const filaEntrarExigeConexao =
       'Entrar com a senha exige conexão. A gravação continua guardada.';
-  static const filaDeOutraConta = 'Gravado por outra conta';
-  static const filaDeOutraContaTexto =
-      'Sobe quando quem gravou entrar neste aparelho. A gravação continua '
-      'guardada.';
   static const filaRecusado = 'A análise recusou o envio';
   static String filaRecusadoTexto(String motivo) =>
       '$motivo Tentar de novo costuma repetir a recusa; se repetir, avise o '
@@ -1136,10 +1132,13 @@ abstract final class AppStrings {
   static const contaSair = 'Sair da conta';
   static const contaSairPergunta = 'Sair da conta neste aparelho?';
 
-  // TODO(jurídico): o que fica no aparelho depois de sair — hoje pacientes,
-  // gravações e fila continuam guardados.
+  // Decisão (US40): o que é da conta fica no aparelho depois de sair — a
+  // fila tem gravação que ainda não subiu, e apagar perderia voz de paciente
+  // que não se grava de novo —, mas só a mesma conta o vê ao entrar. Outra
+  // conta neste aparelho não alcança nada dela.
   static const contaSairTexto =
-      'Pacientes, gravações e laudos continuam guardados neste aparelho.';
+      'Pacientes, gravações e laudos continuam guardados neste aparelho, '
+      'visíveis só para esta conta quando ela entrar de novo.';
   static String contaSairComFila(int n) => n == 1
       ? 'Há 1 envio na fila. Ele pausa, fica neste aparelho e volta a subir '
             'quando você entrar de novo.'

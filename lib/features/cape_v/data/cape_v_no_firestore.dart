@@ -171,7 +171,7 @@ class CapeVNoFirestore implements SincronizacaoDaCapeV {
 Map<String, Object?> camposDaCapeV(AvaliacaoCapeV avaliacao) => {
   'notas': {
     for (final parametro in ParametroCapeV.values)
-      _noFirestore(parametro): _nota(parametro, avaliacao.notas[parametro]!),
+      nomeNoFirestore(parametro): _nota(parametro, avaliacao.notas[parametro]!),
   },
   'comentarios': avaliacao.comentarios,
   // Quando o profissional registrou, pelo relógio do aparelho: a avaliação
@@ -186,8 +186,8 @@ Map<String, Object?> _nota(ParametroCapeV parametro, NotaCapeV nota) => {
 };
 
 /// O nome do parâmetro como as regras e a API o chamam
-/// (`ParametroCapeV` em `domain/models.py`).
-String _noFirestore(ParametroCapeV parametro) => switch (parametro) {
+/// (`ParametroCapeV` em `domain/models.py`) — na subida e na descida.
+String nomeNoFirestore(ParametroCapeV parametro) => switch (parametro) {
   ParametroCapeV.grauGeral => 'grau_geral',
   ParametroCapeV.rugosidade => 'rugosidade',
   ParametroCapeV.soprosidade => 'soprosidade',

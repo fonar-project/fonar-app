@@ -53,9 +53,13 @@ final retiradaEmVigorProvider =
 /// `SincronizacaoFirestore`), como o livro de registros que as regras de
 /// lá exigem.
 ///
-/// TODO(backend): a ordem entre aparelhos ainda não tem regra — a sequência
-/// local só vale neste banco, e um livro diferente no Firebase recusa o
-/// envio (ver `PENDENCIAS.md`).
+/// **Entre aparelhos** (US40), o livro do Firebase é a referência: o que
+/// outro aparelho da conta registrou desce e entra no fim do livro daqui
+/// (`DescidaDoFirestore`), e o daqui sobe no fim do de lá. Uma retirada
+/// feita noutro aparelho passa a valer aqui na descida seguinte. Se os dois
+/// aparelhos registraram ao mesmo tempo, sem rede, os livros divergem: nada
+/// é reescrito, e o envio é recusado com o motivo, para o profissional
+/// conferir — prova de consentimento não se mescla sozinha.
 class RepositorioConsentimentoLocal implements RepositorioConsentimento {
   RepositorioConsentimentoLocal(
     this._banco, {

@@ -24,8 +24,8 @@ import '../../../cape_v/data/repositorio_cape_v_local.dart';
 import '../../../cape_v/domain/avaliacao_cape_v.dart';
 import '../../../cape_v/presentation/apresentacao_cape_v.dart';
 import '../../../captura/domain/amostra.dart';
-import '../../../fila/presentation/fila_controlador.dart';
 import '../../../historico/domain/evolucao_da_medida.dart';
+import '../../../reproducao/data/gravacoes_para_ouvir.dart';
 import '../../../reproducao/presentation/widgets/player_de_amostra.dart';
 import '../../../pacientes/data/repositorio_pacientes_local.dart';
 import '../../../pacientes/domain/paciente.dart';
@@ -441,7 +441,18 @@ class _CartaoDaAmostra extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final textos = Theme.of(context).textTheme;
-    final audios = ref.watch(amostrasDaAnaliseProvider(resultado.id));
+    final audios = ref.watch(
+      gravacoesParaOuvirProvider((
+        pacienteId: pacienteId,
+        analiseId: resultado.id,
+      )),
+    );
+    // Cada tarefa que tem o que mostrar: a conferência (no modo de exemplo)
+    // ou a gravação para ouvir — deste aparelho ou do servidor.
+    final tarefas = [
+      for (final t in TarefaDeGravacao.values)
+        if (resultado.qualidade.containsKey(t) || audios.containsKey(t)) t,
+    ];
     final secundario = textos.bodySmall?.copyWith(
       color: context.cores.secundario,
     );
@@ -450,15 +461,20 @@ class _CartaoDaAmostra extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _Secao(titulo: AppStrings.resultadoQualidadeTitulo),
-        for (final MapEntry(key: tarefa, value: q)
-            in resultado.qualidade.entries) ...[
-          _QualidadeDaAmostra(tarefa: tarefa, qualidade: q),
-          if (audios[tarefa] case final amostra?) ...[
+        for (final tarefa in tarefas) ...[
+          if (resultado.qualidade[tarefa] case final q?)
+            _QualidadeDaAmostra(tarefa: tarefa, qualidade: q)
+          else
+            Text(
+              _nomeDaTarefa(tarefa),
+              style: textos.titleSmall?.copyWith(color: context.cores.texto),
+            ),
+          if (audios[tarefa] case final gravacao?) ...[
             const SizedBox(height: AppSpacing.xs),
             PlayerDeAmostra(
-              caminho: amostra.caminho,
+              caminho: gravacao.caminho,
               rotulo: _nomeDaTarefa(tarefa),
-              duracaoConhecida: amostra.duracao,
+              duracaoConhecida: gravacao.duracao,
             ),
           ],
           const SizedBox(height: AppSpacing.sm),

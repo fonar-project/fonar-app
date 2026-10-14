@@ -452,8 +452,8 @@ final filaControladorProvider =
 /// As amostras que viraram a análise [analiseId], se ainda estão neste
 /// aparelho — achadas pelo envio da fila que devolveu essa análise.
 ///
-/// TODO(backend): com a API, ouvir também análises gravadas em outro
-/// aparelho — o áudio viria dela.
+/// Para ouvir, as telas usam `gravacoesParaOuvirProvider`, que completa com
+/// a gravação do servidor o que não estiver aqui (US40).
 final amostrasDaAnaliseProvider = Provider.autoDispose
     .family<Map<TarefaDeGravacao, Amostra>, String>((ref, analiseId) {
       final itens = ref.watch(filaControladorProvider).value ?? const [];

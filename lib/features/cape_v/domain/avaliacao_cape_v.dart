@@ -113,8 +113,9 @@ ProblemaNaNota? _problema(ParametroCapeV parametro, NotaCapeV? nota) {
 /// Onde as avaliações ficam.
 ///
 /// Ficam no banco local, que é de onde o app lê. Uma cópia sobe para o
-/// Firebase ([SincronizacaoDaCapeV]). TODO(backend): o que outro aparelho
-/// registrou não desce para este.
+/// Firebase ([SincronizacaoDaCapeV]), e o que outro aparelho da conta
+/// registrou desce quando o perfil do paciente abre (US40,
+/// `DescidaDoFirestore`) — vale a mais recente dos dois lados.
 abstract interface class RepositorioCapeV {
   /// A avaliação desta análise, ou `null` se ainda não houver.
   Future<AvaliacaoCapeV?> daAnalise(String analiseId);
