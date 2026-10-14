@@ -25,6 +25,8 @@ Não há ilustrações vetoriais no design system: espectrograma e formas de ond
 | `estado-online.svg` | indicador de conexão ativo (00, 01, 06, 11) |
 | `estado-sem-conexao.svg` | indicador sem conexão (00, 06) |
 | `documento.svg` | laudo em PDF: gerar, salvar ou compartilhar (10, 11) |
+| `mostrar-senha.svg` | campo de senha escondida: toque para ver o que foi digitado (00, conta, bloqueio) |
+| `ocultar-senha.svg` | campo de senha à mostra: toque para esconder de novo (00, conta, bloqueio) |
 
 > **As setas de tendência dizem DIREÇÃO, não leitura.** `tendencia-sobe` é o
 > valor que subiu — e só. Se subir é melhorar ou piorar depende da medida: no
@@ -65,7 +67,7 @@ wc -c assets/icons/*.svg          # ícone limpo: algumas centenas de bytes
 grep -i c2pa assets/icons/*.svg   # não deve retornar nada
 ```
 
-Os 20 ícones atuais já estão limpos.
+Os 22 ícones atuais já estão limpos.
 
 ## Como esses arquivos chegam na tela
 

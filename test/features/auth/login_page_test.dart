@@ -12,6 +12,7 @@ import 'package:fonar_app/core/network/conexao.dart';
 import 'package:fonar_app/core/offline/pacientes_em_cache.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/design_system/tokens/app_colors.dart';
+import 'package:fonar_app/design_system/widgets/app_icone.dart';
 import 'package:fonar_app/features/auth/data/repositorio_autenticacao_firebase.dart';
 import 'package:fonar_app/features/auth/domain/conta_autenticada.dart';
 import 'package:fonar_app/features/auth/domain/repositorio_autenticacao.dart';
@@ -138,6 +139,26 @@ void main() {
       await _tocarEntrar(tester);
 
       expect(find.text(_telaDePacientes), findsOneWidget);
+    });
+
+    testWidgets('o olho mostra a senha digitada e volta a escondê-la', (
+      tester,
+    ) async {
+      bool escondida() => tester
+          .widget<EditableText>(find.byType(EditableText).at(1))
+          .obscureText;
+
+      await _abrir(tester);
+      await _preencher(tester);
+      expect(escondida(), isTrue);
+
+      await tester.tap(find.byTooltip(AppStrings.campoMostrarSenha));
+      await tester.pump();
+      expect(escondida(), isFalse);
+
+      await tester.tap(find.byTooltip(AppStrings.campoOcultarSenha));
+      await tester.pump();
+      expect(escondida(), isTrue);
     });
 
     // Achado 5.4 da revisão de 24/09: este aviso era o único `SnackBar` do
@@ -343,9 +364,8 @@ void main() {
         .focusNode
         .hasPrimaryFocus;
 
-    testWidgets('Tab percorre e-mail, senha, entrar, esqueci a senha', (
-      tester,
-    ) async {
+    testWidgets('Tab percorre e-mail, senha, mostrar senha, entrar, esqueci '
+        'a senha', (tester) async {
       await _abrir(tester, tamanho: _desktop);
 
       await tester.sendKeyEvent(LogicalKeyboardKey.tab);
@@ -355,6 +375,21 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.tab);
       await tester.pump();
       expect(campoFocado(tester, 1), isTrue, reason: 'senha');
+
+      // O olho da senha (US46) também se alcança pelo teclado.
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      expect(
+        focado(
+          tester,
+          find.descendant(
+            of: find.byTooltip(AppStrings.campoMostrarSenha),
+            matching: find.byType(AppIcone),
+          ),
+        ),
+        isTrue,
+        reason: 'mostrar senha',
+      );
 
       await tester.sendKeyEvent(LogicalKeyboardKey.tab);
       await tester.pump();
@@ -405,8 +440,8 @@ void main() {
         reason: 'sem foco não existe anel',
       );
 
-      // Quatro Tab: e-mail, senha, entrar, esqueci a senha.
-      for (var i = 0; i < 4; i++) {
+      // Cinco Tab: e-mail, senha, mostrar senha, entrar, esqueci a senha.
+      for (var i = 0; i < 5; i++) {
         await tester.sendKeyEvent(LogicalKeyboardKey.tab);
         await tester.pump();
       }

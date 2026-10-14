@@ -19,6 +19,11 @@ abstract final class AppStrings {
       'aparelho.';
   static const rotaVoltarAoInicio = 'Voltar aos pacientes';
 
+  // ------------------------------------------------------ campo de texto --
+  /// O olho do campo de senha (US46): diz o que o toque faz.
+  static const campoMostrarSenha = 'Mostrar senha';
+  static const campoOcultarSenha = 'Ocultar senha';
+
   // ------------------------------------------------------------- conexão --
   static const conexaoOnline = 'Online';
   static const conexaoOffline = 'Sem conexão';

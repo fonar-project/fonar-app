@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 
+import '../../l10n/app_strings.dart';
 import '../tokens/app_colors.dart';
 import '../tokens/app_cores.dart';
 import '../tokens/app_spacing.dart';
 import 'app_fundo.dart';
+import 'app_icone.dart';
 import 'app_mensagem_de_campo.dart';
 
 /// Campo de texto do design system.
@@ -20,7 +23,18 @@ import 'app_mensagem_de_campo.dart';
 /// juntos, e a mensagem diz o que fazer, não só o que está errado. Borda
 /// colorida sozinha é invisível para parte dos usuários e ambígua para o
 /// resto.
-class AppCampoTexto extends StatelessWidget {
+///
+/// ## Senha: o olho (US46)
+///
+/// Com [ocultarTexto], o campo traz no fim um botão de olho que mostra e
+/// volta a esconder o que foi digitado — quem digita com pressa, com o
+/// paciente ao lado, confere a senha antes de errar e esperar. Começa sempre
+/// escondida. O botão fica fora da árvore de semântica, porque o campo funde
+/// rótulo e entrada num nó só (ver o `MergeSemantics` abaixo) e o botão
+/// fundido viraria parte da caixa de edição; para o leitor de tela, mostrar e
+/// esconder é uma AÇÃO do próprio campo, com o mesmo nome do botão. Pelo
+/// teclado, o botão continua alcançável com Tab.
+class AppCampoTexto extends StatefulWidget {
   const AppCampoTexto({
     required this.rotulo,
     this.controlador,
@@ -91,11 +105,28 @@ class AppCampoTexto extends StatelessWidget {
   /// altura e cresce até o dobro antes de rolar.
   final int linhas;
 
-  bool get _temErro => erro != null && erro!.isNotEmpty;
+  @override
+  State<AppCampoTexto> createState() => _AppCampoTextoState();
+}
+
+class _AppCampoTextoState extends State<AppCampoTexto> {
+  /// A senha está à mostra? Só o profissional a mostra, pelo olho.
+  var _senhaAMostra = false;
+
+  bool get _temErro => widget.erro != null && widget.erro!.isNotEmpty;
+
+  void _alternarSenha() => setState(() => _senhaAMostra = !_senhaAMostra);
 
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
+    final erro = widget.erro;
+    final habilitado = widget.habilitado;
+    // O olho só existe em campo de senha que se pode usar.
+    final comOlho = widget.ocultarTexto && habilitado;
+    final rotuloDoOlho = _senhaAMostra
+        ? AppStrings.campoOcultarSenha
+        : AppStrings.campoMostrarSenha;
 
     // Dois fundos diferentes, e por isso dois tons de texto secundário.
     //
@@ -117,56 +148,77 @@ class AppCampoTexto extends StatelessWidget {
         // sem nome. O rótulo em cima é só visual; quem o liga à entrada é
         // esta fusão.
         MergeSemantics(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                rotulo,
-                style: tema.textTheme.labelSmall?.copyWith(color: corDoRotulo),
-              ),
-              const SizedBox(height: AppSpacing.xxs + 2),
-              TextField(
-                controller: controlador,
-                focusNode: foco,
-                enabled: habilitado,
-                readOnly: somenteLeitura,
-                obscureText: ocultarTexto,
-                autocorrect: autoCorrecao,
-                enableSuggestions: autoCorrecao,
-                autofillHints: autopreenchimento,
-                inputFormatters: formatadores,
-                textCapitalization: capitalizacao,
-                minLines: linhas,
-                maxLines: linhas == 1 ? 1 : linhas * 2,
-                keyboardType: tipoDeTeclado,
-                textInputAction: acaoDeEntrada,
-                onChanged: aoMudar,
-                onSubmitted: aoEnviar,
-                style: tema.textTheme.bodyMedium,
-                decoration: InputDecoration(
-                  hintText: dica,
-                  hintStyle: tema.textTheme.bodyMedium?.copyWith(
-                    color: context.cores.secundarioSobre(fundoDaCaixa),
+          child: Semantics(
+            customSemanticsActions: comOlho
+                ? {CustomSemanticsAction(label: rotuloDoOlho): _alternarSenha}
+                : null,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  widget.rotulo,
+                  style: tema.textTheme.labelSmall?.copyWith(
+                    color: corDoRotulo,
                   ),
-                  filled: !habilitado,
-                  fillColor: context.cores.suave,
-                  // A mensagem de erro é desenhada abaixo, com ícone — não
-                  // pelo `errorText` do Material, que é só texto vermelho.
-                  // Aqui fica apenas a borda. O foco continua azul mesmo com
-                  // erro: ele diz ONDE o teclado está, e o erro já está dito
-                  // em texto logo abaixo.
-                  enabledBorder: _temErro
-                      ? Theme.of(context).inputDecorationTheme.errorBorder
-                      : null,
                 ),
-              ),
-            ],
+                const SizedBox(height: AppSpacing.xxs + 2),
+                TextField(
+                  controller: widget.controlador,
+                  focusNode: widget.foco,
+                  enabled: habilitado,
+                  readOnly: widget.somenteLeitura,
+                  obscureText: widget.ocultarTexto && !_senhaAMostra,
+                  autocorrect: widget.autoCorrecao,
+                  enableSuggestions: widget.autoCorrecao,
+                  autofillHints: widget.autopreenchimento,
+                  inputFormatters: widget.formatadores,
+                  textCapitalization: widget.capitalizacao,
+                  minLines: widget.linhas,
+                  maxLines: widget.linhas == 1 ? 1 : widget.linhas * 2,
+                  keyboardType: widget.tipoDeTeclado,
+                  textInputAction: widget.acaoDeEntrada,
+                  onChanged: widget.aoMudar,
+                  onSubmitted: widget.aoEnviar,
+                  style: tema.textTheme.bodyMedium,
+                  decoration: InputDecoration(
+                    hintText: widget.dica,
+                    hintStyle: tema.textTheme.bodyMedium?.copyWith(
+                      color: context.cores.secundarioSobre(fundoDaCaixa),
+                    ),
+                    filled: !habilitado,
+                    fillColor: context.cores.suave,
+                    // A mensagem de erro é desenhada abaixo, com ícone — não
+                    // pelo `errorText` do Material, que é só texto vermelho.
+                    // Aqui fica apenas a borda. O foco continua azul mesmo
+                    // com erro: ele diz ONDE o teclado está, e o erro já está
+                    // dito em texto logo abaixo.
+                    enabledBorder: _temErro
+                        ? Theme.of(context).inputDecorationTheme.errorBorder
+                        : null,
+                    suffixIcon: comOlho
+                        ? ExcludeSemantics(
+                            child: IconButton(
+                              onPressed: _alternarSenha,
+                              tooltip: rotuloDoOlho,
+                              icon: AppIcone(
+                                nome: _senhaAMostra
+                                    ? NomeIcone.ocultarSenha
+                                    : NomeIcone.mostrarSenha,
+                                cor: corSecundaria,
+                              ),
+                            ),
+                          )
+                        : null,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         AppMensagemDeCampo(
           erro: _temErro ? erro : null,
-          apoio: apoio,
+          apoio: widget.apoio,
           corDoApoio: corSecundaria,
         ),
       ],
