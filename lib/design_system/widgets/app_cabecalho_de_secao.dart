@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/network/alcance_do_servidor.dart';
 import '../../core/network/conexao.dart';
 import '../breakpoints.dart';
 import '../tokens/app_cores.dart';
@@ -93,6 +94,7 @@ class AppCabecalhoDeSecao extends ConsumerWidget {
                       texto,
                       AppIndicadorConexao(
                         online: ref.watch(conexaoOnlineProvider),
+                        semServidor: ref.watch(semAcessoAoServidorProvider),
                       ),
                     ],
                   ),

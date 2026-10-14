@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fonar_app/features/auth/data/sessao.dart';
@@ -267,6 +268,29 @@ void main() {
       await _assentar(tester);
 
       expect(fila.item.situacao, SituacaoDoEnvio.enviado);
+    }, online: false);
+
+    // O que o `TODO(verificar em aparelho)` do controlador perguntava: no
+    // app, a mudança da rede chega à fila sem ninguém LER a conexão — quem
+    // propaga é o ProviderScope, a cada quadro. Aqui, com a árvore de
+    // widgets de verdade, a rede muda e só.
+    _testarFila('dentro do ProviderScope, a rede que volta leva o envio sem '
+        'ninguém ler a conexão', (tester, fila) async {
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: fila.container,
+          child: const SizedBox(),
+        ),
+      );
+      await fila.enfileirar();
+      await _assentar(tester);
+      expect(fila.item.situacao, SituacaoDoEnvio.naFila);
+
+      fila.container.read(fila.rede.notifier).ligar(true);
+      await _assentar(tester);
+
+      expect(fila.item.situacao, SituacaoDoEnvio.enviado);
+      await tester.pumpWidget(const SizedBox());
     }, online: false);
 
     _testarFila('falha passageira: espera, tenta de novo com a MESMA chave', (

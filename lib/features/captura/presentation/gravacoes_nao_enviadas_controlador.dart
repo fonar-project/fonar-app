@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/trava_por_chave.dart';
 import '../../../core/error/app_exception.dart';
 import '../../../core/relogio.dart';
 import '../../../l10n/app_strings.dart';
@@ -95,23 +96,27 @@ class LimpezaControlador extends Notifier<EstadoDaLimpeza> {
     }
     final arquivos = container.read(arquivosDeAmostraProvider);
     final repositorio = container.read(repositorioAmostrasProvider);
-    String? falha;
-    try {
-      // TODO(equipe): conferência e descarte não são atômicos — ver
-      // `PENDENCIAS.md`.
-      if (await repositorio.estaNumEnvio(sessao.sessaoId)) {
-        falha = AppStrings.naoEnviadasJaNaFila;
-      } else {
-        for (final amostra in sessao.amostras.values) {
-          await arquivos.apagar(amostra.caminho);
-        }
-        await repositorio.descartarSessao(sessao.sessaoId);
-      }
-    } on AppException catch (e) {
-      falha = e.mensagem;
-    } catch (_) {
-      falha = AppStrings.naoEnviadasErroDescartar;
-    }
+    // Conferir e apagar com a trava da sessão: pôr a mesma sessão na fila
+    // espera o descarte terminar, e vice-versa — não há janela entre a
+    // conferência e o primeiro arquivo apagado.
+    final falha = await container
+        .read(travaDasSessoesProvider)
+        .executar<String?>(sessao.sessaoId, () async {
+          try {
+            if (await repositorio.estaNumEnvio(sessao.sessaoId)) {
+              return AppStrings.naoEnviadasJaNaFila;
+            }
+            for (final amostra in sessao.amostras.values) {
+              await arquivos.apagar(amostra.caminho);
+            }
+            await repositorio.descartarSessao(sessao.sessaoId);
+            return null;
+          } on AppException catch (e) {
+            return e.mensagem;
+          } catch (_) {
+            return AppStrings.naoEnviadasErroDescartar;
+          }
+        });
     container.invalidate(sessoesNaoEnviadasProvider(pacienteId));
     // A última sessão da lista pode ter sido a descartada.
     container.invalidate(pacientesProvider);

@@ -142,12 +142,29 @@ void main() {
       expect(ProblemaNaAmostra.saturou.invalida, isFalse);
     });
 
-    test('taxa ou canais trocados pelo aparelho é ressalva', () {
+    test('taxa trocada pelo aparelho, que a análise aceita, é ressalva', () {
       final p = _verificar(
-        wavDeTeste(duracao: const Duration(seconds: 3), taxa: 48000, canais: 2),
+        wavDeTeste(duracao: const Duration(seconds: 3), taxa: 48000),
       );
       expect(p, [ProblemaNaAmostra.formatoAjustado]);
       expect(ProblemaNaAmostra.formatoAjustado.invalida, isFalse);
+    });
+
+    // US39: o que a API recusaria invalida na hora — enviar só traria a
+    // recusa, depois de o paciente ter ido embora.
+    test('invalida: mais de um canal, que a análise não recebe', () {
+      final p = _verificar(
+        wavDeTeste(duracao: const Duration(seconds: 3), taxa: 48000, canais: 2),
+      );
+      expect(p, [ProblemaNaAmostra.formatoForaDoAceito]);
+      expect(ProblemaNaAmostra.formatoForaDoAceito.invalida, isTrue);
+    });
+
+    test('invalida: taxa abaixo do que a análise recebe', () {
+      final p = _verificar(
+        wavDeTeste(duracao: const Duration(seconds: 3), taxa: 6000),
+      );
+      expect(p, [ProblemaNaAmostra.formatoForaDoAceito]);
     });
   });
 

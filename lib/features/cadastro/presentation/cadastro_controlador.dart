@@ -47,6 +47,27 @@ String mensagemDe(ProblemaNoRegistro problema) => switch (problema) {
   ProblemaNoRegistro.senhasDiferentes => AppStrings.cadastroSenhasDiferentes,
 };
 
+/// O campo do formulário de cada campo que a API recusa (`camposDaRecusa`).
+const _campoDoRegistro = {
+  'nome': CampoDoRegistro.nome,
+  'crefono_regiao': CampoDoRegistro.regiao,
+  'crefono_numero': CampoDoRegistro.inscricao,
+  'versao_termos': CampoDoRegistro.termos,
+};
+
+/// A recusa da API no formulário: o campo marcado com o motivo que ela deu.
+/// As regras daqui são as mesmas da API; isto só aparece se as duas
+/// divergirem — e aí o profissional vê qual campo, e não um erro genérico.
+EstadoDoCadastro estadoDaRecusa(FalhaDeValidacao falha) {
+  final erros = {
+    for (final MapEntry(:key, :value) in falha.camposComErro.entries)
+      ?_campoDoRegistro[key]: value,
+  };
+  return erros.isEmpty
+      ? EstadoDoCadastro(erroGeral: falha.mensagem)
+      : EstadoDoCadastro(erros: erros);
+}
+
 Map<CampoDoRegistro, String> _mensagens(
   Map<CampoDoRegistro, ProblemaNoRegistro> problemas,
 ) => {
@@ -283,6 +304,8 @@ class CompletarCadastroControlador extends Notifier<EstadoDoCadastro> {
         } on EmailAindaNaoVerificado {
           if (ref.mounted) state = const EstadoDoCadastro();
           return const VerificarEmail();
+        } on FalhaDeValidacao catch (e) {
+          if (ref.mounted) state = estadoDaRecusa(e);
         } on AppException catch (e) {
           if (ref.mounted) state = EstadoDoCadastro(erroGeral: e.mensagem);
         } catch (_) {

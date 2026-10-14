@@ -27,9 +27,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// provider. Quem sabe disso é a resposta da própria chamada, e é a fila de
 /// sincronização que guarda o trabalho enquanto ela não chega.
 ///
-/// TODO(US06): cruzar esta pista com o resultado das últimas chamadas à API,
-/// para que o indicador de conexão possa mostrar "rede sem acesso ao servidor"
-/// — hoje ele mostra "Online" em consultório com portal cativo.
+/// O cruzamento desta pista com o que as chamadas de verdade encontraram —
+/// "rede sem acesso ao servidor", o portal cativo — é do
+/// `semAcessoAoServidorProvider` (`alcance_do_servidor.dart`), que o
+/// indicador de conexão usa.
 ///
 /// Continua sendo um `Provider<bool>` de propósito: os testes de tela
 /// sobrescrevem com `conexaoOnlineProvider.overrideWithValue(false)` e não

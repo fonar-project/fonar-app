@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_estrutura.dart';
 import '../../../../app/router/app_routes.dart';
+import '../../../../core/network/alcance_do_servidor.dart';
 import '../../../../core/network/conexao.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
@@ -265,6 +266,7 @@ class _LayoutCompacto extends ConsumerWidget {
                       ),
                       AppIndicadorConexao(
                         online: ref.watch(conexaoOnlineProvider),
+                        semServidor: ref.watch(semAcessoAoServidorProvider),
                       ),
                     ],
                   ),

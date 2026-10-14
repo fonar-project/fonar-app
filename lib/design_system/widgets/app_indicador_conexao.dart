@@ -21,20 +21,34 @@ import 'app_icone.dart';
 /// natureza. O estado se distingue por FORMA: ponto cheio contra anel vazado,
 /// borda fina contra borda grossa, texto regular contra negrito. Sem conexão é
 /// o estado que exige atenção, então é ele que pesa mais.
+///
+/// ## Três estados
+///
+/// Online; sem conexão (nenhuma interface de rede); e sem acesso ao servidor
+/// — há rede, mas a última chamada não chegou (US06). O terceiro pesa como o
+/// segundo: o que precisa do servidor não vai sair agora.
 class AppIndicadorConexao extends StatelessWidget {
   const AppIndicadorConexao({
     required this.online,
+    this.semServidor = false,
     this.sobreFundoEscuro = false,
     super.key,
   });
 
+  /// Há interface de rede.
   final bool online;
+
+  /// Há interface, mas o servidor não respondeu da última vez. Só conta com
+  /// [online].
+  final bool semServidor;
 
   /// No cabeçalho roxo do mobile o indicador vira creme sobre roxo.
   final bool sobreFundoEscuro;
 
   @override
   Widget build(BuildContext context) {
+    // O que o profissional precisa saber é se o servidor está ao alcance.
+    final online = this.online && !semServidor;
     final corBase = sobreFundoEscuro
         ? context.cores.sobrePrimaria
         : context.cores.texto;
@@ -76,7 +90,11 @@ class AppIndicadorConexao extends StatelessWidget {
             // cortar o estado da rede.
             Flexible(
               child: Text(
-                online ? AppStrings.conexaoOnline : AppStrings.conexaoOffline,
+                online
+                    ? AppStrings.conexaoOnline
+                    : this.online
+                    ? AppStrings.conexaoSemServidor
+                    : AppStrings.conexaoOffline,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   color: corBase,
                   fontWeight: online ? FontWeight.w600 : FontWeight.w700,

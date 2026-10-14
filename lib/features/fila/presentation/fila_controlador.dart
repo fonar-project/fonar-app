@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/trava_por_chave.dart';
 import '../../../core/error/app_exception.dart';
 import '../../../core/network/conexao.dart';
 import '../../../core/relogio.dart';
@@ -111,6 +112,27 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
     required List<Amostra> amostras,
   }) async {
     await _carregada();
+    // Com a trava da sessão: o descarte da mesma sessão (tela de gravações
+    // não enviadas) espera este terminar, e este espera o descarte.
+    return ref
+        .read(travaDasSessoesProvider)
+        .executar(
+          sessaoId,
+          () => _enfileirar(
+            pacienteId: pacienteId,
+            nomeDoPaciente: nomeDoPaciente,
+            sessaoId: sessaoId,
+            amostras: amostras,
+          ),
+        );
+  }
+
+  Future<ItemDaFila> _enfileirar({
+    required String pacienteId,
+    required String nomeDoPaciente,
+    required String sessaoId,
+    required List<Amostra> amostras,
+  }) async {
     // Uma sessão, um envio. Mandar de novo a mesma sessão devolve o envio que
     // já existe em vez de criar outro — e a análise não sai em dobro.
     final existente = _itens.where((i) => i.sessaoId == sessaoId).firstOrNull;
@@ -343,10 +365,10 @@ class FilaControlador extends AsyncNotifier<List<ItemDaFila>> {
   /// A conexão voltou, ou a sessão abriu: o que esperava não precisa mais
   /// esperar.
   ///
-  /// TODO(verificar em aparelho): testado só num ProviderContainer sem a
-  /// árvore de widgets, onde o Riverpod não propaga a mudança de rede
-  /// sozinho. Conferir no Android e no Windows: desligar a rede, mandar uma
-  /// gravação, religar e ver se ela sobe sem tocar em nada.
+  /// Testado também com a árvore de widgets de verdade (`fila_test.dart`,
+  /// "dentro do ProviderScope"): a mudança da rede chega aqui sem ninguém
+  /// ler a conexão. Falta só a rede de um aparelho real, que está na lista
+  /// do `PENDENCIAS.md` ("Verificar em aparelho real").
   Future<void> _aoVoltarConexao() async {
     if (!ref.mounted) return;
     await _carregada();

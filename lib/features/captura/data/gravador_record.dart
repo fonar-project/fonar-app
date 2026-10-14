@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
+import '../../../core/banco/banco_local.dart';
 import '../domain/ajuste_de_configuracao.dart';
 import '../domain/amostra.dart';
 import '../domain/gravador.dart';
@@ -23,6 +24,59 @@ final gravadorProvider = Provider.autoDispose<Gravador>((ref) {
 final arquivosDeAmostraProvider = Provider<ArquivosDeAmostra>(
   (ref) => const ArquivosDeAmostraLocais(),
 );
+
+/// Na abertura do app, os WAV que nenhum registro aponta saem (US39) — ver
+/// [apagarWavsSemRegistro]. Quem acorda é o `FonarApp`.
+final limpezaDeWavSemRegistroProvider = FutureProvider<int>((ref) async {
+  try {
+    final banco = ref.read(bancoLocalProvider);
+    final registrados = {
+      for (final a in await banco.select(banco.amostras).get()) a.caminho,
+    };
+    return await apagarWavsSemRegistro(registrados);
+  } catch (_) {
+    // Limpar é cuidado, não condição para abrir: fica para a próxima vez.
+    return 0;
+  }
+});
+
+/// Apaga da pasta de amostras os WAV que nenhum registro aponta, e devolve
+/// quantos.
+///
+/// Sobram de uma regravação ou de um descarte em que apagar o arquivo
+/// falhou, ou de uma gravação que o sistema interrompeu antes de virar
+/// amostra. É voz de paciente sem ninguém que saiba dela: sai.
+///
+/// Só os com mais de [idadeMinima]: um WAV sendo gravado agora ainda não
+/// tem registro.
+Future<int> apagarWavsSemRegistro(
+  Set<String> registrados, {
+  Directory? pasta,
+  DateTime? agora,
+  Duration idadeMinima = const Duration(minutes: 10),
+}) async {
+  final raiz =
+      pasta ??
+      Directory(
+        '${(await getApplicationSupportDirectory()).path}'
+        '${Platform.pathSeparator}amostras',
+      );
+  if (!await raiz.exists()) return 0;
+  final limite = (agora ?? DateTime.now()).subtract(idadeMinima);
+  var apagados = 0;
+  await for (final item in raiz.list(recursive: true, followLinks: false)) {
+    if (item is! File || !item.path.toLowerCase().endsWith('.wav')) continue;
+    if (registrados.contains(item.path)) continue;
+    try {
+      if ((await item.lastModified()).isAfter(limite)) continue;
+      await item.delete();
+      apagados++;
+    } catch (_) {
+      // Em uso ou sem permissão: a próxima abertura tenta de novo.
+    }
+  }
+  return apagados;
+}
 
 /// Grava pelo pacote `record`, em WAV PCM, com a configuração de
 /// [ConfiguracaoDeCaptura].

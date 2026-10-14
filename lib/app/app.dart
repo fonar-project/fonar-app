@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../design_system/theme/app_theme.dart';
 import '../features/auth/presentation/widgets/vigia_de_inatividade.dart';
 import '../features/cape_v/presentation/sincronizacao_cape_v_controlador.dart';
+import '../features/captura/data/gravador_record.dart';
 import '../features/conta/data/preferencia_de_tema_local.dart';
 import '../features/conta/domain/tema_escolhido.dart';
 import '../features/fila/presentation/fila_controlador.dart';
@@ -26,6 +27,9 @@ class FonarApp extends ConsumerWidget {
     ref.listen(sincronizacaoCapeVControladorProvider, (_, _) {});
     // E a cópia de cada laudo emitido, para a API (ADR-018 da API).
     ref.listen(sincronizacaoDosLaudosControladorProvider, (_, _) {});
+    // Os WAV que sobraram sem registro (regravação, descarte que falhou no
+    // meio) saem na abertura.
+    ref.listen(limpezaDeWavSemRegistroProvider, (_, _) {});
 
     return MaterialApp.router(
       title: AppStrings.appTitle,

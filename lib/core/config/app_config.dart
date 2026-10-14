@@ -87,8 +87,9 @@ abstract final class AppConfig {
   /// pede a senha: o aparelho fica na mesa do consultório, aberto em dado
   /// de paciente, enquanto o profissional atende.
   ///
-  /// TODO(equipe): tempo escolhido sem medir a consulta. Curto demais trava
-  /// no meio do atendimento; longo demais não protege.
+  /// Decisão da equipe (US39): cinco minutos. O caso em que esse tempo
+  /// atrapalhava — a gravação longa, sem toque — não bloqueia mais: gravando,
+  /// o app conta como em uso (`gravacaoEmAndamentoProvider`).
   static const tempoDeInatividade = Duration(minutes: 5);
 
   /// Tempo para abrir a conexão.
@@ -100,6 +101,10 @@ abstract final class AppConfig {
 
   /// Tempo para enviar. Generoso porque o corpo é um WAV PCM sem compressão,
   /// possivelmente em rede de consultório.
-  /// TODO: medir com arquivo real antes de fixar esse número.
+  ///
+  /// A conta: a gravação mais longa que a API aceita é de 60 s; em 44,1 kHz,
+  /// 16 bits e mono são ~5,3 MB, que sobem em 5 minutos a partir de
+  /// ~150 kbit/s — um 3G fraco. Abaixo disso, a fila tenta de novo depois, e
+  /// nada se perde.
   static const timeoutEnvio = Duration(minutes: 5);
 }

@@ -94,8 +94,9 @@ final class FalhaDeValidacao extends AppException {
   const FalhaDeValidacao({this.camposComErro = const {}, super.causa})
     : super(AppStrings.erroValidacao);
 
-  /// Campo -> motivo, quando a API detalha. Usado para marcar o formulário.
-  /// TODO: preencher quando o contrato de erro da API estiver definido.
+  /// Campo -> motivo, quando a API detalha (`camposDaRecusa`, no
+  /// `ErrorInterceptor`). O campo é o nome no corpo que a API recebe; o
+  /// motivo, o texto dela. Usado para marcar o formulário.
   final Map<String, String> camposComErro;
 }
 

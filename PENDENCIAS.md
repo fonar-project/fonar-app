@@ -49,24 +49,18 @@ houver, no mesmo commit.
 | Pendência | US | Onde |
 |---|---|---|
 | Quando o aparelho troca taxa ou canais: bloqueia ou só avisa? (hoje só avisa) | 04, 05 | `captura/presentation/pages/captura_page.dart`, `captura/domain/verificacao_da_amostra.dart` |
-| Campos recusados pela API, para marcar no formulário: ela manda o motivo num código estável (`detail.codigo`), e hoje só `consentimento_ausente` muda o que o app faz. Nenhuma tela de formulário fala com a API ainda. | — | `core/network/interceptors/error_interceptor.dart` |
 
 ## Equipe (produto e implementação)
 
 | Pendência | US | Onde |
 |---|---|---|
 | **Numeração das US03 a US10 foi deduzida** das telas do protótipo e do índice de ícones — conferir com o backlog. A US11 (conta) veio do `TODO(US11)` que a equipe deixou no roteador; as US12 (perfil do paciente), US13 (ouvir as gravações), US14 (dados salvos no aparelho), US15 (retirar o consentimento), US16 (retomar a sessão de gravação), US17 (espectrograma no celular), US18 (token no cofre do sistema), US19 (limpeza de gravações não enviadas), US20 (editar os dados do paciente), US21 (aviso de duplicado e de saída sem salvar), US22 (documentação), US23 (histórico geral) e US24 (bloqueio por inatividade) foram escolhidas pelo Felipe. | 03–10 | — |
-| **Tempo sem uso até bloquear**: 5 minutos, escolhido sem medir a consulta. O bloqueio também pode cair no meio de uma gravação longa sem toque (a gravação continua embaixo). | 24 | `core/config/app_config.dart` (`tempoDeInatividade`) |
 | **Nada desce do Firebase.** Desde a US33, o paciente, os consentimentos (e retiradas) e a sessão sobem para o Firebase antes de cada envio para a análise; desde a US37 a CAPE-V também (ADR-017 da API), e desde a US38 a cópia de cada laudo emitido (ADR-018 da API). Mas o que outro aparelho gravou não aparece aqui. | 14, 15, 33, 37, 38 | `TODO(backend)` nos repositórios `*_local.dart`, `sincronizacao/data/sincronizacao_firestore.dart` |
 | **Pacientes, consentimentos e resultados de exemplo** aparecem só no modo de exemplo (`--dart-define=FONAR_EXEMPLO=true`, o dos testes; avisados na tela); o app normal abre na API (US33). Apagar de vez quando ninguém mais precisar deles para olhar as telas sem servidor. | 14, 33 | `core/config/app_config.dart` (`exemplo`) |
 | Tendência do AVQI do paciente cadastrado, na lista: hoje sempre "sem comparação". Depende do limiar de mudança (ver "Orientação clínica"); com ele, a lista ainda precisa ler as análises da API (`compararUltimas` já faz a conta), porque hoje ela lê só o banco local. A "última sessão" já aparece: é a gravação mais nova do paciente neste aparelho. | 14 | `pacientes/data/repositorio_pacientes_local.dart` |
-| Retomar a sessão: só se retoma a do **mesmo dia** (decisão de implementação — a voz muda de um dia para o outro, e a análise combina as tarefas). É isso que define uma consulta? | 16 | `captura/domain/retomada.dart` |
-| Cadastro: queixa obrigatória e "salvar leva ao consentimento" foram decisões sem o protótipo. | 02 | `pacientes/presentation/pages/novo_paciente_page.dart` |
 | Paciente duplicado: o aviso compara nome e nascimento só com os pacientes **deste aparelho**. Com o Firebase, comparar também com os da conta. | 21 | `pacientes/domain/duplicidade.dart` |
 | **Nome e registro do profissional**: com a API (US34), vêm do cadastro nela e a Conta salva lá; o aparelho guarda uma cópia para o laudo sair sem rede. Sem a API, continuam só no aparelho. | 32, 34 | `auth/data/profissional_atual.dart`, `conta/presentation/conta_controlador.dart` |
 | Ouvir a análise gravada em OUTRO aparelho: hoje só toca o que ainda está neste (achado pelo envio da fila). Precisa da API servir o áudio. | 13 | `fila/presentation/fila_controlador.dart` (`amostrasDaAnaliseProvider`) |
-| **WAV sem registro**: se apagar o arquivo antigo falha numa regravação, ou no meio de um descarte já com o registro apagado, o WAV fica no disco sem ninguém que o aponte. Falta uma varredura que compare a pasta de amostras com o banco e apague o que sobrou. | 05, 19 | `captura/presentation/gravacao_controlador.dart` (`_apagarSubstituido`) |
-| Descartar uma sessão confere se ela já está num envio antes de apagar qualquer arquivo, mas conferência e descarte não são uma operação só: um envio criado exatamente entre os dois ainda perderia o WAV. Hoje nenhum fluxo põe na fila a sessão que está na tela de limpeza; se passar a existir, os dois precisam de trava comum. | 19 | `captura/presentation/gravacoes_nao_enviadas_controlador.dart` |
 | Consentimento vigente: no aparelho, vale a ordem de gravação (id autoincremento), não o relógio. Na sincronização (US33), o livro do Firebase tem de ser o começo do livro deste aparelho; se outro aparelho escreveu outro livro para o mesmo paciente, o envio é recusado para alguém olhar. A regra entre aparelhos continua em aberto. | 14, 15, 33 | `sincronizacao/data/sincronizacao_firestore.dart` |
 
 ## Verificar em aparelho real

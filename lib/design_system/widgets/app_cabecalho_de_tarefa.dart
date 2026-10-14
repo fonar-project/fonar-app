@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/network/alcance_do_servidor.dart';
 import '../../core/network/conexao.dart';
 import '../../l10n/app_strings.dart';
 import '../breakpoints.dart';
@@ -132,6 +133,7 @@ class AppCabecalhoDeTarefa extends ConsumerWidget {
                       padding: const EdgeInsets.only(right: AppSpacing.xs),
                       child: AppIndicadorConexao(
                         online: ref.watch(conexaoOnlineProvider),
+                        semServidor: ref.watch(semAcessoAoServidorProvider),
                       ),
                     ),
                   ],

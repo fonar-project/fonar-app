@@ -5,6 +5,7 @@ import '../auth/fonte_de_token.dart';
 import '../config/app_config.dart';
 import '../error/app_exception.dart';
 import '../network/interceptors/auth_interceptor.dart';
+import '../network/dio_client.dart';
 import '../network/interceptors/error_interceptor.dart';
 
 /// O Cloud Firestore pela API REST, com o token de quem está na sessão.
@@ -223,6 +224,7 @@ final firestoreRestProvider = Provider<FirestoreRest>((ref) {
   // sair, e o erro é traduzido por último.
   dio.interceptors.addAll([
     AuthInterceptor(ref.watch(fonteDeTokenProvider)),
+    ...interceptorsComuns(ref),
     const ErrorInterceptor(),
   ]);
   ref.onDispose(dio.close);
