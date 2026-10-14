@@ -18,9 +18,9 @@ import 'credencial.dart';
 /// estava aqui.
 ///
 /// Documentação dos pontos usados:
-/// - `accounts:signInWithPassword`, `accounts:signUp` e
-///   `accounts:sendOobCode` (redefinição de senha e verificação de e-mail),
-///   no Identity Toolkit;
+/// - `accounts:signInWithPassword`, `accounts:signUp`, `accounts:update`
+///   (troca de senha) e `accounts:sendOobCode` (redefinição de senha e
+///   verificação de e-mail), no Identity Toolkit;
 /// - `token`, no Secure Token, que troca o token de renovação por um novo.
 class FirebaseAuthRest {
   FirebaseAuthRest(this._dio, {required this.chave, required this.agora});
@@ -139,6 +139,52 @@ class FirebaseAuthRest {
       idToken: _texto(corpo, 'id_token'),
       refreshToken: _texto(corpo, 'refresh_token'),
       expiraEm: _vencimento(corpo['expires_in']),
+    );
+  }
+
+  /// Troca a senha da conta de [credencial] por [novaSenha]
+  /// (`accounts:update`).
+  ///
+  /// A [credencial] tem de ser de uma entrada recente — quem chama confere a
+  /// senha atual logo antes. Trocar a senha encerra os tokens de renovação
+  /// de antes, em todo aparelho: o que volta daqui é a credencial nova, que
+  /// substitui a guardada.
+  ///
+  /// Lança [SenhaFraca], [MuitasTentativas], [ContaDesativada],
+  /// [NaoAutorizado] quando o token não serve mais para trocar, ou a
+  /// `AppException` da rede.
+  Future<Credencial> trocarSenha(
+    Credencial credencial,
+    String novaSenha,
+  ) async {
+    final corpo = await _post(
+      '$_identidade/accounts:update',
+      {
+        'idToken': credencial.idToken,
+        'password': novaSenha,
+        'returnSecureToken': true,
+      },
+      traduzir: (codigo, erro) => switch (codigo) {
+        'WEAK_PASSWORD' ||
+        'MISSING_PASSWORD' ||
+        'PASSWORD_DOES_NOT_MEET_REQUIREMENTS' => SenhaFraca(causa: erro),
+        'TOO_MANY_ATTEMPTS_TRY_LATER' => MuitasTentativas(causa: erro),
+        'USER_DISABLED' => ContaDesativada(causa: erro),
+        'INVALID_ID_TOKEN' ||
+        'TOKEN_EXPIRED' ||
+        'CREDENTIAL_TOO_OLD_LOGIN_AGAIN' ||
+        'USER_NOT_FOUND' => NaoAutorizado(causa: erro),
+        _ => null,
+      },
+    );
+    if (_texto(corpo, 'localId') != credencial.uid) {
+      // Não acontece; se acontecer, o token novo é de outra pessoa.
+      throw NaoAutorizado(causa: 'troca de senha devolveu outra conta');
+    }
+    return credencial.renovada(
+      idToken: _texto(corpo, 'idToken'),
+      refreshToken: _texto(corpo, 'refreshToken'),
+      expiraEm: _vencimento(corpo['expiresIn']),
     );
   }
 

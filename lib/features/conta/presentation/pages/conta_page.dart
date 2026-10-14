@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/app_estrutura.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/config/app_config.dart';
+import '../../../../core/network/conexao.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_radius.dart';
@@ -23,16 +24,20 @@ import '../../../auth/data/profissional_atual.dart';
 import '../../../auth/data/sessao.dart';
 import '../../../cadastro/domain/cadastro.dart';
 import '../../data/preferencia_de_tema_local.dart';
+import '../../data/troca_de_senha_firebase.dart';
 import '../../domain/tema_escolhido.dart';
+import '../../domain/troca_de_senha.dart';
 import '../../../fila/presentation/fila_controlador.dart';
 import '../../domain/dados_do_profissional.dart';
 import '../conta_controlador.dart';
+import '../troca_de_senha_controlador.dart';
 
 /// Conta do profissional (US11).
 ///
 /// Três perguntas que o profissional traz para esta tela: "o laudo sai com o
 /// meu nome e registro certos?", "tem coisa minha presa neste aparelho?" e
-/// "como saio?". Mais o "sobre", que diz o que o FONAR é e o que não é.
+/// "como saio?". Mais a troca de senha (US45) e o "sobre", que diz o que o
+/// FONAR é e o que não é.
 class ContaPage extends ConsumerWidget {
   const ContaPage({super.key});
 
@@ -65,6 +70,8 @@ class ContaPage extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           _SeusDados(),
+                          SizedBox(height: AppSpacing.xl),
+                          _Senha(),
                           SizedBox(height: AppSpacing.xl),
                           _NesteAparelho(),
                           SizedBox(height: AppSpacing.xl),
@@ -308,6 +315,200 @@ class _Credenciamento extends StatelessWidget {
       titulo: AppStrings.contaCredenciamentoCredenciado,
     ),
   };
+}
+
+// ---------------------------------------------------------------- senha --
+
+/// Trocar a senha sem sair do app (US45): fechada, é um botão; aberta, a
+/// senha atual e a nova, duas vezes.
+class _Senha extends ConsumerStatefulWidget {
+  const _Senha();
+
+  @override
+  ConsumerState<_Senha> createState() => _SenhaState();
+}
+
+class _SenhaState extends ConsumerState<_Senha> {
+  final _atual = TextEditingController();
+  final _nova = TextEditingController();
+  final _confirmacao = TextEditingController();
+  final _focoAtual = FocusNode();
+  final _focoNova = FocusNode();
+  final _focoConfirmacao = FocusNode();
+  var _aberta = false;
+
+  @override
+  void dispose() {
+    _atual.dispose();
+    _nova.dispose();
+    _confirmacao.dispose();
+    _focoAtual.dispose();
+    _focoNova.dispose();
+    _focoConfirmacao.dispose();
+    super.dispose();
+  }
+
+  TrocaDeSenhaControlador get _controlador =>
+      ref.read(trocaDeSenhaControladorProvider.notifier);
+
+  void _limpar() {
+    _atual.clear();
+    _nova.clear();
+    _confirmacao.clear();
+  }
+
+  void _abrir() {
+    _controlador.cancelar();
+    setState(() => _aberta = true);
+    // O campo só existe depois do próximo quadro.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focoAtual.requestFocus();
+    });
+  }
+
+  void _fechar() {
+    _controlador.cancelar();
+    _limpar();
+    setState(() => _aberta = false);
+  }
+
+  Future<void> _trocar() async {
+    final trocou = await _controlador.trocar(
+      atual: _atual.text,
+      nova: _nova.text,
+      confirmacao: _confirmacao.text,
+    );
+    if (!mounted) return;
+    if (trocou) {
+      // A senha não fica em campo nenhum depois de trocada.
+      _limpar();
+      setState(() => _aberta = false);
+      return;
+    }
+    // Foco no primeiro campo com erro, como no cadastro.
+    final estado = ref.read(trocaDeSenhaControladorProvider);
+    if (estado.erroAtual != null) {
+      _focoAtual.requestFocus();
+    } else if (estado.erroNova != null) {
+      _focoNova.requestFocus();
+    } else if (estado.erroConfirmacao != null) {
+      _focoConfirmacao.requestFocus();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textos = Theme.of(context).textTheme;
+    final disponivel = ref.watch(trocaDeSenhaProvider) != null;
+    final online = ref.watch(conexaoOnlineProvider);
+    final estado = ref.watch(trocaDeSenhaControladorProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _Titulo(AppStrings.contaSenhaTitulo),
+        _Cartao(
+          children: [
+            if (!disponivel)
+              Text(AppStrings.contaSenhaExemplo, style: textos.bodyMedium)
+            else ...[
+              Text(AppStrings.contaSenhaApoio, style: textos.bodyMedium),
+              const SizedBox(height: AppSpacing.md),
+              if (_aberta)
+                ..._formulario(estado, online: online)
+              else
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: AppBotao.secundario(
+                    rotulo: AppStrings.contaSenhaTrocar,
+                    aoTocar: online ? _abrir : null,
+                    motivoDesabilitado: AppStrings.contaSenhaPrecisaConexao,
+                  ),
+                ),
+              if (estado.trocada) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Semantics(
+                  liveRegion: true,
+                  child: const AppSituacao(
+                    icone: NomeIcone.confirmacao,
+                    titulo: AppStrings.contaSenhaTrocada,
+                  ),
+                ),
+              ],
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _formulario(EstadoDaTroca estado, {required bool online}) => [
+    AppCampoTexto(
+      rotulo: AppStrings.contaSenhaCampoAtual,
+      controlador: _atual,
+      foco: _focoAtual,
+      erro: estado.erroAtual,
+      somenteLeitura: estado.trocando,
+      ocultarTexto: true,
+      autoCorrecao: false,
+      autopreenchimento: const [AutofillHints.password],
+      acaoDeEntrada: TextInputAction.next,
+      aoMudar: (_) => _controlador.editou(CampoDaTrocaDeSenha.atual),
+    ),
+    const SizedBox(height: AppSpacing.md),
+    AppCampoTexto(
+      rotulo: AppStrings.contaSenhaCampoNova,
+      apoio: AppStrings.criarContaSenhaApoio,
+      controlador: _nova,
+      foco: _focoNova,
+      erro: estado.erroNova,
+      somenteLeitura: estado.trocando,
+      ocultarTexto: true,
+      autoCorrecao: false,
+      autopreenchimento: const [AutofillHints.newPassword],
+      acaoDeEntrada: TextInputAction.next,
+      aoMudar: (_) => _controlador.editou(CampoDaTrocaDeSenha.nova),
+    ),
+    const SizedBox(height: AppSpacing.md),
+    AppCampoTexto(
+      rotulo: AppStrings.contaSenhaCampoConfirmacao,
+      controlador: _confirmacao,
+      foco: _focoConfirmacao,
+      erro: estado.erroConfirmacao,
+      somenteLeitura: estado.trocando,
+      ocultarTexto: true,
+      autoCorrecao: false,
+      autopreenchimento: const [AutofillHints.newPassword],
+      acaoDeEntrada: TextInputAction.done,
+      aoEnviar: (_) => _trocar(),
+      aoMudar: (_) => _controlador.editou(CampoDaTrocaDeSenha.confirmacao),
+    ),
+    if (estado.erroGeral case final erro?) ...[
+      const SizedBox(height: AppSpacing.sm),
+      AppSituacao(icone: NomeIcone.alerta, titulo: erro),
+    ],
+    const SizedBox(height: AppSpacing.md),
+    Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
+      children: [
+        AppBotao.primario(
+          rotulo: estado.trocando
+              ? AppStrings.contaSenhaTrocando
+              : AppStrings.contaSenhaTrocar,
+          aoTocar: online && !estado.trocando ? _trocar : null,
+          motivoDesabilitado: estado.trocando
+              ? AppStrings.contaSenhaTrocando
+              : AppStrings.contaSenhaPrecisaConexao,
+        ),
+        AppBotao.secundario(
+          rotulo: AppStrings.contaCancelar,
+          aoTocar: estado.trocando ? null : _fechar,
+          motivoDesabilitado: AppStrings.contaSenhaTrocando,
+        ),
+      ],
+    ),
+  ];
 }
 
 // ------------------------------------------------------- neste aparelho --

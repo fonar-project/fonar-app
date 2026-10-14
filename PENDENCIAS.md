@@ -70,15 +70,8 @@ rede simulados.
 | O build baixa o SQLite pronto (conferido por SHA-256) na primeira compilação de cada plataforma: precisa de rede nessa hora. | 14 | `pubspec.yaml` (`drift_flutter`) |
 | Espectrograma em tela cheia: girar o celular, pinça e arrastar no Android; roda do mouse, arrastar e teclado (setas, + e −) no Windows. | 17 | `analise/presentation/pages/espectrograma_page.dart` |
 | **Credencial no cofre do sistema**: entrar, fechar o app e abrir de novo no Android e no Windows — o modo offline oferece a conta? E, no Android, confirmar que o backup automático está mesmo desligado (Configurações → Sistema → Backup não lista o FONAR). | 18, 32 | `core/storage/token_storage.dart`, `AndroidManifest.xml` |
-| **Login com o Firebase de verdade**, com a chave do projeto: entrar; errar a senha; errar várias vezes (a conta pausa); "Esqueci a senha" — o e-mail chega, em português? Deixar a fila enviando por mais de uma hora: o token é renovado sem pedir a senha? Trocar a senha no console com o app aberto: a fila passa a pedir "Entrar de novo"? Nada disso rodou contra o Firebase: os testes simulam as respostas da API REST. | 32 | `core/auth/firebase_auth_rest.dart`, `core/auth/fonte_de_token.dart` |
+| **Login com o Firebase de verdade**, com a chave do projeto: entrar; errar a senha; errar várias vezes (a conta pausa); "Esqueci a senha" — o e-mail chega, em português? Deixar a fila enviando por mais de uma hora: o token é renovado sem pedir a senha? Trocar a senha no console com o app aberto: a fila passa a pedir "Entrar de novo"? Trocar a senha pela Conta (US45): neste aparelho a fila segue sem pedir nada, e no outro pede "Entrar de novo"? Nada disso rodou contra o Firebase: os testes simulam as respostas da API REST. | 32, 45 | `core/auth/firebase_auth_rest.dart`, `core/auth/fonte_de_token.dart`, `conta/data/troca_de_senha_firebase.dart` |
 | **Bloqueio por inatividade**: deixar o app em segundo plano mais de 5 minutos e voltar — bloqueia na hora? No Windows, digitar conta como uso? | 24 | `auth/presentation/widgets/vigia_de_inatividade.dart` |
 | Ouvir as gravações no **Android**. No Windows já foi conferido em 24/09/2026, com o `audioplayers` tocando um WAV da área privada do app. | 13 | `reproducao/data/reprodutor_audioplayers.dart` |
 | Falha no meio da reprodução (desconectar o fone, arquivo corrompido depois do cabeçalho): o player sai de "tocando" e mostra a falha? Os testes simulam o erro; o caminho real, o `eventStream` do `audioplayers` levando o erro a `falhas`, não foi exercitado. | 13 | `reproducao/data/reprodutor_audioplayers.dart` |
 | Laudo: "salvar ou compartilhar" (no Windows, o "Salvar como" do `file_selector`; no Android, a folha do sistema, com o PDF apagado do cache na abertura seguinte) e "imprimir ou salvar", e a pré-visualização A4 no Windows (o `printing` baixa o pdfium no build). | 10, 38 | `laudo/data/saida_do_laudo.dart`, `laudo/presentation/laudo_controlador.dart` |
-
-## Já existiam antes da US02
-
-Continuam valendo, com `TODO` no código: trocar a senha de dentro do app
-(hoje, só pelo e-mail de "Esqueci a senha") e a tela de erro própria do
-roteador. A autenticação com o Firebase saiu na US32, e o tema escuro na
-US30.
