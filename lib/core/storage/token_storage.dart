@@ -72,5 +72,13 @@ class TokenStorageSeguro implements TokenStorage {
 }
 
 final tokenStorageProvider = Provider<TokenStorage>(
-  (ref) => const TokenStorageSeguro(FlutterSecureStorage()),
+  (ref) => const TokenStorageSeguro(
+    FlutterSecureStorage(
+      // No Mac, o keychain comum (o "login"), e não o de proteção de dados:
+      // este exige o app assinado por uma equipe de desenvolvedor da Apple,
+      // e o FONAR é distribuído sem essa conta (US41). Continua cifrado pelo
+      // sistema e só deste usuário.
+      mOptions: MacOsOptions(usesDataProtectionKeychain: false),
+    ),
+  ),
 );

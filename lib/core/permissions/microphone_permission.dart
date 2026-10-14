@@ -23,7 +23,10 @@
 /// Configurações > Privacidade e segurança > Microfone.
 ///
 /// A declaração formal (`<DeviceCapability Name="microphone" />`) só existe se
-/// o app for empacotado em MSIX. Isso é decisão de release e ficou para depois.
+/// o app for empacotado em MSIX. Decidido na US41: o FONAR é distribuído em
+/// zip, sem MSIX — um MSIX só instala assinado por um certificado em que o
+/// computador confie, e o projeto não tem um. O risco segue coberto pela
+/// conferência de silêncio, abaixo.
 ///
 /// O modo de falha é o pior possível para este projeto: quando o acesso está
 /// bloqueado por política ou pela chave "permitir que aplicativos de desktop

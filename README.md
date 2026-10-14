@@ -269,7 +269,8 @@ comentário de `schemaVersion`, em `lib/core/banco/banco_local.dart`.
 
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda a cada push e a
 cada pull request, com o mesmo Flutter 3.47.2 da tabela de pré-requisitos, em
-dois jobs. Nenhum dos dois publica artefato.
+quatro jobs. Nenhum publica artefato — quem publica é o `release.yml`, por tag
+(ver [Distribuição](#distribuição)).
 
 #### `verificacao`, em `ubuntu-latest`
 
@@ -313,9 +314,16 @@ imagem só serviria para esconder regressão em vez de acusá-la — que é o mo
 de o job existir. O passo `flutter doctor -v` está lá justamente para o log
 dizer qual Visual Studio foi usado.
 
-Ao subir a versão do Flutter, mude nos três lugares: na tabela de
-pré-requisitos e nos dois `flutter-version` do workflow, um por job. Se
-divergirem, o CI passa a validar um Flutter que ninguém usa.
+#### `build-android` e `build-macos`
+
+Pelo mesmo motivo do `build-windows`: o Gradle e o Xcode também não passam
+pelos testes. O Android compila em debug (sem precisar da chave de release),
+no Ubuntu com o JDK 17; o macOS, em debug, no `macos-latest`.
+
+Ao subir a versão do Flutter, mude em todos os lugares: na tabela de
+pré-requisitos, nos `flutter-version` dos jobs do `ci.yml` e do `gerar.yml`, e
+no `FLUTTER_VERSAO` do `release.yml`. Se divergirem, o CI passa a validar um
+Flutter que ninguém usa.
 
 ### Apontar para a API
 
@@ -465,6 +473,58 @@ build de **distribuição** (`--release`) nesse modo se recusa a abrir: seria
 dado de saúde aberto a qualquer senha.
 
 ---
+
+## Distribuição
+
+O FONAR é baixado do **GitHub Releases** deste repositório (US41), e a landing
+page aponta para o último release — o link não muda a cada versão:
+
+| Plataforma | Arquivo | O que é |
+|---|---|---|
+| Windows 10 e 11 | `FONAR-Windows.zip` | a pasta do `flutter build windows --release`; descompacta e abre `fonar_app.exe` |
+| macOS | `FONAR-macOS.zip` | o `FONAR.app`, empacotado com `ditto` |
+| Android | `FONAR-Android.apk` | o APK de release, instalado direto |
+| iPhone e iPad | — | a versão web, instalada pelo Safari (US42) |
+
+**Publicar uma versão:** na `main` atualizada, `git tag v1.0.0` e
+`git push origin v1.0.0`. O [`release.yml`](.github/workflows/release.yml)
+compila as três plataformas, cada uma na sua máquina, e publica o release com
+as instruções de primeira abertura. A versão do app é a da tag.
+
+**Sem assinatura de código, de propósito.** Não há certificado de assinatura
+para o Windows nem conta paga de desenvolvedor da Apple. Por isso:
+
+- no **Windows**, a primeira abertura pode mostrar o SmartScreen ("O Windows
+  protegeu o computador"): *Mais informações* → *Executar assim mesmo*;
+- no **macOS**, o app sai com a assinatura local do Xcode e sem notarização:
+  na primeira abertura, *Ajustes → Privacidade e Segurança* → *Abrir Mesmo
+  Assim*. O cofre da credencial usa o keychain comum do usuário
+  (`usesDataProtectionKeychain: false`), porque o de proteção de dados exige
+  uma equipe de desenvolvedor. O sandbox do app libera só rede (cliente),
+  microfone, salvar o arquivo que o profissional escolhe e imprimir.
+
+**A chave do Android.** Um APK só instala por cima de outro assinado pela
+mesma chave — perder a chave é não conseguir mais atualizar quem já instalou.
+Ela nunca entra no repositório. Para criar e guardar como secrets (uma vez, na
+máquina de quem publica, com o JDK e o `gh` logado):
+
+```bash
+keytool -genkeypair -v -keystore fonar.jks -alias fonar \
+  -keyalg RSA -keysize 4096 -validity 10000 \
+  -dname "CN=FONAR, O=FONAR, C=BR"
+base64 -w0 fonar.jks | gh secret set FONAR_ANDROID_KEYSTORE_BASE64 -R fonar-project/fonar-app
+gh secret set FONAR_KEYSTORE_SENHA -R fonar-project/fonar-app   # a senha do keystore
+gh secret set FONAR_CHAVE_ALIAS -R fonar-project/fonar-app --body fonar
+gh secret set FONAR_CHAVE_SENHA -R fonar-project/fonar-app      # a senha da chave
+```
+
+No PowerShell, o `base64` é
+`[Convert]::ToBase64String([IO.File]::ReadAllBytes("fonar.jks")) | gh secret set FONAR_ANDROID_KEYSTORE_BASE64 -R fonar-project/fonar-app`.
+Guarde o `fonar.jks` e as senhas fora do computador também. Sem os secrets, o
+release sai com a chave de debug e avisa: serve para testar, não para
+distribuir. Para um APK de release na sua máquina, crie `android/key.properties`
+(ignorado pelo git) com `storeFile`, `storePassword`, `keyAlias` e
+`keyPassword`.
 
 ## Verificando o ambiente
 
@@ -635,7 +695,10 @@ de ruído ambiente tem que tratar silêncio absoluto como falha, não como sala
 silenciosa, e bloquear a gravação avisando o usuário.
 
 A declaração formal (`<DeviceCapability Name="microphone" />`) só existiria em
-pacote MSIX. Empacotamento é decisão de release, ainda em aberto.
+pacote MSIX, e o FONAR é distribuído em zip (US41, ver
+[Distribuição](#distribuição)): um MSIX só instala assinado por um certificado
+em que o computador confia, e o projeto não tem um. O risco continua coberto
+pela conferência de silêncio da aferição e de cada gravação.
 
 ### A permissão de INTERNET no manifest é declarada à mão. Não remova
 

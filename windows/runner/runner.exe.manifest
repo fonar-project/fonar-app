@@ -14,11 +14,12 @@
        Configuracoes > Privacidade e seguranca > Microfone.
 
        A declaracao formal (<DeviceCapability Name="microphone" />) so existe
-       em pacote MSIX, e empacotamento e decisao de release ainda em aberto.
+       em pacote MSIX. O FONAR e distribuido em zip, sem MSIX (US41): um
+       MSIX so instala assinado por um certificado confiavel.
 
        ATENCAO ao modo de falha: com o acesso bloqueado, a gravacao costuma
        NAO dar erro — ela grava um WAV valido, com a duracao certa e amplitude
-       zero. Ver o TODO completo em
+       zero. Ver o risco completo em
        lib/core/permissions/microphone_permission.dart. -->
 
   <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">

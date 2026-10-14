@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<!-- A API de análise, o Firebase e o espectrograma (US41). -->
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<!-- A gravação da voz. O texto do pedido está no Info.plist. -->
+	<key>com.apple.security.device.audio-input</key>
+	<true/>
+	<!-- "Salvar como" do laudo em PDF, no lugar que o profissional escolhe. -->
+	<key>com.apple.security.files.user-selected.read-write</key>
+	<true/>
+	<!-- Imprimir o laudo. -->
+	<key>com.apple.security.print</key>
+	<true/>
+	<key>com.apple.security.cs.allow-jit</key>
+	<true/>
+	<key>com.apple.security.network.server</key>
+	<true/>
+</dict>
+</plist>
