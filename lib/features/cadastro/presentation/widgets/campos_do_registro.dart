@@ -100,10 +100,15 @@ class CamposDoRegistro extends StatelessWidget {
           aoMudar: (_) => aoEditar(CampoDoRegistro.inscricao),
         ),
         const SizedBox(height: AppSpacing.lg),
-        Text(
-          AppStrings.cadastroTermosTexto,
-          style: textos.bodySmall?.copyWith(color: context.cores.secundario),
-        ),
+        Text(AppStrings.cadastroTermosTitulo, style: textos.titleSmall),
+        const SizedBox(height: AppSpacing.xs),
+        for (final item in AppStrings.cadastroTermosItens) ...[
+          Text(
+            '• $item',
+            style: textos.bodySmall?.copyWith(color: context.cores.secundario),
+          ),
+          const SizedBox(height: AppSpacing.xxs),
+        ],
         const SizedBox(height: AppSpacing.sm),
         AppCaixaDeMarcacao(
           rotulo: AppStrings.cadastroTermosRotulo,

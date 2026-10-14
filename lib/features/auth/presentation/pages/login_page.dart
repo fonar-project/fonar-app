@@ -265,34 +265,69 @@ Widget _avisoOffline(int pacientesEmCache, ContaAutenticada? conta) {
 
 /// Entra com a conta da última entrada com senha — a credencial guardada no
 /// cofre. Quem saiu da conta apagou a credencial: o modo offline some junto.
-class _BotaoEntrarOffline extends ConsumerWidget {
+///
+/// Com a senha dessa conta (US43), conferida com o verificador que a última
+/// entrada com rede guardou ([SenhaSemRede]). Sem ela, o aparelho na mão de
+/// outra pessoa seria a lista de pacientes aberta.
+class _BotaoEntrarOffline extends ConsumerStatefulWidget {
   const _BotaoEntrarOffline({required this.conta});
 
   final ContaAutenticada conta;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      AppBotao.secundario(
-        rotulo: AppStrings.loginEntrarOffline,
-        aoTocar: () async {
-          final entrou = await ref
-              .read(loginControladorProvider.notifier)
-              .entrarOffline();
-          if (entrou && context.mounted) {
-            context.goNamed(AppRoutes.pacientesNome);
-          }
-        },
-        ocupaLargura: true,
-      ),
-      const SizedBox(height: AppSpacing.xxs),
-      Text(
-        AppStrings.loginOfflineComo(conta.email),
-        textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.bodySmall,
-      ),
-    ],
-  );
+  ConsumerState<_BotaoEntrarOffline> createState() =>
+      _BotaoEntrarOfflineState();
+}
+
+class _BotaoEntrarOfflineState extends ConsumerState<_BotaoEntrarOffline> {
+  final _senha = TextEditingController();
+
+  @override
+  void dispose() {
+    _senha.dispose();
+    super.dispose();
+  }
+
+  Future<void> _entrar() async {
+    final entrou = await ref
+        .read(loginControladorProvider.notifier)
+        .entrarOffline(_senha.text);
+    if (entrou && mounted) context.goNamed(AppRoutes.pacientesNome);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final estado = ref.watch(loginControladorProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AppCampoTexto(
+          rotulo: AppStrings.loginCampoSenha,
+          controlador: _senha,
+          erro: estado.erroSemRede,
+          somenteLeitura: estado.carregando,
+          ocultarTexto: true,
+          autoCorrecao: false,
+          acaoDeEntrada: TextInputAction.done,
+          autopreenchimento: const [AutofillHints.password],
+          aoEnviar: (_) => _entrar(),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        AppBotao.secundario(
+          rotulo: estado.carregando
+              ? AppStrings.loginBotaoEntrando
+              : AppStrings.loginEntrarOffline,
+          aoTocar: estado.carregando ? null : _entrar,
+          ocupaLargura: true,
+        ),
+        const SizedBox(height: AppSpacing.xxs),
+        Text(
+          AppStrings.loginOfflineComo(widget.conta.email),
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ],
+    );
+  }
 }

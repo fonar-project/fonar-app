@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/relogio.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../app/router/trilhas.dart';
 import '../../../../app/app_estrutura.dart';
@@ -263,10 +264,17 @@ class _Formulario extends ConsumerStatefulWidget {
 class _FormularioState extends ConsumerState<_Formulario> {
   final _responsavel = TextEditingController();
   final _focoResponsavel = FocusNode();
-  QuemAutoriza? _quem;
+  // Menor de idade (US43): o responsável legal já vem escolhido — é o
+  // único que pode autorizar.
+  late QuemAutoriza? _quem = _menor ? QuemAutoriza.responsavelLegal : null;
   var _concordou = false;
 
   String get _id => widget.paciente.id;
+
+  late final bool _menor = ehMenorDeIdade(
+    widget.paciente.dataDeNascimento,
+    ref.read(relogioProvider)(),
+  );
 
   @override
   void dispose() {
@@ -350,7 +358,9 @@ class _FormularioState extends ConsumerState<_Formulario> {
                   _editou(CampoDoConsentimento.quemAutoriza);
                 },
           erro: estado.erroQuem,
-          apoio: AppStrings.consentimentoQuemApoio,
+          apoio: _menor
+              ? AppStrings.consentimentoQuemApoioMenor
+              : AppStrings.consentimentoQuemApoio,
         ),
         if (_quem == QuemAutoriza.responsavelLegal) ...[
           const SizedBox(height: AppSpacing.md),

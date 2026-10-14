@@ -34,6 +34,8 @@ import '../../data/repositorio_pacientes_local.dart';
 import '../../domain/novo_paciente.dart';
 import '../../domain/paciente.dart';
 import '../../../sincronizacao/presentation/descida_controlador.dart';
+import '../../../../design_system/widgets/app_confirmacao.dart';
+import '../eliminacao_controlador.dart';
 
 /// Tela 02 — perfil do paciente (US12).
 ///
@@ -359,6 +361,72 @@ class _DadosEAcoes extends ConsumerWidget {
               pathParameters: rotaDoPaciente,
             ),
             ocupaLargura: true,
+          ),
+        ],
+        const SizedBox(height: AppSpacing.xl),
+        _Eliminacao(paciente: paciente),
+      ],
+    );
+  }
+}
+
+/// Eliminar os dados do paciente, a pedido dele (US43, LGPD art. 18, VI).
+///
+/// Por último, longe das ações da consulta, e sem vermelho — a gravidade
+/// está no texto e na pergunta antes ([appConfirmar]).
+class _Eliminacao extends ConsumerWidget {
+  const _Eliminacao({required this.paciente});
+
+  final Paciente paciente;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final estado = ref.watch(eliminacaoControladorProvider);
+    final textos = Theme.of(context).textTheme;
+
+    Future<void> eliminar() async {
+      final confirmou = await appConfirmar(
+        context,
+        titulo: AppStrings.perfilEliminarConfirmarTitulo(paciente.nome),
+        texto: AppStrings.perfilEliminarConfirmarTexto,
+        confirmar: AppStrings.perfilEliminarConfirmar,
+        cancelar: AppStrings.perfilEliminarCancelar,
+      );
+      if (!confirmou || !context.mounted) return;
+      final eliminou = await ref
+          .read(eliminacaoControladorProvider.notifier)
+          .eliminar(paciente.id);
+      if (eliminou && context.mounted) {
+        context.goNamed(AppRoutes.pacientesNome);
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(AppStrings.perfilEliminarTitulo, style: textos.titleSmall),
+        const SizedBox(height: AppSpacing.xxs),
+        Text(
+          AppStrings.perfilEliminarTexto,
+          style: textos.bodySmall?.copyWith(color: context.cores.secundario),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: AppBotao.secundario(
+            rotulo: estado.eliminando
+                ? AppStrings.perfilEliminando
+                : AppStrings.perfilEliminarAcao,
+            icone: NomeIcone.negacao,
+            aoTocar: estado.eliminando ? null : eliminar,
+          ),
+        ),
+        if (estado.erro case final erro?) ...[
+          const SizedBox(height: AppSpacing.sm),
+          AppSituacao(
+            icone: NomeIcone.alerta,
+            titulo: AppStrings.perfilEliminarTitulo,
+            texto: erro,
           ),
         ],
       ],

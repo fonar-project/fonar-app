@@ -18,4 +18,11 @@ Future<ProcessamentoRelatado> processamentoRelatadoPeloNavegador({
 
 String descricaoDoNavegador() => '';
 
+Future<Uint8List> pbkdf2NoNavegador(
+  List<int> senha,
+  List<int> sal,
+  int iteracoes,
+  int tamanho,
+) => throw UnsupportedError('Só no navegador.');
+
 Future<void> pedirArmazenamentoPersistente() async {}

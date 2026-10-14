@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/auth/senha_sem_rede.dart';
 import '../../../core/error/app_exception.dart';
 import '../../../l10n/app_strings.dart';
 import '../../auth/data/profissional_atual.dart';
@@ -135,6 +136,8 @@ class ContaControlador extends Notifier<EstadoDaConta> {
     state = const EstadoDaConta(saindo: true);
     final container = ref.container;
     container.read(sessaoProvider.notifier).encerrar();
+    // O verificador da senha sem rede sai junto com a credencial (US43).
+    await ref.read(senhaSemRedeProvider).esquecer();
     try {
       await ref.read(repositorioAutenticacaoProvider).sair();
     } on AppException catch (e) {

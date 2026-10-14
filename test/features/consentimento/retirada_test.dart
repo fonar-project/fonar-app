@@ -485,7 +485,10 @@ void main() {
       expect(_itens(m.container).single.situacao, SituacaoDoEnvio.enviando);
     });
 
-    test('tentar de novo só sobe com consentimento novo', () async {
+    // US43: o consentimento novo vale para o que for gravado depois dele. A
+    // gravação feita sob o consentimento retirado não sobe mais.
+    test('gravação do consentimento retirado não sobe, nem com um '
+        'consentimento novo', () async {
       final m = _montar(itens: [_item('p1', 's1')]);
       await m.consentimentos.registrar('p1', _consentimento());
       await m.consentimentos.retirar('p1', _retirada());
@@ -502,8 +505,11 @@ void main() {
 
       await m.consentimentos.registrar('p1', _consentimento());
       await controlador.tentarAgora('envio-s1');
-      expect(_itens(m.container).single.situacao, SituacaoDoEnvio.enviado);
-      expect(m.envio.recebidos, ['envio-s1']);
+      expect(
+        _itens(m.container).single.situacao,
+        SituacaoDoEnvio.semConsentimento,
+      );
+      expect(m.envio.recebidos, isEmpty);
     });
 
     test(

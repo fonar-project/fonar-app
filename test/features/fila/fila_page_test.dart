@@ -365,9 +365,10 @@ void main() {
 
     expect(find.text(AppStrings.filaSemConsentimento), findsOneWidget);
     expect(find.text(AppStrings.filaSemConsentimentoTexto), findsOneWidget);
-    // Continua pendente: conta no resumo.
+    // Continua pendente: conta no resumo. Mas não sobe mais (US43): não há
+    // o que tentar de novo.
     expect(find.text(AppStrings.filaResumo(1)), findsOneWidget);
-    expect(find.text(AppStrings.filaTentarDeNovo), findsOneWidget);
+    expect(find.text(AppStrings.filaTentarDeNovo), findsNothing);
   });
 
   testWidgets('enviado leva ao resultado da análise', (tester) async {

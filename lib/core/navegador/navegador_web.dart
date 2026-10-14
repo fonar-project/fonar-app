@@ -79,6 +79,41 @@ Future<ProcessamentoRelatado> processamentoRelatadoPeloNavegador({
   }
 }
 
+/// PBKDF2-HMAC-SHA256 pelo próprio navegador (WebCrypto,
+/// `crypto.subtle.deriveBits`): nativo e rápido, quando a mesma derivação
+/// em Dart compilado para JavaScript levaria segundos (US43, senha sem
+/// rede).
+Future<Uint8List> pbkdf2NoNavegador(
+  List<int> senha,
+  List<int> sal,
+  int iteracoes,
+  int tamanho,
+) async {
+  final subtle = web.window.crypto.subtle;
+  final chave = await subtle
+      .importKey(
+        'raw',
+        Uint8List.fromList(senha).toJS,
+        {'name': 'PBKDF2'}.jsify()!,
+        false,
+        ['deriveBits'.toJS].toJS,
+      )
+      .toDart;
+  final bits = await subtle
+      .deriveBits(
+        web.Pbkdf2Params(
+          name: 'PBKDF2',
+          salt: Uint8List.fromList(sal).toJS,
+          iterations: iteracoes,
+          hash: 'SHA-256'.toJS,
+        ),
+        chave,
+        tamanho * 8,
+      )
+      .toDart;
+  return bits.toDart.asUint8List();
+}
+
 /// O navegador, como ele se apresenta — vai com cada gravação como metadado
 /// de captura, no lugar do sistema e da versão que o aparelho informa.
 String descricaoDoNavegador() => web.window.navigator.userAgent;

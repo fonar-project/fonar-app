@@ -9,12 +9,13 @@ import '../domain/consentimento.dart';
 import '../domain/repositorio_consentimento.dart';
 import 'consentimentos_de_exemplo.dart';
 
-/// Versão do texto do termo que a tela apresenta hoje.
+/// Versão do texto do termo que a tela apresenta hoje
+/// (`AppStrings.consentimentoTermoItens`).
 ///
-/// TODO(jurídico): o texto é PROVISÓRIO. Quando a versão revisada chegar,
-/// troque o texto em `app_strings.dart` e mude esta versão junto — é ela que
-/// diz, em cada registro, com qual texto a pessoa concordou.
-const versaoAtualDoTermo = 'provisorio-1';
+/// Mudou o texto, muda a versão, no mesmo commit — é ela que diz, em cada
+/// registro, com qual texto a pessoa concordou. Os registros antigos
+/// continuam com a versão deles.
+const versaoAtualDoTermo = '2026-10-14';
 
 final repositorioConsentimentoProvider = Provider<RepositorioConsentimento>(
   (ref) => RepositorioConsentimentoLocal(
