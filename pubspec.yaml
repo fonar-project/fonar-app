@@ -168,6 +168,12 @@ dependencies:
   # do time do Dart, já trazido por outros; aqui passa a direto. Licença
   # BSD-3. Não toca em áudio.
   crypto: ^3.0.6
+
+  # O SQLite do banco local, que o `drift` já trazia; aqui passa a direto
+  # porque o app o usa para cifrar o arquivo do banco que ficou de antes da
+  # US44 (`core/banco/cifra_do_banco_nativa.dart`). Domínio público. A
+  # escolha da biblioteca com cifra está em `hooks`, no fim deste arquivo.
+  sqlite3: ^3.5.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -260,3 +266,13 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# O banco local cifrado no aparelho (US44): o `sqlite3` usa a build do
+# SQLite3 Multiple Ciphers (licença MIT; nada de GPL no executável) no lugar
+# do SQLite comum, baixada e conferida por hash pelo hook do próprio pacote.
+# É ela que entende o `PRAGMA key` que `BancoLocal.doAparelho` manda. No
+# navegador nada muda: lá o banco é o `sqlite3.wasm` (ver `banco_local.dart`).
+hooks:
+  user_defines:
+    sqlite3:
+      source: sqlite3mc

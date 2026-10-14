@@ -89,6 +89,11 @@ retirado não sobe mais, nem com um consentimento novo; e o perfil tem
 tudo aqui e no servidor. O termo de consentimento e os termos de uso estão
 escritos sobre a LGPD, com revisão jurídica recomendada (`PENDENCIAS.md`).
 
+Os **dados em repouso** (US44): no aparelho, o banco local é cifrado (SQLite3
+Multiple Ciphers, com a chave no cofre do sistema), e o banco de antes da
+atualização é cifrado na primeira abertura; o WAV sai do aparelho assim que
+chega ao servidor, e ouvir de novo vem da API.
+
 Com **mais de um aparelho** (US40), o que um registra aparece no outro: os
 pacientes da conta e os consentimentos descem do Firebase na abertura, quando
 a conexão volta e quando alguém entra; a CAPE-V e os laudos, quando o perfil

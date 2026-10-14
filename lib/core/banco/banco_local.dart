@@ -1,9 +1,15 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:sqlite3/common.dart' show CommonDatabase;
 
+import '../storage/token_storage.dart';
+import 'chave_do_banco.dart';
+import 'cifra_do_banco.dart';
 import 'tabelas.dart';
 
 part 'banco_local.g.dart';
@@ -37,26 +43,63 @@ class BancoLocal extends _$BancoLocal {
   /// WAV. A pasta de documentos, que é o padrão, no Windows é a "Documentos"
   /// do usuário: dado de paciente não vai para lá.
   ///
-  /// TODO(jurídico): o arquivo não é cifrado — mesma pendência dos WAV.
-  ///
+  /// **Cifrado** (US44), com o SQLite3 Multiple Ciphers (`hooks` no
+  /// `pubspec.yaml`) e a chave do cofre do sistema ([ChaveDoBanco]): quem
+  /// copia o arquivo — o disco de um notebook sem cifra de disco, um backup
+  /// — leva ruído. O banco de antes da US44 é cifrado no lugar na primeira
+  /// abertura ([cifrarBancoDeAntes]). No navegador, [_doNavegador].
+  factory BancoLocal.doAparelho() => BancoLocal(
+    DatabaseConnection.delayed(
+      Future(() async {
+        if (kIsWeb) return _doNavegador();
+        final pasta = await getApplicationSupportDirectory();
+        final caminho = '${pasta.path}${Platform.pathSeparator}$_nome.sqlite';
+        final chave = await ChaveDoBanco(cofreDoSistema)
+            .obter(caminho, aoPerderOBanco: () => _tirarDoCaminho(caminho));
+        await cifrarBancoDeAntes(caminho, chave);
+        return driftDatabase(
+          name: _nome,
+          native: DriftNativeOptions(
+            databasePath: () async => caminho,
+            setup: _abrirCom(chave),
+          ),
+        );
+      }),
+    ),
+  );
+
+  static const _nome = 'fonar';
+
+  /// O que cada conexão faz ao abrir, na isolate do banco: a chave primeiro,
+  /// e uma leitura logo depois, que falha cedo, com o motivo, se a chave não
+  /// abrir o banco. Função à parte, e não um closure no meio da abertura:
+  /// vai para outra isolate, e só pode levar a chave junto.
+  static void Function(CommonDatabase) _abrirCom(String chave) => (banco) {
+    banco.execute("PRAGMA key = '$chave'");
+    banco.select('SELECT count(*) FROM sqlite_master');
+  };
+
+  /// O banco cifrado cuja chave se perdeu: não se lê mais. Sai do caminho
+  /// com outro nome — não é apagado —, e o app começa um banco novo, para o
+  /// qual o que está no Firebase desce de novo (US40).
+  static Future<void> _tirarDoCaminho(String caminho) async {
+    final carimbo = DateTime.now().millisecondsSinceEpoch;
+    await File(caminho).rename('$caminho.sem-chave-$carimbo');
+  }
+
   /// No navegador (US42), o SQLite roda compilado para WebAssembly, num
   /// worker, e o arquivo mora no armazenamento da origem (OPFS ou
   /// IndexedDB, o que o navegador tiver). O `sqlite3.wasm` e o
   /// `drift_worker.js` não são versionados: `tool/preparar_web.sh` os baixa
-  /// da release do drift que o `pubspec.lock` fixou.
-  factory BancoLocal.doAparelho() => BancoLocal(
-    driftDatabase(
-      name: 'fonar',
-      native: const DriftNativeOptions(
-        databaseDirectory: getApplicationSupportDirectory,
-      ),
-      web: DriftWebOptions(
-        sqlite3Wasm: Uri.parse('sqlite3.wasm'),
-        driftWorker: Uri.parse('drift_worker.js'),
-        onResult: (resultado) => bancoSoNaMemoria.value =
-            resultado.chosenImplementation ==
-            WasmStorageImplementation.inMemory,
-      ),
+  /// da release do drift que o `pubspec.lock` fixou. Sem cifra: não há
+  /// arquivo no disco do aparelho, e o armazenamento é isolado por origem.
+  static DatabaseConnection _doNavegador() => driftDatabase(
+    name: _nome,
+    web: DriftWebOptions(
+      sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+      driftWorker: Uri.parse('drift_worker.js'),
+      onResult: (resultado) => bancoSoNaMemoria.value =
+          resultado.chosenImplementation == WasmStorageImplementation.inMemory,
     ),
   );
 

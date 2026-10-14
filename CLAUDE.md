@@ -302,6 +302,13 @@ A credencial do Firebase fica no cofre do sistema (`TokenStorageSeguro`, via
 `CofreDeCredencial`), e o backup automático do Android está desligado de
 propósito — não reativar.
 
+Dados em repouso (US44): no aparelho, o banco local é CIFRADO — SQLite3
+Multiple Ciphers, escolhido pelo `hooks` do `pubspec.yaml`, com a chave
+aleatória no mesmo cofre (`core/banco/chave_do_banco.dart`). O WAV não é
+cifrado, mas só existe até subir: o envio que chega ao servidor o apaga do
+aparelho, e ouvir de novo vem da API. Não volte a guardar o WAV depois do
+envio, e não troque o `source: sqlite3mc` sem cifrar de outro jeito.
+
 ## Git
 Branch: `nome/USxx-featureImplementada` — ex.: `felipe/US04-medidorDeNivel`
 Commit: Conventional Commits em português, referenciando a User Story:
