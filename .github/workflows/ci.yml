@@ -264,3 +264,61 @@ jobs:
             exit 1
           fi
           python3 tool/lista_offline.py build/web
+
+  # TEMPORÁRIO (US54): roda os passos do Android do release.yml, que só roda
+  # com tag, para conferir os dois APK antes do merge. Sai do PR antes dele.
+  temporario-apk-do-release:
+    name: TEMPORÁRIO — APK do release (US54)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.2
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      - name: Build
+        run: |
+          apk() {
+            flutter build apk --release \
+              --target-platform "$1" \
+              --build-name 1.1.0 \
+              --build-number 999 \
+              --dart-define=FONAR_VERSAO=v1.1.0
+            cp build/app/outputs/flutter-apk/app-release.apk "$2"
+          }
+          apk android-arm64 FONAR-Android.apk
+          apk android-arm FONAR-Android-32bits.apk
+
+      - name: Conferir os APK
+        run: |
+          confere() {
+            ls -lh "$1"
+            unzip -l "$1" | grep -E 'lib/[^/]+/[^/]+\.so$' | awk '{print $4}' | sort
+            outras=$(unzip -l "$1" | grep -E 'lib/[^/]+/' | grep -v "lib/$2/" | awk '{print $4}' | tr '\n' ' ' || true)
+            if [ -n "$outras" ]; then
+              echo "::error title=Arquitetura a mais em $1::$outras"
+              exit 1
+            fi
+          }
+          confere FONAR-Android.apk arm64-v8a
+          confere FONAR-Android-32bits.apk armeabi-v7a
+
+      - name: Tamanho e versionCode
+        run: |
+          aapt2="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/aapt2"
+          for a in FONAR-Android.apk FONAR-Android-32bits.apk; do
+            tamanho=$(du -h "$a" | cut -f1)
+            versao=$("$aapt2" dump badging "$a" | head -1)
+            echo "::notice title=$a::$tamanho — $versao"
+          done
