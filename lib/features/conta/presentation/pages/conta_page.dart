@@ -6,6 +6,7 @@ import '../../../../app/router/app_routes.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/network/conexao.dart';
 import '../../../../design_system/breakpoints.dart';
+import '../../../../design_system/escala_da_interface.dart';
 import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
@@ -22,6 +23,7 @@ import '../../../analise/data/catalogo_de_referencias_vazio.dart';
 import '../../../auth/data/profissional_atual.dart';
 import '../../../auth/data/sessao.dart';
 import '../../../cadastro/domain/cadastro.dart';
+import '../../data/preferencia_de_tamanho_local.dart';
 import '../../data/preferencia_de_tema_local.dart';
 import '../../data/troca_de_senha_firebase.dart';
 import '../../domain/tema_escolhido.dart';
@@ -562,7 +564,8 @@ int _pendentes(WidgetRef ref) {
 
 // ------------------------------------------------------------ aparência --
 
-/// Claro, escuro ou o do sistema. Vale para este aparelho, na hora.
+/// Claro, escuro ou o do sistema, e o tamanho da interface (US48). Valem
+/// para este aparelho, na hora.
 class _Aparencia extends ConsumerWidget {
   const _Aparencia();
 
@@ -596,6 +599,37 @@ class _Aparencia extends ConsumerWidget {
               aoEscolher: (tema) =>
                   ref.read(temaEscolhidoProvider.notifier).escolher(tema),
               apoio: AppStrings.contaTemaApoio,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            AppEscolhaUnica<TamanhoDaInterface>(
+              rotulo: AppStrings.contaTamanho,
+              opcoes: const [
+                AppOpcao(
+                  valor: TamanhoDaInterface.automatico,
+                  rotulo: AppStrings.contaTamanhoAutomatico,
+                ),
+                AppOpcao(
+                  valor: TamanhoDaInterface.cem,
+                  rotulo: AppStrings.contaTamanho100,
+                ),
+                AppOpcao(
+                  valor: TamanhoDaInterface.centoEQuinze,
+                  rotulo: AppStrings.contaTamanho115,
+                ),
+                AppOpcao(
+                  valor: TamanhoDaInterface.centoETrinta,
+                  rotulo: AppStrings.contaTamanho130,
+                ),
+              ],
+              selecionado:
+                  ref.watch(tamanhoDaInterfaceProvider).value ??
+                  TamanhoDaInterface.automatico,
+              aoEscolher: (tamanho) => ref
+                  .read(tamanhoDaInterfaceProvider.notifier)
+                  .escolher(tamanho),
+              apoio: AppStrings.contaTamanhoApoio(
+                EscalaDaInterface.fatorDe(context),
+              ),
             ),
           ],
         ),
