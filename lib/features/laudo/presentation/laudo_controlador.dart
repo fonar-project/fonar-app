@@ -2,17 +2,16 @@ import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:printing/printing.dart';
 
 import '../../../core/banco/novo_id.dart';
 import '../../../core/relogio.dart';
 import '../../analise/domain/resultado_da_analise.dart';
-import '../../../design_system/tokens/app_cores.dart';
 import '../data/repositorio_laudos_local.dart';
 import '../domain/conteudo_do_laudo.dart';
 import '../domain/laudo.dart';
 import 'pdf_do_laudo.dart';
 import 'sincronizacao_dos_laudos_controlador.dart';
+import 'widgets/previa_do_pdf.dart';
 
 class EstadoDoLaudo {
   const EstadoDoLaudo({
@@ -146,26 +145,11 @@ final geradorDePdfProvider =
       (ref) => gerarPdfDoLaudo,
     );
 
-/// A pré-visualização A4 do desktop.
+/// A pré-visualização A4 do desktop — ver [PreviaDoPdf].
 ///
-/// É o próprio PDF, rasterizado pelo `printing` — o que se vê é o que sai, e
-/// não uma imitação em widgets que poderia divergir do documento. Trocável
-/// nos testes, onde não há o rasterizador nativo.
+/// Trocável nos testes, onde não há o rasterizador nativo.
 final previaDoPdfProvider =
     Provider<Widget Function(Future<Uint8List> Function() gerar)>(
       (ref) =>
-          (gerar) => Builder(
-            builder: (context) => PdfPreview(
-              build: (_) => gerar(),
-              useActions: false,
-              allowPrinting: false,
-              allowSharing: false,
-              canChangeOrientation: false,
-              canChangePageFormat: false,
-              canDebug: false,
-              maxPageWidth: 640,
-              // A folha continua branca; em volta dela, a cor do tema.
-              scrollViewDecoration: BoxDecoration(color: context.cores.borda),
-            ),
-          ),
+          (gerar) => PreviaDoPdf(gerar: gerar),
     );
