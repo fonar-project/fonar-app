@@ -525,7 +525,7 @@ page aponta para o último release — o link não muda a cada versão:
 | Windows 10 e 11 | `FONAR-Windows.zip` | a pasta do `flutter build windows --release`; descompacta e abre `fonar_app.exe` |
 | macOS | `FONAR-macOS.zip` | o `FONAR.app`, empacotado com `ditto` |
 | Android | `FONAR-Android.apk` | o APK de release, só de 64 bits (arm64), instalado direto (US54) |
-| Android de entrada | `FONAR-Android-32bits.apk` | o mesmo APK para celular com sistema de 32 bits (os Android Go, por exemplo); só no release, não na landing |
+| Android de entrada | `FONAR-Android-32bits.apk` | o mesmo APK para celular com sistema de 32 bits (os Android Go, por exemplo); a landing o indica quando o celular diz que o app não é compatível |
 | iPhone e iPad | — | a versão web, em <https://fonar-project.github.io/fonar-app/>, adicionada à Tela de Início pelo Safari (US42) |
 
 **Publicar uma versão:** na `main` atualizada, `git tag v1.0.0` e

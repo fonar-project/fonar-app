@@ -112,8 +112,11 @@ jobs:
         run: |
           confere() {
             ls -lh "$1"
-            unzip -l "$1" | grep -E 'lib/[^/]+/[^/]+\.so$' | awk '{print $4}' | sort
-            outras=$(unzip -l "$1" | grep -E 'lib/[^/]+/' | grep -v "lib/$2/" | awk '{print $4}' | tr '\n' ' ' || true)
+            # Só os nomes (`-Z1`), e só o que começa com "lib/": as
+            # bibliotecas nativas. Um "lib/" no meio de outro caminho (um
+            # asset, por exemplo) não conta.
+            unzip -Z1 "$1" | grep -E '^lib/[^/]+/[^/]+\.so$' | sort
+            outras=$(unzip -Z1 "$1" | grep -E '^lib/[^/]+/' | grep -v "^lib/$2/" | tr '\n' ' ' || true)
             if [ -n "$outras" ]; then
               echo "::error title=Arquitetura a mais em $1::$outras"
               exit 1
