@@ -143,7 +143,9 @@ class _Perfil extends StatelessWidget {
       ),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1100),
+          // As duas colunas ocupam a tela do desktop (US48): a da esquerda
+          // continua na largura de leitura.
+          constraints: const BoxConstraints(maxWidth: 1320),
           // No desktop, lado a lado: quem é e o que fazer à esquerda, o que
           // já foi feito à direita. Nas outras larguras, um embaixo do outro.
           child: largura == LarguraDeTela.expandida

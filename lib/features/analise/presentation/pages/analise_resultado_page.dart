@@ -274,7 +274,7 @@ class _Resultado extends ConsumerWidget {
       ),
       corpo: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1040),
+          constraints: const BoxConstraints(maxWidth: 1240),
           child: corpo,
         ),
       ),
