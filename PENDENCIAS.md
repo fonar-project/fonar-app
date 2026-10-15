@@ -22,6 +22,7 @@ houver, no mesmo commit.
 | CAPE-V: exigir o sentido do desvio em pitch e loudness (decisão de implementação). | 08 | `cape_v/domain/avaliacao_cape_v.dart` |
 | CAPE-V: esconder o número enquanto se marca, como na folha de papel? | 08 | `cape_v/presentation/pages/cape_v_page.dart` |
 | CAPE-V: âncoras "leve", "moderado" e "severo" sob a régua, como no protótipo — onde ficam na linha e com que termos. Até lá a régua só tem os números. | 28 | `cape_v/presentation/pages/cape_v_page.dart` |
+| CAPE-V: mostrar o espectrograma ao lado da régua? Antes ou só depois de marcar? A CAPE-V é julgamento pelo ouvido, e ver a imagem pode enviesá-lo — a mesma família de "esconder o número". Até lá a tela não mostra o espectrograma. Se aprovado: painel ao lado no desktop (talvez revelado só depois de registrar), botão no celular, com o `ImagemDaApi`. | 52 | `cape_v/presentation/pages/cape_v_page.dart` |
 | **Limiar de mudança de cada medida** — quanto uma diferença entre sessões precisa ter para contar como mudança. Até lá a evolução mostra os valores lado a lado e não diz que a medida subiu, desceu ou ficou estável. | 09 | `historico/data/limiares_de_mudanca_indefinidos.dart` |
 | "Melhorando" / "piorando" na tendência do AVQI (lista) e na evolução. | 01, 09 | `l10n/app_strings.dart` |
 | Laudo: quais itens da conferência **impedem** gerar e quais só avisam (hoje impedem consentimento, análise concluída e conclusão escrita; CAPE-V e amostra com problema só avisam). | 10 | `laudo/domain/laudo.dart` |
