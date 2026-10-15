@@ -48,6 +48,8 @@ enum NomeIcone {
   avancar('avancar'),
   adicionar('adicionar'),
   informacao('informacao'),
+  // O botão de Ajuda (US50): rever o guia e os atalhos de teclado.
+  ajuda('ajuda'),
 
   // Orientação do aparelho.
   virarParaPaciente('virar-para-paciente'),

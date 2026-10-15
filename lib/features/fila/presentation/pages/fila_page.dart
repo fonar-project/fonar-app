@@ -16,6 +16,7 @@ import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../../auth/data/sessao.dart';
+import '../../../guia/presentation/widgets/botao_de_ajuda.dart';
 import '../../domain/item_da_fila.dart';
 import '../fila_controlador.dart';
 
@@ -77,6 +78,7 @@ class FilaPage extends ConsumerWidget {
                 titulo: AppStrings.filaTitulo,
                 largura: largura,
                 situacao: AppStrings.situacaoFila,
+                ajuda: const BotaoDeAjuda(),
               ),
               Expanded(
                 // Carregando → pronto (ou erro): o conteúdo novo entra.

@@ -13,6 +13,8 @@ import '../design_system/widgets/app_indicador_conexao.dart';
 import '../design_system/widgets/app_simbolo.dart';
 import '../design_system/widgets/app_toque.dart';
 import '../features/auth/data/profissional_atual.dart';
+import '../features/guia/domain/passo_do_guia.dart';
+import '../features/guia/presentation/alvos_do_guia.dart';
 import '../l10n/app_strings.dart';
 import 'router/app_routes.dart';
 
@@ -58,7 +60,22 @@ enum DestinoPrincipal {
 
   /// Nome da rota no go_router.
   final String rota;
+
+  /// O papel do destino no guia da primeira vez (US50), se ele aponta para
+  /// este destino.
+  PapelNoGuia? get papelNoGuia => switch (this) {
+    fila => PapelNoGuia.fila,
+    conta => PapelNoGuia.conta,
+    _ => null,
+  };
 }
+
+/// [item] declarado para o guia, se o [destino] tem papel nele.
+Widget _paraOGuia(DestinoPrincipal destino, Widget item) =>
+    switch (destino.papelNoGuia) {
+      final papel? => AlvoDoGuia(papel: papel, child: item),
+      null => item,
+    };
 
 /// O que a moldura mostra para uma tela: qual destino fica marcado e se as
 /// abas aparecem embaixo fora do desktop.
@@ -281,7 +298,10 @@ class _BarraLateral extends ConsumerWidget {
                     _divisoria(context),
                     const SizedBox(height: AppSpacing.sm),
                     for (final destino in DestinoPrincipal.values)
-                      _ItemLateral(destino: destino, ativo: destino == ativo),
+                      _paraOGuia(
+                        destino,
+                        _ItemLateral(destino: destino, ativo: destino == ativo),
+                      ),
                     const Spacer(),
                     _divisoria(context),
                     Padding(
@@ -294,10 +314,15 @@ class _BarraLateral extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          AppIndicadorConexao(
-                            online: ref.watch(conexaoOnlineProvider),
-                            semServidor: ref.watch(semAcessoAoServidorProvider),
-                            sobreFundoEscuro: true,
+                          AlvoDoGuia(
+                            papel: PapelNoGuia.conexao,
+                            child: AppIndicadorConexao(
+                              online: ref.watch(conexaoOnlineProvider),
+                              semServidor: ref.watch(
+                                semAcessoAoServidorProvider,
+                              ),
+                              sobreFundoEscuro: true,
+                            ),
                           ),
                           const SizedBox(height: AppSpacing.xs),
                           Text(
@@ -396,7 +421,10 @@ class _BarraInferior extends StatelessWidget {
           children: [
             for (final destino in DestinoPrincipal.values)
               Expanded(
-                child: _ItemInferior(destino: destino, ativo: destino == ativo),
+                child: _paraOGuia(
+                  destino,
+                  _ItemInferior(destino: destino, ativo: destino == ativo),
+                ),
               ),
           ],
         ),

@@ -240,7 +240,7 @@ do nome FONAR escrito; no laudo, `simboloDoFonarSvg`. A marca NÃO entra em
 landing.
 
 ## Ícones
-22 SVG em `assets/icons/`, 24x24, `currentColor`, sem width/height fixos.
+23 SVG em `assets/icons/`, 24x24, `currentColor`, sem width/height fixos.
 Índice de uso em `assets/icons/README.md`.
 
 - Nenhuma tela importa SVG direto. Tudo passa pelo componente único de ícone
@@ -315,6 +315,14 @@ GitHub Pages (US42), pelo `release.yml`, a cada tag `v*`. Na web, o banco
 local é o SQLite em WebAssembly e os WAV moram nele (`audios_do_navegador`);
 tudo o que só o navegador sabe responder passa por `core/navegador/`, com
 importação condicional — nenhum outro arquivo importa `package:web`.
+
+O guia da primeira vez (US50, `lib/features/guia/`) abre na lista de
+pacientes, uma vez por conta em cada aparelho (`Preferencias`,
+`guia.inicio.v1.<uid>`, sem servidor), e a Ajuda o revê. Ele aponta os
+elementos pelo PAPEL (`AlvoDoGuia`), nunca pela posição: elemento novo que o
+guia explica se declara onde estiver. Só a lista o abre — nunca a gravação
+nem o modo paciente —, e os testes o mantêm fechado
+(`test/flutter_test_config.dart`); os do guia o ligam pelo provider.
 
 O que falta e de quem depende está em `PENDENCIAS.md` — ao resolver um item,
 apague a linha de lá e o `TODO` do código, no mesmo commit.

@@ -16,6 +16,8 @@ import 'app_indicador_conexao.dart';
 /// dois indicadores na mesma tela fazem procurar a diferença entre eles. Nas
 /// outras larguras não há barra lateral, e o indicador vem para cá.
 ///
+/// No desktop, o canto direito é da [ajuda] (US50).
+///
 /// Para telas de tarefa, sem navegação principal, há o
 /// `AppCabecalhoDeTarefa`, com o botão de voltar.
 class AppCabecalhoDeSecao extends ConsumerWidget {
@@ -23,6 +25,7 @@ class AppCabecalhoDeSecao extends ConsumerWidget {
     required this.titulo,
     required this.largura,
     this.situacao,
+    this.ajuda,
     super.key,
   });
 
@@ -36,6 +39,12 @@ class AppCabecalhoDeSecao extends ConsumerWidget {
   /// Faixa de largura da área em que o cabeçalho está.
   final LarguraDeTela largura;
 
+  /// O botão de Ajuda, no canto direito quando há barra lateral — pela
+  /// largura da JANELA, como o `AppCabecalhoDeTarefa`: com a barra lateral a
+  /// área da tela pode ser média e o cabeçalho ainda é o do desktop. No
+  /// celular a Ajuda fica só no topo da lista de pacientes.
+  final Widget? ajuda;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final textos = Theme.of(context).textTheme;
@@ -47,6 +56,20 @@ class AppCabecalhoDeSecao extends ConsumerWidget {
         style: compacta ? textos.titleLarge : textos.headlineSmall,
       ),
     );
+
+    final comBarraLateral =
+        Breakpoints.de(MediaQuery.sizeOf(context).width) ==
+        LarguraDeTela.expandida;
+    Widget comAjuda(Widget conteudo) => switch (ajuda) {
+      final botao? when comBarraLateral => Row(
+        children: [
+          Expanded(child: conteudo),
+          const SizedBox(width: AppSpacing.md),
+          botao,
+        ],
+      ),
+      _ => conteudo,
+    };
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -63,42 +86,44 @@ class AppCabecalhoDeSecao extends ConsumerWidget {
             vertical: AppSpacing.sm,
           ),
           alignment: Alignment.centerLeft,
-          child: largura == LarguraDeTela.expandida
-              ? (situacao == null
-                    ? texto
-                    : SizedBox(
-                        width: double.infinity,
-                        child: Wrap(
-                          alignment: WrapAlignment.spaceBetween,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          spacing: AppSpacing.md,
-                          runSpacing: AppSpacing.xs,
-                          children: [
-                            texto,
-                            AppPilulaDeSituacao(texto: situacao!),
-                          ],
+          child: comAjuda(
+            largura == LarguraDeTela.expandida
+                ? (situacao == null
+                      ? texto
+                      : SizedBox(
+                          width: double.infinity,
+                          child: Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: AppSpacing.md,
+                            runSpacing: AppSpacing.xs,
+                            children: [
+                              texto,
+                              AppPilulaDeSituacao(texto: situacao!),
+                            ],
+                          ),
+                        ))
+                // Wrap, não Row: com o texto do sistema ampliado, título e
+                // indicador não cabem lado a lado em 390 px e o indicador desce.
+                // A largura toda é para o `spaceBetween` levar o indicador à
+                // direita.
+                : SizedBox(
+                    width: double.infinity,
+                    child: Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: AppSpacing.md,
+                      runSpacing: AppSpacing.xs,
+                      children: [
+                        texto,
+                        AppIndicadorConexao(
+                          online: ref.watch(conexaoOnlineProvider),
+                          semServidor: ref.watch(semAcessoAoServidorProvider),
                         ),
-                      ))
-              // Wrap, não Row: com o texto do sistema ampliado, título e
-              // indicador não cabem lado a lado em 390 px e o indicador desce.
-              // A largura toda é para o `spaceBetween` levar o indicador à
-              // direita.
-              : SizedBox(
-                  width: double.infinity,
-                  child: Wrap(
-                    alignment: WrapAlignment.spaceBetween,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: AppSpacing.md,
-                    runSpacing: AppSpacing.xs,
-                    children: [
-                      texto,
-                      AppIndicadorConexao(
-                        online: ref.watch(conexaoOnlineProvider),
-                        semServidor: ref.watch(semAcessoAoServidorProvider),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+          ),
         ),
       ),
     );

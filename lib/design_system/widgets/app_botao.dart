@@ -41,6 +41,7 @@ class AppBotao extends StatelessWidget {
     this.motivoVisivel = true,
     this.carregando = false,
     this.ocupaLargura = false,
+    this.autofocus = false,
     super.key,
   }) : assert(
          aoTocar != null ||
@@ -58,6 +59,7 @@ class AppBotao extends StatelessWidget {
     bool motivoVisivel = true,
     bool carregando = false,
     bool ocupaLargura = false,
+    bool autofocus = false,
     Key? key,
   }) : this(
          rotulo: rotulo,
@@ -68,6 +70,7 @@ class AppBotao extends StatelessWidget {
          motivoVisivel: motivoVisivel,
          carregando: carregando,
          ocupaLargura: ocupaLargura,
+         autofocus: autofocus,
          key: key,
        );
 
@@ -80,6 +83,7 @@ class AppBotao extends StatelessWidget {
     bool motivoVisivel = true,
     bool carregando = false,
     bool ocupaLargura = false,
+    bool autofocus = false,
     Key? key,
   }) : this(
          rotulo: rotulo,
@@ -90,6 +94,7 @@ class AppBotao extends StatelessWidget {
          motivoVisivel: motivoVisivel,
          carregando: carregando,
          ocupaLargura: ocupaLargura,
+         autofocus: autofocus,
          key: key,
        );
 
@@ -128,6 +133,10 @@ class AppBotao extends StatelessWidget {
   /// Esticar até a largura do pai. Usado no mobile, onde o botão principal
   /// ocupa a linha inteira.
   final bool ocupaLargura;
+
+  /// Recebe o foco ao aparecer — num balão ou diálogo que se abre, o foco vai
+  /// para a ação que se espera (o "Próximo" do guia, US50).
+  final bool autofocus;
 
   /// Altura do botão principal. Maior que o alvo mínimo de toque: é a ação que
   /// o profissional procura com o canto do olho.
@@ -187,6 +196,7 @@ class AppBotao extends StatelessWidget {
   Widget _construirPrimario(BuildContext context) {
     return FilledButton(
       onPressed: aoTocar,
+      autofocus: autofocus,
       style: _estiloBase(context, alturaPrimario).copyWith(
         backgroundColor: WidgetStateProperty.resolveWith((estados) {
           if (estados.contains(WidgetState.disabled)) {
@@ -220,6 +230,7 @@ class AppBotao extends StatelessWidget {
   Widget _construirSecundario(BuildContext context) {
     return OutlinedButton(
       onPressed: aoTocar,
+      autofocus: autofocus,
       style: _estiloBase(context, alturaSecundario).copyWith(
         backgroundColor: WidgetStateProperty.resolveWith((estados) {
           if (estados.contains(WidgetState.pressed) ||

@@ -80,7 +80,11 @@ funcional** — trocas de tela, de etapa e de estado com transição curta, que
 some com o movimento reduzido do sistema —, com as ações presas no rodapé só
 quando a tela tem altura para isso (US31). Entre as telas, a barra lateral e
 as abas ficam paradas e só o conteúdo troca, abrindo e voltando com a mesma
-entrada curta (US57).
+entrada curta (US57). Na primeira vez de cada conta em cada aparelho, um
+**guia** mostra a tela inicial, um elemento por vez — a nova avaliação, a
+lista, a fila, a conta, a conexão e a ajuda —, e a **Ajuda** (no canto do
+cabeçalho, no desktop; no topo da lista, no celular) o revê e lista os
+atalhos de teclado (US50).
 
 A **autenticação** (US32) é o Firebase Authentication pela API REST, o mesmo
 código no Android e no Windows. A sessão é da conta: o roteador manda para a
@@ -696,6 +700,7 @@ lib/
     ├── cape_v/            a escala perceptivo-auditiva
     ├── historico/         histórico geral, evolução e modo paciente
     ├── laudo/             conferência, PDF, compartilhar e imprimir
+    ├── guia/              o guia da primeira vez e a Ajuda
     └── conta/             dados do profissional e sair
 
 test/

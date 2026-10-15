@@ -23,6 +23,7 @@ import '../../../analise/data/catalogo_de_referencias_vazio.dart';
 import '../../../auth/data/profissional_atual.dart';
 import '../../../auth/data/sessao.dart';
 import '../../../cadastro/domain/cadastro.dart';
+import '../../../guia/presentation/widgets/botao_de_ajuda.dart';
 import '../../data/preferencia_de_tamanho_local.dart';
 import '../../data/preferencia_de_tema_local.dart';
 import '../../data/troca_de_senha_firebase.dart';
@@ -54,6 +55,7 @@ class ContaPage extends ConsumerWidget {
               AppCabecalhoDeSecao(
                 titulo: AppStrings.contaTitulo,
                 largura: largura,
+                ajuda: const BotaoDeAjuda(),
               ),
               Expanded(
                 child: SingleChildScrollView(

@@ -53,6 +53,20 @@ abstract final class AppConfig {
   @visibleForTesting
   static void mudarModoDeExemplo({required bool ligado}) => _exemplo = ligado;
 
+  static bool _guiaAbreSozinho = true;
+
+  /// O guia da primeira vez (US50) abre sozinho na tela inicial de quem
+  /// ainda não o viu neste aparelho. Os testes o desligam
+  /// (`test/flutter_test_config.dart`): ele cobriria a tela de mais de mil
+  /// testes que não são sobre ele. Os do guia o ligam pelo provider
+  /// (`guiaAbreSozinhoProvider`). O "Rever o guia" da Ajuda vale sempre.
+  static bool get guiaAbreSozinho => _guiaAbreSozinho;
+
+  /// Só os testes mudam depois de aberto.
+  @visibleForTesting
+  static void mudarGuiaAbreSozinho({required bool ligado}) =>
+      _guiaAbreSozinho = ligado;
+
   /// A base da API: a do build, se veio; senão a de produção — ou a local,
   /// no [exemplo], que não deve mandar nada para a produção.
   static String get baseUrl => _urlDoBuild.isNotEmpty

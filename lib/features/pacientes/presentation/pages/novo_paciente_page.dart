@@ -12,6 +12,7 @@ import '../../../../design_system/widgets/app_cabecalho_de_secao.dart';
 import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_mensagem_de_campo.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../../guia/presentation/widgets/botao_de_ajuda.dart';
 import '../../domain/novo_paciente.dart';
 import '../cadastro_paciente_controlador.dart';
 import '../widgets/campos_do_paciente.dart';
@@ -205,6 +206,7 @@ class _NovoPacientePageState extends ConsumerState<NovoPacientePage> {
               AppCabecalhoDeSecao(
                 titulo: AppStrings.cadastroTitulo,
                 largura: largura,
+                ajuda: const BotaoDeAjuda(),
               ),
               Expanded(
                 child: SingleChildScrollView(

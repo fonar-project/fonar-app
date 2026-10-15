@@ -19,6 +19,10 @@ import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_indicador_conexao.dart';
 import '../../../../design_system/widgets/app_toque.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../../guia/domain/passo_do_guia.dart';
+import '../../../guia/presentation/alvos_do_guia.dart';
+import '../../../guia/presentation/widgets/abertura_do_guia.dart';
+import '../../../guia/presentation/widgets/botao_de_ajuda.dart';
 import '../../../historico/domain/evolucao_da_medida.dart';
 import '../../data/repositorio_pacientes_local.dart';
 import '../../domain/paciente.dart';
@@ -28,6 +32,9 @@ import '../busca_pacientes_controlador.dart';
 ///
 /// Expandida: tabela com busca e contagem no topo. Compacta: cards, busca no
 /// cabeçalho e "Nova avaliação" fixo acima das abas, ao alcance do polegar.
+///
+/// É a tela que o guia da primeira vez explica (US50): ele abre aqui, e a
+/// Ajuda fica no topo, nas duas larguras.
 ///
 /// A página observa só a LISTA. O termo da busca fica no
 /// `BuscaPacientesControlador`, e quem o observa são apenas as duas partes que
@@ -41,31 +48,34 @@ class PacientesListPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final pacientes = ref.watch(pacientesProvider);
 
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, restricoes) {
-          final expandida =
-              Breakpoints.de(restricoes.maxWidth) == LarguraDeTela.expandida;
+    return AberturaDoGuia(
+      pronta: pacientes.hasValue,
+      child: Scaffold(
+        body: LayoutBuilder(
+          builder: (context, restricoes) {
+            final expandida =
+                Breakpoints.de(restricoes.maxWidth) == LarguraDeTela.expandida;
 
-          // Lista vazia já tem o próprio "Cadastrar paciente" no centro. O
-          // botão fixo levaria ao mesmo lugar: seriam dois primários iguais na
-          // tela, e o AppBotao pede no máximo um.
-          final aoNovaAvaliacao = pacientes.value?.isEmpty ?? false
-              ? null
-              : () => _novaAvaliacao(context);
+            // Lista vazia já tem o próprio "Cadastrar paciente" no centro. O
+            // botão fixo levaria ao mesmo lugar: seriam dois primários iguais na
+            // tela, e o AppBotao pede no máximo um.
+            final aoNovaAvaliacao = pacientes.value?.isEmpty ?? false
+                ? null
+                : () => _novaAvaliacao(context);
 
-          final conteudo = _Conteudo(expandida: expandida);
+            final conteudo = _Conteudo(expandida: expandida);
 
-          return expandida
-              ? _LayoutExpandido(
-                  aoNovaAvaliacao: aoNovaAvaliacao,
-                  conteudo: conteudo,
-                )
-              : _LayoutCompacto(
-                  aoNovaAvaliacao: aoNovaAvaliacao,
-                  conteudo: conteudo,
-                );
-        },
+            return expandida
+                ? _LayoutExpandido(
+                    aoNovaAvaliacao: aoNovaAvaliacao,
+                    conteudo: conteudo,
+                  )
+                : _LayoutCompacto(
+                    aoNovaAvaliacao: aoNovaAvaliacao,
+                    conteudo: conteudo,
+                  );
+          },
+        ),
       ),
     );
   }
@@ -114,10 +124,14 @@ class _Conteudo extends ConsumerWidget {
               return AppEstado.central(
                 titulo: AppStrings.pacientesVaziaTitulo,
                 texto: AppStrings.pacientesVaziaTexto,
-                acao: AppBotao.primario(
-                  rotulo: AppStrings.pacientesCadastrar,
-                  icone: NomeIcone.adicionar,
-                  aoTocar: () => _novaAvaliacao(context),
+                // Na conta nova, é por aqui que a avaliação começa.
+                acao: AlvoDoGuia(
+                  papel: PapelNoGuia.novaAvaliacao,
+                  child: AppBotao.primario(
+                    rotulo: AppStrings.pacientesCadastrar,
+                    icone: NomeIcone.adicionar,
+                    aoTocar: () => _novaAvaliacao(context),
+                  ),
                 ),
               );
             }
@@ -166,35 +180,50 @@ class _LayoutExpandido extends StatelessWidget {
           decoration: BoxDecoration(
             border: Border(bottom: BorderSide(color: context.cores.borda)),
           ),
-          // Wrap, não Row com Spacer: em 1024 px de janela o painel já é
-          // estreito, e com a fonte ampliada busca, contagem e botão não cabem
-          // na mesma linha. O botão desce inteiro em vez de ser espremido.
-          child: Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: AppSpacing.md,
-            runSpacing: AppSpacing.sm,
+          // A Ajuda fica parada no canto direito (US50); o resto quebra linha
+          // ao lado dela.
+          child: Row(
             children: [
-              Wrap(
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: AppSpacing.md,
-                runSpacing: AppSpacing.xs,
-                children: [
-                  // Teto, não largura fixa: o campo encolhe se o painel for
-                  // menor que isso.
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 420),
-                    child: const _CampoBusca(),
-                  ),
-                  const _Contagem(),
-                ],
-              ),
-              if (aoNovaAvaliacao case final aoTocar?)
-                AppBotao.primario(
-                  rotulo: AppStrings.navNovaAvaliacao,
-                  icone: NomeIcone.adicionar,
-                  aoTocar: aoTocar,
+              Expanded(
+                // Wrap, não Row com Spacer: em 1024 px de janela o painel já
+                // é estreito, e com a fonte ampliada busca, contagem e botão
+                // não cabem na mesma linha. O botão desce inteiro em vez de
+                // ser espremido.
+                child: Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: AppSpacing.md,
+                  runSpacing: AppSpacing.sm,
+                  children: [
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: AppSpacing.md,
+                      runSpacing: AppSpacing.xs,
+                      children: [
+                        // Teto, não largura fixa: o campo encolhe se o painel
+                        // for menor que isso. 360, e não mais 420, para a
+                        // Ajuda caber na mesma linha em 1440 px.
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 360),
+                          child: const _CampoBusca(),
+                        ),
+                        const _Contagem(),
+                      ],
+                    ),
+                    if (aoNovaAvaliacao case final aoTocar?)
+                      AlvoDoGuia(
+                        papel: PapelNoGuia.novaAvaliacao,
+                        child: AppBotao.primario(
+                          rotulo: AppStrings.navNovaAvaliacao,
+                          icone: NomeIcone.adicionar,
+                          aoTocar: aoTocar,
+                        ),
+                      ),
+                  ],
                 ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              const BotaoDeAjuda(),
             ],
           ),
         ),
@@ -270,9 +299,21 @@ class _LayoutCompacto extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      AppIndicadorConexao(
-                        online: ref.watch(conexaoOnlineProvider),
-                        semServidor: ref.watch(semAcessoAoServidorProvider),
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: AppSpacing.xs,
+                        children: [
+                          AlvoDoGuia(
+                            papel: PapelNoGuia.conexao,
+                            child: AppIndicadorConexao(
+                              online: ref.watch(conexaoOnlineProvider),
+                              semServidor: ref.watch(
+                                semAcessoAoServidorProvider,
+                              ),
+                            ),
+                          ),
+                          const BotaoDeAjuda(),
+                        ],
                       ),
                     ],
                   ),
@@ -300,11 +341,14 @@ class _LayoutCompacto extends ConsumerWidget {
             decoration: BoxDecoration(
               border: Border(top: BorderSide(color: context.cores.borda)),
             ),
-            child: AppBotao.primario(
-              rotulo: AppStrings.navNovaAvaliacao,
-              icone: NomeIcone.adicionar,
-              aoTocar: aoTocar,
-              ocupaLargura: true,
+            child: AlvoDoGuia(
+              papel: PapelNoGuia.novaAvaliacao,
+              child: AppBotao.primario(
+                rotulo: AppStrings.navNovaAvaliacao,
+                icone: NomeIcone.adicionar,
+                aoTocar: aoTocar,
+                ocupaLargura: true,
+              ),
             ),
           ),
       ],
@@ -406,6 +450,11 @@ class _CampoBuscaState extends ConsumerState<_CampoBusca> {
 
 // --------------------------------------------------------------- listas --
 
+/// O primeiro paciente é o que o guia aponta como "a lista": a lista inteira
+/// ocupa a tela, e o recorte não teria onde pôr o balão.
+Widget _primeiroParaOGuia(int indice, Widget linha) =>
+    indice == 0 ? AlvoDoGuia(papel: PapelNoGuia.lista, child: linha) : linha;
+
 class _Tabela extends StatelessWidget {
   const _Tabela({required this.pacientes});
 
@@ -447,7 +496,8 @@ class _Tabela extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(_margem, 0, _margem, 20),
             children: [
-              for (final p in pacientes) _LinhaTabela(paciente: p),
+              for (final (i, p) in pacientes.indexed)
+                _primeiroParaOGuia(i, _LinhaTabela(paciente: p)),
               const _NotaTendencia(),
             ],
           ),
@@ -571,10 +621,10 @@ class _Cards extends StatelessWidget {
         vertical: AppSpacing.sm,
       ),
       children: [
-        for (final p in pacientes)
+        for (final (i, p) in pacientes.indexed)
           Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.sm - 2),
-            child: _Card(paciente: p),
+            child: _primeiroParaOGuia(i, _Card(paciente: p)),
           ),
         const _NotaTendencia(),
       ],
