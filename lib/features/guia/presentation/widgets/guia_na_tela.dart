@@ -92,10 +92,12 @@ class _GuiaNaTelaState extends ConsumerState<GuiaNaTela> {
     if (_anunciado == _indice) return;
     _anunciado = _indice;
     final texto = _passo.textoQuando(comAlvo: _recorte != null);
+    final onde = widget.passos.length == 1
+        ? AppStrings.dicaRotulo
+        : AppStrings.guiaPasso(_indice + 1, widget.passos.length);
     SemanticsService.sendAnnouncement(
       View.of(context),
-      '${AppStrings.guiaPasso(_indice + 1, widget.passos.length)}. '
-      '${_passo.titulo}. $texto',
+      '$onde. ${_passo.titulo}. $texto',
       Directionality.of(context),
     );
   }
@@ -309,6 +311,10 @@ class _Balao extends StatelessWidget {
   final VoidCallback aoProximo;
   final bool ultimo;
 
+  /// Um passo só é a dica de uma tela: sem número, sem "Pular", e o botão
+  /// é "Entendi".
+  bool get _dica => total == 1;
+
   @override
   Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
@@ -325,7 +331,7 @@ class _Balao extends StatelessWidget {
           scopesRoute: true,
           namesRoute: true,
           explicitChildNodes: true,
-          label: AppStrings.guiaRotulo,
+          label: _dica ? AppStrings.dicaRotulo : AppStrings.guiaRotulo,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -339,7 +345,10 @@ class _Balao extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppStrings.guiaPasso(indice + 1, total).toUpperCase(),
+                      (_dica
+                              ? AppStrings.dicaRotulo
+                              : AppStrings.guiaPasso(indice + 1, total))
+                          .toUpperCase(),
                       style: AppTypography.overline.copyWith(
                         color: context.cores.secundario,
                       ),
@@ -358,35 +367,45 @@ class _Balao extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
-              Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: AppSpacing.sm,
-                runSpacing: AppSpacing.sm,
-                children: [
-                  _Pular(aoTocar: aoPular),
-                  Wrap(
-                    spacing: AppSpacing.sm,
-                    runSpacing: AppSpacing.sm,
-                    children: [
-                      if (aoAnterior case final voltar?)
-                        AppBotao.secundario(
-                          key: const ValueKey('anterior'),
-                          rotulo: AppStrings.guiaAnterior,
-                          aoTocar: voltar,
-                        ),
-                      AppBotao.primario(
-                        key: const ValueKey('proximo'),
-                        rotulo: ultimo
-                            ? AppStrings.guiaConcluir
-                            : AppStrings.guiaProximo,
-                        aoTocar: aoProximo,
-                        autofocus: true,
-                      ),
-                    ],
+              if (_dica)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: AppBotao.primario(
+                    rotulo: AppStrings.dicaEntendi,
+                    aoTocar: aoProximo,
+                    autofocus: true,
                   ),
-                ],
-              ),
+                )
+              else
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
+                  children: [
+                    _Pular(aoTocar: aoPular),
+                    Wrap(
+                      spacing: AppSpacing.sm,
+                      runSpacing: AppSpacing.sm,
+                      children: [
+                        if (aoAnterior case final voltar?)
+                          AppBotao.secundario(
+                            key: const ValueKey('anterior'),
+                            rotulo: AppStrings.guiaAnterior,
+                            aoTocar: voltar,
+                          ),
+                        AppBotao.primario(
+                          key: const ValueKey('proximo'),
+                          rotulo: ultimo
+                              ? AppStrings.guiaConcluir
+                              : AppStrings.guiaProximo,
+                          aoTocar: aoProximo,
+                          autofocus: true,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
             ],
           ),
         ),

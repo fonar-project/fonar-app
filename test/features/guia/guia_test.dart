@@ -13,6 +13,7 @@ import 'package:fonar_app/core/storage/token_storage.dart';
 import 'package:fonar_app/design_system/widgets/app_indicador_conexao.dart';
 import 'package:fonar_app/features/auth/data/sessao.dart';
 import 'package:fonar_app/features/auth/domain/conta_autenticada.dart';
+import 'package:fonar_app/features/captura/presentation/afericao_controlador.dart';
 import 'package:fonar_app/features/fila/data/repositorio_fila_local.dart';
 import 'package:fonar_app/features/guia/data/preferencia_do_guia_local.dart';
 import 'package:fonar_app/features/guia/domain/passo_do_guia.dart';
@@ -133,16 +134,31 @@ void main() {
 
     test('por conta: marcar uma não marca a outra', () async {
       final pref = PreferenciaDoGuiaLocal(banco);
-      expect(await pref.jaViu(contaDeTeste.uid), isFalse);
+      expect(
+        await pref.jaViu(
+          PreferenciaDoGuiaLocal.chaveDoInicio(contaDeTeste.uid),
+        ),
+        isFalse,
+      );
 
-      await pref.marcarVisto(contaDeTeste.uid);
+      await pref.marcarVisto(
+        PreferenciaDoGuiaLocal.chaveDoInicio(contaDeTeste.uid),
+      );
 
-      expect(await pref.jaViu(contaDeTeste.uid), isTrue);
-      expect(await pref.jaViu(outraConta.uid), isFalse);
+      expect(
+        await pref.jaViu(
+          PreferenciaDoGuiaLocal.chaveDoInicio(contaDeTeste.uid),
+        ),
+        isTrue,
+      );
+      expect(
+        await pref.jaViu(PreferenciaDoGuiaLocal.chaveDoInicio(outraConta.uid)),
+        isFalse,
+      );
     });
 
     test('a chave tem versão, para um guia novo depois de atualizar', () {
-      expect(PreferenciaDoGuiaLocal.chave('abc'), 'guia.inicio.v1.abc');
+      expect(PreferenciaDoGuiaLocal.chaveDoInicio('abc'), 'guia.inicio.v1.abc');
     });
   });
 
@@ -190,7 +206,8 @@ void main() {
 
       expect(_guia, findsNothing);
       expect(
-        await PreferenciaDoGuiaLocal(banco).jaViu(contaDeTeste.uid),
+        await PreferenciaDoGuiaLocal(banco)
+            .jaViu(PreferenciaDoGuiaLocal.chaveDoInicio(contaDeTeste.uid)),
         isTrue,
       );
       await _fechar(tester, c);
@@ -205,7 +222,8 @@ void main() {
     testWidgets('outra conta no mesmo aparelho também vê', (tester) async {
       final banco = bancoEmMemoria();
       addTearDown(banco.close);
-      await PreferenciaDoGuiaLocal(banco).marcarVisto(contaDeTeste.uid);
+      await PreferenciaDoGuiaLocal(banco)
+          .marcarVisto(PreferenciaDoGuiaLocal.chaveDoInicio(contaDeTeste.uid));
 
       final (c, _) = await _abrir(tester, banco: banco, conta: outraConta);
 
@@ -231,7 +249,8 @@ void main() {
 
       expect(_guia, findsNothing);
       expect(
-        await PreferenciaDoGuiaLocal(banco).jaViu(contaDeTeste.uid),
+        await PreferenciaDoGuiaLocal(banco)
+            .jaViu(PreferenciaDoGuiaLocal.chaveDoInicio(contaDeTeste.uid)),
         isTrue,
       );
       await _fechar(tester, c);
@@ -269,7 +288,8 @@ void main() {
 
       expect(_guia, findsNothing);
       expect(
-        await PreferenciaDoGuiaLocal(banco).jaViu(contaDeTeste.uid),
+        await PreferenciaDoGuiaLocal(banco)
+            .jaViu(PreferenciaDoGuiaLocal.chaveDoInicio(contaDeTeste.uid)),
         isTrue,
       );
       await _fechar(tester, c);
@@ -667,21 +687,209 @@ void main() {
     });
   });
 
-  test('só a lista de pacientes abre o guia: nunca a gravação nem o modo '
-      'paciente', () {
-    final quemAbre = Directory('lib')
-        .listSync(recursive: true)
-        .whereType<File>()
-        .where((f) => f.path.endsWith('.dart'))
-        .map((f) => (f.path.replaceAll(r'\', '/'), f.readAsStringSync()))
-        // A própria declaração não conta.
-        .where((f) => !f.$1.startsWith('lib/features/guia/'))
-        .where((f) => f.$2.contains('AberturaDoGuia('))
-        .map((f) => f.$1)
-        .toList();
+  group('dicas por tela', () {
+    const paciente = 'exemplo-a';
+    const analise = 'exemplo-a-4';
+    final telas = <(DicaDeTela, String, Map<String, String>)>[
+      (
+        DicaDeTela.gravacao,
+        AppRoutes.capturaNome,
+        {AppRoutes.paramPacienteId: paciente},
+      ),
+      (
+        DicaDeTela.resultado,
+        AppRoutes.analiseResultadoNome,
+        {
+          AppRoutes.paramPacienteId: paciente,
+          AppRoutes.paramAnaliseId: analise,
+        },
+      ),
+      (
+        DicaDeTela.capeV,
+        AppRoutes.capeVNome,
+        {
+          AppRoutes.paramPacienteId: paciente,
+          AppRoutes.paramAnaliseId: analise,
+        },
+      ),
+      (
+        DicaDeTela.laudo,
+        AppRoutes.laudoNome,
+        {
+          AppRoutes.paramPacienteId: paciente,
+          AppRoutes.paramAnaliseId: analise,
+        },
+      ),
+    ];
 
-    expect(quemAbre, [
-      'lib/features/pacientes/presentation/pages/pacientes_list_page.dart',
-    ]);
+    /// `pump` limitado: o medidor e a prévia do laudo nunca assentam — ver
+    /// a matriz de layout.
+    Future<void> desenhar(WidgetTester tester) async {
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 120));
+      }
+    }
+
+    /// O app com o guia da lista já visto, para só a dica abrir.
+    Future<(ProviderContainer, BancoLocal)> irPara(
+      WidgetTester tester,
+      String rota,
+      Map<String, String> parametros, {
+      Size janela = _desktop,
+      BancoLocal? banco,
+    }) async {
+      final usado = banco ?? bancoEmMemoria();
+      if (banco == null) addTearDown(usado.close);
+      await PreferenciaDoGuiaLocal(usado)
+          .marcarVisto(PreferenciaDoGuiaLocal.chaveDoInicio(contaDeTeste.uid));
+      final (c, _) = await _abrir(tester, janela: janela, banco: usado);
+      c.read(routerProvider).goNamed(rota, pathParameters: parametros);
+      await desenhar(tester);
+      return (c, usado);
+    }
+
+    Finder dica(DicaDeTela d) =>
+        find.descendant(of: _guia, matching: find.text(d.passo.titulo));
+
+    for (final (d, rota, parametros) in telas) {
+      for (final (nome, janela) in [
+        ('desktop', _desktop),
+        ('celular', _celular),
+      ]) {
+        testWidgets('${d.name} ($nome): abre uma vez, sobre o elemento', (
+          tester,
+        ) async {
+          final banco = bancoEmMemoria();
+          addTearDown(banco.close);
+          final (c, _) = await irPara(
+            tester,
+            rota,
+            parametros,
+            janela: janela,
+            banco: banco,
+          );
+
+          expect(dica(d), findsOneWidget);
+          // Um balão só: sem número de passo e sem "Pular".
+          expect(find.text(AppStrings.guiaPular), findsNothing);
+          expect(find.text(AppStrings.dicaEntendi), findsOneWidget);
+          expect(_focoEm(tester, AppStrings.dicaEntendi), isTrue);
+          if (d != DicaDeTela.laudo || janela == _desktop) {
+            expect(
+              c
+                  .read(alvosDoGuiaProvider)
+                  .onde(d.passo.papel, tester.renderObject<RenderBox>(_guia)),
+              isNotNull,
+              reason: 'o elemento de ${d.name} está na tela',
+            );
+          }
+
+          await tester.tap(find.text(AppStrings.dicaEntendi));
+          await desenhar(tester);
+          expect(_guia, findsNothing);
+          expect(
+            await PreferenciaDoGuiaLocal(banco)
+                .jaViu(PreferenciaDoGuiaLocal.chaveDaDica(d, contaDeTeste.uid)),
+            isTrue,
+          );
+
+          // Sair e voltar: não abre de novo.
+          c.read(routerProvider).goNamed(AppRoutes.pacientesNome);
+          await desenhar(tester);
+          c.read(routerProvider).goNamed(rota, pathParameters: parametros);
+          await desenhar(tester);
+          expect(_guia, findsNothing);
+          await _fechar(tester, c);
+        });
+      }
+    }
+
+    testWidgets('gravação: aponta o "Medir ruído ambiente"', (tester) async {
+      final (c, _) = await irPara(tester, AppRoutes.capturaNome, {
+        AppRoutes.paramPacienteId: paciente,
+      });
+
+      final medir = tester.getRect(
+        find.widgetWithText(FilledButton, AppStrings.afericaoMedir),
+      );
+      final visto = _ondeOGuiaVe(tester, c, PapelNoGuia.afericao);
+      expect(visto.center.dx, closeTo(medir.center.dx, 0.5));
+      expect(visto.center.dy, closeTo(medir.center.dy, 0.5));
+      await _fechar(tester, c);
+    });
+
+    testWidgets('gravação: Espaço com a dica aberta fecha a dica, e não mede', (
+      tester,
+    ) async {
+      final (c, _) = await irPara(tester, AppRoutes.capturaNome, {
+        AppRoutes.paramPacienteId: paciente,
+      });
+      expect(dica(DicaDeTela.gravacao), findsOneWidget);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await desenhar(tester);
+
+      expect(_guia, findsNothing);
+      // O Espaço foi do "Entendi", que tinha o foco — não da gravação.
+      expect(c.read(afericaoControladorProvider), isA<AfericaoNaoIniciada>());
+      expect(find.text(AppStrings.afericaoMedir), findsOneWidget);
+      await _fechar(tester, c);
+    });
+
+    testWidgets('desligadas, como nos outros testes, não abrem', (
+      tester,
+    ) async {
+      final (c, _) = await _abrir(tester, abreSozinho: false);
+      for (final (_, rota, parametros) in telas) {
+        c.read(routerProvider).goNamed(rota, pathParameters: parametros);
+        await desenhar(tester);
+        expect(_guia, findsNothing, reason: rota);
+      }
+      await _fechar(tester, c);
+    });
+
+    test('a chave de cada dica é por tela e por conta', () {
+      expect(
+        PreferenciaDoGuiaLocal.chaveDaDica(DicaDeTela.laudo, 'abc'),
+        'dica.laudo.v1.abc',
+      );
+      expect(
+        DicaDeTela.values.map((d) => d.passo.papel).toSet(),
+        hasLength(DicaDeTela.values.length),
+      );
+    });
+  });
+
+  group('quem abre', () {
+    List<String> quemUsa(String widget) =>
+        Directory('lib')
+            .listSync(recursive: true)
+            .whereType<File>()
+            .where((f) => f.path.endsWith('.dart'))
+            .map((f) => (f.path.replaceAll(r'\', '/'), f.readAsStringSync()))
+            // A própria declaração não conta.
+            .where((f) => !f.$1.startsWith('lib/features/guia/'))
+            .where((f) => f.$2.contains('$widget('))
+            .map((f) => f.$1)
+            .toList();
+
+    test('o guia, só a lista de pacientes: nunca a gravação nem o modo '
+        'paciente', () {
+      expect(quemUsa('AberturaDoGuia'), [
+        'lib/features/pacientes/presentation/pages/pacientes_list_page.dart',
+      ]);
+    });
+
+    test('as dicas, só as quatro telas — e o modo paciente nunca', () {
+      expect(
+        quemUsa('AberturaDaDica'),
+        unorderedEquals([
+          'lib/features/captura/presentation/widgets/gravacao_guiada.dart',
+          'lib/features/analise/presentation/pages/analise_resultado_page.dart',
+          'lib/features/cape_v/presentation/pages/cape_v_page.dart',
+          'lib/features/laudo/presentation/pages/laudo_page.dart',
+        ]),
+      );
+    });
   });
 }

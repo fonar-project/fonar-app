@@ -318,11 +318,14 @@ importação condicional — nenhum outro arquivo importa `package:web`.
 
 O guia da primeira vez (US50, `lib/features/guia/`) abre na lista de
 pacientes, uma vez por conta em cada aparelho (`Preferencias`,
-`guia.inicio.v1.<uid>`, sem servidor), e a Ajuda o revê. Ele aponta os
-elementos pelo PAPEL (`AlvoDoGuia`), nunca pela posição: elemento novo que o
-guia explica se declara onde estiver. Só a lista o abre — nunca a gravação
-nem o modo paciente —, e os testes o mantêm fechado
-(`test/flutter_test_config.dart`); os do guia o ligam pelo provider.
+`guia.inicio.v1.<uid>`, sem servidor), e a Ajuda o revê. Gravação,
+resultado, CAPE-V e laudo têm cada um uma dica de primeira vez
+(`AberturaDaDica`, `dica.<tela>.v1.<uid>`); a da gravação só abre antes de
+medir o ruído, com nada em andamento. Guia e dicas apontam os elementos pelo
+PAPEL (`AlvoDoGuia`), nunca pela posição: elemento novo que eles explicam se
+declara onde estiver. Nenhum abre no modo paciente, e os testes os mantêm
+fechados (`test/flutter_test_config.dart`); os do guia os ligam pelo
+provider.
 
 O que falta e de quem depende está em `PENDENCIAS.md` — ao resolver um item,
 apague a linha de lá e o `TODO` do código, no mesmo commit.

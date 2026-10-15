@@ -84,7 +84,8 @@ entrada curta (US57). Na primeira vez de cada conta em cada aparelho, um
 **guia** mostra a tela inicial, um elemento por vez — a nova avaliação, a
 lista, a fila, a conta, a conexão e a ajuda —, e a **Ajuda** (no canto do
 cabeçalho, no desktop; no topo da lista, no celular) o revê e lista os
-atalhos de teclado (US50).
+atalhos de teclado (US50). Gravação, resultado, CAPE-V e laudo também têm,
+cada um, uma dica de primeira vez — a da gravação, só antes de começar.
 
 A **autenticação** (US32) é o Firebase Authentication pela API REST, o mesmo
 código no Android e no Windows. A sessão é da conta: o roteador manda para a

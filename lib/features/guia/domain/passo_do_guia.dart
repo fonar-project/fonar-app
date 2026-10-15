@@ -6,7 +6,21 @@ import '../../../l10n/app_strings.dart';
 /// a fila é um item da barra lateral, no celular uma aba embaixo, e a
 /// conexão sobe do rodapé da barra lateral para o cabeçalho da lista. Cada
 /// elemento se declara com `AlvoDoGuia`, onde quer que esteja.
-enum PapelNoGuia { novaAvaliacao, lista, fila, conta, conexao, ajuda }
+enum PapelNoGuia {
+  // O guia da tela inicial.
+  novaAvaliacao,
+  lista,
+  fila,
+  conta,
+  conexao,
+  ajuda,
+
+  // As dicas por tela.
+  afericao,
+  medidas,
+  reguaCapeV,
+  conferenciaDoLaudo,
+}
 
 /// Um passo do guia: o elemento que ele destaca e o que diz dele.
 class PassoDoGuia {
@@ -68,3 +82,41 @@ const passosDoGuiaDoInicio = <PassoDoGuia>[
     texto: AppStrings.guiaAjudaTexto,
   ),
 ];
+
+/// As dicas de primeira vez por tela (US50): um balão, uma vez por conta
+/// neste aparelho, sobre o elemento que mais pede explicação. Cada uma abre
+/// sozinha na própria tela — ver `AberturaDaDica`.
+enum DicaDeTela {
+  gravacao(
+    PassoDoGuia(
+      papel: PapelNoGuia.afericao,
+      titulo: AppStrings.afericaoMedir,
+      texto: AppStrings.dicaGravacaoTexto,
+    ),
+  ),
+  resultado(
+    PassoDoGuia(
+      papel: PapelNoGuia.medidas,
+      titulo: AppStrings.resultadoMedidasTitulo,
+      texto: AppStrings.dicaResultadoTexto,
+    ),
+  ),
+  capeV(
+    PassoDoGuia(
+      papel: PapelNoGuia.reguaCapeV,
+      titulo: AppStrings.capeVTitulo,
+      texto: AppStrings.dicaCapeVTexto,
+    ),
+  ),
+  laudo(
+    PassoDoGuia(
+      papel: PapelNoGuia.conferenciaDoLaudo,
+      titulo: AppStrings.laudoConferenciaTitulo,
+      texto: AppStrings.dicaLaudoTexto,
+    ),
+  );
+
+  const DicaDeTela(this.passo);
+
+  final PassoDoGuia passo;
+}
