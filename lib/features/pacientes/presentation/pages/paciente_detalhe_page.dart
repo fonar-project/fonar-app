@@ -17,6 +17,8 @@ import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../design_system/widgets/app_toque.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../../anotacoes/presentation/widgets/aviso_de_lembrete.dart';
+import '../../../anotacoes/presentation/widgets/secao_de_anotacoes.dart';
 import '../../../analise/data/repositorio_analises_placeholder.dart';
 import '../../../analise/domain/resultado_da_analise.dart';
 import '../../../analise/presentation/apresentacao_da_medida.dart';
@@ -132,7 +134,20 @@ class _Perfil extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dados = _DadosEAcoes(paciente: paciente);
-    final sessoes = _Sessoes(pacienteId: paciente.id);
+    // As sessões e, embaixo, as anotações (US51): o que já foi feito.
+    final registros = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _Sessoes(pacienteId: paciente.id),
+        const SizedBox(height: AppSpacing.xl),
+        SecaoDeAnotacoes(
+          pacienteId: paciente.id,
+          motivoDesabilitado: paciente.exemplo
+              ? AppStrings.anotacoesExemplo
+              : null,
+        ),
+      ],
+    );
 
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(
@@ -148,23 +163,30 @@ class _Perfil extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 1320),
           // No desktop, lado a lado: quem é e o que fazer à esquerda, o que
           // já foi feito à direita. Nas outras larguras, um embaixo do outro.
-          child: largura == LarguraDeTela.expandida
-              ? Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // O lembrete da consulta anterior (US51), antes de tudo.
+              AvisoDeLembrete(
+                pacienteId: paciente.id,
+                margem: const EdgeInsets.only(bottom: AppSpacing.lg),
+              ),
+              if (largura == LarguraDeTela.expandida)
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(flex: 5, child: dados),
                     const SizedBox(width: AppSpacing.xl),
-                    Expanded(flex: 7, child: sessoes),
+                    Expanded(flex: 7, child: registros),
                   ],
                 )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    dados,
-                    const SizedBox(height: AppSpacing.xl),
-                    sessoes,
-                  ],
-                ),
+              else ...[
+                dados,
+                const SizedBox(height: AppSpacing.xl),
+                registros,
+              ],
+            ],
+          ),
         ),
       ),
     );

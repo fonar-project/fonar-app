@@ -201,6 +201,41 @@ class Laudos extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+/// As anotações do paciente (US51, ADR-019 da API) — prontuário. Uma linha
+/// por VERSÃO, e nenhuma é alterada nem apagada pelo app, a não ser na
+/// eliminação do paciente: editar acrescenta outra, que diz em [substitui]
+/// qual veio antes. A anotação vigente é a versão que nenhuma outra
+/// substitui. O único campo do registro que muda depois é
+/// [lembreteVistoEm], uma vez; [sincronizadaEm] não é o registro.
+@DataClassName('LinhaDaAnotacao')
+class AnotacoesDoPaciente extends Table {
+  /// UUID da versão (`novoId`).
+  TextColumn get id => text()();
+  TextColumn get pacienteId => text()();
+
+  /// A conta que escreveu: só ela a sobe, na árvore dela.
+  TextColumn get profissionalId => text()();
+  TextColumn get texto => text()();
+
+  /// Quando foi escrita, pelo relógio do aparelho.
+  DateTimeColumn get escritaEm => dateTime()();
+
+  /// A versão que esta substitui.
+  TextColumn get substitui => text().nullable()();
+
+  /// Lembrar na próxima consulta: num dia posterior ao de [escritaEm].
+  BoolColumn get lembrarNaProxima => boolean()();
+  DateTimeColumn get lembreteVistoEm => dateTime().nullable()();
+
+  /// Quando o Firebase passou a ter esta versão como está aqui — na subida
+  /// ou na descida. Nulo: algo daqui ainda não subiu (a versão, ou o
+  /// lembrete visto).
+  DateTimeColumn get sincronizadaEm => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 /// Os WAV gravados no navegador (US42), com o caminho que a amostra aponta.
 ///
 /// No aparelho a gravação é um arquivo na área privada do app, e esta tabela

@@ -22,7 +22,8 @@ final eliminacaoDoPacienteProvider = Provider<EliminacaoDoPaciente>(
 /// Primeiro no servidor, pela API (`DELETE /v1/pacientes/{p}`, que apaga a
 /// árvore dele no Firestore e os áudios no Storage, e guarda a comprovação
 /// sem nome nem id); depois aqui: cadastro, consentimentos e retiradas,
-/// gravações (o registro e o WAV), envios da fila, CAPE-V e laudos.
+/// gravações (o registro e o WAV), envios da fila, CAPE-V, laudos e
+/// anotações.
 ///
 /// Nessa ordem porque o servidor é o que não se alcança depois: se apagar
 /// aqui falhar no meio, repetir termina o serviço (o servidor responde que o
@@ -88,6 +89,10 @@ class EliminacaoDoPaciente {
         await (_banco.delete(
           _banco.laudos,
         )..where((l) => l.pacienteId.equals(pacienteId))).go();
+        // As anotações, todas as versões (US51): prontuário, que só sai aqui.
+        await (_banco.delete(
+          _banco.anotacoesDoPaciente,
+        )..where((a) => a.pacienteId.equals(pacienteId))).go();
         await (_banco.delete(
           _banco.retiradasDeConsentimento,
         )..where((r) => r.pacienteId.equals(pacienteId))).go();

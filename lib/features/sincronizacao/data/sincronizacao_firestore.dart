@@ -63,6 +63,31 @@ class SincronizacaoFirestore implements Sincronizacao {
     await _sessao(base, item);
   }
 
+  /// Garante no Firebase só o cadastro do paciente, sem consentimentos nem
+  /// sessão — o que as anotações (US51) precisam: anotar não depende do
+  /// consentimento, e o paciente pode nunca ter mandado gravação. Sobe só
+  /// se o daqui ainda não subiu como está.
+  ///
+  /// Lança só `AppException`.
+  Future<void> garantirPaciente(String pacienteId) async {
+    final conta = uid();
+    if (conta == null) throw const NaoAutorizado();
+    final linha = await (_banco.select(
+      _banco.pacientes,
+    )..where((p) => p.id.equals(pacienteId))).getSingleOrNull();
+    final sincronizado = linha?.sincronizadoEm;
+    final alterado = linha?.alteradoEm;
+    if (sincronizado != null &&
+        (alterado == null || !alterado.isAfter(sincronizado))) {
+      return;
+    }
+    await _paciente(
+      'profissionais/$conta/pacientes/$pacienteId',
+      pacienteId,
+      conta,
+    );
+  }
+
   Future<void> _paciente(String base, String pacienteId, String conta) async {
     final linha = await (_banco.select(
       _banco.pacientes,

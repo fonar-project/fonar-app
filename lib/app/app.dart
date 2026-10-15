@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../design_system/escala_da_interface.dart';
 import '../design_system/theme/app_theme.dart';
+import '../features/anotacoes/presentation/anotacoes_controlador.dart';
 import '../features/auth/presentation/widgets/vigia_de_inatividade.dart';
 import '../features/cape_v/presentation/sincronizacao_cape_v_controlador.dart';
 import '../features/captura/data/gravador_record.dart';
@@ -30,6 +31,8 @@ class FonarApp extends ConsumerWidget {
     ref.listen(sincronizacaoCapeVControladorProvider, (_, _) {});
     // E a cópia de cada laudo emitido, para a API (ADR-018 da API).
     ref.listen(sincronizacaoDosLaudosControladorProvider, (_, _) {});
+    // E as anotações dos pacientes (US51, ADR-019 da API).
+    ref.listen(sincronizacaoDasAnotacoesControladorProvider, (_, _) {});
     // E o caminho de volta (US40): o que outro aparelho da mesma conta
     // cadastrou ou registrou desce para este.
     ref.listen(descidaDaContaControladorProvider, (_, _) {});

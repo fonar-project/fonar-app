@@ -5,9 +5,13 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../app/router/trilhas.dart';
 import '../../../../design_system/breakpoints.dart';
+import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_cabecalho_de_tarefa.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../../anotacoes/presentation/widgets/aviso_de_lembrete.dart';
 import '../../../pacientes/data/repositorio_pacientes_local.dart';
+import '../afericao_controlador.dart';
+import '../gravacao_controlador.dart';
 import '../widgets/gravacao_guiada.dart';
 
 /// Tela 04 — gravação, guiada por etapas: a aferição de ruído ambiente,
@@ -67,6 +71,24 @@ class CapturaPage extends ConsumerWidget {
                 ],
                 situacao: AppStrings.situacaoConsentimentoRegistrado,
               ),
+              // O lembrete da consulta anterior (US51), só antes de começar:
+              // depois, a tela é do paciente.
+              if (ref.watch(afericaoControladorProvider)
+                      is AfericaoNaoIniciada &&
+                  !ref.watch(gravacaoControladorProvider(pacienteId)).ocupado)
+                AvisoDeLembrete(
+                  pacienteId: pacienteId,
+                  margem: EdgeInsets.fromLTRB(
+                    largura == LarguraDeTela.compacta
+                        ? AppSpacing.md
+                        : AppSpacing.xl,
+                    AppSpacing.md,
+                    largura == LarguraDeTela.compacta
+                        ? AppSpacing.md
+                        : AppSpacing.xl,
+                    0,
+                  ),
+                ),
               Expanded(child: GravacaoGuiada(pacienteId: pacienteId)),
             ],
           );
