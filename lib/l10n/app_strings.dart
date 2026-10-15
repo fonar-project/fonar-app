@@ -246,7 +246,7 @@ abstract final class AppStrings {
   static const perfilEliminarTexto =
       'A pedido do paciente (LGPD, art. 18). Apaga para sempre, neste '
       'aparelho e no servidor, o cadastro, os consentimentos, as gravações, '
-      'as análises, a CAPE-V e os laudos.';
+      'as análises, a CAPE-V, os laudos e as anotações.';
   static const perfilEliminarAcao = 'Eliminar os dados';
   static String perfilEliminarConfirmarTitulo(String nome) =>
       'Eliminar os dados de $nome?';
@@ -1466,6 +1466,60 @@ abstract final class AppStrings {
       'equipe do FONAR confere a inscrição na consulta pública do Crefono.';
   static const completarCadastroBotao = 'Concluir cadastro';
   static const completarCadastroSalvando = 'Salvando…';
+
+  // ------------------------------------------------ anotações (US51) --
+  // Prontuário: nada se apaga, e editar guarda a versão de antes. Não
+  // depende do consentimento — ele cobre a voz, não o atendimento.
+  static const anotacoesTitulo = 'Anotações';
+  static const anotacoesApoio =
+      'O registro do atendimento. Nada se apaga: editar guarda a versão de '
+      'antes.';
+  static const anotacoesCampo = 'Nova anotação';
+  static const anotacoesLembrar = 'Lembrar na próxima consulta';
+  static const anotacoesSalvar = 'Salvar anotação';
+  static const anotacoesSalvando = 'Salvando…';
+  static const anotacoesVazio = 'Nenhuma anotação ainda.';
+  static const anotacoesTextoObrigatorio =
+      'Escreva a anotação antes de salvar.';
+  static String anotacoesTextoLongo(int maximo) =>
+      'A anotação passou de $maximo caracteres. Divida em duas.';
+  static const anotacoesEditar = 'Editar';
+  static const anotacoesCampoEdicao = 'Editar a anotação';
+  static const anotacoesSalvarEdicao = 'Salvar edição';
+  static const anotacoesCancelar = 'Cancelar';
+  static String anotacoesEditadaEm(String data) => 'editada em $data';
+  static const anotacoesComLembrete = 'Com lembrete para a próxima consulta';
+  static String anotacoesVerAnteriores(int n) =>
+      n == 1 ? 'Ver a versão anterior' : 'Ver as $n versões anteriores';
+  static const anotacoesEsconderAnteriores = 'Esconder as versões anteriores';
+  static String anotacoesVersaoDe(String data) => 'Versão de $data';
+  static const anotacoesErroCarregar =
+      'Não foi possível carregar as anotações. Feche e abra o perfil de novo.';
+  static const anotacoesErroSalvar =
+      'Não foi possível salvar a anotação. Tente de novo.';
+  static const anotacoesExemplo =
+      'Paciente de exemplo: as anotações são dos pacientes cadastrados.';
+
+  // O lembrete da próxima consulta: discreto, e o texto só aparece ao
+  // tocar — às vezes o paciente vê a tela.
+  static String lembreteUm(String diaEMes) =>
+      'Você deixou um lembrete na consulta de $diaEMes';
+  static String lembreteVarios(int n) =>
+      'Você deixou $n lembretes de consultas anteriores';
+  static const lembreteMostrar = 'Mostrar';
+  static const lembreteEsconder = 'Esconder';
+  static const lembreteVi = 'Ok, vi';
+  static const lembreteSelo = 'Lembrete';
+  static String lembreteSeloSemantica(String nome) =>
+      '$nome tem lembrete para esta consulta';
+  static String lembreteDaConsulta(String diaEMes) => 'Consulta de $diaEMes';
+
+  /// "12/10" — o dia da consulta, como se fala no consultório.
+  static String diaEMes(DateTime d) {
+    final local = d.toLocal();
+    return '${local.day.toString().padLeft(2, '0')}/'
+        '${local.month.toString().padLeft(2, '0')}';
+  }
 
   // ------------------------------------------------------- guia e ajuda --
   // O guia da primeira vez (US50): um passo por elemento da tela inicial.

@@ -309,6 +309,16 @@ subiu. Cada paciente é de uma conta (`Pacientes.profissionalId`): num
 aparelho compartilhado, quem entra só vê os seus, e a fila só mostra os
 envios dela.
 
+As anotações do paciente (US51, ADR-019 da API, `lib/features/anotacoes/`)
+são prontuário: cada versão é uma linha (e um documento no Firestore) que
+nunca muda de texto — editar acrescenta outra, que diz qual substitui —, e
+nada se apaga a não ser na eliminação do paciente. Não dependem do
+consentimento. O lembrete para a próxima consulta só aparece num dia
+seguinte e nunca mostra o texto sem um toque ("Mostrar"); nada dele no modo
+paciente nem no laudo, e sem verde, amarelo ou vermelho. Sobem pela
+`SincronizacaoEmSegundoPlano` (com o cadastro do paciente antes) e descem
+quando o perfil abre, como CAPE-V e laudos.
+
 O app sai para baixar pelo GitHub Releases (US41: Windows, macOS e APK do
 Android, sem assinatura de código) e, para o iPhone, como versão web no
 GitHub Pages (US42), pelo `release.yml`, a cada tag `v*`. Na web, o banco

@@ -9,6 +9,8 @@ import '../../../core/error/app_exception.dart';
 import '../../../core/firestore/firestore_rest.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/relogio.dart';
+import '../../anotacoes/data/anotacoes_no_firestore.dart';
+import '../../anotacoes/data/repositorio_anotacoes_local.dart';
 import '../../cape_v/data/cape_v_no_firestore.dart';
 import '../../cape_v/data/repositorio_cape_v_local.dart';
 import '../../cape_v/domain/avaliacao_cape_v.dart';
@@ -48,9 +50,11 @@ final descidaProvider = Provider<DescidaDoFirestore?>(
 /// - **CAPE-V**: a mais recente vence, dos dois lados (`avaliada_em`).
 /// - **Laudo**: o que falta desce, com o PDF como foi emitido, conferido
 ///   pelo tamanho. Laudo nunca muda, então não há o que atualizar.
+/// - **Anotação** (US51): a versão que falta desce; a que existe só ganha o
+///   lembrete visto noutro aparelho. O texto de uma versão nunca muda.
 ///
-/// Pacientes e livros descem para a conta inteira ([descerConta]); CAPE-V e
-/// laudos, paciente a paciente, quando o perfil dele abre ([descerPaciente])
+/// Pacientes e livros descem para a conta inteira ([descerConta]); CAPE-V,
+/// laudos e anotações, paciente a paciente, quando o perfil dele abre ([descerPaciente])
 /// — são várias leituras por sessão, e a maioria dos pacientes não é aberta
 /// num dia.
 class DescidaDoFirestore {
@@ -89,14 +93,20 @@ class DescidaDoFirestore {
     return mudaram;
   }
 
-  /// As CAPE-V e os laudos das sessões de um paciente da [conta]. Devolve
-  /// quantos registros mudaram aqui.
+  /// As anotações (US51), e as CAPE-V e os laudos das sessões, de um
+  /// paciente da [conta]. Devolve quantos registros mudaram aqui.
   ///
   /// Lança só `AppException`.
   Future<int> descerPaciente(String conta, String pacienteId) async {
     final base = 'profissionais/$conta/pacientes/$pacienteId';
+    var mudaram = await descerAnotacoes(
+      _firestore,
+      RepositorioAnotacoesLocal(_banco),
+      conta: conta,
+      pacienteId: pacienteId,
+      agora: _agora(),
+    );
     final sessoes = await _firestore.listar('$base/sessoes');
-    var mudaram = 0;
     for (final (id: sessaoId, campos: _) in sessoes) {
       if (await _capeV('$base/sessoes/$sessaoId', pacienteId, sessaoId)) {
         mudaram++;

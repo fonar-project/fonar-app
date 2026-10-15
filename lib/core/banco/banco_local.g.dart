@@ -4831,6 +4831,611 @@ class AudiosDoNavegadorCompanion
   }
 }
 
+class $AnotacoesDoPacienteTable extends AnotacoesDoPaciente
+    with TableInfo<$AnotacoesDoPacienteTable, LinhaDaAnotacao> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AnotacoesDoPacienteTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _pacienteIdMeta = const VerificationMeta(
+    'pacienteId',
+  );
+  @override
+  late final GeneratedColumn<String> pacienteId = GeneratedColumn<String>(
+    'paciente_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _profissionalIdMeta = const VerificationMeta(
+    'profissionalId',
+  );
+  @override
+  late final GeneratedColumn<String> profissionalId = GeneratedColumn<String>(
+    'profissional_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _textoMeta = const VerificationMeta('texto');
+  @override
+  late final GeneratedColumn<String> texto = GeneratedColumn<String>(
+    'texto',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _escritaEmMeta = const VerificationMeta(
+    'escritaEm',
+  );
+  @override
+  late final GeneratedColumn<DateTime> escritaEm = GeneratedColumn<DateTime>(
+    'escrita_em',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _substituiMeta = const VerificationMeta(
+    'substitui',
+  );
+  @override
+  late final GeneratedColumn<String> substitui = GeneratedColumn<String>(
+    'substitui',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lembrarNaProximaMeta = const VerificationMeta(
+    'lembrarNaProxima',
+  );
+  @override
+  late final GeneratedColumn<bool> lembrarNaProxima = GeneratedColumn<bool>(
+    'lembrar_na_proxima',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("lembrar_na_proxima" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _lembreteVistoEmMeta = const VerificationMeta(
+    'lembreteVistoEm',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lembreteVistoEm =
+      GeneratedColumn<DateTime>(
+        'lembrete_visto_em',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _sincronizadaEmMeta = const VerificationMeta(
+    'sincronizadaEm',
+  );
+  @override
+  late final GeneratedColumn<DateTime> sincronizadaEm =
+      GeneratedColumn<DateTime>(
+        'sincronizada_em',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    pacienteId,
+    profissionalId,
+    texto,
+    escritaEm,
+    substitui,
+    lembrarNaProxima,
+    lembreteVistoEm,
+    sincronizadaEm,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'anotacoes_do_paciente';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LinhaDaAnotacao> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('paciente_id')) {
+      context.handle(
+        _pacienteIdMeta,
+        pacienteId.isAcceptableOrUnknown(data['paciente_id']!, _pacienteIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_pacienteIdMeta);
+    }
+    if (data.containsKey('profissional_id')) {
+      context.handle(
+        _profissionalIdMeta,
+        profissionalId.isAcceptableOrUnknown(
+          data['profissional_id']!,
+          _profissionalIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_profissionalIdMeta);
+    }
+    if (data.containsKey('texto')) {
+      context.handle(
+        _textoMeta,
+        texto.isAcceptableOrUnknown(data['texto']!, _textoMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_textoMeta);
+    }
+    if (data.containsKey('escrita_em')) {
+      context.handle(
+        _escritaEmMeta,
+        escritaEm.isAcceptableOrUnknown(data['escrita_em']!, _escritaEmMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_escritaEmMeta);
+    }
+    if (data.containsKey('substitui')) {
+      context.handle(
+        _substituiMeta,
+        substitui.isAcceptableOrUnknown(data['substitui']!, _substituiMeta),
+      );
+    }
+    if (data.containsKey('lembrar_na_proxima')) {
+      context.handle(
+        _lembrarNaProximaMeta,
+        lembrarNaProxima.isAcceptableOrUnknown(
+          data['lembrar_na_proxima']!,
+          _lembrarNaProximaMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_lembrarNaProximaMeta);
+    }
+    if (data.containsKey('lembrete_visto_em')) {
+      context.handle(
+        _lembreteVistoEmMeta,
+        lembreteVistoEm.isAcceptableOrUnknown(
+          data['lembrete_visto_em']!,
+          _lembreteVistoEmMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sincronizada_em')) {
+      context.handle(
+        _sincronizadaEmMeta,
+        sincronizadaEm.isAcceptableOrUnknown(
+          data['sincronizada_em']!,
+          _sincronizadaEmMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LinhaDaAnotacao map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LinhaDaAnotacao(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      pacienteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}paciente_id'],
+      )!,
+      profissionalId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}profissional_id'],
+      )!,
+      texto: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}texto'],
+      )!,
+      escritaEm: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}escrita_em'],
+      )!,
+      substitui: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}substitui'],
+      ),
+      lembrarNaProxima: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}lembrar_na_proxima'],
+      )!,
+      lembreteVistoEm: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}lembrete_visto_em'],
+      ),
+      sincronizadaEm: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}sincronizada_em'],
+      ),
+    );
+  }
+
+  @override
+  $AnotacoesDoPacienteTable createAlias(String alias) {
+    return $AnotacoesDoPacienteTable(attachedDatabase, alias);
+  }
+}
+
+class LinhaDaAnotacao extends DataClass implements Insertable<LinhaDaAnotacao> {
+  /// UUID da versão (`novoId`).
+  final String id;
+  final String pacienteId;
+
+  /// A conta que escreveu: só ela a sobe, na árvore dela.
+  final String profissionalId;
+  final String texto;
+
+  /// Quando foi escrita, pelo relógio do aparelho.
+  final DateTime escritaEm;
+
+  /// A versão que esta substitui.
+  final String? substitui;
+
+  /// Lembrar na próxima consulta: num dia posterior ao de [escritaEm].
+  final bool lembrarNaProxima;
+  final DateTime? lembreteVistoEm;
+
+  /// Quando o Firebase passou a ter esta versão como está aqui — na subida
+  /// ou na descida. Nulo: algo daqui ainda não subiu (a versão, ou o
+  /// lembrete visto).
+  final DateTime? sincronizadaEm;
+  const LinhaDaAnotacao({
+    required this.id,
+    required this.pacienteId,
+    required this.profissionalId,
+    required this.texto,
+    required this.escritaEm,
+    this.substitui,
+    required this.lembrarNaProxima,
+    this.lembreteVistoEm,
+    this.sincronizadaEm,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['paciente_id'] = Variable<String>(pacienteId);
+    map['profissional_id'] = Variable<String>(profissionalId);
+    map['texto'] = Variable<String>(texto);
+    map['escrita_em'] = Variable<DateTime>(escritaEm);
+    if (!nullToAbsent || substitui != null) {
+      map['substitui'] = Variable<String>(substitui);
+    }
+    map['lembrar_na_proxima'] = Variable<bool>(lembrarNaProxima);
+    if (!nullToAbsent || lembreteVistoEm != null) {
+      map['lembrete_visto_em'] = Variable<DateTime>(lembreteVistoEm);
+    }
+    if (!nullToAbsent || sincronizadaEm != null) {
+      map['sincronizada_em'] = Variable<DateTime>(sincronizadaEm);
+    }
+    return map;
+  }
+
+  AnotacoesDoPacienteCompanion toCompanion(bool nullToAbsent) {
+    return AnotacoesDoPacienteCompanion(
+      id: Value(id),
+      pacienteId: Value(pacienteId),
+      profissionalId: Value(profissionalId),
+      texto: Value(texto),
+      escritaEm: Value(escritaEm),
+      substitui: substitui == null && nullToAbsent
+          ? const Value.absent()
+          : Value(substitui),
+      lembrarNaProxima: Value(lembrarNaProxima),
+      lembreteVistoEm: lembreteVistoEm == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lembreteVistoEm),
+      sincronizadaEm: sincronizadaEm == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sincronizadaEm),
+    );
+  }
+
+  factory LinhaDaAnotacao.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LinhaDaAnotacao(
+      id: serializer.fromJson<String>(json['id']),
+      pacienteId: serializer.fromJson<String>(json['pacienteId']),
+      profissionalId: serializer.fromJson<String>(json['profissionalId']),
+      texto: serializer.fromJson<String>(json['texto']),
+      escritaEm: serializer.fromJson<DateTime>(json['escritaEm']),
+      substitui: serializer.fromJson<String?>(json['substitui']),
+      lembrarNaProxima: serializer.fromJson<bool>(json['lembrarNaProxima']),
+      lembreteVistoEm: serializer.fromJson<DateTime?>(json['lembreteVistoEm']),
+      sincronizadaEm: serializer.fromJson<DateTime?>(json['sincronizadaEm']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'pacienteId': serializer.toJson<String>(pacienteId),
+      'profissionalId': serializer.toJson<String>(profissionalId),
+      'texto': serializer.toJson<String>(texto),
+      'escritaEm': serializer.toJson<DateTime>(escritaEm),
+      'substitui': serializer.toJson<String?>(substitui),
+      'lembrarNaProxima': serializer.toJson<bool>(lembrarNaProxima),
+      'lembreteVistoEm': serializer.toJson<DateTime?>(lembreteVistoEm),
+      'sincronizadaEm': serializer.toJson<DateTime?>(sincronizadaEm),
+    };
+  }
+
+  LinhaDaAnotacao copyWith({
+    String? id,
+    String? pacienteId,
+    String? profissionalId,
+    String? texto,
+    DateTime? escritaEm,
+    Value<String?> substitui = const Value.absent(),
+    bool? lembrarNaProxima,
+    Value<DateTime?> lembreteVistoEm = const Value.absent(),
+    Value<DateTime?> sincronizadaEm = const Value.absent(),
+  }) => LinhaDaAnotacao(
+    id: id ?? this.id,
+    pacienteId: pacienteId ?? this.pacienteId,
+    profissionalId: profissionalId ?? this.profissionalId,
+    texto: texto ?? this.texto,
+    escritaEm: escritaEm ?? this.escritaEm,
+    substitui: substitui.present ? substitui.value : this.substitui,
+    lembrarNaProxima: lembrarNaProxima ?? this.lembrarNaProxima,
+    lembreteVistoEm: lembreteVistoEm.present
+        ? lembreteVistoEm.value
+        : this.lembreteVistoEm,
+    sincronizadaEm: sincronizadaEm.present
+        ? sincronizadaEm.value
+        : this.sincronizadaEm,
+  );
+  LinhaDaAnotacao copyWithCompanion(AnotacoesDoPacienteCompanion data) {
+    return LinhaDaAnotacao(
+      id: data.id.present ? data.id.value : this.id,
+      pacienteId: data.pacienteId.present
+          ? data.pacienteId.value
+          : this.pacienteId,
+      profissionalId: data.profissionalId.present
+          ? data.profissionalId.value
+          : this.profissionalId,
+      texto: data.texto.present ? data.texto.value : this.texto,
+      escritaEm: data.escritaEm.present ? data.escritaEm.value : this.escritaEm,
+      substitui: data.substitui.present ? data.substitui.value : this.substitui,
+      lembrarNaProxima: data.lembrarNaProxima.present
+          ? data.lembrarNaProxima.value
+          : this.lembrarNaProxima,
+      lembreteVistoEm: data.lembreteVistoEm.present
+          ? data.lembreteVistoEm.value
+          : this.lembreteVistoEm,
+      sincronizadaEm: data.sincronizadaEm.present
+          ? data.sincronizadaEm.value
+          : this.sincronizadaEm,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LinhaDaAnotacao(')
+          ..write('id: $id, ')
+          ..write('pacienteId: $pacienteId, ')
+          ..write('profissionalId: $profissionalId, ')
+          ..write('texto: $texto, ')
+          ..write('escritaEm: $escritaEm, ')
+          ..write('substitui: $substitui, ')
+          ..write('lembrarNaProxima: $lembrarNaProxima, ')
+          ..write('lembreteVistoEm: $lembreteVistoEm, ')
+          ..write('sincronizadaEm: $sincronizadaEm')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    pacienteId,
+    profissionalId,
+    texto,
+    escritaEm,
+    substitui,
+    lembrarNaProxima,
+    lembreteVistoEm,
+    sincronizadaEm,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LinhaDaAnotacao &&
+          other.id == this.id &&
+          other.pacienteId == this.pacienteId &&
+          other.profissionalId == this.profissionalId &&
+          other.texto == this.texto &&
+          other.escritaEm == this.escritaEm &&
+          other.substitui == this.substitui &&
+          other.lembrarNaProxima == this.lembrarNaProxima &&
+          other.lembreteVistoEm == this.lembreteVistoEm &&
+          other.sincronizadaEm == this.sincronizadaEm);
+}
+
+class AnotacoesDoPacienteCompanion extends UpdateCompanion<LinhaDaAnotacao> {
+  final Value<String> id;
+  final Value<String> pacienteId;
+  final Value<String> profissionalId;
+  final Value<String> texto;
+  final Value<DateTime> escritaEm;
+  final Value<String?> substitui;
+  final Value<bool> lembrarNaProxima;
+  final Value<DateTime?> lembreteVistoEm;
+  final Value<DateTime?> sincronizadaEm;
+  final Value<int> rowid;
+  const AnotacoesDoPacienteCompanion({
+    this.id = const Value.absent(),
+    this.pacienteId = const Value.absent(),
+    this.profissionalId = const Value.absent(),
+    this.texto = const Value.absent(),
+    this.escritaEm = const Value.absent(),
+    this.substitui = const Value.absent(),
+    this.lembrarNaProxima = const Value.absent(),
+    this.lembreteVistoEm = const Value.absent(),
+    this.sincronizadaEm = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AnotacoesDoPacienteCompanion.insert({
+    required String id,
+    required String pacienteId,
+    required String profissionalId,
+    required String texto,
+    required DateTime escritaEm,
+    this.substitui = const Value.absent(),
+    required bool lembrarNaProxima,
+    this.lembreteVistoEm = const Value.absent(),
+    this.sincronizadaEm = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       pacienteId = Value(pacienteId),
+       profissionalId = Value(profissionalId),
+       texto = Value(texto),
+       escritaEm = Value(escritaEm),
+       lembrarNaProxima = Value(lembrarNaProxima);
+  static Insertable<LinhaDaAnotacao> custom({
+    Expression<String>? id,
+    Expression<String>? pacienteId,
+    Expression<String>? profissionalId,
+    Expression<String>? texto,
+    Expression<DateTime>? escritaEm,
+    Expression<String>? substitui,
+    Expression<bool>? lembrarNaProxima,
+    Expression<DateTime>? lembreteVistoEm,
+    Expression<DateTime>? sincronizadaEm,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (pacienteId != null) 'paciente_id': pacienteId,
+      if (profissionalId != null) 'profissional_id': profissionalId,
+      if (texto != null) 'texto': texto,
+      if (escritaEm != null) 'escrita_em': escritaEm,
+      if (substitui != null) 'substitui': substitui,
+      if (lembrarNaProxima != null) 'lembrar_na_proxima': lembrarNaProxima,
+      if (lembreteVistoEm != null) 'lembrete_visto_em': lembreteVistoEm,
+      if (sincronizadaEm != null) 'sincronizada_em': sincronizadaEm,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AnotacoesDoPacienteCompanion copyWith({
+    Value<String>? id,
+    Value<String>? pacienteId,
+    Value<String>? profissionalId,
+    Value<String>? texto,
+    Value<DateTime>? escritaEm,
+    Value<String?>? substitui,
+    Value<bool>? lembrarNaProxima,
+    Value<DateTime?>? lembreteVistoEm,
+    Value<DateTime?>? sincronizadaEm,
+    Value<int>? rowid,
+  }) {
+    return AnotacoesDoPacienteCompanion(
+      id: id ?? this.id,
+      pacienteId: pacienteId ?? this.pacienteId,
+      profissionalId: profissionalId ?? this.profissionalId,
+      texto: texto ?? this.texto,
+      escritaEm: escritaEm ?? this.escritaEm,
+      substitui: substitui ?? this.substitui,
+      lembrarNaProxima: lembrarNaProxima ?? this.lembrarNaProxima,
+      lembreteVistoEm: lembreteVistoEm ?? this.lembreteVistoEm,
+      sincronizadaEm: sincronizadaEm ?? this.sincronizadaEm,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (pacienteId.present) {
+      map['paciente_id'] = Variable<String>(pacienteId.value);
+    }
+    if (profissionalId.present) {
+      map['profissional_id'] = Variable<String>(profissionalId.value);
+    }
+    if (texto.present) {
+      map['texto'] = Variable<String>(texto.value);
+    }
+    if (escritaEm.present) {
+      map['escrita_em'] = Variable<DateTime>(escritaEm.value);
+    }
+    if (substitui.present) {
+      map['substitui'] = Variable<String>(substitui.value);
+    }
+    if (lembrarNaProxima.present) {
+      map['lembrar_na_proxima'] = Variable<bool>(lembrarNaProxima.value);
+    }
+    if (lembreteVistoEm.present) {
+      map['lembrete_visto_em'] = Variable<DateTime>(lembreteVistoEm.value);
+    }
+    if (sincronizadaEm.present) {
+      map['sincronizada_em'] = Variable<DateTime>(sincronizadaEm.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AnotacoesDoPacienteCompanion(')
+          ..write('id: $id, ')
+          ..write('pacienteId: $pacienteId, ')
+          ..write('profissionalId: $profissionalId, ')
+          ..write('texto: $texto, ')
+          ..write('escritaEm: $escritaEm, ')
+          ..write('substitui: $substitui, ')
+          ..write('lembrarNaProxima: $lembrarNaProxima, ')
+          ..write('lembreteVistoEm: $lembreteVistoEm, ')
+          ..write('sincronizadaEm: $sincronizadaEm, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$BancoLocal extends GeneratedDatabase {
   _$BancoLocal(QueryExecutor e) : super(e);
   $BancoLocalManager get managers => $BancoLocalManager(this);
@@ -4851,6 +5456,8 @@ abstract class _$BancoLocal extends GeneratedDatabase {
   late final $PreferenciasTable preferencias = $PreferenciasTable(this);
   late final $AudiosDoNavegadorTable audiosDoNavegador =
       $AudiosDoNavegadorTable(this);
+  late final $AnotacoesDoPacienteTable anotacoesDoPaciente =
+      $AnotacoesDoPacienteTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4867,6 +5474,7 @@ abstract class _$BancoLocal extends GeneratedDatabase {
     laudos,
     preferencias,
     audiosDoNavegador,
+    anotacoesDoPaciente,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -8329,6 +8937,319 @@ typedef $$AudiosDoNavegadorTableProcessedTableManager =
       LinhaDoAudioDoNavegador,
       PrefetchHooks Function()
     >;
+typedef $$AnotacoesDoPacienteTableCreateCompanionBuilder =
+    AnotacoesDoPacienteCompanion Function({
+      required String id,
+      required String pacienteId,
+      required String profissionalId,
+      required String texto,
+      required DateTime escritaEm,
+      Value<String?> substitui,
+      required bool lembrarNaProxima,
+      Value<DateTime?> lembreteVistoEm,
+      Value<DateTime?> sincronizadaEm,
+      Value<int> rowid,
+    });
+typedef $$AnotacoesDoPacienteTableUpdateCompanionBuilder =
+    AnotacoesDoPacienteCompanion Function({
+      Value<String> id,
+      Value<String> pacienteId,
+      Value<String> profissionalId,
+      Value<String> texto,
+      Value<DateTime> escritaEm,
+      Value<String?> substitui,
+      Value<bool> lembrarNaProxima,
+      Value<DateTime?> lembreteVistoEm,
+      Value<DateTime?> sincronizadaEm,
+      Value<int> rowid,
+    });
+
+class $$AnotacoesDoPacienteTableFilterComposer
+    extends Composer<_$BancoLocal, $AnotacoesDoPacienteTable> {
+  $$AnotacoesDoPacienteTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pacienteId => $composableBuilder(
+    column: $table.pacienteId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get profissionalId => $composableBuilder(
+    column: $table.profissionalId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get texto => $composableBuilder(
+    column: $table.texto,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get escritaEm => $composableBuilder(
+    column: $table.escritaEm,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get substitui => $composableBuilder(
+    column: $table.substitui,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get lembrarNaProxima => $composableBuilder(
+    column: $table.lembrarNaProxima,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lembreteVistoEm => $composableBuilder(
+    column: $table.lembreteVistoEm,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get sincronizadaEm => $composableBuilder(
+    column: $table.sincronizadaEm,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AnotacoesDoPacienteTableOrderingComposer
+    extends Composer<_$BancoLocal, $AnotacoesDoPacienteTable> {
+  $$AnotacoesDoPacienteTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pacienteId => $composableBuilder(
+    column: $table.pacienteId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get profissionalId => $composableBuilder(
+    column: $table.profissionalId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get texto => $composableBuilder(
+    column: $table.texto,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get escritaEm => $composableBuilder(
+    column: $table.escritaEm,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get substitui => $composableBuilder(
+    column: $table.substitui,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get lembrarNaProxima => $composableBuilder(
+    column: $table.lembrarNaProxima,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lembreteVistoEm => $composableBuilder(
+    column: $table.lembreteVistoEm,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get sincronizadaEm => $composableBuilder(
+    column: $table.sincronizadaEm,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AnotacoesDoPacienteTableAnnotationComposer
+    extends Composer<_$BancoLocal, $AnotacoesDoPacienteTable> {
+  $$AnotacoesDoPacienteTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get pacienteId => $composableBuilder(
+    column: $table.pacienteId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get profissionalId => $composableBuilder(
+    column: $table.profissionalId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get texto =>
+      $composableBuilder(column: $table.texto, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get escritaEm =>
+      $composableBuilder(column: $table.escritaEm, builder: (column) => column);
+
+  GeneratedColumn<String> get substitui =>
+      $composableBuilder(column: $table.substitui, builder: (column) => column);
+
+  GeneratedColumn<bool> get lembrarNaProxima => $composableBuilder(
+    column: $table.lembrarNaProxima,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lembreteVistoEm => $composableBuilder(
+    column: $table.lembreteVistoEm,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get sincronizadaEm => $composableBuilder(
+    column: $table.sincronizadaEm,
+    builder: (column) => column,
+  );
+}
+
+class $$AnotacoesDoPacienteTableTableManager
+    extends
+        RootTableManager<
+          _$BancoLocal,
+          $AnotacoesDoPacienteTable,
+          LinhaDaAnotacao,
+          $$AnotacoesDoPacienteTableFilterComposer,
+          $$AnotacoesDoPacienteTableOrderingComposer,
+          $$AnotacoesDoPacienteTableAnnotationComposer,
+          $$AnotacoesDoPacienteTableCreateCompanionBuilder,
+          $$AnotacoesDoPacienteTableUpdateCompanionBuilder,
+          (
+            LinhaDaAnotacao,
+            BaseReferences<
+              _$BancoLocal,
+              $AnotacoesDoPacienteTable,
+              LinhaDaAnotacao
+            >,
+          ),
+          LinhaDaAnotacao,
+          PrefetchHooks Function()
+        > {
+  $$AnotacoesDoPacienteTableTableManager(
+    _$BancoLocal db,
+    $AnotacoesDoPacienteTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AnotacoesDoPacienteTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AnotacoesDoPacienteTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$AnotacoesDoPacienteTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> pacienteId = const Value.absent(),
+                Value<String> profissionalId = const Value.absent(),
+                Value<String> texto = const Value.absent(),
+                Value<DateTime> escritaEm = const Value.absent(),
+                Value<String?> substitui = const Value.absent(),
+                Value<bool> lembrarNaProxima = const Value.absent(),
+                Value<DateTime?> lembreteVistoEm = const Value.absent(),
+                Value<DateTime?> sincronizadaEm = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AnotacoesDoPacienteCompanion(
+                id: id,
+                pacienteId: pacienteId,
+                profissionalId: profissionalId,
+                texto: texto,
+                escritaEm: escritaEm,
+                substitui: substitui,
+                lembrarNaProxima: lembrarNaProxima,
+                lembreteVistoEm: lembreteVistoEm,
+                sincronizadaEm: sincronizadaEm,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String pacienteId,
+                required String profissionalId,
+                required String texto,
+                required DateTime escritaEm,
+                Value<String?> substitui = const Value.absent(),
+                required bool lembrarNaProxima,
+                Value<DateTime?> lembreteVistoEm = const Value.absent(),
+                Value<DateTime?> sincronizadaEm = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AnotacoesDoPacienteCompanion.insert(
+                id: id,
+                pacienteId: pacienteId,
+                profissionalId: profissionalId,
+                texto: texto,
+                escritaEm: escritaEm,
+                substitui: substitui,
+                lembrarNaProxima: lembrarNaProxima,
+                lembreteVistoEm: lembreteVistoEm,
+                sincronizadaEm: sincronizadaEm,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$AnotacoesDoPacienteTable, LinhaDaAnotacao>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$BancoLocal,
+                    $AnotacoesDoPacienteTable,
+                    LinhaDaAnotacao
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AnotacoesDoPacienteTableProcessedTableManager =
+    ProcessedTableManager<
+      _$BancoLocal,
+      $AnotacoesDoPacienteTable,
+      LinhaDaAnotacao,
+      $$AnotacoesDoPacienteTableFilterComposer,
+      $$AnotacoesDoPacienteTableOrderingComposer,
+      $$AnotacoesDoPacienteTableAnnotationComposer,
+      $$AnotacoesDoPacienteTableCreateCompanionBuilder,
+      $$AnotacoesDoPacienteTableUpdateCompanionBuilder,
+      (
+        LinhaDaAnotacao,
+        BaseReferences<
+          _$BancoLocal,
+          $AnotacoesDoPacienteTable,
+          LinhaDaAnotacao
+        >,
+      ),
+      LinhaDaAnotacao,
+      PrefetchHooks Function()
+    >;
 
 class $BancoLocalManager {
   final _$BancoLocal _db;
@@ -8358,4 +9279,6 @@ class $BancoLocalManager {
       $$PreferenciasTableTableManager(_db, _db.preferencias);
   $$AudiosDoNavegadorTableTableManager get audiosDoNavegador =>
       $$AudiosDoNavegadorTableTableManager(_db, _db.audiosDoNavegador);
+  $$AnotacoesDoPacienteTableTableManager get anotacoesDoPaciente =>
+      $$AnotacoesDoPacienteTableTableManager(_db, _db.anotacoesDoPaciente);
 }

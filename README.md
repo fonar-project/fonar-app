@@ -106,6 +106,16 @@ retirado não sobe mais, nem com um consentimento novo; e o perfil tem
 tudo aqui e no servidor. O termo de consentimento e os termos de uso estão
 escritos sobre a LGPD, com revisão jurídica recomendada (`PENDENCIAS.md`).
 
+O perfil tem **anotações** (US51), o registro do atendimento: escritas com a
+data, sem rede inclusive, e editáveis sem apagar — a edição é uma versão nova,
+e as de antes ficam à vista. Não dependem do consentimento, que cobre a voz:
+anota-se sem ele e depois de retirado. Uma anotação pode deixar um **lembrete
+para a próxima consulta**, que aparece discreto num dia seguinte, no topo do
+perfil e no início da gravação, com o texto só ao tocar em "Mostrar" — o
+paciente às vezes vê a tela —, e como selo "Lembrete" na lista. Sobem para o
+Firebase e descem em outro aparelho (ADR-019 da API); só saem com a eliminação
+do paciente.
+
 Os **dados em repouso** (US44): no aparelho, o banco local é cifrado (SQLite3
 Multiple Ciphers, com a chave no cofre do sistema), e o banco de antes da
 atualização é cifrado na primeira abertura; o WAV sai do aparelho assim que
@@ -701,6 +711,7 @@ lib/
     ├── cape_v/            a escala perceptivo-auditiva
     ├── historico/         histórico geral, evolução e modo paciente
     ├── laudo/             conferência, PDF, compartilhar e imprimir
+    ├── anotacoes/         anotações do paciente e o lembrete da consulta
     ├── guia/              o guia da primeira vez e a Ajuda
     └── conta/             dados do profissional e sair
 

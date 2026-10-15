@@ -17,7 +17,7 @@ part 'banco_local.g.dart';
 /// O banco local do aparelho — um só, para todas as funcionalidades.
 ///
 /// Guarda o que precisa sobreviver ao app fechado: pacientes, consentimentos,
-/// gravações, a fila de envio, CAPE-V, laudos e as preferências do aparelho. É o que deixa o consultório sem sinal
+/// gravações, a fila de envio, CAPE-V, laudos, anotações e as preferências do aparelho. É o que deixa o consultório sem sinal
 /// trabalhar: gravar funciona offline, e a fila sobe depois.
 ///
 /// Nenhuma medida acústica mora aqui: elas vêm do servidor.
@@ -34,6 +34,7 @@ part 'banco_local.g.dart';
     Laudos,
     Preferencias,
     AudiosDoNavegador,
+    AnotacoesDoPaciente,
   ],
 )
 class BancoLocal extends _$BancoLocal {
@@ -110,7 +111,7 @@ class BancoLocal extends _$BancoLocal {
   /// `drift_schemas/` guarda o formato de cada versão já distribuída; é com
   /// ele que se testa que o banco de quem atualiza o app chega inteiro.
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -157,6 +158,10 @@ class BancoLocal extends _$BancoLocal {
         await customStatement(
           'UPDATE pacientes SET alterado_em = cadastrado_em',
         );
+      }
+      if (de < 8) {
+        // US51: as anotações do paciente.
+        await m.createTable(anotacoesDoPaciente);
       }
     },
     // O SQLite vem com chave estrangeira DESLIGADA; sem isto, nada impediria

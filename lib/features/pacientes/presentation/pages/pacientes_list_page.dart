@@ -19,6 +19,8 @@ import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_indicador_conexao.dart';
 import '../../../../design_system/widgets/app_toque.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../../anotacoes/presentation/anotacoes_controlador.dart';
+import '../../../anotacoes/presentation/widgets/aviso_de_lembrete.dart';
 import '../../../guia/domain/passo_do_guia.dart';
 import '../../../guia/presentation/alvos_do_guia.dart';
 import '../../../guia/presentation/widgets/abertura_do_guia.dart';
@@ -575,7 +577,7 @@ class _LinhaTabela extends StatelessWidget {
           paciente: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(paciente.nome, style: textos.titleMedium),
+              _NomeComLembrete(paciente: paciente),
               const SizedBox(height: 2),
               Text(
                 paciente.queixa,
@@ -666,7 +668,7 @@ class _Card extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(paciente.nome, style: textos.titleMedium),
+                        _NomeComLembrete(paciente: paciente),
                         Text(paciente.queixa, style: secundario),
                       ],
                     ),
@@ -705,6 +707,32 @@ class _Card extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// O nome do paciente e, se ele tem lembrete de uma consulta anterior
+/// esperando (US51), o selo "Lembrete" — texto, nunca só cor.
+class _NomeComLembrete extends ConsumerWidget {
+  const _NomeComLembrete({required this.paciente});
+
+  final Paciente paciente;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final comLembrete =
+        ref.watch(pacientesComLembreteProvider).value?.contains(paciente.id) ??
+        false;
+    final nome = Text(
+      paciente.nome,
+      style: Theme.of(context).textTheme.titleMedium,
+    );
+    if (!comLembrete) return nome;
+    return Wrap(
+      spacing: AppSpacing.xs,
+      runSpacing: AppSpacing.xxs,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [nome, const SeloDeLembrete()],
     );
   }
 }
