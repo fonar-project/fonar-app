@@ -16,6 +16,9 @@ import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../design_system/widgets/app_toque.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../../guia/domain/passo_do_guia.dart';
+import '../../../guia/presentation/alvos_do_guia.dart';
+import '../../../guia/presentation/widgets/abertura_do_guia.dart';
 import '../../../pacientes/data/repositorio_pacientes_local.dart';
 import '../../../reproducao/presentation/widgets/player_de_amostra.dart';
 import '../../data/configuracao_de_captura.dart';
@@ -147,219 +150,229 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
     // mudo, e isso se descobre antes da consulta, não depois.
     final etapa = liberada ? _etapa : _ruido;
 
-    return LayoutBuilder(
-      builder: (context, restricoes) {
-        final compacta =
-            Breakpoints.de(restricoes.maxWidth) == LarguraDeTela.compacta;
-        final palco = switch (etapa) {
-          _ruido => _palcoDoRuido(afericao, gravacao),
-          _ when etapa == _revisao => _palcoDaRevisao(gravacao),
-          _ => _palcoDaTarefa(_tarefas[etapa - 1], gravacao),
-        };
+    // A dica da primeira vez (US50) só com nada em andamento: antes de medir
+    // o ruído, nunca no meio de uma gravação.
+    return AberturaDaDica(
+      dica: DicaDeTela.gravacao,
+      pronta:
+          afericao is AfericaoNaoIniciada &&
+          !gravacao.ocupado &&
+          !gravacao.retomando,
+      child: LayoutBuilder(
+        builder: (context, restricoes) {
+          final compacta =
+              Breakpoints.de(restricoes.maxWidth) == LarguraDeTela.compacta;
+          final palco = switch (etapa) {
+            _ruido => _palcoDoRuido(afericao, gravacao),
+            _ when etapa == _revisao => _palcoDaRevisao(gravacao),
+            _ => _palcoDaTarefa(_tarefas[etapa - 1], gravacao),
+          };
 
-        final etapas = _Etapas(
-          atual: etapa,
-          concluidas: {
-            if (liberada && etapa != _ruido) _ruido,
-            for (final (i, tarefa) in _tarefas.indexed)
-              if (gravacao.amostras[tarefa] != null) i + 1,
-          },
-          compacta: compacta,
-          // Mudar de etapa no meio de uma gravação a deixaria órfã na tela.
-          aoEscolher: liberada && !gravacao.ocupado ? _irPara : null,
-        );
-
-        // A fase do palco: muda quando a etapa avança, quando a gravação
-        // começa ou termina, quando a conferência devolve o resultado. É ela
-        // que decide quando o conteúdo entra animado — ver `AppTrocaAnimada`.
-        final fase = switch (etapa) {
-          _ruido => afericao.runtimeType,
-          _ when etapa == _revisao => 'revisão',
-          _ => switch (_tarefas[etapa - 1]) {
-            final t when gravacao.gravando == t => 'gravando',
-            final t when gravacao.conferindo == t => 'conferindo',
-            final t
-                when gravacao.amostras[t] != null ||
-                    gravacao.rejeitadas[t] != null ||
-                    gravacao.falha?.tarefa == t =>
-              'resultado',
-            _ => 'pronto',
-          },
-        };
-
-        final chaveDaFase = (etapa, fase);
-        if (_faseMostrada != null && _faseMostrada != chaveDaFase) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (_rolagem.hasClients) _rolagem.jumpTo(0);
-          });
-        }
-        _faseMostrada = chaveDaFase;
-
-        final conteudo = Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (gravacao.retomadaDe case final inicio?) ...[
-              AppSituacao(
-                icone: NomeIcone.informacao,
-                titulo: AppStrings.capturaRetomadaTitulo,
-                texto: AppStrings.capturaRetomadaTexto(
-                  AppStrings.hora(inicio),
-                  gravacao.amostras.length,
-                  _tarefas.length,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-            ],
-            AppTrocaAnimada(
-              chave: chaveDaFase,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: palco.corpo,
-              ),
-            ),
-          ],
-        );
-
-        // Tela baixa — celular deitado, ou o texto do sistema ampliado —: nada
-        // fica preso, tudo rola junto. Ver `AppAreaComAcoes`.
-        final baixa =
-            restricoes.maxHeight < AppAreaComAcoes.alturaParaFixar(context);
-
-        final Widget tela;
-        if (compacta) {
-          tela = AppAreaComAcoes(
-            controller: _rolagem,
-            topo: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              child: etapas,
-            ),
-            padding: const EdgeInsets.all(AppSpacing.md),
-            centralizar: true,
-            // No celular o texto do rodapé rola com o conteúdo: na barra fixa,
-            // com o texto em 200%, não sobraria tela.
-            corpo: palco.rodape == null
-                ? conteudo
-                : Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      conteudo,
-                      const SizedBox(height: AppSpacing.sm),
-                      _Apoio(palco.rodape!),
-                    ],
-                  ),
-            acoes: palco.acoes.isEmpty
-                ? const SizedBox.shrink()
-                : DecoratedBox(
-                    decoration: BoxDecoration(
-                      border: Border(
-                        top: BorderSide(color: context.cores.borda),
-                      ),
-                    ),
-                    child: SafeArea(
-                      top: false,
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            for (final (i, acao) in palco.acoes.indexed) ...[
-                              if (i > 0) const SizedBox(height: AppSpacing.xs),
-                              acao.botao(ocupaLargura: true),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+          final etapas = _Etapas(
+            atual: etapa,
+            concluidas: {
+              if (liberada && etapa != _ruido) _ruido,
+              for (final (i, tarefa) in _tarefas.indexed)
+                if (gravacao.amostras[tarefa] != null) i + 1,
+            },
+            compacta: compacta,
+            // Mudar de etapa no meio de uma gravação a deixaria órfã na tela.
+            aoEscolher: liberada && !gravacao.ocupado ? _irPara : null,
           );
-        } else {
-          final corpoDoCartao = Column(
+
+          // A fase do palco: muda quando a etapa avança, quando a gravação
+          // começa ou termina, quando a conferência devolve o resultado. É ela
+          // que decide quando o conteúdo entra animado — ver `AppTrocaAnimada`.
+          final fase = switch (etapa) {
+            _ruido => afericao.runtimeType,
+            _ when etapa == _revisao => 'revisão',
+            _ => switch (_tarefas[etapa - 1]) {
+              final t when gravacao.gravando == t => 'gravando',
+              final t when gravacao.conferindo == t => 'conferindo',
+              final t
+                  when gravacao.amostras[t] != null ||
+                      gravacao.rejeitadas[t] != null ||
+                      gravacao.falha?.tarefa == t =>
+                'resultado',
+              _ => 'pronto',
+            },
+          };
+
+          final chaveDaFase = (etapa, fase);
+          if (_faseMostrada != null && _faseMostrada != chaveDaFase) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (_rolagem.hasClients) _rolagem.jumpTo(0);
+            });
+          }
+          _faseMostrada = chaveDaFase;
+
+          final conteudo = Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              conteudo,
-              if (palco.acoes.isNotEmpty && palco.rodape == null) ...[
-                const SizedBox(height: AppSpacing.lg),
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.xs,
-                  children: [
-                    for (final acao in palco.acoes)
-                      acao.botao(ocupaLargura: false),
-                  ],
+              if (gravacao.retomadaDe case final inicio?) ...[
+                AppSituacao(
+                  icone: NomeIcone.informacao,
+                  titulo: AppStrings.capturaRetomadaTitulo,
+                  texto: AppStrings.capturaRetomadaTexto(
+                    AppStrings.hora(inicio),
+                    gravacao.amostras.length,
+                    _tarefas.length,
+                  ),
                 ),
+                const SizedBox(height: AppSpacing.lg),
               ],
+              AppTrocaAnimada(
+                chave: chaveDaFase,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: palco.corpo,
+                ),
+              ),
             ],
           );
-          final cartao = Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: context.cores.borda),
-              borderRadius: AppRadius.bordaMedia,
-            ),
-            child: Column(
+
+          // Tela baixa — celular deitado, ou o texto do sistema ampliado —: nada
+          // fica preso, tudo rola junto. Ver `AppAreaComAcoes`.
+          final baixa =
+              restricoes.maxHeight < AppAreaComAcoes.alturaParaFixar(context);
+
+          final Widget tela;
+          if (compacta) {
+            tela = AppAreaComAcoes(
+              controller: _rolagem,
+              topo: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
+                ),
+                child: etapas,
+              ),
+              padding: const EdgeInsets.all(AppSpacing.md),
+              centralizar: true,
+              // No celular o texto do rodapé rola com o conteúdo: na barra fixa,
+              // com o texto em 200%, não sobraria tela.
+              corpo: palco.rodape == null
+                  ? conteudo
+                  : Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        conteudo,
+                        const SizedBox(height: AppSpacing.sm),
+                        _Apoio(palco.rodape!),
+                      ],
+                    ),
+              acoes: palco.acoes.isEmpty
+                  ? const SizedBox.shrink()
+                  : DecoratedBox(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          top: BorderSide(color: context.cores.borda),
+                        ),
+                      ),
+                      child: SafeArea(
+                        top: false,
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              for (final (i, acao) in palco.acoes.indexed) ...[
+                                if (i > 0)
+                                  const SizedBox(height: AppSpacing.xs),
+                                acao.botao(ocupaLargura: true),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+            );
+          } else {
+            final corpoDoCartao = Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (baixa)
-                  Padding(
-                    padding: const EdgeInsets.all(AppSpacing.xl),
-                    child: corpoDoCartao,
-                  )
-                else
-                  Expanded(
-                    child: _Rolavel(
-                      controller: _rolagem,
+                conteudo,
+                if (palco.acoes.isNotEmpty && palco.rodape == null) ...[
+                  const SizedBox(height: AppSpacing.lg),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.xs,
+                    children: [
+                      for (final acao in palco.acoes)
+                        acao.botao(ocupaLargura: false),
+                    ],
+                  ),
+                ],
+              ],
+            );
+            final cartao = Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: context.cores.borda),
+                borderRadius: AppRadius.bordaMedia,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (baixa)
+                    Padding(
                       padding: const EdgeInsets.all(AppSpacing.xl),
                       child: corpoDoCartao,
+                    )
+                  else
+                    Expanded(
+                      child: _Rolavel(
+                        controller: _rolagem,
+                        padding: const EdgeInsets.all(AppSpacing.xl),
+                        child: corpoDoCartao,
+                      ),
                     ),
-                  ),
-                if (palco.rodape case final rodape?)
-                  _Rodape(texto: rodape, acoes: palco.acoes)
-                else
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.md,
-                      0,
-                      AppSpacing.md,
-                      AppSpacing.sm,
+                  if (palco.rodape case final rodape?)
+                    _Rodape(texto: rodape, acoes: palco.acoes)
+                  else
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        0,
+                        AppSpacing.md,
+                        AppSpacing.sm,
+                      ),
+                      child: Text(
+                        AppStrings.capturaAtalhos,
+                        textAlign: TextAlign.end,
+                        style: Theme.of(context).textTheme.bodySmall
+                            ?.copyWith(color: context.cores.secundario),
+                      ),
                     ),
-                    child: Text(
-                      AppStrings.capturaAtalhos,
-                      textAlign: TextAlign.end,
-                      style: Theme.of(context).textTheme.bodySmall
-                          ?.copyWith(color: context.cores.secundario),
-                    ),
-                  ),
+                ],
+              ),
+            );
+            final coluna = Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                etapas,
+                const SizedBox(height: 22),
+                if (baixa) cartao else Expanded(child: cartao),
               ],
-            ),
-          );
-          final coluna = Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              etapas,
-              const SizedBox(height: 22),
-              if (baixa) cartao else Expanded(child: cartao),
-            ],
-          );
-          const respiro = EdgeInsets.fromLTRB(34, 26, 34, 26);
-          tela = baixa
-              ? SingleChildScrollView(
-                  controller: _rolagem,
-                  padding: respiro,
-                  child: coluna,
-                )
-              : Padding(padding: respiro, child: coluna);
-        }
+            );
+            const respiro = EdgeInsets.fromLTRB(34, 26, 34, 26);
+            tela = baixa
+                ? SingleChildScrollView(
+                    controller: _rolagem,
+                    padding: respiro,
+                    child: coluna,
+                  )
+                : Padding(padding: respiro, child: coluna);
+          }
 
-        // O foco começa na tela, para os atalhos valerem sem clicar antes.
-        return Focus(focusNode: _foco, autofocus: true, child: tela);
-      },
+          // O foco começa na tela, para os atalhos valerem sem clicar antes.
+          return Focus(focusNode: _foco, autofocus: true, child: tela);
+        },
+      ),
     );
   }
 
@@ -393,7 +406,13 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
           const SizedBox(height: AppSpacing.md),
           const _Apoio(AppStrings.afericaoExplicacao),
         ],
-        acoes: [_Acao.primaria(AppStrings.afericaoMedir, medir)],
+        acoes: [
+          _Acao.primaria(
+            AppStrings.afericaoMedir,
+            medir,
+            alvo: PapelNoGuia.afericao,
+          ),
+        ],
       ),
       AfericaoMedindo(:final nivel, :final progresso) => _Palco(
         corpo: [
@@ -801,9 +820,9 @@ class _Acao {
     this.icone,
     this.motivo,
     this.primaria = false,
-  });
+  }) : alvo = null;
 
-  const _Acao.primaria(this.rotulo, this.aoTocar, {this.motivo})
+  const _Acao.primaria(this.rotulo, this.aoTocar, {this.motivo, this.alvo})
     : icone = null,
       primaria = true;
 
@@ -813,14 +832,23 @@ class _Acao {
   final String? motivo;
   final bool primaria;
 
-  Widget botao({required bool ocupaLargura}) => AppBotao(
-    variante: primaria ? VarianteBotao.primario : VarianteBotao.secundario,
-    rotulo: rotulo,
-    icone: icone,
-    aoTocar: aoTocar,
-    motivoDesabilitado: motivo,
-    ocupaLargura: ocupaLargura,
-  );
+  /// O que o botão é para a dica da primeira vez (US50), se ela o aponta.
+  final PapelNoGuia? alvo;
+
+  Widget botao({required bool ocupaLargura}) {
+    final botao = AppBotao(
+      variante: primaria ? VarianteBotao.primario : VarianteBotao.secundario,
+      rotulo: rotulo,
+      icone: icone,
+      aoTocar: aoTocar,
+      motivoDesabilitado: motivo,
+      ocupaLargura: ocupaLargura,
+    );
+    return switch (alvo) {
+      final papel? => AlvoDoGuia(papel: papel, child: botao),
+      null => botao,
+    };
+  }
 }
 
 /// Centraliza o palco na altura quando cabe, e rola quando não cabe.

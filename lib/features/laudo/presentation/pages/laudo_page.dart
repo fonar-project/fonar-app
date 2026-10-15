@@ -21,6 +21,9 @@ import '../../../../design_system/widgets/app_estado.dart';
 import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../../guia/domain/passo_do_guia.dart';
+import '../../../guia/presentation/alvos_do_guia.dart';
+import '../../../guia/presentation/widgets/abertura_do_guia.dart';
 import '../../../analise/data/catalogo_de_referencias_vazio.dart';
 import '../../../analise/data/repositorio_analises_placeholder.dart';
 import '../../../analise/domain/resultado_da_analise.dart';
@@ -95,79 +98,86 @@ class LaudoPage extends ConsumerWidget {
       ref.invalidate(consentimentoProvider(pacienteId));
     }
 
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, restricoes) {
-          final largura = Breakpoints.de(restricoes.maxWidth);
+    return AberturaDaDica(
+      dica: DicaDeTela.laudo,
+      pronta:
+          cargas.every((a) => a.hasValue) &&
+          !cargas.any((a) => a.hasError) &&
+          paciente.value != null,
+      child: Scaffold(
+        body: LayoutBuilder(
+          builder: (context, restricoes) {
+            final largura = Breakpoints.de(restricoes.maxWidth);
 
-          final Widget conteudo;
-          if (analise.error is AnaliseDeOutroPaciente) {
-            conteudo = AvisoDeOutroPaciente(aoVoltar: () => _voltar(context));
-          } else if (cargas.any((a) => a.hasError)) {
-            conteudo = AppEstado.central(
-              titulo: AppStrings.laudoErroCarregar,
-              acao: AppBotao.secundario(
-                rotulo: AppStrings.tentarNovamente,
-                aoTocar: tentarDeNovo,
-              ),
-            );
-          } else if (cargas.every((a) => a.hasValue)) {
-            if (paciente.requireValue case final cadastro?) {
-              conteudo = _Laudo(
-                pacienteId: pacienteId,
-                resultado: analise.requireValue,
-                estado: laudo.requireValue,
-                capeV: capeV.value,
-                temConsentimento: consentimento.value != null,
-                paciente: cadastro,
-                largura: largura,
-              );
-            } else {
-              // Carregou, e o paciente não está neste aparelho: diferente de
-              // "ainda carregando" e de "falhou ao carregar".
+            final Widget conteudo;
+            if (analise.error is AnaliseDeOutroPaciente) {
+              conteudo = AvisoDeOutroPaciente(aoVoltar: () => _voltar(context));
+            } else if (cargas.any((a) => a.hasError)) {
               conteudo = AppEstado.central(
-                titulo: AppStrings.laudoSemPaciente,
-                texto: AppStrings.laudoSemPacienteTexto,
+                titulo: AppStrings.laudoErroCarregar,
                 acao: AppBotao.secundario(
-                  rotulo: AppStrings.voltar,
-                  aoTocar: () => _voltar(context),
+                  rotulo: AppStrings.tentarNovamente,
+                  aoTocar: tentarDeNovo,
                 ),
+              );
+            } else if (cargas.every((a) => a.hasValue)) {
+              if (paciente.requireValue case final cadastro?) {
+                conteudo = _Laudo(
+                  pacienteId: pacienteId,
+                  resultado: analise.requireValue,
+                  estado: laudo.requireValue,
+                  capeV: capeV.value,
+                  temConsentimento: consentimento.value != null,
+                  paciente: cadastro,
+                  largura: largura,
+                );
+              } else {
+                // Carregou, e o paciente não está neste aparelho: diferente de
+                // "ainda carregando" e de "falhou ao carregar".
+                conteudo = AppEstado.central(
+                  titulo: AppStrings.laudoSemPaciente,
+                  texto: AppStrings.laudoSemPacienteTexto,
+                  acao: AppBotao.secundario(
+                    rotulo: AppStrings.voltar,
+                    aoTocar: () => _voltar(context),
+                  ),
+                );
+              }
+            } else {
+              conteudo = Center(
+                child: CircularProgressIndicator(color: context.cores.acento),
               );
             }
-          } else {
-            conteudo = Center(
-              child: CircularProgressIndicator(color: context.cores.acento),
-            );
-          }
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AppCabecalhoDeTarefa(
-                titulo: AppStrings.laudoTitulo,
-                aoVoltar: () => _voltar(context),
-                largura: largura,
-                trilha: [
-                  ...Trilhas.doPaciente(
-                    context,
-                    pacienteId: pacienteId,
-                    nome: paciente.value?.nome,
-                  ),
-                  ItemDaTrilha(AppStrings.laudoTitulo),
-                ],
-                situacao: AppStrings.situacaoLaudo,
-              ),
-              Expanded(
-                // Carregando → pronto (ou erro): o conteúdo novo entra.
-                child: AppTrocaAnimada(
-                  chave: conteudo.runtimeType,
-                  preencher: true,
-                  child: conteudo,
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AppCabecalhoDeTarefa(
+                  titulo: AppStrings.laudoTitulo,
+                  aoVoltar: () => _voltar(context),
+                  largura: largura,
+                  trilha: [
+                    ...Trilhas.doPaciente(
+                      context,
+                      pacienteId: pacienteId,
+                      nome: paciente.value?.nome,
+                    ),
+                    ItemDaTrilha(AppStrings.laudoTitulo),
+                  ],
+                  situacao: AppStrings.situacaoLaudo,
                 ),
-              ),
-            ],
-          );
-        },
+                Expanded(
+                  // Carregando → pronto (ou erro): o conteúdo novo entra.
+                  child: AppTrocaAnimada(
+                    chave: conteudo.runtimeType,
+                    preencher: true,
+                    child: conteudo,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -493,15 +503,24 @@ class _Painel extends StatelessWidget {
           resumo,
         ],
         const SizedBox(height: AppSpacing.lg),
-        _Titulo(AppStrings.laudoConferenciaTitulo),
-        for (final MapEntry(key: item, value: situacao)
-            in conferencia.itens.entries)
-          _ItemDaConferencia(
-            item: item,
-            situacao: situacao,
-            pacienteId: pacienteId,
-            analiseId: analiseId,
+        // A conferência inteira é o que a dica da primeira vez (US50) aponta.
+        AlvoDoGuia(
+          papel: PapelNoGuia.conferenciaDoLaudo,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _Titulo(AppStrings.laudoConferenciaTitulo),
+              for (final MapEntry(key: item, value: situacao)
+                  in conferencia.itens.entries)
+                _ItemDaConferencia(
+                  item: item,
+                  situacao: situacao,
+                  pacienteId: pacienteId,
+                  analiseId: analiseId,
+                ),
+            ],
           ),
+        ),
         const SizedBox(height: AppSpacing.lg),
         AppCampoTexto(
           rotulo: AppStrings.laudoCampoConclusao,

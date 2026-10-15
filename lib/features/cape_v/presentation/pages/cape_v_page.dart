@@ -23,6 +23,9 @@ import '../../../../design_system/widgets/app_mensagem_de_campo.dart';
 import '../../../../design_system/widgets/app_toque.dart';
 import '../../../../design_system/tokens/app_typography.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../../guia/domain/passo_do_guia.dart';
+import '../../../guia/presentation/alvos_do_guia.dart';
+import '../../../guia/presentation/widgets/abertura_do_guia.dart';
 import '../../../analise/data/repositorio_analises_placeholder.dart';
 import '../../../analise/domain/resultado_da_analise.dart';
 import '../../../analise/presentation/aviso_de_outro_paciente.dart';
@@ -90,64 +93,68 @@ class CapeVPage extends ConsumerWidget {
     }
 
     final nomeDoPaciente = ref.watch(pacienteProvider(pacienteId)).value?.nome;
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, restricoes) {
-          final largura = Breakpoints.de(restricoes.maxWidth);
-          final compacta = largura == LarguraDeTela.compacta;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AppCabecalhoDeTarefa(
-                titulo: AppStrings.capeVTitulo,
-                aoVoltar: () => _voltar(context),
-                largura: largura,
-                subtitulo: nomeDoPaciente,
-                trilha: [
-                  ...Trilhas.doPaciente(
-                    context,
-                    pacienteId: pacienteId,
-                    nome: nomeDoPaciente,
-                  ),
-                  Trilhas.resultado(
-                    context,
-                    pacienteId: pacienteId,
-                    analiseId: analiseId,
-                  ),
-                  ItemDaTrilha(AppStrings.capeVTitulo),
-                ],
-                situacao: AppStrings.situacaoCapeV,
-              ),
-              Expanded(
-                child: switch ((analise, estado)) {
-                  // A análise precisa ser deste paciente — ver `daPaciente`.
-                  (AsyncError(:final error), _)
-                      when error is AnaliseDeOutroPaciente =>
-                    AvisoDeOutroPaciente(aoVoltar: () => _voltar(context)),
-                  (AsyncError(), _) || (_, AsyncError()) => AppEstado.central(
-                    titulo: AppStrings.capeVErroCarregar,
-                    acao: AppBotao.secundario(
-                      rotulo: AppStrings.tentarNovamente,
-                      aoTocar: tentarDeNovo,
+    return AberturaDaDica(
+      dica: DicaDeTela.capeV,
+      pronta: analise is AsyncData && estado is AsyncData,
+      child: Scaffold(
+        body: LayoutBuilder(
+          builder: (context, restricoes) {
+            final largura = Breakpoints.de(restricoes.maxWidth);
+            final compacta = largura == LarguraDeTela.compacta;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AppCabecalhoDeTarefa(
+                  titulo: AppStrings.capeVTitulo,
+                  aoVoltar: () => _voltar(context),
+                  largura: largura,
+                  subtitulo: nomeDoPaciente,
+                  trilha: [
+                    ...Trilhas.doPaciente(
+                      context,
+                      pacienteId: pacienteId,
+                      nome: nomeDoPaciente,
                     ),
-                  ),
-                  (AsyncData(), AsyncData(:final value)) => _Formulario(
-                    pacienteId: pacienteId,
-                    analiseId: analiseId,
-                    estado: value,
-                    compacta: compacta,
-                    aoRegistrar: () => _voltar(context),
-                  ),
-                  _ => Center(
-                    child: CircularProgressIndicator(
-                      color: context.cores.acento,
+                    Trilhas.resultado(
+                      context,
+                      pacienteId: pacienteId,
+                      analiseId: analiseId,
                     ),
-                  ),
-                },
-              ),
-            ],
-          );
-        },
+                    ItemDaTrilha(AppStrings.capeVTitulo),
+                  ],
+                  situacao: AppStrings.situacaoCapeV,
+                ),
+                Expanded(
+                  child: switch ((analise, estado)) {
+                    // A análise precisa ser deste paciente — ver `daPaciente`.
+                    (AsyncError(:final error), _)
+                        when error is AnaliseDeOutroPaciente =>
+                      AvisoDeOutroPaciente(aoVoltar: () => _voltar(context)),
+                    (AsyncError(), _) || (_, AsyncError()) => AppEstado.central(
+                      titulo: AppStrings.capeVErroCarregar,
+                      acao: AppBotao.secundario(
+                        rotulo: AppStrings.tentarNovamente,
+                        aoTocar: tentarDeNovo,
+                      ),
+                    ),
+                    (AsyncData(), AsyncData(:final value)) => _Formulario(
+                      pacienteId: pacienteId,
+                      analiseId: analiseId,
+                      estado: value,
+                      compacta: compacta,
+                      aoRegistrar: () => _voltar(context),
+                    ),
+                    _ => Center(
+                      child: CircularProgressIndicator(
+                        color: context.cores.acento,
+                      ),
+                    ),
+                  },
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -260,21 +267,23 @@ class _FormularioState extends ConsumerState<_Formulario> {
               ),
               const SizedBox(height: AppSpacing.lg),
               for (final parametro in ParametroCapeV.values) ...[
-                if (compacta)
-                  _ParametroCompacto(
-                    parametro: parametro,
-                    nota: estado.notas[parametro] ?? const NotaCapeV(),
-                    problema: estado.problemas[parametro],
-                    aoAbrir: ocupado ? null : () => _abrir(parametro),
-                  )
-                else
-                  _Parametro(
-                    parametro: parametro,
-                    nota: estado.notas[parametro] ?? const NotaCapeV(),
-                    problema: estado.problemas[parametro],
-                    habilitado: !ocupado,
-                    controlador: _controlador,
-                  ),
+                _primeiroParaADica(
+                  parametro,
+                  compacta
+                      ? _ParametroCompacto(
+                          parametro: parametro,
+                          nota: estado.notas[parametro] ?? const NotaCapeV(),
+                          problema: estado.problemas[parametro],
+                          aoAbrir: ocupado ? null : () => _abrir(parametro),
+                        )
+                      : _Parametro(
+                          parametro: parametro,
+                          nota: estado.notas[parametro] ?? const NotaCapeV(),
+                          problema: estado.problemas[parametro],
+                          habilitado: !ocupado,
+                          controlador: _controlador,
+                        ),
+                ),
                 SizedBox(height: compacta ? AppSpacing.sm : AppSpacing.md),
               ],
               AppCampoTexto(
@@ -924,3 +933,10 @@ class _EscalaEmTelaCheiaState extends ConsumerState<_EscalaEmTelaCheia> {
     );
   }
 }
+
+/// O primeiro parâmetro é o que a dica da primeira vez (US50) aponta: a
+/// régua no desktop, o cartão que abre a escala no celular.
+Widget _primeiroParaADica(ParametroCapeV parametro, Widget item) =>
+    parametro == ParametroCapeV.values.first
+    ? AlvoDoGuia(papel: PapelNoGuia.reguaCapeV, child: item)
+    : item;

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../auth/data/sessao.dart';
 import '../../data/preferencia_do_guia_local.dart';
+import '../../domain/passo_do_guia.dart';
 import '../alvos_do_guia.dart';
 import 'guia_na_tela.dart';
 
@@ -16,24 +17,80 @@ import 'guia_na_tela.dart';
 ///
 /// Só a lista de pacientes o usa, e por isso o guia nunca abre sobre a
 /// gravação nem no modo paciente.
-class AberturaDoGuia extends ConsumerStatefulWidget {
+class AberturaDoGuia extends StatelessWidget {
   const AberturaDoGuia({required this.pronta, required this.child, super.key});
 
   final bool pronta;
   final Widget child;
 
   @override
-  ConsumerState<AberturaDoGuia> createState() => _AberturaDoGuiaState();
+  Widget build(BuildContext context) => _Abertura(
+    passos: passosDoGuiaDoInicio,
+    chave: PreferenciaDoGuiaLocal.chaveDoInicio,
+    atendePedido: true,
+    pronta: pronta,
+    child: child,
+  );
 }
 
-class _AberturaDoGuiaState extends ConsumerState<AberturaDoGuia> {
+/// Abre a dica de primeira vez de uma tela (US50): um balão, uma vez por
+/// conta neste aparelho, sobre o elemento que mais pede explicação.
+///
+/// As mesmas esperas do [AberturaDoGuia]. A tela diz quando está [pronta] —
+/// e na gravação isso inclui não haver nada em andamento: a dica aparece
+/// antes de medir o ruído, nunca no meio de uma gravação.
+class AberturaDaDica extends StatelessWidget {
+  const AberturaDaDica({
+    required this.dica,
+    required this.pronta,
+    required this.child,
+    super.key,
+  });
+
+  final DicaDeTela dica;
+  final bool pronta;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => _Abertura(
+    passos: [dica.passo],
+    chave: (uid) => PreferenciaDoGuiaLocal.chaveDaDica(dica, uid),
+    atendePedido: false,
+    pronta: pronta,
+    child: child,
+  );
+}
+
+class _Abertura extends ConsumerStatefulWidget {
+  const _Abertura({
+    required this.passos,
+    required this.chave,
+    required this.atendePedido,
+    required this.pronta,
+    required this.child,
+  });
+
+  final List<PassoDoGuia> passos;
+
+  /// Onde fica guardado que uma conta já viu.
+  final String Function(String uid) chave;
+
+  /// Abre também quando alguém pede "Rever o guia".
+  final bool atendePedido;
+  final bool pronta;
+  final Widget child;
+
+  @override
+  ConsumerState<_Abertura> createState() => _AberturaState();
+}
+
+class _AberturaState extends ConsumerState<_Abertura> {
   var _aberto = false;
 
   /// De quem é a resposta em [_primeiraVez].
   String? _uid;
 
-  /// O guia ainda não foi visto por [_uid] neste aparelho? Nulo: ainda não
-  /// se sabe.
+  /// Ainda não foi visto por [_uid] neste aparelho? Nulo: ainda não se sabe.
   bool? _primeiraVez;
 
   /// A consulta ao banco em andamento: quem chega enquanto ela corre espera
@@ -57,9 +114,11 @@ class _AberturaDoGuiaState extends ConsumerState<AberturaDoGuia> {
       _uid = uid;
       _primeiraVez = null;
     }
-    ref.listen(pedidoDoGuiaProvider, (_, pedido) {
-      if (pedido) _agendar();
-    });
+    if (widget.atendePedido) {
+      ref.listen(pedidoDoGuiaProvider, (_, pedido) {
+        if (pedido) _agendar();
+      });
+    }
     if (widget.pronta) _agendar();
     return widget.child;
   }
@@ -71,7 +130,7 @@ class _AberturaDoGuiaState extends ConsumerState<AberturaDoGuia> {
     final uid = _uid;
     if (!mounted || _aberto || !widget.pronta || uid == null) return;
 
-    final pedido = ref.read(pedidoDoGuiaProvider);
+    final pedido = widget.atendePedido && ref.read(pedidoDoGuiaProvider);
     if (!pedido) {
       if (!ref.read(guiaAbreSozinhoProvider)) return;
       if (_primeiraVez == null) {
@@ -85,16 +144,16 @@ class _AberturaDoGuiaState extends ConsumerState<AberturaDoGuia> {
 
     _aberto = true;
     _primeiraVez = false;
-    ref.read(pedidoDoGuiaProvider.notifier).atender();
+    if (pedido) ref.read(pedidoDoGuiaProvider.notifier).atender();
     // Lida antes de abrir: se a tela sair enquanto o guia está aberto (a
     // sessão acabou no bloqueio), fechar ainda guarda.
     final preferencia = ref.read(preferenciaDoGuiaProvider);
-    await mostrarGuia(context);
+    await mostrarGuia(context, passos: widget.passos);
     _aberto = false;
     try {
-      await preferencia.marcarVisto(uid);
+      await preferencia.marcarVisto(widget.chave(uid));
     } catch (erro) {
-      // Sem guardar, o guia volta na próxima abertura — incômodo, não falha.
+      // Sem guardar, volta na próxima abertura — incômodo, não falha.
       debugPrint('Não foi possível guardar que o guia foi visto: $erro');
     }
   }
@@ -102,7 +161,7 @@ class _AberturaDoGuiaState extends ConsumerState<AberturaDoGuia> {
   Future<void> _conferirPrimeiraVez(String uid) async {
     bool viu;
     try {
-      viu = await ref.read(preferenciaDoGuiaProvider).jaViu(uid);
+      viu = await ref.read(preferenciaDoGuiaProvider).jaViu(widget.chave(uid));
     } catch (erro) {
       // Banco indisponível: melhor não abrir que abrir toda vez.
       debugPrint('Preferência do guia indisponível: $erro');

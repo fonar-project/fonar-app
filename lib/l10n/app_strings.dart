@@ -1509,6 +1509,29 @@ abstract final class AppStrings {
   static const guiaAjudaTexto =
       'Para ver este guia de novo, ou os atalhos de teclado, é aqui.';
 
+  // As dicas de primeira vez por tela (US50): uma vez cada, por conta, neste
+  // aparelho.
+  static const dicaRotulo = 'Dica';
+  static const dicaEntendi = 'Entendi';
+  static const dicaGravacaoTexto =
+      'A gravação começa por aqui: 5 segundos de silêncio para medir a sala. '
+      'Se o microfone não captar som, a gravação não abre. Depois, uma tarefa '
+      'por vez, com a instrução grande para o paciente. No teclado, Espaço '
+      'inicia e para, e R grava de novo.';
+  static const dicaResultadoTexto =
+      'As medidas são calculadas no servidor, a partir das gravações. Só '
+      'aparecem classificadas quando há faixa de referência validada para o '
+      'perfil do paciente; sem ela, o app mostra o valor e diz por quê. É '
+      'apoio à decisão, não diagnóstico.';
+  static const dicaCapeVTexto =
+      'Ouça a amostra e marque cada parâmetro na escala: à esquerda, sem '
+      'desvio; à direita, desvio extremo. A avaliação é o seu julgamento pelo '
+      'ouvido — o app só registra.';
+  static const dicaLaudoTexto =
+      'O que falta para gerar o laudo aparece aqui: há itens que impedem e '
+      'itens que só avisam. O laudo emitido não muda depois — emitir de novo '
+      'cria outro documento, que diz qual substitui.';
+
   // Só os atalhos que existem: cada linha corresponde a uma tecla tratada
   // no código (gravação guiada e espectrograma).
   static const atalhosTitulo = 'Atalhos de teclado';
