@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../app/app_estrutura.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
@@ -40,9 +39,8 @@ class HistoricoPage extends ConsumerWidget {
     final termo = ref.watch(buscaDoHistoricoProvider).trim();
     final textos = Theme.of(context).textTheme;
 
-    return AppEstrutura(
-      destino: DestinoPrincipal.historico,
-      child: LayoutBuilder(
+    return Scaffold(
+      body: LayoutBuilder(
         builder: (context, restricoes) {
           final largura = Breakpoints.de(restricoes.maxWidth);
           final compacta = largura == LarguraDeTela.compacta;

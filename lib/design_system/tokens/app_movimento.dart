@@ -20,7 +20,11 @@ import 'package:flutter/material.dart';
 ///    antigo some imediatamente e o novo aparece com um esmaecer e um
 ///    deslize de poucos pixels. Nunca há dois estados na tela ao mesmo tempo
 ///    — numa ferramenta clínica, um valor velho ainda visível durante a
-///    transição pode ser lido como atual.
+///    transição pode ser lido como atual. Vale para a troca de tela, nos dois
+///    sentidos (US57): ao abrir, a tela de baixo some e a nova entra; ao
+///    voltar, a que sai some no primeiro quadro e a de baixo reaparece com a
+///    mesma entrada. A barra lateral e as abas não fazem parte da troca —
+///    ficam paradas (ver `AppEstrutura`).
 /// 3. **Sem quique, zoom ou parallax.** Curvas de desaceleração simples.
 /// 4. **Nada com movimento reduzido.** Com o sistema pedindo menos movimento,
 ///    toda duração vira zero ([duracao]) e as transições devolvem o estado
@@ -55,9 +59,10 @@ abstract final class AppMovimento {
   static Duration duracao(BuildContext context, Duration padrao) =>
       reduzido(context) ? Duration.zero : padrao;
 
-  /// Troca de página: a tela nova esmaece e sobe [deslize] pixels, em
-  /// [media]. Sem o deslizar lateral do Material, que no Windows parece
-  /// defeito e no celular só adiciona espera.
+  /// Troca de página: a tela que aparece — a nova, ao abrir; a de baixo, ao
+  /// voltar — esmaece e sobe [deslize] pixels, em [media]; a outra some na
+  /// hora. Sem o deslizar lateral do Material, que no Windows parece defeito
+  /// e no celular só adiciona espera.
   static const transicoesDePagina = PageTransitionsTheme(
     builders: {
       TargetPlatform.android: _TransicaoDePagina(),
@@ -91,9 +96,10 @@ class _TransicaoDePagina extends PageTransitionsBuilder {
   @override
   Duration get transitionDuration => AppMovimento.media;
 
-  /// A volta é imediata: quem volta já sabe para onde vai.
+  /// A volta dura o mesmo que a ida: é nela que a tela de baixo reaparece
+  /// com a entrada curta. A que sai não espera — some no primeiro quadro.
   @override
-  Duration get reverseTransitionDuration => Duration.zero;
+  Duration get reverseTransitionDuration => AppMovimento.media;
 
   @override
   Widget buildTransitions<T>(
@@ -102,10 +108,72 @@ class _TransicaoDePagina extends PageTransitionsBuilder {
     Animation<double> animation,
     Animation<double> secondaryAnimation,
     Widget child,
-  ) {
-    if (AppMovimento.reduzido(context)) return child;
-    return AppMovimento.entrada(animation, child);
+  ) => TelaEmTroca(
+    animacao: animation,
+    animacaoDeCima: secondaryAnimation,
+    reduzido: AppMovimento.reduzido(context),
+    child: child,
+  );
+}
+
+/// Uma tela durante a troca de telas: entrando, saindo, coberta pela que
+/// abriu por cima ou reaparecendo quando a de cima volta.
+///
+/// [animacao] é a da própria tela (sobe ao abrir, desce ao voltar dela);
+/// [animacaoDeCima] é a da tela aberta por cima desta. A regra é a do
+/// [AppMovimento]: só entra; o que sai, sai na hora.
+///
+/// Pública para o teste. Na árvore, a estrutura é sempre a mesma — só os
+/// valores mudam —, para a tela não perder o estado se uma volta for
+/// cancelada no meio.
+@visibleForTesting
+class TelaEmTroca extends StatelessWidget {
+  const TelaEmTroca({
+    required this.animacao,
+    required this.animacaoDeCima,
+    required this.reduzido,
+    required this.child,
+    super.key,
+  });
+
+  final Animation<double> animacao;
+  final Animation<double> animacaoDeCima;
+  final bool reduzido;
+  final Widget child;
+
+  /// Quanto da entrada já aconteceu: 0 é escondida, 1 é no lugar.
+  double get progresso {
+    // Voltando desta tela: some na hora.
+    if (animacao.status == AnimationStatus.reverse) return 0;
+    // Outra abrindo por cima, ou já por cima: esta some na hora.
+    if (animacaoDeCima.status == AnimationStatus.forward ||
+        animacaoDeCima.status == AnimationStatus.completed) {
+      return 0;
+    }
+    if (reduzido) return 1;
+    // A de cima voltando: esta reaparece com a entrada.
+    if (animacaoDeCima.status == AnimationStatus.reverse) {
+      return AppMovimento.curva.transform(1 - animacaoDeCima.value);
+    }
+    // Abrindo (ou já aberta).
+    return AppMovimento.curva.transform(animacao.value);
   }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: Listenable.merge([animacao, animacaoDeCima]),
+    builder: (context, filho) {
+      final p = progresso;
+      return Opacity(
+        opacity: p,
+        child: Transform.translate(
+          offset: Offset(0, (1 - p) * AppMovimento.deslize),
+          child: filho,
+        ),
+      );
+    },
+    child: child,
+  );
 }
 
 /// Troca um conteúdo por outro com a entrada do [AppMovimento]: o antigo

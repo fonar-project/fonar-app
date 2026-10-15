@@ -216,6 +216,15 @@ estados (e um valor velho) na tela ao mesmo tempo. Tudo passa pelos tokens e
 componentes de `design_system/tokens/app_movimento.dart` (`AppTrocaAnimada`,
 `AppRevelar`, `AppTamanhoAnimado`), que já zeram com movimento reduzido.
 
+A troca de tela segue a mesma regra, nos dois sentidos (US57). A barra
+lateral e as abas ficam PARADAS: um `ShellRoute` monta a `AppEstrutura` uma
+vez, nenhuma tela se embrulha, e o destino e as abas de cada rota estão em
+`navegacaoDasRotas` (`app/app_estrutura.dart`). Só o conteúdo troca: ao
+abrir, a tela de baixo some e a nova entra; ao voltar, a que sai some na hora
+e a de baixo reaparece com a mesma entrada curta. Sem deslizar de lado. O
+destaque do destino ativo e o hover (`AppToque`) usam a transição dos
+controles (150 ms).
+
 Ação presa no rodapé só quando cabe: `AppAreaComAcoes` decide pela altura
 (já na escala de texto); em tela baixa — celular deitado, texto em 200% —
 tudo rola junto. A matriz de layout (`test/app/matriz_de_layout_test.dart`)

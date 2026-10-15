@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:fonar_app/app/app_estrutura.dart';
 import 'package:fonar_app/app/router/app_routes.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/design_system/tokens/app_colors.dart';
@@ -63,32 +64,38 @@ Future<void> _abrir(
   final roteador = GoRouter(
     initialLocation: AppRoutes.pacientesCaminho,
     routes: [
-      GoRoute(
-        name: AppRoutes.pacientesNome,
-        path: AppRoutes.pacientesCaminho,
-        builder: (_, _) => const PacientesListPage(),
+      // A moldura do app: barra lateral no desktop, abas no celular.
+      ShellRoute(
+        builder: molduraDoRoteador,
         routes: [
           GoRoute(
-            name: AppRoutes.novaAvaliacaoNome,
-            path: AppRoutes.novaAvaliacaoCaminho,
+            name: AppRoutes.pacientesNome,
+            path: AppRoutes.pacientesCaminho,
+            builder: (_, _) => const PacientesListPage(),
+            routes: [
+              GoRoute(
+                name: AppRoutes.novaAvaliacaoNome,
+                path: AppRoutes.novaAvaliacaoCaminho,
+                builder: (_, estado) => _destino(estado),
+              ),
+              GoRoute(
+                name: AppRoutes.pacienteDetalheNome,
+                path: AppRoutes.pacienteDetalheCaminho,
+                builder: (_, estado) => _destino(estado),
+              ),
+            ],
+          ),
+          GoRoute(
+            name: AppRoutes.filaNome,
+            path: AppRoutes.filaCaminho,
             builder: (_, estado) => _destino(estado),
           ),
           GoRoute(
-            name: AppRoutes.pacienteDetalheNome,
-            path: AppRoutes.pacienteDetalheCaminho,
+            name: AppRoutes.contaNome,
+            path: AppRoutes.contaCaminho,
             builder: (_, estado) => _destino(estado),
           ),
         ],
-      ),
-      GoRoute(
-        name: AppRoutes.filaNome,
-        path: AppRoutes.filaCaminho,
-        builder: (_, estado) => _destino(estado),
-      ),
-      GoRoute(
-        name: AppRoutes.contaNome,
-        path: AppRoutes.contaCaminho,
-        builder: (_, estado) => _destino(estado),
       ),
     ],
   );

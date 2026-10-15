@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../app/router/trilhas.dart';
-import '../../../../app/app_estrutura.dart';
 import '../../../../core/relogio.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
@@ -64,65 +63,61 @@ class PacienteDetalhePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final paciente = ref.watch(pacienteProvider(pacienteId));
 
-    return AppEstrutura(
-      destino: DestinoPrincipal.pacientes,
-      navegacaoInferior: false,
-      child: Scaffold(
-        body: LayoutBuilder(
-          builder: (context, restricoes) {
-            final largura = Breakpoints.de(restricoes.maxWidth);
+    return Scaffold(
+      body: LayoutBuilder(
+        builder: (context, restricoes) {
+          final largura = Breakpoints.de(restricoes.maxWidth);
 
-            final Widget conteudo = switch (paciente) {
-              AsyncData(value: final p?) => _Perfil(
-                paciente: p,
+          final Widget conteudo = switch (paciente) {
+            AsyncData(value: final p?) => _Perfil(
+              paciente: p,
+              largura: largura,
+            ),
+            AsyncData() => AppEstado.central(
+              titulo: AppStrings.perfilNaoEncontrado,
+              texto: AppStrings.perfilNaoEncontradoTexto,
+              acao: AppBotao.secundario(
+                rotulo: AppStrings.perfilVoltarParaLista,
+                aoTocar: () => context.goNamed(AppRoutes.pacientesNome),
+              ),
+            ),
+            AsyncError() => AppEstado.central(
+              titulo: AppStrings.perfilErroCarregar,
+              acao: AppBotao.secundario(
+                rotulo: AppStrings.tentarNovamente,
+                aoTocar: () => ref.invalidate(pacientesProvider),
+              ),
+            ),
+            _ => Center(
+              child: CircularProgressIndicator(color: context.cores.acento),
+            ),
+          };
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AppCabecalhoDeTarefa(
+                titulo: AppStrings.pacienteDetalheTitulo,
+                aoVoltar: () => _voltar(context),
                 largura: largura,
-              ),
-              AsyncData() => AppEstado.central(
-                titulo: AppStrings.perfilNaoEncontrado,
-                texto: AppStrings.perfilNaoEncontradoTexto,
-                acao: AppBotao.secundario(
-                  rotulo: AppStrings.perfilVoltarParaLista,
-                  aoTocar: () => context.goNamed(AppRoutes.pacientesNome),
-                ),
-              ),
-              AsyncError() => AppEstado.central(
-                titulo: AppStrings.perfilErroCarregar,
-                acao: AppBotao.secundario(
-                  rotulo: AppStrings.tentarNovamente,
-                  aoTocar: () => ref.invalidate(pacientesProvider),
-                ),
-              ),
-              _ => Center(
-                child: CircularProgressIndicator(color: context.cores.acento),
-              ),
-            };
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                AppCabecalhoDeTarefa(
-                  titulo: AppStrings.pacienteDetalheTitulo,
-                  aoVoltar: () => _voltar(context),
-                  largura: largura,
-                  trilha: [
-                    Trilhas.pacientes(context),
-                    ItemDaTrilha(
-                      paciente.value?.nome ?? AppStrings.pacienteDetalheTitulo,
-                    ),
-                  ],
-                ),
-                Expanded(
-                  // Carregando → pronto (ou erro): o conteúdo novo entra.
-                  child: AppTrocaAnimada(
-                    chave: conteudo.runtimeType,
-                    preencher: true,
-                    child: conteudo,
+                trilha: [
+                  Trilhas.pacientes(context),
+                  ItemDaTrilha(
+                    paciente.value?.nome ?? AppStrings.pacienteDetalheTitulo,
                   ),
+                ],
+              ),
+              Expanded(
+                // Carregando → pronto (ou erro): o conteúdo novo entra.
+                child: AppTrocaAnimada(
+                  chave: conteudo.runtimeType,
+                  preencher: true,
+                  child: conteudo,
                 ),
-              ],
-            );
-          },
-        ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

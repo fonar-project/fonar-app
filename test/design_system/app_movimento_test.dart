@@ -44,7 +44,11 @@ double _opacidade(WidgetTester tester, String texto) {
   final fades = tester.widgetList<FadeTransition>(
     find.ancestor(of: find.text(texto), matching: find.byType(FadeTransition)),
   );
-  return fades.fold(1.0, (acc, f) => acc * f.opacity.value);
+  final opacidades = tester.widgetList<Opacity>(
+    find.ancestor(of: find.text(texto), matching: find.byType(Opacity)),
+  );
+  return fades.fold(1.0, (acc, f) => acc * f.opacity.value) *
+      opacidades.fold(1.0, (acc, o) => acc * o.opacity);
 }
 
 void main() {
@@ -207,6 +211,44 @@ void main() {
       await navegar(tester, reduzido: true);
 
       expect(_opacidade(tester, 'tela nova'), 1);
+    });
+
+    // US57: nunca dois estados na tela. A de baixo some enquanto a nova entra.
+    testWidgets('ao abrir, a tela de baixo some na hora', (tester) async {
+      await navegar(tester);
+
+      expect(_opacidade(tester, 'ir'), 0);
+    });
+
+    // A volta tem a mesma entrada curta: a que sai some no primeiro quadro, e
+    // a de baixo reaparece esmaecendo.
+    testWidgets('ao voltar, a que sai some e a de baixo entra', (tester) async {
+      await navegar(tester);
+      await tester.pumpAndSettle();
+
+      tester.state<NavigatorState>(find.byType(Navigator)).pop();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 20));
+
+      expect(_opacidade(tester, 'tela nova'), 0);
+      expect(_opacidade(tester, 'ir'), inExclusiveRange(0, 1));
+      await tester.pumpAndSettle();
+      expect(find.text('tela nova'), findsNothing);
+      expect(_opacidade(tester, 'ir'), 1);
+    });
+
+    testWidgets('com movimento reduzido, a volta também é na hora', (
+      tester,
+    ) async {
+      await navegar(tester, reduzido: true);
+      await tester.pumpAndSettle();
+
+      tester.state<NavigatorState>(find.byType(Navigator)).pop();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 20));
+
+      expect(_opacidade(tester, 'tela nova'), 0);
+      expect(_opacidade(tester, 'ir'), 1);
     });
   });
 }

@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../app/router/trilhas.dart';
-import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/widgets/app_cabecalho_de_tarefa.dart';
 import '../../../../l10n/app_strings.dart';
@@ -46,36 +45,32 @@ class CapturaPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final paciente = ref.watch(pacienteProvider(pacienteId)).value;
 
-    return AppEstrutura(
-      destino: DestinoPrincipal.novaAvaliacao,
-      navegacaoInferior: false,
-      child: Scaffold(
-        body: LayoutBuilder(
-          builder: (context, restricoes) {
-            final largura = Breakpoints.de(restricoes.maxWidth);
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                AppCabecalhoDeTarefa(
-                  titulo: AppStrings.capturaTitulo,
-                  aoVoltar: () => _voltar(context),
-                  largura: largura,
-                  subtitulo: paciente?.nome,
-                  trilha: [
-                    ...Trilhas.doPaciente(
-                      context,
-                      pacienteId: pacienteId,
-                      nome: paciente?.nome,
-                    ),
-                    ItemDaTrilha(AppStrings.navNovaAvaliacao),
-                  ],
-                  situacao: AppStrings.situacaoConsentimentoRegistrado,
-                ),
-                Expanded(child: GravacaoGuiada(pacienteId: pacienteId)),
-              ],
-            );
-          },
-        ),
+    return Scaffold(
+      body: LayoutBuilder(
+        builder: (context, restricoes) {
+          final largura = Breakpoints.de(restricoes.maxWidth);
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AppCabecalhoDeTarefa(
+                titulo: AppStrings.capturaTitulo,
+                aoVoltar: () => _voltar(context),
+                largura: largura,
+                subtitulo: paciente?.nome,
+                trilha: [
+                  ...Trilhas.doPaciente(
+                    context,
+                    pacienteId: pacienteId,
+                    nome: paciente?.nome,
+                  ),
+                  ItemDaTrilha(AppStrings.navNovaAvaliacao),
+                ],
+                situacao: AppStrings.situacaoConsentimentoRegistrado,
+              ),
+              Expanded(child: GravacaoGuiada(pacienteId: pacienteId)),
+            ],
+          );
+        },
       ),
     );
   }

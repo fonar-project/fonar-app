@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../app/router/trilhas.dart';
 import '../../../pacientes/data/repositorio_pacientes_local.dart';
-import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_movimento.dart';
@@ -204,80 +203,76 @@ class _EspectrogramaPageState extends ConsumerState<EspectrogramaPage> {
         .watch(pacienteProvider(widget.pacienteId))
         .value
         ?.nome;
-    return AppEstrutura(
-      destino: DestinoPrincipal.pacientes,
-      navegacaoInferior: false,
-      child: Scaffold(
-        body: LayoutBuilder(
-          builder: (context, restricoes) {
-            final largura = Breakpoints.de(restricoes.maxWidth);
-            final compacta = largura == LarguraDeTela.compacta;
+    return Scaffold(
+      body: LayoutBuilder(
+        builder: (context, restricoes) {
+          final largura = Breakpoints.de(restricoes.maxWidth);
+          final compacta = largura == LarguraDeTela.compacta;
 
-            final Widget conteudo = switch (analise) {
-              AsyncData(value: ResultadoDaAnalise(:final espectrogramaUrl?)) =>
-                Listener(
-                  onPointerDown: (_) => _contarDedo(1),
-                  onPointerUp: (_) => _contarDedo(-1),
-                  onPointerCancel: (_) => _contarDedo(-1),
-                  child: NotificationListener<ScrollMetricsNotification>(
-                    onNotification: _aoMedir,
-                    child: _visor(espectrogramaUrl, compacta: compacta),
-                  ),
-                ),
-              AsyncData() => AppEstado.central(
-                titulo: AppStrings.resultadoEspectrogramaIndisponivel,
-                acao: AppBotao.secundario(
-                  rotulo: AppStrings.voltar,
-                  aoTocar: _voltar,
+          final Widget conteudo = switch (analise) {
+            AsyncData(value: ResultadoDaAnalise(:final espectrogramaUrl?)) =>
+              Listener(
+                onPointerDown: (_) => _contarDedo(1),
+                onPointerUp: (_) => _contarDedo(-1),
+                onPointerCancel: (_) => _contarDedo(-1),
+                child: NotificationListener<ScrollMetricsNotification>(
+                  onNotification: _aoMedir,
+                  child: _visor(espectrogramaUrl, compacta: compacta),
                 ),
               ),
-              AsyncError(:final error) when error is AnaliseDeOutroPaciente =>
-                AvisoDeOutroPaciente(aoVoltar: _voltar),
-              AsyncError() => AppEstado.central(
-                titulo: AppStrings.resultadoErroCarregar,
-                acao: AppBotao.secundario(
-                  rotulo: AppStrings.tentarNovamente,
-                  aoTocar: () => ref.invalidate(analiseProvider(chave)),
-                ),
+            AsyncData() => AppEstado.central(
+              titulo: AppStrings.resultadoEspectrogramaIndisponivel,
+              acao: AppBotao.secundario(
+                rotulo: AppStrings.voltar,
+                aoTocar: _voltar,
               ),
-              _ => Center(
-                child: CircularProgressIndicator(color: context.cores.acento),
+            ),
+            AsyncError(:final error) when error is AnaliseDeOutroPaciente =>
+              AvisoDeOutroPaciente(aoVoltar: _voltar),
+            AsyncError() => AppEstado.central(
+              titulo: AppStrings.resultadoErroCarregar,
+              acao: AppBotao.secundario(
+                rotulo: AppStrings.tentarNovamente,
+                aoTocar: () => ref.invalidate(analiseProvider(chave)),
               ),
-            };
+            ),
+            _ => Center(
+              child: CircularProgressIndicator(color: context.cores.acento),
+            ),
+          };
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                AppCabecalhoDeTarefa(
-                  titulo: AppStrings.resultadoEspectrogramaTitulo,
-                  aoVoltar: _voltar,
-                  largura: largura,
-                  trilha: [
-                    ...Trilhas.doPaciente(
-                      context,
-                      pacienteId: widget.pacienteId,
-                      nome: nomeDoPaciente,
-                    ),
-                    Trilhas.resultado(
-                      context,
-                      pacienteId: widget.pacienteId,
-                      analiseId: widget.analiseId,
-                    ),
-                    ItemDaTrilha(AppStrings.resultadoEspectrogramaTitulo),
-                  ],
-                ),
-                Expanded(
-                  // Carregando → pronto (ou erro): o conteúdo novo entra.
-                  child: AppTrocaAnimada(
-                    chave: conteudo.runtimeType,
-                    preencher: true,
-                    child: conteudo,
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AppCabecalhoDeTarefa(
+                titulo: AppStrings.resultadoEspectrogramaTitulo,
+                aoVoltar: _voltar,
+                largura: largura,
+                trilha: [
+                  ...Trilhas.doPaciente(
+                    context,
+                    pacienteId: widget.pacienteId,
+                    nome: nomeDoPaciente,
                   ),
+                  Trilhas.resultado(
+                    context,
+                    pacienteId: widget.pacienteId,
+                    analiseId: widget.analiseId,
+                  ),
+                  ItemDaTrilha(AppStrings.resultadoEspectrogramaTitulo),
+                ],
+              ),
+              Expanded(
+                // Carregando → pronto (ou erro): o conteúdo novo entra.
+                child: AppTrocaAnimada(
+                  chave: conteudo.runtimeType,
+                  preencher: true,
+                  child: conteudo,
                 ),
-              ],
-            );
-          },
-        ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
