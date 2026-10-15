@@ -505,6 +505,8 @@ class _SenhaState extends ConsumerState<_Senha> {
           rotulo: AppStrings.contaCancelar,
           aoTocar: estado.trocando ? null : _fechar,
           motivoDesabilitado: AppStrings.contaSenhaTrocando,
+          // O botão do lado já diz "Trocando…" no rótulo.
+          motivoVisivel: false,
         ),
       ],
     ),

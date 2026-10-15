@@ -101,6 +101,90 @@ void main() {
       );
     });
 
+    testWidgets('o leitor de tela anuncia o motivo no próprio botão', (
+      tester,
+    ) async {
+      final semantica = tester.ensureSemantics();
+      await tester.pumpWidget(
+        _tela(
+          const AppBotao.primario(
+            rotulo: 'Gravar',
+            aoTocar: null,
+            motivoDesabilitado: 'Registre o consentimento para gravar',
+          ),
+        ),
+      );
+
+      // No nó do botão, e não num vizinho: o leitor lê "Gravar, botão,
+      // desabilitado" e o motivo juntos.
+      final no = tester
+          .getSemantics(find.byType(FilledButton))
+          .getSemanticsData();
+      expect(no.label, 'Gravar');
+      expect(no.hint, 'Registre o consentimento para gravar');
+      expect(no.flagsCollection.isButton, isTrue);
+      semantica.dispose();
+    });
+
+    testWidgets('motivo que já está na tela: só o leitor de tela o anuncia', (
+      tester,
+    ) async {
+      final semantica = tester.ensureSemantics();
+      await tester.pumpWidget(
+        _tela(
+          const AppBotao.secundario(
+            rotulo: 'Reenviar',
+            aoTocar: null,
+            motivoDesabilitado: 'Conferindo…',
+            motivoVisivel: false,
+          ),
+        ),
+      );
+
+      expect(find.text('Conferindo…'), findsNothing);
+      expect(
+        tester
+            .getSemantics(find.byType(OutlinedButton))
+            .getSemanticsData()
+            .hint,
+        'Conferindo…',
+      );
+      semantica.dispose();
+    });
+
+    testWidgets('rótulo que já é o motivo não se repete embaixo', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _tela(
+          const AppBotao.primario(
+            rotulo: 'Salvando…',
+            aoTocar: null,
+            motivoDesabilitado: 'Salvando…',
+          ),
+        ),
+      );
+
+      expect(find.text('Salvando…'), findsOneWidget);
+    });
+
+    testWidgets('em andamento, um indicador no lugar do ícone', (tester) async {
+      await tester.pumpWidget(
+        _tela(
+          const AppBotao.primario(
+            rotulo: 'Conferindo…',
+            icone: NomeIcone.confirmacao,
+            aoTocar: null,
+            motivoDesabilitado: 'Conferindo…',
+            carregando: true,
+          ),
+        ),
+      );
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(AppIcone), findsNothing);
+    });
+
     testWidgets('respeita o alvo mínimo de toque', (tester) async {
       await tester.pumpWidget(
         _tela(AppBotao.primario(rotulo: 'Entrar', aoTocar: () {})),

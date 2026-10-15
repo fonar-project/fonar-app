@@ -96,7 +96,9 @@ class _Formulario extends ConsumerWidget {
               ? AppStrings.verificarEmailConferindo
               : AppStrings.verificarEmailJaConfirmei,
           aoTocar: online && !ocupado ? confirmar : null,
+          // Conferindo, o rótulo já é o motivo, e não se repete embaixo.
           motivoDesabilitado: motivo ?? AppStrings.verificarEmailConferindo,
+          carregando: ocupado,
           ocupaLargura: true,
         ),
         if (estado.erroGeral case final erro?) ...[
@@ -108,6 +110,9 @@ class _Formulario extends ConsumerWidget {
           rotulo: AppStrings.verificarEmailReenviar,
           aoTocar: online && !ocupado ? controlador.reenviar : null,
           motivoDesabilitado: motivo ?? AppStrings.verificarEmailConferindo,
+          // Parado pelo mesmo motivo do botão de cima, que já o mostra: um
+          // "Conferindo…" na tela, e não três (US49).
+          motivoVisivel: false,
           ocupaLargura: true,
         ),
         const SizedBox(height: AppSpacing.xs),

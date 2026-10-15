@@ -109,29 +109,32 @@ class _CriarContaPageState extends ConsumerState<CriarContaPage> {
             aoMudar: (_) => _controlador.editou(CampoDoRegistro.email),
           ),
           const SizedBox(height: AppSpacing.md),
-          AppCampoTexto(
-            rotulo: AppStrings.loginCampoSenha,
-            apoio: AppStrings.criarContaSenhaApoio,
-            controlador: _senha,
-            erro: estado.erroDe(CampoDoRegistro.senha),
-            somenteLeitura: ocupado,
-            ocultarTexto: true,
-            acaoDeEntrada: TextInputAction.next,
-            autoCorrecao: false,
-            autopreenchimento: const [AutofillHints.newPassword],
-            aoMudar: (_) => _controlador.editou(CampoDoRegistro.senha),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          AppCampoTexto(
-            rotulo: AppStrings.criarContaCampoConfirmacao,
-            controlador: _confirmacao,
-            erro: estado.erroDe(CampoDoRegistro.confirmacao),
-            somenteLeitura: ocupado,
-            ocultarTexto: true,
-            acaoDeEntrada: TextInputAction.next,
-            autoCorrecao: false,
-            autopreenchimento: const [AutofillHints.newPassword],
-            aoMudar: (_) => _controlador.editou(CampoDoRegistro.confirmacao),
+          // Num formulário largo, lado a lado: são curtos, e um confere o
+          // outro.
+          CamposLadoALado(
+            primeiro: AppCampoTexto(
+              rotulo: AppStrings.loginCampoSenha,
+              apoio: AppStrings.criarContaSenhaApoio,
+              controlador: _senha,
+              erro: estado.erroDe(CampoDoRegistro.senha),
+              somenteLeitura: ocupado,
+              ocultarTexto: true,
+              acaoDeEntrada: TextInputAction.next,
+              autoCorrecao: false,
+              autopreenchimento: const [AutofillHints.newPassword],
+              aoMudar: (_) => _controlador.editou(CampoDoRegistro.senha),
+            ),
+            segundo: AppCampoTexto(
+              rotulo: AppStrings.criarContaCampoConfirmacao,
+              controlador: _confirmacao,
+              erro: estado.erroDe(CampoDoRegistro.confirmacao),
+              somenteLeitura: ocupado,
+              ocultarTexto: true,
+              acaoDeEntrada: TextInputAction.next,
+              autoCorrecao: false,
+              autopreenchimento: const [AutofillHints.newPassword],
+              aoMudar: (_) => _controlador.editou(CampoDoRegistro.confirmacao),
+            ),
           ),
           const SizedBox(height: AppSpacing.lg),
           const TituloDaSecao(AppStrings.criarContaSecaoRegistro),
@@ -162,6 +165,8 @@ class _CriarContaPageState extends ConsumerState<CriarContaPage> {
             motivoDesabilitado: online
                 ? AppStrings.criarContaCriando
                 : AppStrings.loginEntrarExigeConexao,
+            // Sem conexão, o aviso logo acima já diz; criando, o rótulo diz.
+            motivoVisivel: false,
             ocupaLargura: true,
           ),
           if (estado.erroGeral case final erro?) ...[
