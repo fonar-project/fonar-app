@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../design_system/escala_da_interface.dart';
 import '../design_system/theme/app_theme.dart';
 import '../features/auth/presentation/widgets/vigia_de_inatividade.dart';
 import '../features/cape_v/presentation/sincronizacao_cape_v_controlador.dart';
 import '../features/captura/data/gravador_record.dart';
+import '../features/conta/data/preferencia_de_tamanho_local.dart';
 import '../features/conta/data/preferencia_de_tema_local.dart';
 import '../features/conta/domain/tema_escolhido.dart';
 import '../features/fila/presentation/fila_controlador.dart';
@@ -49,9 +51,15 @@ class FonarApp extends ConsumerWidget {
       // Troca de tema sem transição: é mudança de ajuste, não animação.
       themeAnimationDuration: Duration.zero,
       routerConfig: ref.watch(routerProvider),
-      // Por cima do roteador: o bloqueio vale para qualquer tela.
-      builder: (context, filho) =>
-          VigiaDeInatividade(child: filho ?? const SizedBox.shrink()),
+      // Por cima do roteador: o bloqueio vale para qualquer tela, e o
+      // tamanho da interface (US48) amplia todas, os diálogos inclusive.
+      // Enquanto a escolha carrega, o automático.
+      builder: (context, filho) => EscalaDaInterface(
+        tamanho:
+            ref.watch(tamanhoDaInterfaceProvider).value ??
+            TamanhoDaInterface.automatico,
+        child: VigiaDeInatividade(child: filho ?? const SizedBox.shrink()),
+      ),
     );
   }
 }

@@ -46,6 +46,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fonar_app/app/router/app_router.dart';
 import 'package:fonar_app/app/router/app_routes.dart';
 import 'package:fonar_app/core/network/conexao.dart';
+import 'package:fonar_app/design_system/escala_da_interface.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/features/auth/data/sessao.dart';
 
@@ -121,15 +122,26 @@ Future<void> _desenhar(WidgetTester tester) async {
 }
 
 void main() {
-  final passadas = [
+  final passadas = <(String, Size, double, bool, TamanhoDaInterface?)>[
     for (final (nome, tamanho) in _larguras)
-      for (final escala in _escalas) (nome, tamanho, escala, false),
+      for (final escala in _escalas) (nome, tamanho, escala, false, null),
     // Uma passada inteira com o sistema pedindo menos movimento: é onde as
     // animações viram duração zero, e duração zero tem armadilhas próprias
     // (o `AnimatedSize` quebrava o layout) — ver `AppMovimento`.
-    ('390x844 sem movimento', const Size(390, 844), 1.0, true),
+    ('390x844 sem movimento', const Size(390, 844), 1.0, true, null),
+    // O tamanho da interface (US48): Full HD no automático é 120%, e o app
+    // vê 1600×900. Também com o texto do sistema em 200% por cima.
+    for (final escala in [1.0, 2.0])
+      (
+        '1920x1080 interface 120%',
+        const Size(1920, 1080),
+        escala,
+        false,
+        TamanhoDaInterface.automatico,
+      ),
   ];
-  for (final (nomeDaLargura, tamanho, escala, semMovimento) in passadas) {
+  for (final (nomeDaLargura, tamanho, escala, semMovimento, interface)
+      in passadas) {
     testWidgets('$nomeDaLargura @ ${(escala * 100).round()}%', (tester) async {
       tester.view.physicalSize = tamanho;
       tester.view.devicePixelRatio = 1;
@@ -159,7 +171,9 @@ void main() {
             builder: (context, filho) => MediaQuery(
               data: MediaQuery.of(context)
                   .copyWith(disableAnimations: semMovimento),
-              child: filho!,
+              child: interface == null
+                  ? filho!
+                  : EscalaDaInterface(tamanho: interface, child: filho!),
             ),
           ),
         ),

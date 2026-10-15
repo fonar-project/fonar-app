@@ -1157,6 +1157,15 @@ abstract final class AppStrings {
   static const contaTemaEscuro = 'Escuro';
   static const contaTemaApoio =
       'Vale para este aparelho. O laudo em PDF sai sempre em papel branco.';
+  static const contaTamanho = 'Tamanho da interface';
+  static const contaTamanhoAutomatico = 'Automático';
+  static const contaTamanho100 = '100%';
+  static const contaTamanho115 = '115%';
+  static const contaTamanho130 = '130%';
+  static String contaTamanhoApoio(double fator) =>
+      'Deixa tudo maior em telas largas, como a do computador. No celular, '
+      'quem manda é o tamanho de texto do sistema. Nesta janela, agora: '
+      '${(fator * 100).round()}%.';
   static const contaFaixasTitulo = 'Faixas de referência';
   static const contaFaixasPendente = 'Validação clínica pendente';
   static const contaFaixasEmUso = 'Catálogo em uso';
