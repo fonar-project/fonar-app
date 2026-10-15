@@ -14,6 +14,7 @@ import 'package:fonar_app/design_system/widgets/app_icone.dart';
 import 'package:fonar_app/design_system/widgets/app_indicador_conexao.dart';
 import 'package:fonar_app/design_system/widgets/app_simbolo.dart';
 import 'package:fonar_app/design_system/widgets/app_status_medida.dart';
+import 'package:fonar_app/design_system/widgets/app_toque.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 
 Widget _tela(Widget filho) => MaterialApp(
@@ -45,6 +46,29 @@ Widget _telaSobreLavanda(Widget filho) => _tela(
 );
 
 void main() {
+  group('AppToque', () {
+    InkWell tinta(WidgetTester tester) =>
+        tester.widget<InkWell>(find.byType(InkWell));
+
+    // US57: a linha sob o ponteiro acende com a transição dos controles, e
+    // não nos 50 ms do `InkWell`.
+    testWidgets('o hover acende na transição dos controles', (tester) async {
+      await tester.pumpWidget(
+        _tela(AppToque(aoTocar: () {}, conteudo: (_) => const Text('linha'))),
+      );
+      expect(tinta(tester).hoverDuration, AppMovimento.rapida);
+    });
+
+    testWidgets('com movimento reduzido, o hover é na hora', (tester) async {
+      await tester.pumpWidget(
+        _telaSemMovimento(
+          AppToque(aoTocar: () {}, conteudo: (_) => const Text('linha')),
+        ),
+      );
+      expect(tinta(tester).hoverDuration, Duration.zero);
+    });
+  });
+
   group('AppBotao', () {
     testWidgets('chama o callback ao ser tocado', (tester) async {
       var tocou = false;

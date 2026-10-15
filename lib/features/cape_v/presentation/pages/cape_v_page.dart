@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../app/router/trilhas.dart';
-import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_movimento.dart';
@@ -91,68 +90,64 @@ class CapeVPage extends ConsumerWidget {
     }
 
     final nomeDoPaciente = ref.watch(pacienteProvider(pacienteId)).value?.nome;
-    return AppEstrutura(
-      destino: DestinoPrincipal.pacientes,
-      navegacaoInferior: false,
-      child: Scaffold(
-        body: LayoutBuilder(
-          builder: (context, restricoes) {
-            final largura = Breakpoints.de(restricoes.maxWidth);
-            final compacta = largura == LarguraDeTela.compacta;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                AppCabecalhoDeTarefa(
-                  titulo: AppStrings.capeVTitulo,
-                  aoVoltar: () => _voltar(context),
-                  largura: largura,
-                  subtitulo: nomeDoPaciente,
-                  trilha: [
-                    ...Trilhas.doPaciente(
-                      context,
-                      pacienteId: pacienteId,
-                      nome: nomeDoPaciente,
+    return Scaffold(
+      body: LayoutBuilder(
+        builder: (context, restricoes) {
+          final largura = Breakpoints.de(restricoes.maxWidth);
+          final compacta = largura == LarguraDeTela.compacta;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AppCabecalhoDeTarefa(
+                titulo: AppStrings.capeVTitulo,
+                aoVoltar: () => _voltar(context),
+                largura: largura,
+                subtitulo: nomeDoPaciente,
+                trilha: [
+                  ...Trilhas.doPaciente(
+                    context,
+                    pacienteId: pacienteId,
+                    nome: nomeDoPaciente,
+                  ),
+                  Trilhas.resultado(
+                    context,
+                    pacienteId: pacienteId,
+                    analiseId: analiseId,
+                  ),
+                  ItemDaTrilha(AppStrings.capeVTitulo),
+                ],
+                situacao: AppStrings.situacaoCapeV,
+              ),
+              Expanded(
+                child: switch ((analise, estado)) {
+                  // A análise precisa ser deste paciente — ver `daPaciente`.
+                  (AsyncError(:final error), _)
+                      when error is AnaliseDeOutroPaciente =>
+                    AvisoDeOutroPaciente(aoVoltar: () => _voltar(context)),
+                  (AsyncError(), _) || (_, AsyncError()) => AppEstado.central(
+                    titulo: AppStrings.capeVErroCarregar,
+                    acao: AppBotao.secundario(
+                      rotulo: AppStrings.tentarNovamente,
+                      aoTocar: tentarDeNovo,
                     ),
-                    Trilhas.resultado(
-                      context,
-                      pacienteId: pacienteId,
-                      analiseId: analiseId,
+                  ),
+                  (AsyncData(), AsyncData(:final value)) => _Formulario(
+                    pacienteId: pacienteId,
+                    analiseId: analiseId,
+                    estado: value,
+                    compacta: compacta,
+                    aoRegistrar: () => _voltar(context),
+                  ),
+                  _ => Center(
+                    child: CircularProgressIndicator(
+                      color: context.cores.acento,
                     ),
-                    ItemDaTrilha(AppStrings.capeVTitulo),
-                  ],
-                  situacao: AppStrings.situacaoCapeV,
-                ),
-                Expanded(
-                  child: switch ((analise, estado)) {
-                    // A análise precisa ser deste paciente — ver `daPaciente`.
-                    (AsyncError(:final error), _)
-                        when error is AnaliseDeOutroPaciente =>
-                      AvisoDeOutroPaciente(aoVoltar: () => _voltar(context)),
-                    (AsyncError(), _) || (_, AsyncError()) => AppEstado.central(
-                      titulo: AppStrings.capeVErroCarregar,
-                      acao: AppBotao.secundario(
-                        rotulo: AppStrings.tentarNovamente,
-                        aoTocar: tentarDeNovo,
-                      ),
-                    ),
-                    (AsyncData(), AsyncData(:final value)) => _Formulario(
-                      pacienteId: pacienteId,
-                      analiseId: analiseId,
-                      estado: value,
-                      compacta: compacta,
-                      aoRegistrar: () => _voltar(context),
-                    ),
-                    _ => Center(
-                      child: CircularProgressIndicator(
-                        color: context.cores.acento,
-                      ),
-                    ),
-                  },
-                ),
-              ],
-            );
-          },
-        ),
+                  ),
+                },
+              ),
+            ],
+          );
+        },
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -36,11 +37,14 @@ import 'saida_protegida.dart';
 /// resultado só existem no contexto de um paciente, e o caminho carrega esse
 /// contexto. Nenhuma delas deve ser alcançável sem `pacienteId`.
 ///
-/// O roteador NÃO embrulha tela nenhuma na [AppEstrutura]: quem decide ter
-/// navegação principal é a própria tela. Ver a convenção documentada em
+/// As telas de quem entrou ficam num `ShellRoute`, que monta a
+/// [AppEstrutura] uma vez só: ao trocar de tela, a barra lateral e as abas
+/// ficam paradas e só o conteúdo troca (US57). Ver a convenção documentada em
 /// `app_estrutura.dart`.
 final routerProvider = Provider<GoRouter>((ref) {
+  final raiz = GlobalKey<NavigatorState>(debugLabel: 'raiz');
   return GoRouter(
+    navigatorKey: raiz,
     initialLocation: AppRoutes.loginCaminho,
     debugLogDiagnostics: kDebugMode,
 
@@ -85,145 +89,163 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.completarCadastroCaminho,
         builder: (context, state) => const CompletarCadastroPage(),
       ),
-      GoRoute(
-        name: AppRoutes.pacientesNome,
-        path: AppRoutes.pacientesCaminho,
-        builder: (context, state) => const PacientesListPage(),
+      // A moldura das telas de quem entrou: barra lateral no desktop, abas
+      // no celular. Fica parada entre as telas; só o conteúdo troca.
+      ShellRoute(
+        builder: molduraDoRoteador,
         routes: [
-          // Antes de :pacienteId — ver AppRoutes.novaAvaliacaoCaminho.
           GoRoute(
-            name: AppRoutes.novaAvaliacaoNome,
-            path: AppRoutes.novaAvaliacaoCaminho,
-            onExit: confirmarSaida(ref, (_) => chaveDoCadastro),
-            builder: (context, state) => const NovoPacientePage(),
-          ),
-          GoRoute(
-            name: AppRoutes.pacienteDetalheNome,
-            path: AppRoutes.pacienteDetalheCaminho,
-            builder: (context, state) => PacienteDetalhePage(
-              pacienteId: state.pathParameters[AppRoutes.paramPacienteId]!,
-            ),
+            name: AppRoutes.pacientesNome,
+            path: AppRoutes.pacientesCaminho,
+            builder: (context, state) => const PacientesListPage(),
             routes: [
+              // Antes de :pacienteId — ver AppRoutes.novaAvaliacaoCaminho.
               GoRoute(
-                name: AppRoutes.edicaoPacienteNome,
-                path: AppRoutes.edicaoPacienteCaminho,
-                onExit: confirmarSaida(
-                  ref,
-                  (state) => chaveDaEdicao(
-                    state.pathParameters[AppRoutes.paramPacienteId]!,
-                  ),
-                ),
-                builder: (context, state) => EditarPacientePage(
-                  pacienteId: state.pathParameters[AppRoutes.paramPacienteId]!,
-                ),
+                name: AppRoutes.novaAvaliacaoNome,
+                path: AppRoutes.novaAvaliacaoCaminho,
+                onExit: confirmarSaida(ref, (_) => chaveDoCadastro),
+                builder: (context, state) => const NovoPacientePage(),
               ),
               GoRoute(
-                name: AppRoutes.consentimentoNome,
-                path: AppRoutes.consentimentoCaminho,
-                builder: (context, state) => ConsentimentoPage(
+                name: AppRoutes.pacienteDetalheNome,
+                path: AppRoutes.pacienteDetalheCaminho,
+                builder: (context, state) => PacienteDetalhePage(
                   pacienteId: state.pathParameters[AppRoutes.paramPacienteId]!,
                 ),
                 routes: [
                   GoRoute(
-                    name: AppRoutes.retiradaConsentimentoNome,
-                    path: AppRoutes.retiradaConsentimentoCaminho,
-                    builder: (context, state) => RetiradaConsentimentoPage(
+                    name: AppRoutes.edicaoPacienteNome,
+                    path: AppRoutes.edicaoPacienteCaminho,
+                    onExit: confirmarSaida(
+                      ref,
+                      (state) => chaveDaEdicao(
+                        state.pathParameters[AppRoutes.paramPacienteId]!,
+                      ),
+                    ),
+                    builder: (context, state) => EditarPacientePage(
                       pacienteId:
                           state.pathParameters[AppRoutes.paramPacienteId]!,
                     ),
                   ),
-                ],
-              ),
-              GoRoute(
-                name: AppRoutes.gravacoesNaoEnviadasNome,
-                path: AppRoutes.gravacoesNaoEnviadasCaminho,
-                builder: (context, state) => GravacoesNaoEnviadasPage(
-                  pacienteId: state.pathParameters[AppRoutes.paramPacienteId]!,
-                ),
-              ),
-              GoRoute(
-                name: AppRoutes.capturaNome,
-                path: AppRoutes.capturaCaminho,
-                redirect: (context, state) => _exigirConsentimento(ref, state),
-                builder: (context, state) => CapturaPage(
-                  pacienteId: state.pathParameters[AppRoutes.paramPacienteId]!,
-                ),
-              ),
-              GoRoute(
-                name: AppRoutes.analiseResultadoNome,
-                path: AppRoutes.analiseResultadoCaminho,
-                builder: (context, state) => AnaliseResultadoPage(
-                  pacienteId: state.pathParameters[AppRoutes.paramPacienteId]!,
-                  analiseId: state.pathParameters[AppRoutes.paramAnaliseId]!,
-                ),
-                routes: [
                   GoRoute(
-                    name: AppRoutes.espectrogramaNome,
-                    path: AppRoutes.espectrogramaCaminho,
-                    builder: (context, state) => EspectrogramaPage(
+                    name: AppRoutes.consentimentoNome,
+                    path: AppRoutes.consentimentoCaminho,
+                    builder: (context, state) => ConsentimentoPage(
+                      pacienteId:
+                          state.pathParameters[AppRoutes.paramPacienteId]!,
+                    ),
+                    routes: [
+                      GoRoute(
+                        name: AppRoutes.retiradaConsentimentoNome,
+                        path: AppRoutes.retiradaConsentimentoCaminho,
+                        builder: (context, state) => RetiradaConsentimentoPage(
+                          pacienteId:
+                              state.pathParameters[AppRoutes.paramPacienteId]!,
+                        ),
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    name: AppRoutes.gravacoesNaoEnviadasNome,
+                    path: AppRoutes.gravacoesNaoEnviadasCaminho,
+                    builder: (context, state) => GravacoesNaoEnviadasPage(
+                      pacienteId:
+                          state.pathParameters[AppRoutes.paramPacienteId]!,
+                    ),
+                  ),
+                  GoRoute(
+                    name: AppRoutes.capturaNome,
+                    path: AppRoutes.capturaCaminho,
+                    redirect: (context, state) =>
+                        _exigirConsentimento(ref, state),
+                    builder: (context, state) => CapturaPage(
+                      pacienteId:
+                          state.pathParameters[AppRoutes.paramPacienteId]!,
+                    ),
+                  ),
+                  GoRoute(
+                    name: AppRoutes.analiseResultadoNome,
+                    path: AppRoutes.analiseResultadoCaminho,
+                    builder: (context, state) => AnaliseResultadoPage(
                       pacienteId:
                           state.pathParameters[AppRoutes.paramPacienteId]!,
                       analiseId:
                           state.pathParameters[AppRoutes.paramAnaliseId]!,
                     ),
+                    routes: [
+                      GoRoute(
+                        name: AppRoutes.espectrogramaNome,
+                        path: AppRoutes.espectrogramaCaminho,
+                        builder: (context, state) => EspectrogramaPage(
+                          pacienteId:
+                              state.pathParameters[AppRoutes.paramPacienteId]!,
+                          analiseId:
+                              state.pathParameters[AppRoutes.paramAnaliseId]!,
+                        ),
+                      ),
+                      GoRoute(
+                        name: AppRoutes.capeVNome,
+                        path: AppRoutes.capeVCaminho,
+                        builder: (context, state) => CapeVPage(
+                          pacienteId:
+                              state.pathParameters[AppRoutes.paramPacienteId]!,
+                          analiseId:
+                              state.pathParameters[AppRoutes.paramAnaliseId]!,
+                        ),
+                      ),
+                      GoRoute(
+                        name: AppRoutes.laudoNome,
+                        path: AppRoutes.laudoCaminho,
+                        builder: (context, state) => LaudoPage(
+                          pacienteId:
+                              state.pathParameters[AppRoutes.paramPacienteId]!,
+                          analiseId:
+                              state.pathParameters[AppRoutes.paramAnaliseId]!,
+                        ),
+                      ),
+                    ],
                   ),
                   GoRoute(
-                    name: AppRoutes.capeVNome,
-                    path: AppRoutes.capeVCaminho,
-                    builder: (context, state) => CapeVPage(
-                      pacienteId:
-                          state.pathParameters[AppRoutes.paramPacienteId]!,
-                      analiseId:
-                          state.pathParameters[AppRoutes.paramAnaliseId]!,
-                    ),
-                  ),
-                  GoRoute(
-                    name: AppRoutes.laudoNome,
-                    path: AppRoutes.laudoCaminho,
-                    builder: (context, state) => LaudoPage(
-                      pacienteId:
-                          state.pathParameters[AppRoutes.paramPacienteId]!,
-                      analiseId:
-                          state.pathParameters[AppRoutes.paramAnaliseId]!,
-                    ),
-                  ),
-                ],
-              ),
-              GoRoute(
-                name: AppRoutes.evolucaoNome,
-                path: AppRoutes.evolucaoCaminho,
-                builder: (context, state) => EvolucaoPage(
-                  pacienteId: state.pathParameters[AppRoutes.paramPacienteId]!,
-                ),
-                routes: [
-                  GoRoute(
-                    name: AppRoutes.modoPacienteNome,
-                    path: AppRoutes.modoPacienteCaminho,
-                    builder: (context, state) => EvolucaoModoPacientePage(
+                    name: AppRoutes.evolucaoNome,
+                    path: AppRoutes.evolucaoCaminho,
+                    builder: (context, state) => EvolucaoPage(
                       pacienteId:
                           state.pathParameters[AppRoutes.paramPacienteId]!,
                     ),
+                    routes: [
+                      // Tela inteira para o paciente ver, por cima da
+                      // moldura: sem barra lateral nem abas.
+                      GoRoute(
+                        parentNavigatorKey: raiz,
+                        name: AppRoutes.modoPacienteNome,
+                        path: AppRoutes.modoPacienteCaminho,
+                        builder: (context, state) => EvolucaoModoPacientePage(
+                          pacienteId:
+                              state.pathParameters[AppRoutes.paramPacienteId]!,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ],
           ),
+          GoRoute(
+            name: AppRoutes.filaNome,
+            path: AppRoutes.filaCaminho,
+            builder: (context, state) => const FilaPage(),
+          ),
+          GoRoute(
+            name: AppRoutes.contaNome,
+            path: AppRoutes.contaCaminho,
+            builder: (context, state) => const ContaPage(),
+          ),
+          GoRoute(
+            name: AppRoutes.historicoNome,
+            path: AppRoutes.historicoCaminho,
+            builder: (context, state) => const HistoricoPage(),
+          ),
         ],
-      ),
-      GoRoute(
-        name: AppRoutes.filaNome,
-        path: AppRoutes.filaCaminho,
-        builder: (context, state) => const FilaPage(),
-      ),
-      GoRoute(
-        name: AppRoutes.contaNome,
-        path: AppRoutes.contaCaminho,
-        builder: (context, state) => const ContaPage(),
-      ),
-      GoRoute(
-        name: AppRoutes.historicoNome,
-        path: AppRoutes.historicoCaminho,
-        builder: (context, state) => const HistoricoPage(),
       ),
     ],
 

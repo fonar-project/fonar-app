@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../app/app_estrutura.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../app/router/saida_protegida.dart';
 import '../../../../design_system/breakpoints.dart';
@@ -195,9 +194,8 @@ class _NovoPacientePageState extends ConsumerState<NovoPacientePage> {
       ],
     );
 
-    return AppEstrutura(
-      destino: DestinoPrincipal.novaAvaliacao,
-      child: LayoutBuilder(
+    return Scaffold(
+      body: LayoutBuilder(
         builder: (context, restricoes) {
           final largura = Breakpoints.de(restricoes.maxWidth);
           final compacta = largura == LarguraDeTela.compacta;

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../app/app_estrutura.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/network/alcance_do_servidor.dart';
 import '../../../../core/network/conexao.dart';
@@ -42,9 +41,8 @@ class PacientesListPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final pacientes = ref.watch(pacientesProvider);
 
-    return AppEstrutura(
-      destino: DestinoPrincipal.pacientes,
-      child: LayoutBuilder(
+    return Scaffold(
+      body: LayoutBuilder(
         builder: (context, restricoes) {
           final expandida =
               Breakpoints.de(restricoes.maxWidth) == LarguraDeTela.expandida;

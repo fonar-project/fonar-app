@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../app/app_estrutura.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/network/conexao.dart';
@@ -43,9 +42,8 @@ class ContaPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return AppEstrutura(
-      destino: DestinoPrincipal.conta,
-      child: LayoutBuilder(
+    return Scaffold(
+      body: LayoutBuilder(
         builder: (context, restricoes) {
           final largura = Breakpoints.de(restricoes.maxWidth);
           return Column(

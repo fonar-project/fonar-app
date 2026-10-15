@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../tokens/app_colors.dart';
 import '../tokens/app_cores.dart';
+import '../tokens/app_movimento.dart';
 import 'app_fundo.dart';
 
 /// Área clicável que não é botão: linha de lista, card, item de navegação.
@@ -105,6 +106,10 @@ class _AppToqueState extends State<AppToque> {
             setState(() => _pressionado = pressionado),
         borderRadius: widget.raio,
         focusColor: Colors.transparent,
+        // O véu acompanha a transição dos controles do `AppMovimento` (US57),
+        // e não os 50 ms do `InkWell`: na lista, a linha sob o ponteiro
+        // acende sem piscar. Com movimento reduzido, na hora.
+        hoverDuration: AppMovimento.duracao(context, AppMovimento.rapida),
         hoverColor: widget.corDoHover ?? context.cores.veu,
         highlightColor: widget.corDoHover ?? context.cores.veu,
         splashFactory: NoSplash.splashFactory,

@@ -6,6 +6,7 @@ import '../core/network/alcance_do_servidor.dart';
 import '../core/network/conexao.dart';
 import '../design_system/breakpoints.dart';
 import '../design_system/tokens/app_cores.dart';
+import '../design_system/tokens/app_movimento.dart';
 import '../design_system/tokens/app_spacing.dart';
 import '../design_system/widgets/app_fundo.dart';
 import '../design_system/widgets/app_indicador_conexao.dart';
@@ -59,6 +60,80 @@ enum DestinoPrincipal {
   final String rota;
 }
 
+/// O que a moldura mostra para uma tela: qual destino fica marcado e se as
+/// abas aparecem embaixo fora do desktop.
+typedef NavegacaoDaTela = ({DestinoPrincipal destino, bool abas});
+
+/// A navegação de cada rota que fica dentro da moldura, pelo nome — ver
+/// "Convenção" em [AppEstrutura].
+///
+/// As telas de destino têm abas; as de tarefa (perfil, gravação, resultado,
+/// CAPE-V, laudo...) ocupam a tela inteira no celular, com o próprio voltar,
+/// e no desktop ficam ao lado da barra lateral, como no protótipo.
+/// `app_estrutura_test.dart` confere que toda rota da moldura está aqui.
+const navegacaoDasRotas = <String, NavegacaoDaTela>{
+  AppRoutes.pacientesNome: (destino: DestinoPrincipal.pacientes, abas: true),
+  AppRoutes.novaAvaliacaoNome: (
+    destino: DestinoPrincipal.novaAvaliacao,
+    abas: true,
+  ),
+  AppRoutes.historicoNome: (destino: DestinoPrincipal.historico, abas: true),
+  AppRoutes.filaNome: (destino: DestinoPrincipal.fila, abas: true),
+  AppRoutes.contaNome: (destino: DestinoPrincipal.conta, abas: true),
+  AppRoutes.pacienteDetalheNome: (
+    destino: DestinoPrincipal.pacientes,
+    abas: false,
+  ),
+  AppRoutes.edicaoPacienteNome: (
+    destino: DestinoPrincipal.pacientes,
+    abas: false,
+  ),
+  // Consentimento e gravação são o caminho da "Nova avaliação".
+  AppRoutes.consentimentoNome: (
+    destino: DestinoPrincipal.novaAvaliacao,
+    abas: false,
+  ),
+  AppRoutes.retiradaConsentimentoNome: (
+    destino: DestinoPrincipal.pacientes,
+    abas: false,
+  ),
+  AppRoutes.gravacoesNaoEnviadasNome: (
+    destino: DestinoPrincipal.pacientes,
+    abas: false,
+  ),
+  AppRoutes.capturaNome: (destino: DestinoPrincipal.novaAvaliacao, abas: false),
+  AppRoutes.analiseResultadoNome: (
+    destino: DestinoPrincipal.pacientes,
+    abas: false,
+  ),
+  AppRoutes.espectrogramaNome: (
+    destino: DestinoPrincipal.pacientes,
+    abas: false,
+  ),
+  AppRoutes.capeVNome: (destino: DestinoPrincipal.pacientes, abas: false),
+  AppRoutes.laudoNome: (destino: DestinoPrincipal.pacientes, abas: false),
+  AppRoutes.evolucaoNome: (destino: DestinoPrincipal.pacientes, abas: false),
+};
+
+/// O `builder` do `ShellRoute` das telas de quem entrou: a [AppEstrutura]
+/// com o destino e as abas da tela de cima, por [navegacaoDasRotas].
+///
+/// Público para os testes montarem roteadores com a mesma moldura do app.
+Widget molduraDoRoteador(
+  BuildContext context,
+  GoRouterState state,
+  Widget filho,
+) {
+  final navegacao =
+      navegacaoDasRotas[state.topRoute?.name] ??
+      (destino: DestinoPrincipal.pacientes, abas: false);
+  return AppEstrutura(
+    destino: navegacao.destino,
+    navegacaoInferior: navegacao.abas,
+    child: filho,
+  );
+}
+
 /// Moldura das telas com navegação principal.
 ///
 /// Expandida: barra lateral roxa com a marca, os destinos, a conexão e o
@@ -66,26 +141,20 @@ enum DestinoPrincipal {
 /// O cabeçalho do celular é da tela, não daqui — cada tela põe nele o que
 /// precisa (a lista de pacientes, por exemplo, põe a busca).
 ///
-/// ## Convenção: CADA TELA SE EMBRULHA, o roteador nunca embrulha
+/// ## Convenção: O ROTEADOR EMBRULHA, por um `ShellRoute` (US57)
 ///
-/// Quem decide ter navegação principal é a tela, no seu próprio `build` — não
-/// o roteador por `ShellRoute` nem por `AppEstrutura` em volta do `builder`.
-/// Vale sem exceção.
+/// As telas de quem entrou ficam todas dentro de um `ShellRoute`, e é ele
+/// quem monta a moldura — uma vez só. Ao trocar de tela, a barra lateral e as
+/// abas ficam PARADAS e só o conteúdo troca, com a entrada do
+/// `AppMovimento`; o destaque do destino ativo anda com a transição curta dos
+/// controles. Antes da US57 cada tela montava a própria moldura, e a página
+/// inteira, barra lateral inclusive, era trocada e animava junto.
 ///
-/// O motivo é que as telas não têm todas a mesma navegação: as de tarefa —
-/// perfil, gravação, resultado, CAPE-V — ficam ao lado da barra lateral no
-/// desktop, como no protótipo, mas ocupam a tela inteira no celular
-/// ([navegacaoInferior] falso); o login vem antes de haver navegação. Com o
-/// roteador embrulhando, a lista de quem fica de fora vira uma lista de
-/// exceções espalhada pelas rotas, longe da tela que ela descreve. Aqui basta
-/// abrir a tela para saber a resposta.
-///
-/// Houve um tempo em que o roteador embrulhava as telas de andaime enquanto
-/// esta documentação dizia o contrário. As duas convenções funcionam; ter as
-/// duas ao mesmo tempo é que não. As telas de andaime acabaram — a última
-/// saiu com o histórico (US23), e a `TelaPlaceholder` foi removida em
-/// 25/09/2026. O que segura a convenção agora é `app_estrutura_test.dart`,
-/// exercitando o roteador de verdade.
+/// Nenhuma tela se embrulha: o que muda de uma para outra (o destino marcado,
+/// as abas embaixo ou a tela inteira no celular) está em [navegacaoDasRotas],
+/// num lugar só. Ficam fora da moldura a entrada (que vem antes de haver
+/// navegação) e o modo paciente, que é tela inteira para o paciente ver.
+/// `app_estrutura_test.dart` segura a convenção, pelo roteador de verdade.
 class AppEstrutura extends StatelessWidget {
   const AppEstrutura({
     required this.destino,
@@ -118,13 +187,15 @@ class AppEstrutura extends StatelessWidget {
             ),
           );
         }
-        if (!navegacaoInferior) return child;
+        // A mesma estrutura com e sem abas: só a barra entra e sai. O
+        // conteúdo (o navegador das telas, na moldura do roteador) fica no
+        // mesmo lugar da árvore e não é remontado.
         return Scaffold(
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(child: child),
-              _BarraInferior(ativo: destino),
+              if (navegacaoInferior) _BarraInferior(ativo: destino),
             ],
           ),
         );
@@ -270,28 +341,37 @@ class _ItemLateral extends StatelessWidget {
       // Azul some sobre o roxo; o anel aqui é creme.
       corDoFoco: creme,
       corDoHover: creme.withValues(alpha: 0.08),
-      conteudo: (context) => Container(
+      // O destaque anda com a transição dos controles: a barra lateral
+      // fica parada entre as telas (ver a convenção em [AppEstrutura]), e só
+      // o destino marcado muda.
+      conteudo: (context) => AnimatedContainer(
+        duration: AppMovimento.duracao(context, AppMovimento.rapida),
+        curve: AppMovimento.curva,
         constraints: const BoxConstraints(
           minHeight: AppSpacing.alvoDeToqueMinimo,
         ),
         alignment: Alignment.centerLeft,
         padding: const EdgeInsets.symmetric(horizontal: 19, vertical: 12),
         decoration: BoxDecoration(
-          color: ativo ? creme.withValues(alpha: 0.14) : null,
+          color: ativo
+              ? creme.withValues(alpha: 0.14)
+              : creme.withValues(alpha: 0),
           // Marca à esquerda no ativo: o estado não depende só do fundo.
           border: Border(
             left: BorderSide(
-              color: ativo ? creme : Colors.transparent,
+              color: ativo ? creme : creme.withValues(alpha: 0),
               width: 3,
             ),
           ),
         ),
-        child: Text(
-          destino.rotulo,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+        child: AnimatedDefaultTextStyle(
+          duration: AppMovimento.duracao(context, AppMovimento.rapida),
+          curve: AppMovimento.curva,
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
             color: ativo ? creme : creme.withValues(alpha: 0.8),
             fontWeight: ativo ? FontWeight.w700 : FontWeight.w500,
           ),
+          child: Text(destino.rotulo),
         ),
       ),
     );
@@ -336,7 +416,9 @@ class _ItemInferior extends StatelessWidget {
     return AppToque(
       aoTocar: () => context.goNamed(destino.rota),
       selecionado: ativo,
-      conteudo: (context) => Container(
+      conteudo: (context) => AnimatedContainer(
+        duration: AppMovimento.duracao(context, AppMovimento.rapida),
+        curve: AppMovimento.curva,
         constraints: const BoxConstraints(
           minHeight: AppSpacing.alvoDeToqueMinimo + AppSpacing.xs,
         ),
@@ -346,7 +428,9 @@ class _ItemInferior extends StatelessWidget {
           // Traço em cima da aba ativa, além do peso e da cor do texto.
           border: Border(
             top: BorderSide(
-              color: ativo ? context.cores.acento : Colors.transparent,
+              color: ativo
+                  ? context.cores.acento
+                  : context.cores.acento.withValues(alpha: 0),
               width: 3,
             ),
           ),

@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/relogio.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../app/router/trilhas.dart';
-import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_colors.dart';
 import '../../../../design_system/tokens/app_cores.dart';
@@ -55,80 +54,76 @@ class ConsentimentoPage extends ConsumerWidget {
     final paciente = ref.watch(pacienteProvider(pacienteId));
     final consentimento = ref.watch(consentimentoProvider(pacienteId));
 
-    return AppEstrutura(
-      destino: DestinoPrincipal.novaAvaliacao,
-      navegacaoInferior: false,
-      child: Scaffold(
-        body: LayoutBuilder(
-          builder: (context, restricoes) {
-            final largura = Breakpoints.de(restricoes.maxWidth);
-            final compacta = largura == LarguraDeTela.compacta;
+    return Scaffold(
+      body: LayoutBuilder(
+        builder: (context, restricoes) {
+          final largura = Breakpoints.de(restricoes.maxWidth);
+          final compacta = largura == LarguraDeTela.compacta;
 
-            final Widget conteudo;
-            if (paciente.hasError || consentimento.hasError) {
-              conteudo = AppEstado.central(
-                titulo: AppStrings.consentimentoErroCarregar,
-                acao: AppBotao.secundario(
-                  rotulo: AppStrings.tentarNovamente,
-                  aoTocar: () {
-                    ref.invalidate(pacienteProvider(pacienteId));
-                    ref.invalidate(consentimentoProvider(pacienteId));
-                  },
-                ),
-              );
-            } else if (!paciente.hasValue || !consentimento.hasValue) {
-              conteudo = Center(
-                child: CircularProgressIndicator(color: context.cores.acento),
-              );
-            } else if (paciente.value case final encontrado?) {
-              conteudo = _Rolagem(
-                compacta: compacta,
-                child: switch (consentimento.value) {
-                  final registrado? => _Registrado(
-                    paciente: encontrado,
-                    consentimento: registrado,
-                  ),
-                  null => _Formulario(paciente: encontrado),
+          final Widget conteudo;
+          if (paciente.hasError || consentimento.hasError) {
+            conteudo = AppEstado.central(
+              titulo: AppStrings.consentimentoErroCarregar,
+              acao: AppBotao.secundario(
+                rotulo: AppStrings.tentarNovamente,
+                aoTocar: () {
+                  ref.invalidate(pacienteProvider(pacienteId));
+                  ref.invalidate(consentimentoProvider(pacienteId));
                 },
-              );
-            } else {
-              conteudo = AppEstado.central(
-                titulo: AppStrings.consentimentoPacienteNaoEncontrado,
-                acao: AppBotao.secundario(
-                  rotulo: AppStrings.consentimentoVoltarParaLista,
-                  aoTocar: () => context.goNamed(AppRoutes.pacientesNome),
-                ),
-              );
-            }
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                AppCabecalhoDeTarefa(
-                  titulo: AppStrings.consentimentoTitulo,
-                  aoVoltar: () => _voltar(context),
-                  largura: largura,
-                  trilha: [
-                    ...Trilhas.doPaciente(
-                      context,
-                      pacienteId: pacienteId,
-                      nome: paciente.value?.nome,
-                    ),
-                    ItemDaTrilha(AppStrings.consentimentoTitulo),
-                  ],
-                ),
-                Expanded(
-                  // Carregando → pronto (ou erro): o conteúdo novo entra.
-                  child: AppTrocaAnimada(
-                    chave: conteudo.runtimeType,
-                    preencher: true,
-                    child: conteudo,
-                  ),
-                ),
-              ],
+              ),
             );
-          },
-        ),
+          } else if (!paciente.hasValue || !consentimento.hasValue) {
+            conteudo = Center(
+              child: CircularProgressIndicator(color: context.cores.acento),
+            );
+          } else if (paciente.value case final encontrado?) {
+            conteudo = _Rolagem(
+              compacta: compacta,
+              child: switch (consentimento.value) {
+                final registrado? => _Registrado(
+                  paciente: encontrado,
+                  consentimento: registrado,
+                ),
+                null => _Formulario(paciente: encontrado),
+              },
+            );
+          } else {
+            conteudo = AppEstado.central(
+              titulo: AppStrings.consentimentoPacienteNaoEncontrado,
+              acao: AppBotao.secundario(
+                rotulo: AppStrings.consentimentoVoltarParaLista,
+                aoTocar: () => context.goNamed(AppRoutes.pacientesNome),
+              ),
+            );
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AppCabecalhoDeTarefa(
+                titulo: AppStrings.consentimentoTitulo,
+                aoVoltar: () => _voltar(context),
+                largura: largura,
+                trilha: [
+                  ...Trilhas.doPaciente(
+                    context,
+                    pacienteId: pacienteId,
+                    nome: paciente.value?.nome,
+                  ),
+                  ItemDaTrilha(AppStrings.consentimentoTitulo),
+                ],
+              ),
+              Expanded(
+                // Carregando → pronto (ou erro): o conteúdo novo entra.
+                child: AppTrocaAnimada(
+                  chave: conteudo.runtimeType,
+                  preencher: true,
+                  child: conteudo,
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

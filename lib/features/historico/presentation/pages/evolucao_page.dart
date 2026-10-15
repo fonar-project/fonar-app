@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../app/router/trilhas.dart';
-import '../../../../app/app_estrutura.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_movimento.dart';
@@ -65,82 +64,78 @@ class EvolucaoPage extends ConsumerWidget {
     final analises = ref.watch(analisesDoPacienteProvider(pacienteId));
     final paciente = ref.watch(pacienteProvider(pacienteId)).value;
 
-    return AppEstrutura(
-      destino: DestinoPrincipal.pacientes,
-      navegacaoInferior: false,
-      child: Scaffold(
-        body: LayoutBuilder(
-          builder: (context, restricoes) {
-            final largura = Breakpoints.de(restricoes.maxWidth);
-            final compacta = largura == LarguraDeTela.compacta;
+    return Scaffold(
+      body: LayoutBuilder(
+        builder: (context, restricoes) {
+          final largura = Breakpoints.de(restricoes.maxWidth);
+          final compacta = largura == LarguraDeTela.compacta;
 
-            final Widget conteudo = switch (analises) {
-              AsyncData(:final value) => switch (sessoesAnalisadas(value)) {
-                [] => AppEstado.central(
-                  titulo: AppStrings.evolucaoVaziaTitulo,
-                  texto: AppStrings.evolucaoVaziaTexto,
-                  acao: AppBotao.secundario(
-                    rotulo: AppStrings.voltar,
-                    aoTocar: () => _voltar(context),
-                  ),
-                ),
-                final sessoes => _Evolucao(
-                  pacienteId: pacienteId,
-                  paciente: paciente,
-                  sessoes: sessoes,
-                  compacta: compacta,
-                  expandida: largura == LarguraDeTela.expandida,
-                ),
-              },
-              AsyncError() => AppEstado.central(
-                titulo: AppStrings.evolucaoErroCarregar,
+          final Widget conteudo = switch (analises) {
+            AsyncData(:final value) => switch (sessoesAnalisadas(value)) {
+              [] => AppEstado.central(
+                titulo: AppStrings.evolucaoVaziaTitulo,
+                texto: AppStrings.evolucaoVaziaTexto,
                 acao: AppBotao.secundario(
-                  rotulo: AppStrings.tentarNovamente,
-                  aoTocar: () =>
-                      ref.invalidate(analisesDoPacienteProvider(pacienteId)),
+                  rotulo: AppStrings.voltar,
+                  aoTocar: () => _voltar(context),
                 ),
               ),
-              _ => Center(
-                child: CircularProgressIndicator(color: context.cores.acento),
+              final sessoes => _Evolucao(
+                pacienteId: pacienteId,
+                paciente: paciente,
+                sessoes: sessoes,
+                compacta: compacta,
+                expandida: largura == LarguraDeTela.expandida,
               ),
-            };
+            },
+            AsyncError() => AppEstado.central(
+              titulo: AppStrings.evolucaoErroCarregar,
+              acao: AppBotao.secundario(
+                rotulo: AppStrings.tentarNovamente,
+                aoTocar: () =>
+                    ref.invalidate(analisesDoPacienteProvider(pacienteId)),
+              ),
+            ),
+            _ => Center(
+              child: CircularProgressIndicator(color: context.cores.acento),
+            ),
+          };
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                AppCabecalhoDeTarefa(
-                  titulo: AppStrings.evolucaoTitulo,
-                  aoVoltar: () => _voltar(context),
-                  largura: largura,
-                  subtitulo: paciente?.nome,
-                  trilha: [
-                    ...Trilhas.doPaciente(
-                      context,
-                      pacienteId: pacienteId,
-                      nome: paciente?.nome,
-                    ),
-                    ItemDaTrilha(AppStrings.evolucaoTitulo),
-                  ],
-                  // No desktop a ação sobe para o cabeçalho, como no
-                  // protótipo; nas outras larguras, fica no corpo.
-                  acoes: [
-                    if (analises.value case final v?
-                        when sessoesAnalisadas(v).isNotEmpty)
-                      _MostrarAoPaciente(pacienteId: pacienteId),
-                  ],
-                ),
-                Expanded(
-                  // Carregando → pronto (ou erro): o conteúdo novo entra.
-                  child: AppTrocaAnimada(
-                    chave: conteudo.runtimeType,
-                    preencher: true,
-                    child: conteudo,
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AppCabecalhoDeTarefa(
+                titulo: AppStrings.evolucaoTitulo,
+                aoVoltar: () => _voltar(context),
+                largura: largura,
+                subtitulo: paciente?.nome,
+                trilha: [
+                  ...Trilhas.doPaciente(
+                    context,
+                    pacienteId: pacienteId,
+                    nome: paciente?.nome,
                   ),
+                  ItemDaTrilha(AppStrings.evolucaoTitulo),
+                ],
+                // No desktop a ação sobe para o cabeçalho, como no
+                // protótipo; nas outras larguras, fica no corpo.
+                acoes: [
+                  if (analises.value case final v?
+                      when sessoesAnalisadas(v).isNotEmpty)
+                    _MostrarAoPaciente(pacienteId: pacienteId),
+                ],
+              ),
+              Expanded(
+                // Carregando → pronto (ou erro): o conteúdo novo entra.
+                child: AppTrocaAnimada(
+                  chave: conteudo.runtimeType,
+                  preencher: true,
+                  child: conteudo,
                 ),
-              ],
-            );
-          },
-        ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
