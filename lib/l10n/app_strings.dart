@@ -1467,6 +1467,73 @@ abstract final class AppStrings {
   static const completarCadastroBotao = 'Concluir cadastro';
   static const completarCadastroSalvando = 'Salvando…';
 
+  // ------------------------------------------------------- guia e ajuda --
+  // O guia da primeira vez (US50): um passo por elemento da tela inicial.
+  // Cada título diz O QUE é o elemento, com o nome que ele tem na tela — o
+  // recorte não é a única pista.
+  static const ajuda = 'Ajuda';
+  static const ajudaReverGuia = 'Rever o guia';
+  static const ajudaAtalhos = 'Atalhos de teclado';
+
+  static String guiaPasso(int atual, int total) => 'Passo $atual de $total';
+  static const guiaRotulo = 'Guia do FONAR';
+  static const guiaPular = 'Pular o guia';
+  static const guiaAnterior = 'Anterior';
+  static const guiaProximo = 'Próximo';
+  static const guiaConcluir = 'Concluir';
+
+  static const guiaNovaAvaliacaoTitulo = navNovaAvaliacao;
+  static const guiaNovaAvaliacaoTexto =
+      'Por este botão você cadastra o paciente, registra o consentimento e '
+      'grava a voz. Quem já está na lista é avaliado de novo pelo perfil.';
+  static const guiaListaTitulo = 'Seus pacientes';
+  static const guiaListaTexto =
+      'Cada paciente da lista abre o perfil: consentimento, sessões, '
+      'resultados, CAPE-V, evolução e laudo.';
+  static const guiaListaVaziaTexto =
+      'Os pacientes que você cadastrar aparecem nesta tela. Cada um abre o '
+      'perfil: consentimento, sessões, resultados, CAPE-V, evolução e laudo.';
+  static const guiaFilaTitulo = navFila;
+  static const guiaFilaTexto =
+      'Cada gravação espera aqui até chegar à análise. Sem conexão nada se '
+      'perde: o envio continua sozinho quando a conexão volta.';
+  static const guiaContaTitulo = navConta;
+  static const guiaContaTexto =
+      'Seus dados profissionais, a troca de senha e a aparência: tema claro '
+      'ou escuro e tamanho da interface.';
+  static const guiaConexaoTitulo = 'Conexão';
+  static const guiaConexaoTexto =
+      'Diz se o aparelho está conectado. A gravação funciona sem conexão; a '
+      'análise precisa dela.';
+  static const guiaAjudaTitulo = ajuda;
+  static const guiaAjudaTexto =
+      'Para ver este guia de novo, ou os atalhos de teclado, é aqui.';
+
+  // Só os atalhos que existem: cada linha corresponde a uma tecla tratada
+  // no código (gravação guiada e espectrograma).
+  static const atalhosTitulo = 'Atalhos de teclado';
+  static const atalhosFechar = 'Fechar';
+  static const atalhosEmQualquerTela = 'Em qualquer tela';
+  static const atalhosTab = 'Tab e Shift+Tab';
+  static const atalhosTabTexto = 'Passa de um controle para o próximo.';
+  static const atalhosAtivar = 'Enter ou Espaço';
+  static const atalhosAtivarTexto = 'Aciona o controle em destaque.';
+  static const atalhosEsc = 'Esc';
+  static const atalhosEscTexto = 'Fecha a janela aberta, como esta.';
+  static const atalhosNaGravacao = 'Na gravação';
+  static const atalhosEspaco = 'Espaço';
+  static const atalhosEspacoTexto =
+      'Mede o ruído da sala, inicia ou para a gravação da etapa.';
+  static const atalhosR = 'R';
+  static const atalhosRTexto = 'Grava a etapa de novo.';
+  static const atalhosNoEspectrograma = 'No espectrograma';
+  static const atalhosSetas = 'Setas';
+  static const atalhosSetasTexto = 'Percorrem a imagem ampliada.';
+  static const atalhosMais = '+ e −';
+  static const atalhosMaisTexto = 'Aproximam e afastam.';
+  static const atalhosZero = '0';
+  static const atalhosZeroTexto = 'Volta à imagem inteira.';
+
   // ---------------------------------------------------------------- erros --
   // Mensagens voltadas ao fonoaudiólogo: dizem o que aconteceu e o que fazer,
   // sem jargão de rede e sem código de status.

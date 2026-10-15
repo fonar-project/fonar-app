@@ -19,6 +19,7 @@ Não há ilustrações vetoriais no design system: espectrograma e formas de ond
 | `avancar.svg` | linhas de lista e CTAs › (01, 02, 05, 06, 07, 09, 10) |
 | `adicionar.svg` | nova avaliação ＋ (01, 02) |
 | `informacao.svg` | procedência da faixa de referência (07, 09) |
+| `ajuda.svg` | botão de Ajuda: rever o guia e atalhos de teclado (01 e cabeçalho das telas principais no desktop) |
 | `virar-para-paciente.svg` | modo paciente ⟳ (09) |
 | `girar-aparelho.svg` | dica de paisagem p/ espectrograma ⟲ (07 mobile) |
 | `passo-pendente.svg` | passo aguardando na fila (06) |
@@ -67,7 +68,7 @@ wc -c assets/icons/*.svg          # ícone limpo: algumas centenas de bytes
 grep -i c2pa assets/icons/*.svg   # não deve retornar nada
 ```
 
-Os 22 ícones atuais já estão limpos.
+Os 23 ícones atuais já estão limpos.
 
 ## Como esses arquivos chegam na tela
 

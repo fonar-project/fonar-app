@@ -18,6 +18,7 @@ import '../../../../design_system/widgets/app_toque.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../../analise/domain/resultado_da_analise.dart';
 import '../../../analise/presentation/apresentacao_da_medida.dart';
+import '../../../guia/presentation/widgets/botao_de_ajuda.dart';
 import '../../domain/entrada_do_historico.dart';
 import '../../domain/evolucao_da_medida.dart';
 import '../historico_controlador.dart';
@@ -143,6 +144,7 @@ class HistoricoPage extends ConsumerWidget {
               AppCabecalhoDeSecao(
                 titulo: AppStrings.historicoTitulo,
                 largura: largura,
+                ajuda: const BotaoDeAjuda(),
               ),
               Expanded(child: CustomScrollView(slivers: [topo, corpo])),
             ],

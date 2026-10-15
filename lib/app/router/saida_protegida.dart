@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../design_system/widgets/app_confirmacao.dart';
+import '../../features/guia/presentation/alvos_do_guia.dart';
 import '../../l10n/app_strings.dart';
 
 /// Os formulários abertos com alterações que ainda não foram salvas, por
@@ -52,6 +53,11 @@ ExitCallback confirmarSaida(Ref ref, String Function(GoRouterState) chave) =>
         ref
             .read(formulariosAlteradosProvider.notifier)
             .marcar(k, alterado: false);
+      } else {
+        // Quem fica no formulário desistiu de ir: o "Rever o guia" que pediu
+        // esta saída (US50) cai, senão o guia abriria mais tarde, ao voltar
+        // à lista por outro caminho.
+        ref.read(pedidoDoGuiaProvider.notifier).atender();
       }
       return sair;
     };

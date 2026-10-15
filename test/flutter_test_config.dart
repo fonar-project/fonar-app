@@ -9,7 +9,11 @@ import 'package:fonar_app/core/config/app_config.dart';
 /// não: rodam no modo de exemplo, sem rede, como o app rodava antes sem
 /// `--dart-define`. Quem testa o caminho de verdade (login, cadastro, API)
 /// troca o provider pelo falso, como sempre fez.
+///
+/// E sem o guia da primeira vez (US50) abrindo sozinho: ele cobriria a tela
+/// inicial de todo teste que passa por ela. Os testes do guia o ligam.
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   AppConfig.mudarModoDeExemplo(ligado: true);
+  AppConfig.mudarGuiaAbreSozinho(ligado: false);
   await testMain();
 }
