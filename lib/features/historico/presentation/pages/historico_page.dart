@@ -112,6 +112,11 @@ class HistoricoPage extends ConsumerWidget {
                   children: _itens(
                     entradas,
                     exemplo: todas.any((e) => e.analise.exemplo),
+                    // Na tela larga, duas por linha (US48): uma linha de
+                    // ponta a ponta deixava o nome a um palmo do AVQI.
+                    colunas: restricoes.maxWidth - 2 * margem >= _larguraDeDuas
+                        ? 2
+                        : 1,
                   ),
                 ),
               ),
@@ -148,11 +153,18 @@ class HistoricoPage extends ConsumerWidget {
   }
 }
 
+/// Largura a partir da qual o histórico vai em duas colunas.
+const _larguraDeDuas = 1100.0;
+
 /// As linhas do histórico, com o título de cada mês. Sem data — a que o
 /// servidor ainda está analisando — é um grupo próprio, no topo.
+///
+/// Com [colunas] 2, as de cada mês vão lado a lado, na ordem: a mais
+/// recente à esquerda, a seguinte à direita, e assim por diante.
 List<Widget> _itens(
   List<EntradaDoHistorico> entradas, {
   required bool exemplo,
+  int colunas = 1,
 }) {
   String grupo(EntradaDoHistorico e) => switch (e.analise.realizadaEm) {
     final d? => AppStrings.mesEAno(d),
@@ -169,16 +181,35 @@ List<Widget> _itens(
       const SizedBox(height: AppSpacing.md),
     ],
   ];
-  String? anterior;
+  // Os meses, na ordem em que aparecem.
+  final meses = <String, List<EntradaDoHistorico>>{};
   for (final e in entradas) {
-    final atual = grupo(e);
-    if (atual != anterior) {
-      itens.add(_TituloDoMes(atual, primeiro: anterior == null));
-      anterior = atual;
+    meses.putIfAbsent(grupo(e), () => []).add(e);
+  }
+  for (final (i, MapEntry(key: mes, value: doMes)) in meses.entries.indexed) {
+    itens.add(_TituloDoMes(mes, primeiro: i == 0));
+    for (var j = 0; j < doMes.length; j += colunas) {
+      final linha = doMes.skip(j).take(colunas).toList();
+      itens
+        ..add(
+          colunas == 1
+              ? _Linha(entrada: linha.single)
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (var k = 0; k < colunas; k++) ...[
+                      if (k > 0) const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: k < linha.length
+                            ? _Linha(entrada: linha[k])
+                            : const SizedBox.shrink(),
+                      ),
+                    ],
+                  ],
+                ),
+        )
+        ..add(const SizedBox(height: AppSpacing.xs));
     }
-    itens
-      ..add(_Linha(entrada: e))
-      ..add(const SizedBox(height: AppSpacing.xs));
   }
   return itens;
 }

@@ -244,6 +244,31 @@ void main() {
       expect(find.text(AppStrings.contaNadaMudou), findsOneWidget);
     });
 
+    // US48: no desktop largo, duas colunas — a conta à esquerda, este
+    // aparelho à direita. Na janela menor, uma só.
+    for (final (nome, tamanho, duas) in [
+      ('desktop largo', const Size(1600, 1400), true),
+      ('janela de 1280', const Size(1280, 1400), false),
+    ]) {
+      testWidgets('$nome: ${duas ? 'duas colunas' : 'uma coluna'}', (
+        tester,
+      ) async {
+        await _abrir(tester, tamanho: tamanho);
+
+        final dados = tester.getTopLeft(find.text(AppStrings.contaSeusDados));
+        final aparelho = tester.getTopLeft(
+          find.text(AppStrings.contaNesteAparelho),
+        );
+        if (duas) {
+          expect(aparelho.dy, dados.dy);
+          expect(aparelho.dx, greaterThan(dados.dx));
+        } else {
+          expect(aparelho.dx, dados.dx);
+          expect(aparelho.dy, greaterThan(dados.dy));
+        }
+      });
+    }
+
     testWidgets('primeira entrada no aparelho: perfil vazio, e a barra lateral '
         'mostra o e-mail e pede os dados', (tester) async {
       final (_, conta, _) = await _abrir(

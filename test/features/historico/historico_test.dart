@@ -239,6 +239,28 @@ void main() {
     );
   });
 
+  // US48: na tela larga, duas avaliações por linha, na ordem (a mais
+  // recente à esquerda). Na estreita, uma embaixo da outra.
+  for (final (nome, tamanho, lado) in [
+    ('tela larga', const Size(1600, 1400), true),
+    ('tela estreita', const Size(1024, 1400), false),
+  ]) {
+    testWidgets('$nome: ${lado ? 'duas por linha' : 'uma por linha'}', (
+      tester,
+    ) async {
+      await _abrir(tester, tamanho: tamanho);
+
+      final primeira = tester.getTopLeft(find.text('20 set 2026, 14:00'));
+      final segunda = tester.getTopLeft(find.text('02 set 2026, 10:00'));
+      if (lado) {
+        expect(segunda.dy, closeTo(primeira.dy, 4));
+        expect(segunda.dx, greaterThan(primeira.dx));
+      } else {
+        expect(segunda.dy, greaterThan(primeira.dy));
+      }
+    });
+  }
+
   testWidgets('cada avaliação diz de quem, quando e o AVQI — sem '
       'classificar', (tester) async {
     await _abrir(tester, comLaudo: ['an-3']);

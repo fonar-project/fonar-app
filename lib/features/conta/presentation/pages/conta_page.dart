@@ -63,27 +63,50 @@ class ContaPage extends ConsumerWidget {
                         : AppSpacing.xl,
                     vertical: AppSpacing.lg,
                   ),
+                  // No desktop largo, duas colunas (US48): a conta — dados,
+                  // senha e sair — e este aparelho. Cada uma na largura de
+                  // leitura de um formulário; numa coluna só, sobrava vazio
+                  // dos dois lados.
                   child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 640),
-                      child: const Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _SeusDados(),
-                          SizedBox(height: AppSpacing.xl),
-                          _Senha(),
-                          SizedBox(height: AppSpacing.xl),
-                          _NesteAparelho(),
-                          SizedBox(height: AppSpacing.xl),
-                          _FaixasDeReferencia(),
-                          SizedBox(height: AppSpacing.xl),
-                          _Aparencia(),
-                          SizedBox(height: AppSpacing.xl),
-                          _Sobre(),
-                          SizedBox(height: AppSpacing.xl),
-                          _Sair(),
-                        ],
-                      ),
+                    child: LayoutBuilder(
+                      builder: (context, area) =>
+                          area.maxWidth >= _larguraDeDuasColunas
+                          ? ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 1240),
+                              child: const Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: _Coluna([
+                                      _SeusDados(),
+                                      _Senha(),
+                                      _Sair(),
+                                    ]),
+                                  ),
+                                  SizedBox(width: AppSpacing.xxl),
+                                  Expanded(
+                                    child: _Coluna([
+                                      _NesteAparelho(),
+                                      _Aparencia(),
+                                      _FaixasDeReferencia(),
+                                      _Sobre(),
+                                    ]),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 640),
+                              child: const _Coluna([
+                                _SeusDados(),
+                                _Senha(),
+                                _NesteAparelho(),
+                                _FaixasDeReferencia(),
+                                _Aparencia(),
+                                _Sobre(),
+                                _Sair(),
+                              ]),
+                            ),
                     ),
                   ),
                 ),
@@ -94,6 +117,27 @@ class ContaPage extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// A partir desta largura de conteúdo, a Conta vai em duas colunas.
+const _larguraDeDuasColunas = 1100.0;
+
+/// Seções uma embaixo da outra, com o respiro de sempre entre elas.
+class _Coluna extends StatelessWidget {
+  const _Coluna(this.secoes);
+
+  final List<Widget> secoes;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      for (final (i, secao) in secoes.indexed) ...[
+        if (i > 0) const SizedBox(height: AppSpacing.xl),
+        secao,
+      ],
+    ],
+  );
 }
 
 class _Titulo extends StatelessWidget {
