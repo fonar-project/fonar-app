@@ -28,6 +28,27 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Só as arquiteturas pedidas ao `flutter build` (US54). O plugin do
+        // Flutter põe as três nos abiFilters, seja qual for o
+        // `--target-platform`, e a biblioteca nativa de um pacote (o
+        // libdartjni, do `jni`) ia para todas: o APK de 64 bits saía com uma
+        // pasta de 32, e o celular de 32 bits o instalaria sem o motor do
+        // Flutter. Sem `--target-platform` (o build de debug do CI), o Flutter
+        // manda as três, e nada muda. Com `--split-per-abi`, quem separa são
+        // os splits, que não aceitam abiFilters junto.
+        val alvo = project.findProperty("target-platform") as String?
+        if (alvo != null && project.findProperty("split-per-abi") != "true") {
+            val arquiteturas = mapOf(
+                "android-arm" to "armeabi-v7a",
+                "android-arm64" to "arm64-v8a",
+                "android-x64" to "x86_64",
+            )
+            ndk {
+                abiFilters.clear()
+                abiFilters += alvo.split(",").mapNotNull { arquiteturas[it] }
+            }
+        }
     }
 
     // A chave de release (US41). Fica FORA do repositório — é ela que prova
