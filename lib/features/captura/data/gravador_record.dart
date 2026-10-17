@@ -58,6 +58,30 @@ final limpezaDeWavSemRegistroProvider = FutureProvider<int>((ref) async {
   }
 });
 
+/// Chave de comparação entre o caminho que o registro guarda e o que a
+/// listagem da pasta devolve.
+///
+/// O mesmo arquivo pode estar escrito de duas formas: o banco guarda o
+/// caminho como quem gravou o escreveu, e [Directory.list] devolve sempre o
+/// separador da plataforma. No Windows as duas diferenças possíveis são o
+/// separador (`/` no lugar de `\`) e a caixa, que o sistema de arquivos
+/// ignora. Comparar a string crua faz um WAV registrado passar por órfão —
+/// e voz de paciente some.
+///
+/// A normalização só erra para o lado seguro: dois caminhos que viram a
+/// mesma chave fazem o arquivo ser POUPADO, nunca apagado.
+///
+/// O `Platform.isWindows` aqui não decide LAYOUT — decide semântica de
+/// sistema de arquivos, que é mesmo diferente entre os sistemas. A regra
+/// do projeto que proíbe `Platform.is*` vale para a interface, e segue
+/// valendo. O parâmetro [windows] existe para o teste provar os dois
+/// comportamentos em qualquer máquina.
+@visibleForTesting
+String chaveDeCaminho(String caminho, {bool? windows}) {
+  if (!(windows ?? Platform.isWindows)) return caminho;
+  return caminho.replaceAll('/', r'\').toLowerCase();
+}
+
 /// Apaga da pasta de amostras os WAV que nenhum registro aponta, e devolve
 /// quantos.
 ///
@@ -81,10 +105,13 @@ Future<int> apagarWavsSemRegistro(
       );
   if (!await raiz.exists()) return 0;
   final limite = (agora ?? DateTime.now()).subtract(idadeMinima);
+  final registradosPorChave = {
+    for (final caminho in registrados) chaveDeCaminho(caminho),
+  };
   var apagados = 0;
   await for (final item in raiz.list(recursive: true, followLinks: false)) {
     if (item is! File || !item.path.toLowerCase().endsWith('.wav')) continue;
-    if (registrados.contains(item.path)) continue;
+    if (registradosPorChave.contains(chaveDeCaminho(item.path))) continue;
     try {
       if ((await item.lastModified()).isAfter(limite)) continue;
       await item.delete();
