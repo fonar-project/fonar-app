@@ -55,30 +55,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (destino != null && mounted) context.goNamed(rotaDe(destino));
   }
 
-  /// Tocou em "Esqueci a senha": o resultado fica na tela até sair dela.
-  ///
-  /// Era o único `SnackBar` do aplicativo (achado 5.4 da revisão de 24/09).
-  /// Ele flutuava por cima do conteúdo, sumia sozinho — quem lê devagar perde
-  /// o aviso, e é ele que explica o que aconteceu — e vinha com a cor escura
-  /// do Material, fora da paleta. Todo aviso desta tela e das outras é um
-  /// `AppSituacao` no fluxo da página; este passou a ser também.
-  var _recuperacaoPedida = false;
-  String? _erroDaRecuperacao;
-
-  Future<void> _recuperar() async {
-    if (ref.read(loginDeExemploProvider)) {
-      setState(() => _recuperacaoPedida = true);
-      return;
-    }
-    final erro = await ref
-        .read(redefinicaoDeSenhaProvider.notifier)
-        .pedir(_email.text);
-    if (!mounted) return;
-    setState(() {
-      _recuperacaoPedida = true;
-      _erroDaRecuperacao = erro;
-    });
-  }
+  /// "Esqueci a senha" abre a tela própria do pedido (US58), com o e-mail
+  /// que já estava aqui. Empilhada: voltar de lá traz esta tela de volta
+  /// como estava.
+  void _recuperar() => context.pushNamed(
+    AppRoutes.recuperarSenhaNome,
+    extra: _email.text.trim(),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +81,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     // Idem: enquanto o cofre não respondeu, nenhuma conta para o offline.
     final contaGuardada = ref.watch(contaGuardadaProvider).value;
     final deExemplo = ref.watch(loginDeExemploProvider);
-    final pedido = ref.watch(redefinicaoDeSenhaProvider);
     final textos = Theme.of(context).textTheme;
 
     return AutofillGroup(
@@ -181,32 +163,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             const SizedBox(height: AppSpacing.xs),
             LinkDaEntrada(
               rotulo: AppStrings.loginEsqueciSenha,
-              aoTocar: pedido == PedidoDeRedefinicao.enviando
-                  ? null
-                  : _recuperar,
+              aoTocar: estado.carregando ? null : _recuperar,
             ),
-            if (_recuperacaoPedida) ...[
-              const SizedBox(height: AppSpacing.sm),
-              if (_erroDaRecuperacao case final erro?)
-                ErroDaEntrada(mensagem: erro)
-              else
-                // `liveRegion`: o aviso aparece por causa de um toque, e quem
-                // não vê a tela precisa ouvir que apareceu.
-                Semantics(
-                  liveRegion: true,
-                  child: deExemplo
-                      ? const AppSituacao(
-                          icone: NomeIcone.informacao,
-                          titulo: AppStrings.loginRecuperacaoIndisponivel,
-                          texto: AppStrings.loginRecuperacaoIndisponivelTexto,
-                        )
-                      : const AppSituacao(
-                          icone: NomeIcone.informacao,
-                          titulo: AppStrings.loginRecuperacaoEnviadaTitulo,
-                          texto: AppStrings.loginRecuperacaoEnviadaTexto,
-                        ),
-                ),
-            ],
             // Criar conta só existe com o Firebase de verdade.
             if (ref.watch(criacaoDeContaProvider) != null) ...[
               const SizedBox(height: AppSpacing.md),

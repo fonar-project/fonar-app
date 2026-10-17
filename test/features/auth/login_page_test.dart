@@ -17,6 +17,7 @@ import 'package:fonar_app/features/auth/data/repositorio_autenticacao_firebase.d
 import 'package:fonar_app/features/auth/domain/conta_autenticada.dart';
 import 'package:fonar_app/features/auth/domain/repositorio_autenticacao.dart';
 import 'package:fonar_app/features/auth/presentation/pages/login_page.dart';
+import 'package:fonar_app/features/auth/presentation/pages/recuperar_senha_page.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 
 import '../../apoio/senha_sem_rede_em_memoria.dart';
@@ -24,12 +25,7 @@ import '../../apoio/sessao_de_teste.dart';
 
 /// Repositório controlável pelo teste.
 class _RepositorioFalso implements RepositorioAutenticacao {
-  _RepositorioFalso({
-    this.erro,
-    this.espera,
-    this.guardada = contaDeTeste,
-    this.erroDaRedefinicao,
-  });
+  _RepositorioFalso({this.erro, this.espera, this.guardada = contaDeTeste});
 
   /// Lançado em [entrar], se preenchido.
   final AppException? erro;
@@ -39,9 +35,6 @@ class _RepositorioFalso implements RepositorioAutenticacao {
 
   /// A conta do modo offline.
   final ContaAutenticada? guardada;
-
-  /// Lançado em [pedirRedefinicaoDeSenha], se preenchido.
-  final AppException? erroDaRedefinicao;
 
   int chamadas = 0;
   final redefinicoes = <String>[];
@@ -63,7 +56,6 @@ class _RepositorioFalso implements RepositorioAutenticacao {
   @override
   Future<void> pedirRedefinicaoDeSenha(String email) async {
     redefinicoes.add(email);
-    if (erroDaRedefinicao case final erro?) throw erro;
   }
 
   @override
@@ -93,6 +85,12 @@ Future<void> _abrir(
         name: AppRoutes.loginNome,
         path: AppRoutes.loginCaminho,
         builder: (_, _) => const LoginPage(),
+      ),
+      GoRoute(
+        name: AppRoutes.recuperarSenhaNome,
+        path: AppRoutes.recuperarSenhaCaminho,
+        builder: (_, estado) =>
+            RecuperarSenhaPage(emailInicial: estado.extra as String?),
       ),
       GoRoute(
         name: AppRoutes.pacientesNome,
@@ -161,98 +159,54 @@ void main() {
       expect(escondida(), isTrue);
     });
 
-    // Achado 5.4 da revisão de 24/09: este aviso era o único `SnackBar` do
-    // aplicativo — flutuava, sumia sozinho e vinha fora da paleta.
-    testWidgets('"Esqueci a senha" pede o e-mail e avisa na própria tela', (
+    // US58: o pedido do link tem tela própria; a entrada só leva até ela.
+    testWidgets(
+      '"Esqueci a senha" abre a tela própria, com o e-mail digitado',
+      (tester) async {
+        final repositorio = _RepositorioFalso();
+        await _abrir(tester, repositorio: repositorio);
+        await tester.enterText(
+          find.byType(TextField).first,
+          ' fono@exemplo.com ',
+        );
+
+        await tester.tap(find.text(AppStrings.loginEsqueciSenha));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(RecuperarSenhaPage), findsOneWidget);
+        expect(find.text(AppStrings.recuperarTitulo), findsOneWidget);
+        // O e-mail vem junto, já limpo; nada foi pedido ainda.
+        expect(
+          tester
+              .widget<TextField>(find.byType(TextField).first)
+              .controller!
+              .text,
+          'fono@exemplo.com',
+        );
+        expect(repositorio.redefinicoes, isEmpty);
+
+        // Voltar traz a entrada como estava.
+        await tester.tap(find.text(AppStrings.recuperarVoltar));
+        await tester.pumpAndSettle();
+        expect(find.byType(LoginPage), findsOneWidget);
+        expect(
+          tester
+              .widget<TextField>(find.byType(TextField).first)
+              .controller!
+              .text,
+          ' fono@exemplo.com ',
+        );
+      },
+    );
+
+    testWidgets('a entrada não pede o link nem mostra aviso de recuperação', (
       tester,
     ) async {
       final repositorio = _RepositorioFalso();
       await _abrir(tester, repositorio: repositorio);
-      await tester.enterText(
-        find.byType(TextField).first,
-        ' fono@exemplo.com ',
-      );
-
       expect(find.text(AppStrings.loginRecuperacaoEnviadaTitulo), findsNothing);
-
-      await tester.tap(find.text(AppStrings.loginEsqueciSenha));
-      await tester.pumpAndSettle();
-
-      expect(repositorio.redefinicoes, ['fono@exemplo.com']);
-      expect(
-        find.text(AppStrings.loginRecuperacaoEnviadaTitulo),
-        findsOneWidget,
-      );
-      // A mesma resposta exista ou não a conta: não diz quem usa o FONAR.
-      expect(
-        find.text(AppStrings.loginRecuperacaoEnviadaTexto),
-        findsOneWidget,
-      );
-      expect(find.byType(SnackBar), findsNothing);
-
-      // Não sai sozinho: quem lê devagar não perde o aviso.
-      await tester.pump(const Duration(seconds: 30));
-      await tester.pumpAndSettle();
-      expect(
-        find.text(AppStrings.loginRecuperacaoEnviadaTitulo),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('"Esqueci a senha" sem e-mail diz o que preencher', (
-      tester,
-    ) async {
-      final repositorio = _RepositorioFalso();
-      await _abrir(tester, repositorio: repositorio);
-
-      await tester.tap(find.text(AppStrings.loginEsqueciSenha));
-      await tester.pumpAndSettle();
-
+      expect(find.text(AppStrings.loginRecuperacaoIndisponivel), findsNothing);
       expect(repositorio.redefinicoes, isEmpty);
-      expect(
-        find.text(AppStrings.loginRecuperacaoInformeEmail),
-        findsOneWidget,
-      );
-      expect(find.text(AppStrings.loginRecuperacaoEnviadaTitulo), findsNothing);
-    });
-
-    testWidgets('"Esqueci a senha" com e-mail mal formado diz para conferir', (
-      tester,
-    ) async {
-      await _abrir(
-        tester,
-        repositorio: _RepositorioFalso(
-          erroDaRedefinicao: const CredencialInvalida(),
-        ),
-      );
-      await tester.enterText(find.byType(TextField).first, 'fono@');
-
-      await tester.tap(find.text(AppStrings.loginEsqueciSenha));
-      await tester.pumpAndSettle();
-
-      expect(
-        find.text(AppStrings.loginRecuperacaoEmailInvalido),
-        findsOneWidget,
-      );
-      expect(find.text(AppStrings.loginRecuperacaoEnviadaTitulo), findsNothing);
-    });
-
-    testWidgets('login de exemplo: avisa, e a recuperação diz que não existe', (
-      tester,
-    ) async {
-      final repositorio = _RepositorioFalso();
-      await _abrir(tester, repositorio: repositorio, deExemplo: true);
-      expect(find.text(AppStrings.loginExemploTitulo), findsOneWidget);
-      await tester.enterText(find.byType(TextField).first, 'fono@exemplo.com');
-
-      await tester.tap(find.text(AppStrings.loginEsqueciSenha));
-      await tester.pumpAndSettle();
-
-      expect(repositorio.redefinicoes, isEmpty);
-      expect(
-        find.text(AppStrings.loginRecuperacaoIndisponivel),
-        findsOneWidget,
-      );
     });
 
     testWidgets('com a chave do Firebase, nada de aviso de exemplo', (

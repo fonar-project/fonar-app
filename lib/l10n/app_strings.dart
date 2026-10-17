@@ -1314,8 +1314,21 @@ abstract final class AppStrings {
   static const loginSemConta = 'Ainda não tem conta no FONAR?';
   static const loginCriarConta = 'Criar conta';
 
-  static const loginRecuperacaoInformeEmail =
-      'Informe acima o e-mail da conta para receber o link de redefinição.';
+  // "Esqueci a senha" — a tela própria do pedido (US58).
+  static const recuperarTitulo = 'Recuperar a senha';
+  static const recuperarTexto =
+      'Informe o e-mail da sua conta. Mandamos um link para você criar uma '
+      'senha nova.';
+  static const recuperarInformeEmail = 'Informe o e-mail da conta.';
+  static const recuperarEnviar = 'Enviar link';
+  static const recuperarEnviando = 'Enviando…';
+  static const recuperarExigeConexao = 'Pedir o link exige conexão.';
+  static String recuperarPedidoPara(String email) =>
+      'Pedido feito para $email.';
+  static const recuperarEnviarDeNovo = 'Não chegou? Enviar de novo';
+  static const recuperarOutroEmail = 'Usar outro e-mail';
+  static const recuperarVoltar = 'Voltar para entrar';
+
   static const loginRecuperacaoEmailInvalido =
       'Confira o e-mail: ele não parece um endereço válido.';
   static const loginRecuperacaoEnviadaTitulo = 'Confira seu e-mail';

@@ -30,7 +30,8 @@ O caminho de uma avaliação, na ordem em que o profissional passa por ele:
 
 1. **Entra** (US00) com e-mail e senha conferidos pelo Firebase (US32) e vê
    **os pacientes** (US01), com busca que não liga para acento. Esqueceu a
-   senha? O Firebase manda o link de redefinição. Sem conexão, entra no modo
+   senha? Uma tela só para isso (US58) pede o e-mail — já preenchido com o
+   da entrada — e o Firebase manda o link de redefinição. Sem conexão, entra no modo
    offline com a conta da última entrada, se houver pacientes no aparelho.
    Ainda não tem conta? **Cria pelo app** (US34): e-mail, senha e a inscrição
    no Crefono; confirma o e-mail e já usa, enquanto a equipe confere a

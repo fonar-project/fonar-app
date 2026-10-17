@@ -68,6 +68,7 @@ final _rotas = <(String, Map<String, String>)>[
   (AppRoutes.criarContaNome, {}),
   (AppRoutes.verificarEmailNome, {}),
   (AppRoutes.completarCadastroNome, {}),
+  (AppRoutes.recuperarSenhaNome, {}),
   (AppRoutes.pacientesNome, {}),
   (AppRoutes.novaAvaliacaoNome, {}),
   (AppRoutes.pacienteDetalheNome, {_p: _paciente}),
@@ -93,6 +94,7 @@ const _daEntrada = {
   AppRoutes.criarContaNome,
   AppRoutes.verificarEmailNome,
   AppRoutes.completarCadastroNome,
+  AppRoutes.recuperarSenhaNome,
 };
 
 /// Os dois alvos de design do projeto, o celular deitado (espectrograma e

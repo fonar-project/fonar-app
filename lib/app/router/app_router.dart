@@ -7,6 +7,7 @@ import '../../features/analise/presentation/pages/analise_resultado_page.dart';
 import '../../features/analise/presentation/pages/espectrograma_page.dart';
 import '../../features/auth/data/sessao.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/auth/presentation/pages/recuperar_senha_page.dart';
 import '../../features/cadastro/presentation/pages/completar_cadastro_page.dart';
 import '../../features/cadastro/presentation/pages/criar_conta_page.dart';
 import '../../features/cadastro/presentation/pages/verificar_email_page.dart';
@@ -58,7 +59,8 @@ final routerProvider = Provider<GoRouter>((ref) {
     // fila parar primeiro.
     //
     // "A entrada" são as telas de quem ainda não tem sessão: entrar, criar
-    // conta, confirmar o e-mail e completar o cadastro (US34).
+    // conta, confirmar o e-mail, completar o cadastro (US34) e recuperar a
+    // senha (US58).
     redirect: (context, state) {
       final naEntrada = AppRoutes.caminhosDeEntrada.contains(
         state.matchedLocation,
@@ -88,6 +90,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: AppRoutes.completarCadastroNome,
         path: AppRoutes.completarCadastroCaminho,
         builder: (context, state) => const CompletarCadastroPage(),
+      ),
+      GoRoute(
+        name: AppRoutes.recuperarSenhaNome,
+        path: AppRoutes.recuperarSenhaCaminho,
+        // O e-mail que estava na entrada vem em memória (`extra`), nunca no
+        // endereço: na web, o endereço fica no histórico do navegador.
+        builder: (context, state) => RecuperarSenhaPage(
+          emailInicial: state.extra is String ? state.extra as String : null,
+        ),
       ),
       // A moldura das telas de quem entrou: barra lateral no desktop, abas
       // no celular. Fica parada entre as telas; só o conteúdo troca.
