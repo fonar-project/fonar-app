@@ -78,10 +78,7 @@ class _RecuperarSenhaPageState extends ConsumerState<RecuperarSenhaPage> {
 
     final titulo = Semantics(
       header: true,
-      child: Text(
-        AppStrings.recuperarTitulo,
-        style: textos.headlineMedium,
-      ),
+      child: Text(AppStrings.recuperarTitulo, style: textos.headlineMedium),
     );
 
     if (estado.enviadoPara case final email?) {

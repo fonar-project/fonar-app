@@ -25,12 +25,7 @@ import '../../apoio/sessao_de_teste.dart';
 
 /// Repositório controlável pelo teste.
 class _RepositorioFalso implements RepositorioAutenticacao {
-  _RepositorioFalso({
-    this.erro,
-    this.espera,
-    this.guardada = contaDeTeste,
-    this.erroDaRedefinicao,
-  });
+  _RepositorioFalso({this.erro, this.espera, this.guardada = contaDeTeste});
 
   /// Lançado em [entrar], se preenchido.
   final AppException? erro;
@@ -40,9 +35,6 @@ class _RepositorioFalso implements RepositorioAutenticacao {
 
   /// A conta do modo offline.
   final ContaAutenticada? guardada;
-
-  /// Lançado em [pedirRedefinicaoDeSenha], se preenchido.
-  final AppException? erroDaRedefinicao;
 
   int chamadas = 0;
   final redefinicoes = <String>[];
@@ -64,7 +56,6 @@ class _RepositorioFalso implements RepositorioAutenticacao {
   @override
   Future<void> pedirRedefinicaoDeSenha(String email) async {
     redefinicoes.add(email);
-    if (erroDaRedefinicao case final erro?) throw erro;
   }
 
   @override
@@ -169,37 +160,44 @@ void main() {
     });
 
     // US58: o pedido do link tem tela própria; a entrada só leva até ela.
-    testWidgets('"Esqueci a senha" abre a tela própria, com o e-mail digitado', (
-      tester,
-    ) async {
-      final repositorio = _RepositorioFalso();
-      await _abrir(tester, repositorio: repositorio);
-      await tester.enterText(
-        find.byType(TextField).first,
-        ' fono@exemplo.com ',
-      );
+    testWidgets(
+      '"Esqueci a senha" abre a tela própria, com o e-mail digitado',
+      (tester) async {
+        final repositorio = _RepositorioFalso();
+        await _abrir(tester, repositorio: repositorio);
+        await tester.enterText(
+          find.byType(TextField).first,
+          ' fono@exemplo.com ',
+        );
 
-      await tester.tap(find.text(AppStrings.loginEsqueciSenha));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text(AppStrings.loginEsqueciSenha));
+        await tester.pumpAndSettle();
 
-      expect(find.byType(RecuperarSenhaPage), findsOneWidget);
-      expect(find.text(AppStrings.recuperarTitulo), findsOneWidget);
-      // O e-mail vem junto, já limpo; nada foi pedido ainda.
-      expect(
-        tester.widget<TextField>(find.byType(TextField).first).controller!.text,
-        'fono@exemplo.com',
-      );
-      expect(repositorio.redefinicoes, isEmpty);
+        expect(find.byType(RecuperarSenhaPage), findsOneWidget);
+        expect(find.text(AppStrings.recuperarTitulo), findsOneWidget);
+        // O e-mail vem junto, já limpo; nada foi pedido ainda.
+        expect(
+          tester
+              .widget<TextField>(find.byType(TextField).first)
+              .controller!
+              .text,
+          'fono@exemplo.com',
+        );
+        expect(repositorio.redefinicoes, isEmpty);
 
-      // Voltar traz a entrada como estava.
-      await tester.tap(find.text(AppStrings.recuperarVoltar));
-      await tester.pumpAndSettle();
-      expect(find.byType(LoginPage), findsOneWidget);
-      expect(
-        tester.widget<TextField>(find.byType(TextField).first).controller!.text,
-        ' fono@exemplo.com ',
-      );
-    });
+        // Voltar traz a entrada como estava.
+        await tester.tap(find.text(AppStrings.recuperarVoltar));
+        await tester.pumpAndSettle();
+        expect(find.byType(LoginPage), findsOneWidget);
+        expect(
+          tester
+              .widget<TextField>(find.byType(TextField).first)
+              .controller!
+              .text,
+          ' fono@exemplo.com ',
+        );
+      },
+    );
 
     testWidgets('a entrada não pede o link nem mostra aviso de recuperação', (
       tester,

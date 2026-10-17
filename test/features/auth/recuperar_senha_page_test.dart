@@ -109,10 +109,7 @@ void main() {
     await _enviar(tester);
 
     expect(repositorio.pedidos, ['outra@exemplo.com']);
-    expect(
-      find.text(AppStrings.loginRecuperacaoEnviadaTitulo),
-      findsOneWidget,
-    );
+    expect(find.text(AppStrings.loginRecuperacaoEnviadaTitulo), findsOneWidget);
     // A mesma resposta exista ou não a conta: não diz quem usa o FONAR.
     expect(find.text(AppStrings.loginRecuperacaoEnviadaTexto), findsOneWidget);
     expect(
@@ -125,10 +122,7 @@ void main() {
     // Não sai sozinha: quem lê devagar não perde a confirmação.
     await tester.pump(const Duration(seconds: 30));
     await tester.pumpAndSettle();
-    expect(
-      find.text(AppStrings.loginRecuperacaoEnviadaTitulo),
-      findsOneWidget,
-    );
+    expect(find.text(AppStrings.loginRecuperacaoEnviadaTitulo), findsOneWidget);
   });
 
   testWidgets('sem e-mail, o erro é do campo e nada é pedido', (tester) async {
@@ -172,10 +166,7 @@ void main() {
     repositorio.erro = null;
     await _enviar(tester);
     expect(repositorio.pedidos, hasLength(2));
-    expect(
-      find.text(AppStrings.loginRecuperacaoEnviadaTitulo),
-      findsOneWidget,
-    );
+    expect(find.text(AppStrings.loginRecuperacaoEnviadaTitulo), findsOneWidget);
   });
 
   testWidgets('"Enviar de novo" repete o pedido; "Usar outro e-mail" volta', (
