@@ -24,6 +24,10 @@ abstract final class AppRoutes {
   static const completarCadastroNome = 'completarCadastro';
   static const completarCadastroCaminho = '/completar-cadastro';
 
+  // /recuperar-senha — "Esqueci a senha": pedir o link de redefinição (US58).
+  static const recuperarSenhaNome = 'recuperarSenha';
+  static const recuperarSenhaCaminho = '/recuperar-senha';
+
   /// As telas de quem ainda não tem sessão: só elas abrem sem sessão, e com
   /// sessão nenhuma delas tem o que fazer.
   static const caminhosDeEntrada = {
@@ -31,6 +35,7 @@ abstract final class AppRoutes {
     criarContaCaminho,
     verificarEmailCaminho,
     completarCadastroCaminho,
+    recuperarSenhaCaminho,
   };
 
   // /pacientes

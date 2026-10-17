@@ -34,9 +34,6 @@ class EstadoLogin {
   final String? erroSemRede;
 }
 
-/// Em que pé está o pedido de redefinição de senha.
-enum PedidoDeRedefinicao { nenhum, enviando, enviado }
-
 class LoginControlador extends Notifier<EstadoLogin> {
   @override
   EstadoLogin build() => const EstadoLogin();
@@ -160,44 +157,6 @@ class LoginControlador extends Notifier<EstadoLogin> {
 final contaGuardadaProvider = FutureProvider.autoDispose<ContaAutenticada?>(
   (ref) => ref.watch(repositorioAutenticacaoProvider).contaGuardada(),
 );
-
-/// "Esqueci a senha": pede o e-mail de redefinição ao Firebase.
-class RedefinicaoDeSenhaControlador extends Notifier<PedidoDeRedefinicao> {
-  @override
-  PedidoDeRedefinicao build() => PedidoDeRedefinicao.nenhum;
-
-  /// Devolve o erro a mostrar, ou `null` quando o pedido saiu. Com o e-mail
-  /// em branco, nem tenta: o erro é o do campo.
-  Future<String?> pedir(String email) async {
-    if (state == PedidoDeRedefinicao.enviando) return null;
-    final limpo = email.trim();
-    if (limpo.isEmpty) return AppStrings.loginRecuperacaoInformeEmail;
-    state = PedidoDeRedefinicao.enviando;
-    String? erro;
-    try {
-      await ref
-          .read(repositorioAutenticacaoProvider)
-          .pedirRedefinicaoDeSenha(limpo);
-    } on CredencialInvalida {
-      erro = AppStrings.loginRecuperacaoEmailInvalido;
-    } on AppException catch (e) {
-      erro = e.mensagem;
-    } catch (_) {
-      erro = AppStrings.erroDesconhecido;
-    }
-    if (!ref.mounted) return erro;
-    state = erro == null
-        ? PedidoDeRedefinicao.enviado
-        : PedidoDeRedefinicao.nenhum;
-    return erro;
-  }
-}
-
-final redefinicaoDeSenhaProvider =
-    NotifierProvider.autoDispose<
-      RedefinicaoDeSenhaControlador,
-      PedidoDeRedefinicao
-    >(RedefinicaoDeSenhaControlador.new);
 
 final loginControladorProvider =
     NotifierProvider.autoDispose<LoginControlador, EstadoLogin>(
