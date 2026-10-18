@@ -5,6 +5,7 @@ import 'package:fonar_app/core/error/app_exception.dart';
 import 'package:fonar_app/core/network/interceptors/error_interceptor.dart';
 import 'package:fonar_app/features/auth/data/repositorio_autenticacao_firebase.dart';
 import 'package:fonar_app/features/auth/data/sessao.dart';
+import 'package:fonar_app/features/auth/data/sessao_mantida.dart';
 import 'package:fonar_app/features/auth/domain/conta_autenticada.dart';
 import 'package:fonar_app/features/auth/presentation/login_controlador.dart';
 import 'package:fonar_app/features/cadastro/data/cadastro_api.dart';
@@ -81,6 +82,7 @@ class _Montagem {
         repositorioAutenticacaoProvider.overrideWithValue(autenticacao),
         cadastroApiProvider.overrideWithValue(CadastroApi(dio)),
         criacaoDeContaProvider.overrideWithValue(criacao),
+        sessaoMantidaProvider.overrideWithValue(mantida),
       ],
     );
     addTearDown(container.dispose);
@@ -93,14 +95,19 @@ class _Montagem {
 
   final AdaptadorFalso servidor;
   final AutenticacaoFalsa autenticacao;
+  final mantida = SessaoMantidaFalsa();
   late final _CriacaoFalsa criacao;
   late final ProviderContainer container;
 
   bool get sessaoAberta => container.read(sessaoAbertaProvider);
 
-  Future<DestinoDaEntrada?> entrar() => container
+  Future<DestinoDaEntrada?> entrar({bool manterConectado = false}) => container
       .read(loginControladorProvider.notifier)
-      .entrar(email: 'fono@exemplo.com', senha: 'senha');
+      .entrar(
+        email: 'fono@exemplo.com',
+        senha: 'senha',
+        manterConectado: manterConectado,
+      );
 }
 
 /// O perfil já carregado, sem ir ao banco nem à API ao abrir.
@@ -145,6 +152,36 @@ void main() {
       expect(m.sessaoAberta, isFalse);
       // A credencial fica: é com ela que a confirmação pede o token novo.
       expect(m.autenticacao.saidas, 0);
+    });
+
+    test('"Manter conectado" marcado: entra e mantém (US59)', () async {
+      final m = _Montagem([RespostaFalsa(200, _perfil())]);
+      expect(await m.entrar(manterConectado: true), isA<EntrarNoApp>());
+      expect(m.sessaoAberta, isTrue);
+      expect(m.mantida.mantidas, [contaDeTeste.uid]);
+    });
+
+    test('sem marcar, a sessão não fica mantida', () async {
+      final m = _Montagem([RespostaFalsa(200, _perfil())]);
+      expect(await m.entrar(), isA<EntrarNoApp>());
+      expect(m.mantida.mantidas, isEmpty);
+    });
+
+    test('marcado, mas com o e-mail por verificar: não mantém', () async {
+      // A próxima abertura não pode pular a confirmação do e-mail.
+      final m = _Montagem([_recusa(403, 'email_nao_verificado')]);
+      expect(
+        await m.entrar(manterConectado: true),
+        isA<VerificarEmail>(),
+      );
+      expect(m.mantida.mantidas, isEmpty);
+    });
+
+    test('o cofre que falha ao manter não impede a entrada', () async {
+      final m = _Montagem([RespostaFalsa(200, _perfil())]);
+      m.mantida.falha = const FalhaDesconhecida();
+      expect(await m.entrar(manterConectado: true), isA<EntrarNoApp>());
+      expect(m.sessaoAberta, isTrue);
     });
 
     test('sem cadastro: vai ao formulário, sem sessão', () async {

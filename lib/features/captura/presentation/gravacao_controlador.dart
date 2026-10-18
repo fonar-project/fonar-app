@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/gravacao_em_andamento.dart';
 import '../../../core/banco/novo_id.dart';
 import '../../../core/relogio.dart';
 import '../../fila/data/repositorio_fila_local.dart';
@@ -119,25 +118,6 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
     // dois — ao sair da tela — para e apaga uma gravação pela metade.
     _gravador = ref.watch(gravadorProvider);
     ref.onDispose(() => unawaited(_inscricao?.cancel()));
-    // Gravando, o app não bloqueia por inatividade (o profissional está com
-    // o paciente, sem tocar na tela). Sair da tela encerra a gravação: o
-    // aviso de "parou" vai depois do descarte, que não pode mexer em outro
-    // provider.
-    final container = ref.container;
-    listenSelf((_, estado) {
-      container
-          .read(gravacaoEmAndamentoProvider.notifier)
-          .definir(estado.gravando != null);
-    });
-    ref.onDispose(
-      () => Future.microtask(() {
-        try {
-          container.read(gravacaoEmAndamentoProvider.notifier).definir(false);
-        } on StateError {
-          // O app (ou o teste) já fechou: não há bloqueio a avisar.
-        }
-      }),
-    );
     // Depois de o estado existir: procura a sessão de hoje para continuar.
     _retomada = Future.microtask(_retomar);
     return EstadoDaGravacao(

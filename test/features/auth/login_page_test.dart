@@ -14,6 +14,7 @@ import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/design_system/tokens/app_colors.dart';
 import 'package:fonar_app/design_system/widgets/app_icone.dart';
 import 'package:fonar_app/features/auth/data/repositorio_autenticacao_firebase.dart';
+import 'package:fonar_app/features/auth/data/sessao_mantida.dart';
 import 'package:fonar_app/features/auth/domain/conta_autenticada.dart';
 import 'package:fonar_app/features/auth/domain/repositorio_autenticacao.dart';
 import 'package:fonar_app/features/auth/presentation/pages/login_page.dart';
@@ -73,6 +74,7 @@ Future<void> _abrir(
   RepositorioAutenticacao? repositorio,
   Size tamanho = _celular,
   bool deExemplo = false,
+  SessaoMantidaFalsa? mantida,
 }) async {
   tester.view.physicalSize = tamanho;
   tester.view.devicePixelRatio = 1;
@@ -112,6 +114,9 @@ Future<void> _abrir(
         senhaSemRedeProvider.overrideWithValue(
           SenhaSemRedeEmMemoria({contaDeTeste.uid: 'certa'}),
         ),
+        sessaoMantidaProvider.overrideWithValue(
+          mantida ?? SessaoMantidaFalsa(),
+        ),
       ],
       child: MaterialApp.router(theme: AppTheme.claro, routerConfig: roteador),
     ),
@@ -137,6 +142,50 @@ void main() {
       await _tocarEntrar(tester);
 
       expect(find.text(_telaDePacientes), findsOneWidget);
+    });
+
+    testWidgets('"Manter conectado" começa desmarcado e não mantém (US59)', (
+      tester,
+    ) async {
+      final mantida = SessaoMantidaFalsa();
+      await _abrir(tester, mantida: mantida);
+      expect(find.text(AppStrings.loginManterConectado), findsOneWidget);
+
+      await _preencher(tester);
+      await _tocarEntrar(tester);
+
+      expect(find.text(_telaDePacientes), findsOneWidget);
+      expect(mantida.mantidas, isEmpty);
+    });
+
+    testWidgets('marcado, a entrada mantém a sessão neste aparelho', (
+      tester,
+    ) async {
+      final mantida = SessaoMantidaFalsa();
+      await _abrir(tester, mantida: mantida);
+
+      // O texto também marca: o quadrado sozinho é alvo pequeno.
+      await tester.tap(find.text(AppStrings.loginManterConectado));
+      await tester.pump();
+      await _preencher(tester);
+      await _tocarEntrar(tester);
+
+      expect(find.text(_telaDePacientes), findsOneWidget);
+      expect(mantida.mantidas, [contaDeTeste.uid]);
+    });
+
+    testWidgets('marcar duas vezes desmarca', (tester) async {
+      final mantida = SessaoMantidaFalsa();
+      await _abrir(tester, mantida: mantida);
+
+      await tester.tap(find.text(AppStrings.loginManterConectado));
+      await tester.pump();
+      await tester.tap(find.text(AppStrings.loginManterConectado));
+      await tester.pump();
+      await _preencher(tester);
+      await _tocarEntrar(tester);
+
+      expect(mantida.mantidas, isEmpty);
     });
 
     testWidgets('o olho mostra a senha digitada e volta a escondê-la', (

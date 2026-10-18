@@ -8,6 +8,7 @@ import '../../../../core/offline/pacientes_em_cache.dart';
 import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
+import '../../../../design_system/widgets/app_caixa_de_marcacao.dart';
 import '../../../../design_system/widgets/app_campo_texto.dart';
 import '../../../../design_system/widgets/app_estado.dart';
 import '../../../../design_system/widgets/app_icone.dart';
@@ -40,6 +41,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _senha = TextEditingController();
   final _focoSenha = FocusNode();
 
+  /// "Manter conectado neste aparelho" (US59). Começa desmarcada: abrir o
+  /// app sem senha é escolha de quem está no aparelho, a cada entrada.
+  var _manterConectado = false;
+
   @override
   void dispose() {
     _email.dispose();
@@ -51,7 +56,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Future<void> _entrar() async {
     final destino = await ref
         .read(loginControladorProvider.notifier)
-        .entrar(email: _email.text, senha: _senha.text);
+        .entrar(
+          email: _email.text,
+          senha: _senha.text,
+          manterConectado: _manterConectado,
+        );
     if (destino != null && mounted) context.goNamed(rotaDe(destino));
   }
 
@@ -144,7 +153,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             autoCorrecao: false,
             autopreenchimento: const [AutofillHints.password],
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.xs),
+          AppCaixaDeMarcacao(
+            rotulo: AppStrings.loginManterConectado,
+            marcada: _manterConectado,
+            aoMudar: online && !estado.carregando
+                ? (marcada) => setState(() => _manterConectado = marcada)
+                : null,
+          ),
+          const SizedBox(height: AppSpacing.sm),
           AppBotao.primario(
             rotulo: estado.carregando
                 ? AppStrings.loginBotaoEntrando

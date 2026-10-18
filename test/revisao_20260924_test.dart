@@ -8,10 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fonar_app/core/network/conexao.dart';
 import 'package:fonar_app/features/auth/data/sessao.dart';
-import 'package:fonar_app/core/relogio.dart';
-import 'package:fonar_app/features/auth/data/bloqueio_por_inatividade.dart';
-import 'package:fonar_app/features/auth/data/repositorio_autenticacao_firebase.dart';
-import 'package:fonar_app/features/conta/presentation/conta_controlador.dart';
 import 'package:fonar_app/features/captura/presentation/gravacao_controlador.dart';
 import 'package:fonar_app/features/captura/data/gravador_record.dart';
 import 'package:fonar_app/features/captura/data/repositorio_amostras_local.dart';
@@ -71,12 +67,6 @@ class Arquivos implements ArquivosDeAmostra {
   @override
   Future<String> novoCaminho(String id, TarefaDeGravacao t) async =>
       '/novo.wav';
-}
-
-class ContaLenta extends AutenticacaoFalsa {
-  final pendente = Completer<void>();
-  @override
-  Future<void> sair() => pendente.future;
 }
 
 class DiscoComFalha extends Arquivos {
@@ -200,32 +190,6 @@ void main() {
       agora = agora.subtract(const Duration(hours: 1));
       await repo.registrar('p', pedido);
       expect(await repo.buscar('p'), isNotNull);
-    },
-  );
-  test(
-    'review: sair do bloqueio mantem a protecao enquanto logout espera',
-    () async {
-      var agora = DateTime(2026, 9, 24);
-      final conta = ContaLenta();
-      final c = ProviderContainer(
-        overrides: [
-          sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
-          relogioProvider.overrideWithValue(() => agora),
-          repositorioAutenticacaoProvider.overrideWithValue(conta),
-        ],
-      );
-      addTearDown(c.dispose);
-      c.listen(bloqueioPorInatividadeProvider, (_, _) {});
-      c.listen(contaControladorProvider, (_, _) {});
-      agora = agora.add(const Duration(minutes: 6));
-      c.read(bloqueioPorInatividadeProvider.notifier).conferir();
-      expect(c.read(bloqueioPorInatividadeProvider), isTrue);
-      final saindo = c.read(contaControladorProvider.notifier).sair();
-      await c.pump();
-      final protegidoDuranteEspera = c.read(bloqueioPorInatividadeProvider);
-      conta.pendente.complete();
-      await saindo;
-      expect(protegidoDuranteEspera, isTrue);
     },
   );
 

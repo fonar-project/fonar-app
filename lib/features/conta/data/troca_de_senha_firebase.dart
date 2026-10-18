@@ -43,8 +43,11 @@ class TrocaDeSenhaFirebase implements TrocaDeSenha {
     // isso, então não vira erro na tela.
     try {
       // Os tokens de renovação de antes deixaram de valer: sem guardar o
-      // novo, a próxima renovação pediria para entrar de novo.
-      await _cofre.guardar(trocada);
+      // novo, a próxima renovação pediria para entrar de novo. O "Manter
+      // conectado" da credencial de antes continua (US59): trocar a senha
+      // não é escolher entrar com ela a cada abertura.
+      final mantida = (await _cofre.ler())?.manterConectado ?? false;
+      await _cofre.guardar(trocada.comManterConectado(mantida));
     } catch (_) {
       // Fica o token de antes, que o Firebase não renova mais: o app pede
       // para entrar de novo, já com a senha nova.

@@ -8,10 +8,11 @@ import 'app/app.dart';
 import 'app/licencas.dart';
 import 'core/config/app_config.dart';
 import 'core/navegador/navegador.dart';
+import 'features/auth/data/sessao_mantida.dart';
 import 'features/laudo/data/saida_do_laudo.dart';
 import 'features/reproducao/data/reprodutor_audioplayers.dart';
 
-void main() {
+Future<void> main() async {
   // No modo de exemplo (ou com a chave do Firebase apagada no build), o app
   // entra com o login de exemplo, que aceita qualquer senha. Em
   // desenvolvimento serve; num build de distribuição seria dado de saúde
@@ -23,8 +24,14 @@ void main() {
     );
   }
   registrarLicencas();
-  // ProviderScope na raiz: é ele que hospeda o estado de todos os providers.
-  runApp(const ProviderScope(child: FonarApp()));
+  WidgetsFlutterBinding.ensureInitialized();
+  // O container na raiz hospeda o estado de todos os providers. Criado antes
+  // do app para a sessão mantida (US59) abrir antes da primeira tela.
+  final container = ProviderContainer();
+  await abrirSessaoMantida(container);
+  runApp(
+    UncontrolledProviderScope(container: container, child: const FonarApp()),
+  );
   // O PDF que o compartilhamento do celular deixou no cache (laudo é dado
   // pessoal sensível): sai na abertura seguinte, sem segurar a tela.
   unawaited(limparPdfsCompartilhados());

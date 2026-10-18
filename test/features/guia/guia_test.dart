@@ -67,8 +67,8 @@ Future<(ProviderContainer, BancoLocal)> _abrir(
   return (container, usado);
 }
 
-// Com a sessão aberta há o relógio do bloqueio: desmontar e descartar ainda
-// no corpo, antes de o teste conferir timers — ver bloqueio_test.
+// Desmontar e descartar ainda no corpo, antes de o teste conferir os timers
+// que ficaram pendentes.
 Future<void> _fechar(WidgetTester tester, ProviderContainer c) async {
   await tester.pumpWidget(const SizedBox());
   c.dispose();

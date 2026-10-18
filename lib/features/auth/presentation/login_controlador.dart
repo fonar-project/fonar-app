@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/senha_sem_rede.dart';
@@ -8,6 +9,7 @@ import '../../../l10n/app_strings.dart';
 import '../../cadastro/presentation/entrada.dart';
 import '../data/repositorio_autenticacao_firebase.dart';
 import '../data/sessao.dart';
+import '../data/sessao_mantida.dart';
 import '../domain/conta_autenticada.dart';
 
 /// Estado do formulário de login.
@@ -42,9 +44,15 @@ class LoginControlador extends Notifier<EstadoLogin> {
   /// pacientes, ou o passo que falta do primeiro acesso (confirmar o e-mail,
   /// preencher o cadastro) —, e `null` quando não entrou. A navegação fica
   /// com a tela, que é quem tem o `BuildContext`.
+  ///
+  /// Com [manterConectado] (US59), a sessão que abrir daqui abre sozinha nas
+  /// próximas aberturas do app, até a pessoa sair. Só quando ela abre de
+  /// fato: quem ainda vai confirmar o e-mail ou completar o cadastro não
+  /// pula esses passos na abertura seguinte.
   Future<DestinoDaEntrada?> entrar({
     required String email,
     required String senha,
+    bool manterConectado = false,
   }) async {
     // Toque duplo no botão, ou Enter no campo enquanto a primeira tentativa
     // ainda está no ar.
@@ -86,13 +94,17 @@ class LoginControlador extends Notifier<EstadoLogin> {
     }
 
     // A senha conferiu: o verificador dela fica no aparelho, para a entrada
-    // e o desbloqueio sem rede (US43). Não segura a entrada.
+    // sem rede (US43). Não segura a entrada.
     unawaited(senhas.lembrar(conta.uid, senha));
 
     // Falta saber em que pé está o cadastro. O botão continua em
     // "Entrando…" enquanto a API responde.
     final destino = await conferirCadastro(ref);
     if (!ref.mounted) return null;
+    if (manterConectado && destino is EntrarNoApp) {
+      await _manter(conta.uid);
+      if (!ref.mounted) return null;
+    }
     state = resultado;
     switch (destino) {
       case EntrarNoApp():
@@ -103,6 +115,16 @@ class LoginControlador extends Notifier<EstadoLogin> {
         ref.invalidate(contaGuardadaProvider);
     }
     return destino;
+  }
+
+  /// Marca a credencial recém-guardada para abrir sozinha. Se o cofre
+  /// falhar, entra do mesmo jeito: a próxima abertura só pede a senha.
+  Future<void> _manter(String uid) async {
+    try {
+      await ref.read(sessaoMantidaProvider).manter(uid);
+    } catch (erro) {
+      debugPrint('Não foi possível manter a sessão: $erro');
+    }
   }
 
   /// Entra sem conexão, com a conta da última entrada com senha neste

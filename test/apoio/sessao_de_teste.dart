@@ -1,6 +1,7 @@
 // Sessão e autenticação para os testes.
 
 import 'package:fonar_app/core/error/app_exception.dart';
+import 'package:fonar_app/features/auth/data/sessao_mantida.dart';
 import 'package:fonar_app/features/auth/domain/conta_autenticada.dart';
 import 'package:fonar_app/features/auth/domain/profissional.dart';
 import 'package:fonar_app/features/auth/domain/repositorio_autenticacao.dart';
@@ -55,6 +56,28 @@ class AutenticacaoFalsa implements RepositorioAutenticacao {
   Future<void> sair() async {
     saidas++;
     guardada = null;
+  }
+}
+
+/// O "Manter conectado" (US59) sem o cofre: anota de quem pediram para
+/// manter a sessão e, na abertura, abre [conta]. Com [falha], lança.
+class SessaoMantidaFalsa implements SessaoMantida {
+  SessaoMantidaFalsa({this.conta, this.falha});
+
+  ContaAutenticada? conta;
+  Object? falha;
+  final mantidas = <String>[];
+
+  @override
+  Future<void> manter(String uid) async {
+    if (falha case final falha?) throw falha;
+    mantidas.add(uid);
+  }
+
+  @override
+  Future<ContaAutenticada?> contaAAbrir() async {
+    if (falha case final falha?) throw falha;
+    return conta;
   }
 }
 

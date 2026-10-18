@@ -125,6 +125,14 @@ Token Service (README). O login de EXEMPLO só existe no modo de exemplo
   que conduz o primeiro acesso: e-mail por verificar → formulário → entra.
   O credenciamento (pendente ou credenciado) é da equipe, não bloqueia nada,
   e o app só o mostra. `features/cadastro/`.
+- "Manter conectado neste aparelho" (US59) é a caixa da entrada: marcada,
+  a próxima abertura do app já abre a sessão (`abrirSessaoMantida`, no
+  `main.dart`, antes da primeira tela). Quem abre é a credencial do cofre,
+  com a marca `manterConectado` — a senha nunca é guardada; sair apaga a
+  credencial e a marca junto, e a renovação do token e a troca de senha a
+  carregam. Só marca quando a sessão abre de fato: quem ainda vai confirmar
+  o e-mail ou completar o cadastro não pula esses passos. Não há bloqueio
+  por inatividade (saiu na US59): quem quer o aparelho fechado o bloqueia.
 - Trocar a senha (US45) é na Conta: confere a atual (`signInWithPassword`),
   troca (`accounts:update`), guarda a credencial nova — os tokens de
   renovação de antes deixam de valer — e o verificador da senha sem rede.
@@ -270,7 +278,8 @@ responsável legal; gravação feita sob consentimento retirado não sobe mais,
 nem com consentimento novo (o que já foi feito fica como prontuário);
 eliminação dos dados só a pedido do paciente, aqui e no servidor; e sem
 conexão a senha é conferida por um verificador PBKDF2 no cofre — nunca se
-entra nem se desbloqueia sem senha.
+entra sem senha, com uma exceção decidida pela equipe: o "Manter conectado"
+(US59), escolhido na entrada, abre a sessão guardada sem pedir a senha.
 
 Todo dado exibido em desenvolvimento é placeholder e deve ser identificável
 como tal.
