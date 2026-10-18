@@ -367,8 +367,8 @@ void main() {
         .focusNode
         .hasPrimaryFocus;
 
-    testWidgets('Tab percorre e-mail, senha, mostrar senha, entrar, esqueci '
-        'a senha', (tester) async {
+    testWidgets('Tab percorre e-mail, senha, mostrar senha, manter '
+        'conectado, entrar, esqueci a senha', (tester) async {
       await _abrir(tester, tamanho: _desktop);
 
       await tester.sendKeyEvent(LogicalKeyboardKey.tab);
@@ -392,6 +392,15 @@ void main() {
         ),
         isTrue,
         reason: 'mostrar senha',
+      );
+
+      // A caixa do "Manter conectado" (US59) também.
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      expect(
+        focado(tester, find.text(AppStrings.loginManterConectado)),
+        isTrue,
+        reason: 'manter conectado',
       );
 
       await tester.sendKeyEvent(LogicalKeyboardKey.tab);
@@ -443,8 +452,9 @@ void main() {
         reason: 'sem foco não existe anel',
       );
 
-      // Cinco Tab: e-mail, senha, mostrar senha, entrar, esqueci a senha.
-      for (var i = 0; i < 5; i++) {
+      // Seis Tab: e-mail, senha, mostrar senha, manter conectado, entrar,
+      // esqueci a senha.
+      for (var i = 0; i < 6; i++) {
         await tester.sendKeyEvent(LogicalKeyboardKey.tab);
         await tester.pump();
       }

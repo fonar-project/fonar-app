@@ -160,9 +160,8 @@ void main() {
 
     test('renovar não desliga o "Manter conectado" (US59)', () async {
       await cofre.guardar(
-        _credencial(
-          expiraEm: _agora.add(const Duration(minutes: 4)),
-        ).comManterConectado(true),
+        _credencial(expiraEm: _agora.add(const Duration(minutes: 4)))
+            .comManterConectado(true),
       );
 
       await FonteDeToken(

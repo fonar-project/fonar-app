@@ -170,10 +170,7 @@ void main() {
     test('marcado, mas com o e-mail por verificar: não mantém', () async {
       // A próxima abertura não pode pular a confirmação do e-mail.
       final m = _Montagem([_recusa(403, 'email_nao_verificado')]);
-      expect(
-        await m.entrar(manterConectado: true),
-        isA<VerificarEmail>(),
-      );
+      expect(await m.entrar(manterConectado: true), isA<VerificarEmail>());
       expect(m.mantida.mantidas, isEmpty);
     });
 
