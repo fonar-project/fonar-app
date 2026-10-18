@@ -31,7 +31,9 @@ O caminho de uma avaliação, na ordem em que o profissional passa por ele:
 1. **Entra** (US00) com e-mail e senha conferidos pelo Firebase (US32) e vê
    **os pacientes** (US01), com busca que não liga para acento. Esqueceu a
    senha? Uma tela só para isso (US58) pede o e-mail — já preenchido com o
-   da entrada — e o Firebase manda o link de redefinição. Sem conexão, entra no modo
+   da entrada — e o Firebase manda o link de redefinição. **Manter
+   conectado neste aparelho** (US59), marcado na entrada, faz o app abrir
+   direto na conta até a pessoa sair. Sem conexão, entra no modo
    offline com a conta da última entrada, se houver pacientes no aparelho.
    Ainda não tem conta? **Cria pelo app** (US34): e-mail, senha e a inscrição
    no Crefono; confirma o e-mail e já usa, enquanto a equipe confere a
@@ -72,8 +74,9 @@ Em volta disso: o **perfil do paciente** (US12) reúne dados, consentimento,
 sessões, laudos e fila; o **histórico** (US23) lista as avaliações de todos os
 pacientes, por mês, para achar uma pelo quando; a **conta** (US11) tem os dados do profissional e o
 sair; tudo fica num **banco local** (US14); o token vai para o **cofre do
-sistema** (US18); e, depois de 5 minutos sem uso, o app **bloqueia** e pede a
-senha, sem perder a tela que estava aberta (US24). O app tem **tema escuro**,
+sistema** (US18). O bloqueio por inatividade (US24) saiu na US59: quem quer o
+aparelho fechado bloqueia o computador ou o celular, como faz com o resto.
+O app tem **tema escuro**,
 que segue o sistema ou a escolha feita na conta (US30); no computador, a
 **interface cresce com a janela** — 120% num monitor Full HD —, com o ajuste
 "Tamanho da interface" na conta (US48); e **movimento
@@ -99,8 +102,10 @@ conta (US45): o app confere a atual, troca no Firebase e guarda a credencial
 nova — e a nova passa a valer também sem conexão.
 
 As **decisões jurídicas** (US43) seguem o lado conservador: sem conexão, a
-entrada e o desbloqueio conferem a senha com um verificador guardado no cofre
-na última entrada com rede (PBKDF2, nunca a senha); paciente menor de 18 anos
+entrada confere a senha com um verificador guardado no cofre na última
+entrada com rede (PBKDF2, nunca a senha) — a exceção, por decisão da equipe,
+é o "Manter conectado" (US59), que abre a sessão guardada sem pedir senha
+nenhuma, e nunca guarda a senha; paciente menor de 18 anos
 só é autorizado pelo responsável legal; a gravação feita sob um consentimento
 retirado não sobe mais, nem com um consentimento novo; e o perfil tem
 **eliminar os dados do paciente**, a pedido dele (LGPD, art. 18), que apaga
@@ -702,7 +707,7 @@ lib/
 ├── l10n/
 │   └── app_strings.dart   TODO texto de interface, em pt-BR
 └── features/              uma pasta por funcionalidade
-    ├── auth/              entrada, sessão por conta, desbloqueio e perfil
+    ├── auth/              entrada, sessão por conta (e a mantida) e perfil
     ├── pacientes/         lista, cadastro, perfil e correção dos dados
     ├── consentimento/     registro e retirada
     ├── captura/           aferição, gravação, retomada e sessões paradas

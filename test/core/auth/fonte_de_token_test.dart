@@ -81,6 +81,25 @@ void main() {
       expect(lida.idToken, guardada.idToken);
       expect(lida.refreshToken, guardada.refreshToken);
       expect(lida.expiraEm, guardada.expiraEm);
+      expect(lida.manterConectado, isFalse);
+    });
+
+    test('o "Manter conectado" vai e volta com a credencial (US59)', () async {
+      await cofre.guardar(
+        _credencial(expiraEm: _agora).comManterConectado(true),
+      );
+
+      expect((await cofre.ler())!.manterConectado, isTrue);
+    });
+
+    test('a credencial de antes da US59, sem o campo, não mantém', () async {
+      tokens.token =
+          '{"uid": "u", "email": "e@x.com", "idToken": "i", '
+          '"refreshToken": "r", "expiraEm": "2026-10-18T12:00:00Z"}';
+
+      final lida = await cofre.ler();
+      expect(lida, isNotNull);
+      expect(lida!.manterConectado, isFalse);
     });
 
     test(
@@ -136,6 +155,24 @@ void main() {
       final guardada = await cofre.ler();
       expect(guardada!.idToken, 'token-2');
       expect(guardada.refreshToken, 'renova-2');
+      expect(guardada.manterConectado, isFalse);
+    });
+
+    test('renovar não desliga o "Manter conectado" (US59)', () async {
+      await cofre.guardar(
+        _credencial(expiraEm: _agora.add(const Duration(minutes: 4)))
+            .comManterConectado(true),
+      );
+
+      await FonteDeToken(
+        cofre,
+        _firebase(AdaptadorFalso([_renovou])),
+        () => _agora,
+      ).tokenDeAcesso();
+
+      final guardada = await cofre.ler();
+      expect(guardada!.idToken, 'token-2');
+      expect(guardada.manterConectado, isTrue);
     });
 
     test('dois pedidos ao mesmo tempo: uma renovação só', () async {

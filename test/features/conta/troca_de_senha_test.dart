@@ -155,8 +155,24 @@ void main() {
         expect(guardada?.idToken, 'token-novo');
         expect(guardada?.refreshToken, 'renova-novo');
         expect(senhas.senhas, {'uid-de-teste': 'nova-senha-1'});
+        // Quem não marcou "Manter conectado" continua sem (US59).
+        expect(guardada?.manterConectado, isFalse);
       },
     );
+
+    test('o "Manter conectado" continua depois da troca (US59)', () async {
+      await cofre.guardar(_guardada.comManterConectado(true));
+
+      await troca([_entrou, _trocou]).trocar(
+        conta: contaDeTeste,
+        atual: 'antiga-senha',
+        nova: 'nova-senha-1',
+      );
+
+      final guardada = await cofre.ler();
+      expect(guardada?.idToken, 'token-novo');
+      expect(guardada?.manterConectado, isTrue);
+    });
 
     test('a atual errada não troca nada', () async {
       await expectLater(

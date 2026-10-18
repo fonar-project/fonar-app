@@ -146,7 +146,7 @@ class _AberturaState extends ConsumerState<_Abertura> {
     _primeiraVez = false;
     if (pedido) ref.read(pedidoDoGuiaProvider.notifier).atender();
     // Lida antes de abrir: se a tela sair enquanto o guia está aberto (a
-    // sessão acabou no bloqueio), fechar ainda guarda.
+    // sessão acabou), fechar ainda guarda.
     final preferencia = ref.read(preferenciaDoGuiaProvider);
     await mostrarGuia(context, passos: widget.passos);
     _aberto = false;

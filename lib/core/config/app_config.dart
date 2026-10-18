@@ -97,15 +97,6 @@ abstract final class AppConfig {
     defaultValue: 'desenvolvimento',
   );
 
-  /// Sem nenhum toque, tecla ou rolagem por este tempo, o app bloqueia e
-  /// pede a senha: o aparelho fica na mesa do consultório, aberto em dado
-  /// de paciente, enquanto o profissional atende.
-  ///
-  /// Decisão da equipe (US39): cinco minutos. O caso em que esse tempo
-  /// atrapalhava — a gravação longa, sem toque — não bloqueia mais: gravando,
-  /// o app conta como em uso (`gravacaoEmAndamentoProvider`).
-  static const tempoDeInatividade = Duration(minutes: 5);
-
   /// Tempo para abrir a conexão.
   static const timeoutConexao = Duration(seconds: 15);
 

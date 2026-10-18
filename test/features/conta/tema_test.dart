@@ -176,8 +176,8 @@ void main() {
         TemaEscolhido.escuro,
       );
 
-      // Com a sessão aberta há o relógio do bloqueio: desmontar e descartar
-      // ainda no corpo, antes de o teste conferir timers — ver bloqueio_test.
+      // Desmontar e descartar ainda no corpo, antes de o teste conferir os
+      // timers que ficaram pendentes.
       await tester.pumpWidget(const SizedBox());
       container.dispose();
     });
