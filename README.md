@@ -129,8 +129,9 @@ Multiple Ciphers, com a chave no cofre do sistema), e o banco de antes da
 atualização é cifrado na primeira abertura; o WAV sai do aparelho assim que
 chega ao servidor, e ouvir de novo vem da API.
 
-Com **mais de um aparelho** (US40), o que um registra aparece no outro: os
-pacientes da conta e os consentimentos descem do Firebase na abertura, quando
+Com **mais de um aparelho** (US40), o que um registra aparece no outro: o
+paciente e os consentimentos sobem logo depois de cadastrados ou registrados
+— sem esperar a primeira gravação —, e descem do Firebase na abertura, quando
 a conexão volta e quando alguém entra; a CAPE-V e os laudos, quando o perfil
 do paciente abre; e a gravação feita em outro aparelho se ouve pela API. Uma
 retirada de consentimento feita num aparelho passa a bloquear a gravação no

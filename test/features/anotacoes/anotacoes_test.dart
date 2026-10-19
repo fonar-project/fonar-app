@@ -480,7 +480,7 @@ void main() {
     final esquema = await verificador.schemaAt(7);
     final banco = BancoLocal(esquema.newConnection());
     addTearDown(banco.close);
-    await verificador.migrateAndValidate(banco, 8);
+    await verificador.migrateAndValidate(banco, banco.schemaVersion);
 
     await RepositorioAnotacoesLocal(banco).escrever(
       pacienteId: _paciente,

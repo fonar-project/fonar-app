@@ -325,6 +325,14 @@ identificado como tal, só o modo de exemplo (`AppConfig.exemplo`): o login
 que aceita qualquer e-mail e senha, e os resultados e os pacientes "de
 Exemplo", que aparecem por cima do banco sem serem gravados nele.
 
+O paciente e o livro de consentimentos sobem SEM esperar o primeiro envio
+(US40, `SubidaDosPacientesControlador`): logo depois de cadastrar, corrigir,
+registrar ou retirar, e nas ocasiões de toda sincronização em segundo plano.
+O que está por subir se sabe sem perguntar ao servidor: o cadastro, por
+`Pacientes.alteradoEm`; o livro, por `Pacientes.livroNoFirebase`. Até
+19/10/2026 o paciente sem gravação não aparecia na versão web nem em outro
+aparelho (teste de homologação).
+
 O caminho de volta também existe (US40, `sincronizacao/data/descida_firestore.dart`):
 os pacientes da conta e o livro de consentimentos de cada um descem na
 abertura, quando a conexão volta e quando alguém entra; CAPE-V e laudos,

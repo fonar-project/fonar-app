@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
+import 'package:drift_dev/api/migrations_native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fonar_app/core/banco/banco_local.dart';
 import 'package:fonar_app/core/error/app_exception.dart';
@@ -11,6 +12,7 @@ import 'package:fonar_app/features/sincronizacao/data/sincronizacao_firestore.da
 
 import '../../apoio/banco_em_memoria.dart';
 import '../../apoio/http_falso.dart';
+import '../../core/migracoes/schema.dart';
 
 const _uid = 'uid-de-teste';
 const _paciente = '0f8b7e5c-3c1a-4d2e-9f00-1a2b3c4d5e6f';
@@ -324,4 +326,186 @@ void main() {
     );
     expect(m.servidor.feitas, isEmpty);
   });
+
+  // Teste de homologação de 18/10/2026: o paciente cadastrado num aparelho,
+  // sem gravação, não aparecia na versão web da mesma conta.
+  group('sincronizar (sem envio)', () {
+    /// O paciente de [_montar], da conta da sessão e cadastrado aqui.
+    Future<_Montagem> montarDaConta(List<RespostaFalsa> respostas) async {
+      final m = await _montar(respostas);
+      await (m.banco.update(
+        m.banco.pacientes,
+      )..where((p) => p.id.equals(_paciente))).write(
+        PacientesCompanion(
+          profissionalId: const Value(_uid),
+          alteradoEm: Value(DateTime(2026, 10, 1, 10)),
+        ),
+      );
+      return m;
+    }
+
+    Future<LinhaDoPaciente> linha(_Montagem m) => (m.banco.select(
+      m.banco.pacientes,
+    )..where((p) => p.id.equals(_paciente))).getSingle();
+
+    test('o cadastrado aqui sobe com o livro, sem sessão nenhuma', () async {
+      final m = await montarDaConta([
+        _naoExiste, // paciente
+        _ok, // cria o paciente
+        _ok, // lista os consentimentos: nenhum
+        _ok, // cria o consentimento 1
+      ]);
+
+      expect(await m.sincronizacao.sincronizar(), 1);
+
+      final [paciente, consentimento] = m.escritas;
+      expect((paciente['update'] as Map)['name'], '$_documentos/$_base');
+      expect(
+        (consentimento['update'] as Map)['name'],
+        '$_documentos/$_base/consentimentos/1',
+      );
+      // Nada de sessão: ela só existe com um envio.
+      expect(
+        m.servidor.feitas.where((f) => f.uri.path.contains('sessoes')),
+        isEmpty,
+      );
+      final depois = await linha(m);
+      expect(depois.sincronizadoEm, isNotNull);
+      expect(depois.livroNoFirebase, 1);
+    });
+
+    test('subido, a vez seguinte não pergunta nada ao servidor', () async {
+      final m = await montarDaConta([_naoExiste, _ok, _ok, _ok]);
+      await m.sincronizacao.sincronizar();
+      final feitas = m.servidor.feitas.length;
+
+      expect(await m.sincronizacao.sincronizar(), 0);
+      expect(m.servidor.feitas, hasLength(feitas));
+    });
+
+    test('a retirada registrada depois sobe sozinha', () async {
+      final m = await montarDaConta([_naoExiste, _ok, _ok, _ok]);
+      await m.sincronizacao.sincronizar();
+      await m.banco
+          .into(m.banco.retiradasDeConsentimento)
+          .insert(
+            RetiradasDeConsentimentoCompanion.insert(
+              pacienteId: _paciente,
+              consentimentoId: const Value(1),
+              retiradaEm: DateTime.utc(2026, 10, 2, 9),
+              quemPediu: 'paciente',
+              nomeDoResponsavel: const Value(null),
+            ),
+          );
+      m.servidor.respostas.addAll([
+        RespostaFalsa(200, {
+          'name': '$_documentos/$_base',
+          'fields': codificar({
+            'nome': 'Ana de Teste',
+            'data_nascimento': DateTime.utc(1990, 6, 15),
+            'sexo_referencia': 'feminino',
+            'queixa_principal': 'rouquidão (teste)',
+          }),
+        }),
+        RespostaFalsa(
+          200,
+          _paginaDeConsentimentos([
+            {'seq': 1, 'tipo': 'concessao', 'versao_termo': 'provisorio-1'},
+          ]),
+        ),
+        _ok, // cria a retirada
+      ]);
+      final antes = m.escritas.length;
+
+      expect(await m.sincronizacao.sincronizar(), 1);
+
+      // O cadastro já estava igual: só a retirada é escrita.
+      final novas = m.escritas.sublist(antes);
+      expect(novas, hasLength(1));
+      expect(
+        (novas.single['update'] as Map)['name'],
+        '$_documentos/$_base/consentimentos/2',
+      );
+      expect((await linha(m)).livroNoFirebase, 2);
+    });
+
+    test('paciente de outra conta neste aparelho não sobe', () async {
+      final m = await montarDaConta(const []);
+      await (m.banco.update(m.banco.pacientes)
+            ..where((p) => p.id.equals(_paciente)))
+          .write(const PacientesCompanion(profissionalId: Value('outra')));
+
+      expect(await m.sincronizacao.sincronizar(), 0);
+      expect(m.servidor.feitas, isEmpty);
+    });
+
+    test('um paciente que falha não impede os outros', () async {
+      final m = await montarDaConta([
+        _naoExiste, // o completo; o incompleto nem chega ao servidor
+        _ok,
+        _ok,
+      ]);
+      // Cadastro de antes da US40, sem nascimento: não passa nas regras.
+      await m.banco
+          .into(m.banco.pacientes)
+          .insert(
+            PacientesCompanion.insert(
+              id: 'incompleto',
+              nome: 'Sem Nascimento (teste)',
+              queixa: '',
+              cadastradoEm: DateTime(2026, 9, 1),
+              profissionalId: const Value(_uid),
+              alteradoEm: Value(DateTime(2026, 9, 1)),
+            ),
+          );
+      await (m.banco.delete(
+        m.banco.consentimentos,
+      )..where((c) => c.pacienteId.equals(_paciente))).go();
+
+      await expectLater(
+        m.sincronizacao.sincronizar(),
+        throwsA(isA<FalhaDeValidacao>()),
+      );
+      expect((await linha(m)).sincronizadoEm, isNotNull);
+    });
+
+    test('sem sessão aberta, nada sai', () async {
+      final m = await montarDaConta(const []);
+      final semConta = SincronizacaoFirestore(
+        FirestoreRest(Dio()..httpClientAdapter = m.servidor, projeto: 'demo'),
+        m.banco,
+        uid: () => null,
+      );
+
+      await expectLater(semConta.sincronizar(), throwsA(isA<NaoAutorizado>()));
+      expect(m.servidor.feitas, isEmpty);
+    });
+  });
+
+  test(
+    'migração: o banco da versão 8 ganha a marca do livro, em zero',
+    () async {
+      final verificador = SchemaVerifier(GeneratedHelper());
+      final esquema = await verificador.schemaAt(8);
+      final banco = BancoLocal(esquema.newConnection());
+      addTearDown(banco.close);
+      await verificador.migrateAndValidate(banco, banco.schemaVersion);
+
+      await banco
+          .into(banco.pacientes)
+          .insert(
+            PacientesCompanion.insert(
+              id: _paciente,
+              nome: 'Ana de Teste',
+              queixa: '',
+              cadastradoEm: DateTime(2026, 10, 1),
+            ),
+          );
+      // Zero: a primeira subida confere o livro com o do Firebase e acerta.
+      expect(
+        (await banco.select(banco.pacientes).getSingle()).livroNoFirebase,
+        0,
+      );
+    },
+  );
 }

@@ -219,6 +219,12 @@ class DescidaDoFirestore {
               );
         }
       }
+      // O livro daqui virou o de lá: nada dele por subir.
+      if (faltam.isNotEmpty) {
+        await (_banco.update(_banco.pacientes)
+              ..where((p) => p.id.equals(pacienteId)))
+            .write(PacientesCompanion(livroNoFirebase: Value(livro.length)));
+      }
       return faltam.length;
     });
   }
