@@ -16,7 +16,10 @@ abstract interface class FonteDeNivel {
   ///
   /// Pode emitir valor não finito (menos infinito) quando o trecho é silêncio
   /// digital — ver `zonaDe`.
-  Future<Stream<double>> abrir(Duration intervalo);
+  ///
+  /// [microfone] é o identificador do escolhido (`Microfone.id`); nulo, o
+  /// padrão do sistema.
+  Future<Stream<double>> abrir(Duration intervalo, {String? microfone});
 
   /// Fecha o microfone. Seguro de chamar mais de uma vez, ou sem ter aberto.
   Future<void> fechar();

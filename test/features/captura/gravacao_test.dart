@@ -40,7 +40,7 @@ class _SalaQuieta implements FonteDeNivel {
   @override
   Future<bool> pedirPermissao() async => true;
   @override
-  Future<Stream<double>> abrir(Duration intervalo) async =>
+  Future<Stream<double>> abrir(Duration intervalo, {String? microfone}) async =>
       Stream.periodic(intervalo, (i) => -65.0 + (i % 5));
   @override
   Future<void> fechar() async {}
@@ -54,6 +54,9 @@ class _Arquivos implements ArquivosDeAmostra {
   @override
   Future<String> novoCaminho(String pacienteId, TarefaDeGravacao t) async =>
       '/amostras/$pacienteId/${t.name}-${_n++}.wav';
+
+  @override
+  Future<Uint8List?> lerTudo(String caminho) async => conteudo[caminho];
 
   @override
   Future<({Uint8List inicio, int tamanho})?> ler(String caminho) async {
@@ -95,7 +98,11 @@ class _Gravador implements Gravador {
   Future<bool> pedirPermissao() async => true;
 
   @override
-  Future<Stream<double>> iniciar(String caminho, Duration intervalo) async {
+  Future<Stream<double>> iniciar(
+    String caminho,
+    Duration intervalo, {
+    String? microfone,
+  }) async {
     inicios++;
     _caminho = caminho;
     _emitidas = 0;

@@ -6,6 +6,7 @@ import '../design_system/theme/app_theme.dart';
 import '../features/anotacoes/presentation/anotacoes_controlador.dart';
 import '../features/cape_v/presentation/sincronizacao_cape_v_controlador.dart';
 import '../features/captura/data/gravador_record.dart';
+import '../features/captura/presentation/microfone_controlador.dart';
 import '../features/conta/data/preferencia_de_tamanho_local.dart';
 import '../features/conta/data/preferencia_de_tema_local.dart';
 import '../features/conta/domain/tema_escolhido.dart';
@@ -35,6 +36,9 @@ class FonarApp extends ConsumerWidget {
     // E o caminho de volta (US40): o que outro aparelho da mesma conta
     // cadastrou ou registrou desce para este.
     ref.listen(descidaDaContaControladorProvider, (_, _) {});
+    // O microfone escolhido neste aparelho, carregado já: a primeira
+    // aferição usa ele, sem esperar o banco.
+    ref.listen(microfoneGuardadoProvider, (_, _) {});
     // Os WAV que sobraram sem registro (regravação, descarte que falhou no
     // meio) saem na abertura.
     ref.listen(limpezaDeWavSemRegistroProvider, (_, _) {});

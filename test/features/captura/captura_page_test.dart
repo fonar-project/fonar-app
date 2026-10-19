@@ -11,6 +11,8 @@ import 'package:fonar_app/features/captura/data/fonte_de_nivel_record.dart';
 import 'package:fonar_app/features/captura/domain/ajuste_de_configuracao.dart';
 import 'package:fonar_app/features/captura/domain/afericao_de_ruido.dart';
 import 'package:fonar_app/features/captura/domain/fonte_de_nivel.dart';
+import 'package:fonar_app/features/captura/domain/microfone.dart';
+import 'package:fonar_app/features/captura/data/microfones_record.dart';
 import 'package:fonar_app/features/captura/domain/processamento_automatico.dart';
 import 'package:fonar_app/features/captura/presentation/afericao_controlador.dart';
 import 'package:fonar_app/features/captura/presentation/pages/captura_page.dart';
@@ -20,15 +22,25 @@ import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_local.da
 import 'package:fonar_app/features/pacientes/domain/paciente.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 
+import '../../apoio/banco_em_memoria.dart';
+
 /// Microfone de mentira: emite [niveis] em ciclo, um por intervalo.
 class _FonteFalsa implements FonteDeNivel {
   _FonteFalsa({
     this.niveis = const [-66, -64, -65, -63, -67],
+    this.niveisDaVoz,
     this.permitido = true,
     this.falhaAoAbrir = false,
     this.ajuste,
     this.segurarFechamento,
   });
+
+  /// O que emite da segunda abertura em diante — a conferência com a voz.
+  /// Nulo repete [niveis].
+  final List<double>? niveisDaVoz;
+
+  /// O microfone pedido em cada abertura (nulo é o padrão do sistema).
+  final microfonesPedidos = <String?>[];
 
   /// Segura o `fechar` até o teste soltar — o plugin demorando a liberar.
   final Completer<void>? segurarFechamento;
@@ -47,10 +59,12 @@ class _FonteFalsa implements FonteDeNivel {
   Future<bool> pedirPermissao() async => permitido;
 
   @override
-  Future<Stream<double>> abrir(Duration intervalo) async {
+  Future<Stream<double>> abrir(Duration intervalo, {String? microfone}) async {
     if (falhaAoAbrir) throw Exception('microfone ocupado');
     aberturas++;
-    return Stream.periodic(intervalo, (i) => niveis[i % niveis.length]);
+    microfonesPedidos.add(microfone);
+    final emitidos = aberturas > 1 ? niveisDaVoz ?? niveis : niveis;
+    return Stream.periodic(intervalo, (i) => emitidos[i % emitidos.length]);
   }
 
   @override
@@ -63,11 +77,23 @@ class _FonteFalsa implements FonteDeNivel {
 const _celular = Size(390, 844);
 const _desktop = Size(1440, 900);
 
+/// Dois microfones ligados: o embutido e o de um aplicativo de câmera.
+class _DoisMicrofones implements ListaDeMicrofones {
+  const _DoisMicrofones();
+
+  static const embutido = Microfone(id: 'mic-1', nome: 'Microfone embutido');
+  static const virtual = Microfone(id: 'mic-2', nome: 'DroidCam Virtual Audio');
+
+  @override
+  Future<List<Microfone>> listar() async => const [embutido, virtual];
+}
+
 Future<_FonteFalsa> _abrir(
   WidgetTester tester, {
   _FonteFalsa? fonte,
   Size tamanho = _celular,
   double escala = 1,
+  ListaDeMicrofones? microfones,
 }) async {
   tester.view.physicalSize = tamanho;
   tester.view.devicePixelRatio = 1;
@@ -83,6 +109,10 @@ Future<_FonteFalsa> _abrir(
       overrides: [
         fonteDeNivelProvider.overrideWithValue(falsa),
         conexaoOnlineProvider.overrideWithValue(true),
+        if (microfones != null) ...[
+          listaDeMicrofonesProvider.overrideWithValue(microfones),
+          bancoDeTeste(),
+        ],
         pacientesProvider.overrideWith(
           (ref) async => const [
             Paciente(
@@ -108,16 +138,22 @@ Future<_FonteFalsa> _abrir(
 Future<void> _medir(
   WidgetTester tester, {
   String rotulo = AppStrings.afericaoMedir,
+  Duration duracao = AfericaoDeRuido.duracao,
 }) async {
   final botao = find.text(rotulo);
   await tester.ensureVisible(botao);
   await tester.tap(botao);
   await tester.pump();
-  await tester.pump(
-    AfericaoDeRuido.duracao + const Duration(milliseconds: 200),
-  );
+  await tester.pump(duracao + const Duration(milliseconds: 200));
   await tester.pumpAndSettle();
 }
+
+/// Toca em "Conferir com a voz" e deixa a conferência inteira passar.
+Future<void> _conferirComAVoz(WidgetTester tester) => _medir(
+  tester,
+  rotulo: AppStrings.afericaoConferirComAVoz,
+  duracao: AfericaoDeRuido.duracaoDaConferencia,
+);
 
 /// A etapa, como o leitor de tela a lê: "Vogal /a/, pendente".
 Finder _etapa(String nome, String situacao) =>
@@ -166,6 +202,12 @@ void main() {
         fonte: _FonteFalsa(niveis: [double.negativeInfinity]),
       );
       await _medir(tester);
+
+      expect(tester.takeException(), isNull);
+      expect(find.text(AppStrings.afericaoSilencio), findsOneWidget);
+
+      // E o texto mais longo, o de depois da conferência com a voz.
+      await _conferirComAVoz(tester);
 
       expect(tester.takeException(), isNull);
       expect(find.text(AppStrings.afericaoMudo), findsOneWidget);
@@ -247,6 +289,15 @@ void main() {
 
     await _medir(tester);
 
+    // Silêncio absoluto ainda não é sala silenciosa: bloqueia e pede a voz.
+    expect(find.text(AppStrings.afericaoSilencio), findsOneWidget);
+    expect(find.text(AppStrings.afericaoSilencioTexto), findsOneWidget);
+    expect(find.text(AppStrings.capturaBloqueadaMicrofone), findsOneWidget);
+    expect(find.text(AppStrings.capturaContinuar), findsNothing);
+
+    // Nem a voz chegou: é o microfone.
+    await _conferirComAVoz(tester);
+
     expect(find.text(AppStrings.afericaoMudo), findsOneWidget);
     expect(find.text(AppStrings.afericaoMudoTexto), findsOneWidget);
     expect(find.text(AppStrings.capturaBloqueadaMicrofone), findsOneWidget);
@@ -255,6 +306,84 @@ void main() {
     await tester.tap(find.text(AppStrings.tarefaVogalCurta));
     await tester.pumpAndSettle();
     expect(find.text(AppStrings.capturaIniciarGravacao), findsNothing);
+  });
+
+  // Teste de homologação de 18/10/2026: numa sala sem som nenhum, o
+  // microfone que zera o sinal dava "o microfone não está captando som".
+  testWidgets('sala em silêncio total: a voz prova o microfone e libera', (
+    tester,
+  ) async {
+    final fonte = await _abrir(
+      tester,
+      fonte: _FonteFalsa(
+        niveis: [double.negativeInfinity],
+        niveisDaVoz: [-38, -30, -26, -33, -41, -29],
+      ),
+    );
+
+    await _medir(tester);
+    expect(find.text(AppStrings.afericaoSilencio), findsOneWidget);
+
+    // A conferência termina assim que a voz chega — sem esperar o tempo
+    // todo. Dez leituras de 100 ms bastam.
+    await tester.tap(find.text(AppStrings.afericaoConferirComAVoz));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1500));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.afericaoSalaSilenciosa), findsOneWidget);
+    expect(find.text(AppStrings.instrucaoRuidoOk), findsOneWidget);
+    expect(find.text(AppStrings.capturaBloqueadaMicrofone), findsNothing);
+    expect(find.text(AppStrings.capturaContinuar), findsOneWidget);
+    expect(fonte.aberturas, 2);
+  });
+
+  testWidgets('a escolha do microfone aparece depois da aferição e mede de '
+      'novo com o escolhido', (tester) async {
+    final fonte = await _abrir(
+      tester,
+      fonte: _FonteFalsa(niveis: [double.negativeInfinity]),
+      microfones: const _DoisMicrofones(),
+    );
+
+    // Antes da primeira aferição, nada — no navegador, listar pediria a
+    // permissão antes de o profissional tocar em medir.
+    expect(find.text(AppStrings.microfoneRotulo), findsNothing);
+
+    await _medir(tester);
+
+    expect(find.text(AppStrings.microfoneRotulo), findsOneWidget);
+    expect(find.text(AppStrings.microfonePadrao), findsOneWidget);
+    expect(find.text(_DoisMicrofones.virtual.nome), findsOneWidget);
+    expect(fonte.microfonesPedidos, [null]);
+
+    final embutido = find.text(_DoisMicrofones.embutido.nome);
+    await tester.ensureVisible(embutido);
+    await tester.tap(embutido);
+    await tester.pump();
+    await tester.pump(
+      AfericaoDeRuido.duracao + const Duration(milliseconds: 200),
+    );
+    await tester.pumpAndSettle();
+
+    // Trocar mede de novo, já com o escolhido.
+    expect(fonte.microfonesPedidos, [null, _DoisMicrofones.embutido.id]);
+    expect(
+      tester
+          .widget<Semantics>(
+            find
+                .ancestor(
+                  of: find.text(_DoisMicrofones.embutido.nome),
+                  matching: find.byWidgetPredicate(
+                    (w) => w is Semantics && w.properties.checked != null,
+                  ),
+                )
+                .first,
+          )
+          .properties
+          .checked,
+      isTrue,
+    );
   });
 
   testWidgets('sala barulhenta avisa com o nível e o limite', (tester) async {

@@ -14,6 +14,7 @@ Future<Uint8List> lerEnderecoTemporario(String endereco) =>
 Future<ProcessamentoRelatado> processamentoRelatadoPeloNavegador({
   required int taxaDeAmostragem,
   required int canais,
+  String? microfone,
 }) => throw UnsupportedError('Só no navegador.');
 
 String descricaoDoNavegador() => '';

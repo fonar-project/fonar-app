@@ -17,6 +17,7 @@ import '../domain/cabecalho_wav.dart';
 import '../domain/gravador.dart';
 import '../domain/retomada.dart';
 import '../domain/verificacao_da_amostra.dart';
+import 'microfone_controlador.dart';
 
 /// Por que a gravação não começou ou não terminou.
 enum FalhaDaGravacao {
@@ -214,6 +215,10 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
         return;
       }
       if (!ref.mounted) return;
+      // O mesmo microfone que a aferição mediu: a escolha só muda na etapa
+      // do ruído, que mede de novo.
+      final microfone = await microfoneParaCapturar(ref);
+      if (!ref.mounted) return;
       caminho = await arquivos.novoCaminho(pacienteId, tarefa);
       if (!ref.mounted) return;
       _caminho = caminho;
@@ -221,6 +226,7 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
       final niveis = await _gravador.iniciar(
         caminho,
         AfericaoDeRuido.intervalo,
+        microfone: microfone,
       );
       if (!ref.mounted) {
         // Abriu depois de a tela fechar: fecha de novo e não deixa arquivo.
@@ -301,14 +307,16 @@ class GravacaoControlador extends Notifier<EstadoDaGravacao> {
     Amostra? guardada;
     try {
       await _gravador.parar();
-      final lido = await arquivos.ler(caminho);
+      // O arquivo inteiro: a conferência de silêncio julga todo o áudio, não
+      // só o começo — ver `ArquivosDeAmostra.lerTudo`.
+      final lido = await arquivos.lerTudo(caminho);
       if (!ref.mounted) return;
 
-      final cabecalho = lido == null ? null : lerCabecalhoWav(lido.inicio);
+      final cabecalho = lido == null ? null : lerCabecalhoWav(lido);
       final problemas = VerificacaoDaAmostra.verificar(
         cabecalho: cabecalho,
-        inicioDoArquivo: lido?.inicio,
-        tamanhoDoArquivo: lido?.tamanho ?? 0,
+        arquivo: lido,
+        tamanhoDoArquivo: lido?.length ?? 0,
         leituras: leituras,
         taxaPedida: ConfiguracaoDeCaptura.taxaDeAmostragem,
         canaisPedidos: ConfiguracaoDeCaptura.canais,
