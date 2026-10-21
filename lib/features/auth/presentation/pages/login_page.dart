@@ -76,10 +76,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   /// "Esqueci a senha" abre a tela própria do pedido (US58), com o e-mail
   /// que já estava aqui. Empilhada: voltar de lá traz esta tela de volta
   /// como estava.
-  void _recuperar() => context.abrir(
-    AppRoutes.recuperarSenhaNome,
-    extra: _email.text.trim(),
-  );
+  void _recuperar() =>
+      context.abrir(AppRoutes.recuperarSenhaNome, extra: _email.text.trim());
 
   @override
   Widget build(BuildContext context) {

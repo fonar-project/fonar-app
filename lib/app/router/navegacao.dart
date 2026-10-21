@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 import '../app_estrutura.dart';
+import 'app_routes.dart';
 
 /// Como uma tela leva a outra (US60).
 ///
@@ -40,11 +41,8 @@ extension Navegacao on BuildContext {
     String nome, {
     Map<String, String> pathParameters = const {},
     Object? extra,
-  }) => pushReplacementNamed(
-    nome,
-    pathParameters: pathParameters,
-    extra: extra,
-  );
+  }) =>
+      pushReplacementNamed(nome, pathParameters: pathParameters, extra: extra);
 
   /// Volta uma tela. Sem tela embaixo — aberta pelo endereço, na web —, vai
   /// para [nome], a tela de onde normalmente se chega a esta.
@@ -58,19 +56,30 @@ extension Navegacao on BuildContext {
 
   /// Vai a um destino da navegação principal — a barra lateral, as abas.
   ///
-  /// Saindo de outro destino, empilha, como toda ida: o voltar do celular
-  /// refaz o caminho pelas abas. Saindo de uma tela de tarefa (só no
-  /// desktop a barra lateral aparece nelas), recomeça a pilha pelo destino:
-  /// a gravação em andamento, embaixo, continuaria gravando escondida.
-  /// No próprio destino, nada.
+  /// Saindo de uma das listas (pacientes, histórico, fila, conta), empilha,
+  /// como toda ida: o voltar do celular refaz o caminho pelas abas. Saindo
+  /// de uma tarefa — o cadastro da Nova avaliação, ou, no desktop, onde a
+  /// barra lateral aparece em toda tela, a gravação, o laudo —, recomeça a
+  /// pilha pelo destino: a tarefa é deixada de verdade, e o formulário com
+  /// alteração pergunta antes (US21), em vez de ficar escondido embaixo —
+  /// e a gravação em andamento, gravando escondida. No próprio destino,
+  /// nada.
   void irAoDestino(DestinoPrincipal destino) {
     final atual = GoRouter.of(this).state.name;
     if (atual == destino.rota) return;
-    final deOutroDestino = navegacaoDasRotas[atual]?.abas ?? false;
-    if (deOutroDestino) {
+    if (_listas.contains(atual)) {
       abrir(destino.rota);
     } else {
       goNamed(destino.rota);
     }
   }
 }
+
+/// Os destinos que são lista, e não tarefa: deles, ir a outro destino
+/// empilha.
+const _listas = {
+  AppRoutes.pacientesNome,
+  AppRoutes.historicoNome,
+  AppRoutes.filaNome,
+  AppRoutes.contaNome,
+};

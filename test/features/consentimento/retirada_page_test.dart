@@ -119,8 +119,20 @@ Future<_Montagem> _abrir(
       child: MaterialApp.router(theme: AppTheme.claro, routerConfig: roteador),
     ),
   );
-  roteador.goNamed(inicio, pathParameters: {AppRoutes.paramPacienteId: 'p1'});
+  // Como o app chega a cada tela: o perfil, e a retirada aberta por cima
+  // dele (US60).
+  roteador.goNamed(
+    AppRoutes.pacienteDetalheNome,
+    pathParameters: {AppRoutes.paramPacienteId: 'p1'},
+  );
   await tester.pumpAndSettle();
+  if (inicio != AppRoutes.pacienteDetalheNome) {
+    roteador.pushNamed(
+      inicio,
+      pathParameters: {AppRoutes.paramPacienteId: 'p1'},
+    );
+    await tester.pumpAndSettle();
+  }
   return _Montagem(roteador, consentimentos, fila);
 }
 

@@ -360,16 +360,14 @@ class _Acoes {
         ? AppStrings.capeVEditar
         : AppStrings.capeVRegistrar,
     icone: NomeIcone.avancar,
-    aoTocar: () =>
-        context.abrir(AppRoutes.capeVNome, pathParameters: _params),
+    aoTocar: () => context.abrir(AppRoutes.capeVNome, pathParameters: _params),
   );
 
   AppBotao _laudo(BuildContext context, {required bool primario}) => AppBotao(
     variante: primario ? VarianteBotao.primario : VarianteBotao.secundario,
     rotulo: AppStrings.resultadoPrepararLaudo,
     icone: NomeIcone.avancar,
-    aoTocar: () =>
-        context.abrir(AppRoutes.laudoNome, pathParameters: _params),
+    aoTocar: () => context.abrir(AppRoutes.laudoNome, pathParameters: _params),
   );
 
   Widget principal({required bool ocupaLargura}) => Builder(

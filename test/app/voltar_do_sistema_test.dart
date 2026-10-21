@@ -191,14 +191,12 @@ void main() {
     ) async {
       final app = await _abrir(tester);
       await _ir(tester, app, AppRoutes.pacienteDetalheNome, {_p: _paciente});
-      _naMoldura(
-        tester,
-      ).abrir(AppRoutes.consentimentoNome, pathParameters: {_p: _paciente});
+      _naMoldura(tester)
+          .abrir(AppRoutes.consentimentoNome, pathParameters: {_p: _paciente});
       await _desenhar(tester);
       // O consentimento registrado leva à gravação, no lugar do termo.
-      _naMoldura(
-        tester,
-      ).substituir(AppRoutes.capturaNome, pathParameters: {_p: _paciente});
+      _naMoldura(tester)
+          .substituir(AppRoutes.capturaNome, pathParameters: {_p: _paciente});
       await _desenhar(tester);
       expect(app.onde, AppRoutes.capturaNome);
 
@@ -312,9 +310,7 @@ void main() {
     ) async {
       final app = await _abrir(tester, comSessao: false);
       await _ir(tester, app, AppRoutes.loginNome);
-      tester
-          .element(find.byType(LoginPage))
-          .abrir(AppRoutes.criarContaNome);
+      tester.element(find.byType(LoginPage)).abrir(AppRoutes.criarContaNome);
       await _desenhar(tester);
       expect(app.onde, AppRoutes.criarContaNome);
 

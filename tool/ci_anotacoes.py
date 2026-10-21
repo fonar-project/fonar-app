@@ -80,13 +80,34 @@ def analise(saida: Path) -> None:
         )
 
 
+def _miolo_da_excecao(saida: str) -> str:
+    """O que o `flutter_test` imprime quando um teste de widget falha.
+
+    O erro do reporter, nesses testes, é só "Test failed. See exception logs
+    above." — o que falhou, o esperado e o encontrado vão antes, impressos.
+    Fica o trecho do cabeçalho da exceção até a pilha.
+    """
+    inicio = saida.find("EXCEPTION CAUGHT")
+    if inicio < 0:
+        return saida.strip()[-1500:]
+    trecho = saida[inicio:]
+    for marca in ("When the exception was thrown", "The test description was"):
+        fim = trecho.find(marca)
+        if fim > 0:
+            trecho = trecho[:fim]
+            break
+    return trecho.strip()[:2500]
+
+
 def testes(relatorio: Path) -> None:
     """Os erros do reporter JSON do `flutter test`, com o nome do teste.
 
     Erro de compilação aparece como falha do "teste" oculto que carrega o
-    arquivo (`loading ...`), e entra igual.
+    arquivo (`loading ...`), e entra igual. O que o teste imprimiu antes do
+    erro — o relatório da exceção, nos testes de widget — entra junto.
     """
     nomes: dict[int, str] = {}
+    impressos: dict[int, list[str]] = {}
     falhas: list[tuple[str, str]] = []
     contagem = {"success": 0, "failure": 0, "error": 0, "pulados": 0}
     for linha in relatorio.read_text(encoding="utf-8", errors="replace").splitlines():
@@ -99,6 +120,8 @@ def testes(relatorio: Path) -> None:
         if evento.get("type") == "testStart":
             teste = evento.get("test", {})
             nomes[teste.get("id")] = teste.get("name", "?")
+        elif evento.get("type") == "print":
+            impressos.setdefault(evento.get("testID"), []).append(str(evento.get("message", "")))
         elif evento.get("type") == "testDone" and not evento.get("hidden"):
             if evento.get("skipped"):
                 contagem["pulados"] += 1
@@ -106,9 +129,11 @@ def testes(relatorio: Path) -> None:
                 resultado = evento.get("result")
                 contagem[resultado] = contagem.get(resultado, 0) + 1
         elif evento.get("type") == "error":
-            nome = nomes.get(evento.get("testID"), "?")
+            id_do_teste = evento.get("testID")
+            nome = nomes.get(id_do_teste, "?")
             pilha = "\n".join(str(evento.get("stackTrace", "")).splitlines()[:12])
-            falhas.append((nome, f"{evento.get('error', '')}\n\n{pilha}"))
+            impresso = _miolo_da_excecao("\n".join(impressos.get(id_do_teste, [])))
+            falhas.append((nome, f"{impresso}\n\n{evento.get('error', '')}\n\n{pilha}".strip()))
     # O resumo sai sempre: sem abrir o log, dá para ver quantos testes
     # rodaram - e se um teste novo entrou na conta.
     total = sum(contagem.values())
