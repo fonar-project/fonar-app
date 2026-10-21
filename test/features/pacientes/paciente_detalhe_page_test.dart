@@ -190,8 +190,7 @@ bool _habilitado(WidgetTester tester, String rotulo) {
   return tester.widget<ButtonStyleButton>(botao.first).onPressed != null;
 }
 
-String _caminho(GoRouter r) =>
-    r.routerDelegate.currentConfiguration.uri.toString();
+String _caminho(GoRouter r) => r.state.uri.toString();
 
 void main() {
   testWidgets('mostra quem é o paciente', (tester) async {

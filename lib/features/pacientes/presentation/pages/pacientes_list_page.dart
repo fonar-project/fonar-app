@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/navegacao.dart';
 import '../../../../core/network/alcance_do_servidor.dart';
 import '../../../../core/network/conexao.dart';
 import '../../../../design_system/breakpoints.dart';
@@ -84,9 +84,9 @@ class PacientesListPage extends ConsumerWidget {
 }
 
 void _novaAvaliacao(BuildContext context) =>
-    context.goNamed(AppRoutes.novaAvaliacaoNome);
+    context.abrir(AppRoutes.novaAvaliacaoNome);
 
-void _abrir(BuildContext context, Paciente paciente) => context.goNamed(
+void _abrir(BuildContext context, Paciente paciente) => context.abrir(
   AppRoutes.pacienteDetalheNome,
   pathParameters: {AppRoutes.paramPacienteId: paciente.id},
 );

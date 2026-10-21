@@ -3,12 +3,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:fonar_app/app/app_estrutura.dart';
 import 'package:fonar_app/app/router/app_router.dart';
 import 'package:fonar_app/app/router/app_routes.dart';
+import 'package:fonar_app/app/router/navegacao.dart';
 import 'package:fonar_app/core/network/conexao.dart';
 import 'package:fonar_app/core/storage/token_storage.dart';
 import 'package:fonar_app/design_system/theme/app_theme.dart';
 import 'package:fonar_app/features/auth/data/sessao.dart';
+import 'package:fonar_app/features/auth/presentation/pages/login_page.dart';
 
 import '../apoio/banco_em_memoria.dart';
 import '../apoio/repositorios_em_memoria.dart';
@@ -111,7 +114,100 @@ Future<void> _ir(
   expect(app.onde, nome, reason: 'a navegação até $nome foi desviada');
 }
 
+/// Um `context` dentro do app, para navegar como as telas navegam.
+BuildContext _naMoldura(WidgetTester tester) =>
+    tester.element(find.byType(AppEstrutura));
+
 void main() {
+  // A regra do voltar (US60): ele leva sempre à tela de onde se veio, uma de
+  // cada vez — o caminho de volta é o caminho de ida, ao contrário.
+  group('o caminho de volta é o de ida', () {
+    testWidgets('pelas abas, cada voltar desfaz uma troca de aba', (
+      tester,
+    ) async {
+      final app = await _abrir(tester);
+      await _ir(tester, app, AppRoutes.pacientesNome);
+
+      _naMoldura(tester).irAoDestino(DestinoPrincipal.fila);
+      await _desenhar(tester);
+      _naMoldura(tester).irAoDestino(DestinoPrincipal.conta);
+      await _desenhar(tester);
+      expect(app.onde, AppRoutes.contaNome);
+
+      await _voltar(tester);
+      expect(app.onde, AppRoutes.filaNome);
+      await _voltar(tester);
+      expect(app.onde, AppRoutes.pacientesNome);
+      expect(app.fechou, isFalse);
+
+      await _voltar(tester);
+      expect(app.fechou, isTrue);
+    });
+
+    testWidgets('tocar na aba em que se está não empilha outra igual', (
+      tester,
+    ) async {
+      final app = await _abrir(tester);
+      await _ir(tester, app, AppRoutes.pacientesNome);
+
+      _naMoldura(tester).irAoDestino(DestinoPrincipal.pacientes);
+      await _desenhar(tester);
+      await _voltar(tester);
+
+      expect(app.fechou, isTrue);
+    });
+
+    testWidgets('do Histórico à CAPE-V, e de volta uma tela por vez', (
+      tester,
+    ) async {
+      final app = await _abrir(tester);
+      await _ir(tester, app, AppRoutes.pacientesNome);
+      _naMoldura(tester).irAoDestino(DestinoPrincipal.historico);
+      await _desenhar(tester);
+      _naMoldura(tester).abrir(
+        AppRoutes.analiseResultadoNome,
+        pathParameters: {_p: _paciente, _a: _analise},
+      );
+      await _desenhar(tester);
+      _naMoldura(tester).abrir(
+        AppRoutes.capeVNome,
+        pathParameters: {_p: _paciente, _a: _analise},
+      );
+      await _desenhar(tester);
+      expect(app.onde, AppRoutes.capeVNome);
+
+      await _voltar(tester);
+      expect(app.onde, AppRoutes.analiseResultadoNome);
+      // E não o perfil do paciente, que nunca esteve no caminho.
+      await _voltar(tester);
+      expect(app.onde, AppRoutes.historicoNome);
+      await _voltar(tester);
+      expect(app.onde, AppRoutes.pacientesNome);
+      expect(app.fechou, isFalse);
+    });
+
+    testWidgets('a tarefa concluída não volta: o voltar pula o formulário', (
+      tester,
+    ) async {
+      final app = await _abrir(tester);
+      await _ir(tester, app, AppRoutes.pacienteDetalheNome, {_p: _paciente});
+      _naMoldura(
+        tester,
+      ).abrir(AppRoutes.consentimentoNome, pathParameters: {_p: _paciente});
+      await _desenhar(tester);
+      // O consentimento registrado leva à gravação, no lugar do termo.
+      _naMoldura(
+        tester,
+      ).substituir(AppRoutes.capturaNome, pathParameters: {_p: _paciente});
+      await _desenhar(tester);
+      expect(app.onde, AppRoutes.capturaNome);
+
+      await _voltar(tester);
+
+      expect(app.onde, AppRoutes.pacienteDetalheNome);
+    });
+  });
+
   group('depois de entrar', () {
     testWidgets('na lista de pacientes, o voltar fecha o app', (tester) async {
       final app = await _abrir(tester);
@@ -210,6 +306,23 @@ void main() {
         expect(app.onde, AppRoutes.loginNome);
       });
     }
+
+    testWidgets('criar conta, aberta da entrada, volta para ela', (
+      tester,
+    ) async {
+      final app = await _abrir(tester, comSessao: false);
+      await _ir(tester, app, AppRoutes.loginNome);
+      tester
+          .element(find.byType(LoginPage))
+          .abrir(AppRoutes.criarContaNome);
+      await _desenhar(tester);
+      expect(app.onde, AppRoutes.criarContaNome);
+
+      await _voltar(tester);
+
+      expect(app.onde, AppRoutes.loginNome);
+      expect(app.fechou, isFalse);
+    });
 
     testWidgets('a recuperação de senha, empilhada, desempilha', (
       tester,

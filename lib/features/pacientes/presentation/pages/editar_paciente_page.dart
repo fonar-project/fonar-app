@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/navegacao.dart';
 import '../../../../app/router/trilhas.dart';
 import '../../../../app/router/saida_protegida.dart';
 import '../../../../design_system/breakpoints.dart';
@@ -264,8 +265,9 @@ class _FormularioState extends ConsumerState<_Formulario> {
           AvisoDeDuplicado(
             paciente: existente,
             aoAbrirExistente: () {
+              // A edição não volta: o outro cadastro toma o lugar dela.
               _descartarMarca();
-              context.goNamed(
+              context.substituir(
                 AppRoutes.pacienteDetalheNome,
                 pathParameters: {AppRoutes.paramPacienteId: existente.id},
               );

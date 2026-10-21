@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/navegacao.dart';
 import '../../../../app/router/saida_protegida.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
@@ -105,9 +105,10 @@ class _NovoPacientePageState extends ConsumerState<NovoPacientePage> {
     if (!mounted) return;
 
     if (paciente != null) {
-      // Salvo: não há o que perder, e sair não pergunta nada.
+      // Salvo: não há o que perder, e sair não pergunta nada. O termo toma
+      // o lugar do formulário, que não volta.
       _descartarMarca();
-      context.goNamed(
+      context.substituir(
         AppRoutes.consentimentoNome,
         pathParameters: {AppRoutes.paramPacienteId: paciente.id},
       );
@@ -126,7 +127,7 @@ class _NovoPacientePageState extends ConsumerState<NovoPacientePage> {
     queixa: _focoQueixa,
   )?.requestFocus();
 
-  void _cancelar() => context.goNamed(AppRoutes.pacientesNome);
+  void _cancelar() => context.voltarOu(AppRoutes.pacientesNome);
 
   void _editou(CampoDoCadastro campo) =>
       ref.read(cadastroPacienteControladorProvider.notifier).editou(campo);
@@ -171,9 +172,9 @@ class _NovoPacientePageState extends ConsumerState<NovoPacientePage> {
             paciente: existente,
             aoAbrirExistente: () {
               // Escolheu o cadastro que já existe: o que digitou aqui não
-              // é para guardar.
+              // é para guardar, e o formulário não volta.
               _descartarMarca();
-              context.goNamed(
+              context.substituir(
                 AppRoutes.pacienteDetalheNome,
                 pathParameters: {AppRoutes.paramPacienteId: existente.id},
               );

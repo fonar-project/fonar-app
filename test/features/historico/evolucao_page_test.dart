@@ -151,8 +151,7 @@ Future<void> _tocar(WidgetTester tester, Finder alvo) async {
   await tester.pumpAndSettle();
 }
 
-String _caminho(GoRouter r) =>
-    r.routerDelegate.currentConfiguration.uri.toString();
+String _caminho(GoRouter r) => r.state.uri.toString();
 
 void main() {
   testWidgets('sem análise concluída: estado vazio, sem gráfico', (

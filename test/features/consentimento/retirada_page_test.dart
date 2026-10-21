@@ -50,8 +50,7 @@ class _Montagem {
   final RepositorioConsentimentoPlaceholder consentimentos;
   final RepositorioFilaEmMemoria fila;
 
-  String get caminho =>
-      roteador.routerDelegate.currentConfiguration.uri.toString();
+  String get caminho => roteador.state.uri.toString();
 }
 
 /// O app com o ROTEADOR DE VERDADE, aberto na rota [inicio] do paciente p1.

@@ -17,6 +17,7 @@ import '../features/guia/domain/passo_do_guia.dart';
 import '../features/guia/presentation/alvos_do_guia.dart';
 import '../l10n/app_strings.dart';
 import 'router/app_routes.dart';
+import 'router/navegacao.dart';
 import 'router/voltar_do_sistema.dart';
 
 /// Destinos da navegação principal.
@@ -146,8 +147,8 @@ Widget molduraDoRoteador(
   final navegacao =
       navegacaoDasRotas[nome] ??
       (destino: DestinoPrincipal.pacientes, abas: false);
-  // O voltar do Android (US60): as telas de tarefa desempilham até a tela de
-  // cima; as abas, que abrem sozinhas na pilha, voltam para a lista de
+  // O voltar do Android (US60): com tela embaixo, desempilha — volta para a
+  // tela de onde se veio. Sozinha na pilha, a tela volta para a lista de
   // pacientes; e na lista o app fecha.
   return VoltarDoSistema(
     para: AppRoutes.pacientesNome,
@@ -388,7 +389,7 @@ class _ItemLateral extends StatelessWidget {
   Widget build(BuildContext context) {
     final creme = context.cores.sobrePrimaria;
     return AppToque(
-      aoTocar: () => context.goNamed(destino.rota),
+      aoTocar: () => context.irAoDestino(destino),
       selecionado: ativo,
       // Azul some sobre o roxo; o anel aqui é creme.
       corDoFoco: creme,
@@ -469,7 +470,7 @@ class _ItemInferior extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppToque(
-      aoTocar: () => context.goNamed(destino.rota),
+      aoTocar: () => context.irAoDestino(destino),
       selecionado: ativo,
       conteudo: (context) => AnimatedContainer(
         duration: AppMovimento.duracao(context, AppMovimento.rapida),

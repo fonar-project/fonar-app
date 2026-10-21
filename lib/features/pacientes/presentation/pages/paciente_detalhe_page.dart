@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/navegacao.dart';
 import '../../../../app/router/trilhas.dart';
 import '../../../../core/relogio.dart';
 import '../../../../design_system/breakpoints.dart';
@@ -282,7 +283,7 @@ class _DadosEAcoes extends ConsumerWidget {
             rotulo: AppStrings.perfilEditarDados,
             aoTocar: paciente.exemplo
                 ? null
-                : () => context.pushNamed(
+                : () => context.abrir(
                     AppRoutes.edicaoPacienteNome,
                     pathParameters: rotaDoPaciente,
                   ),
@@ -331,7 +332,7 @@ class _DadosEAcoes extends ConsumerWidget {
             alignment: Alignment.centerLeft,
             child: AppBotao.secundario(
               rotulo: AppStrings.retiradaAcao,
-              aoTocar: () => context.goNamed(
+              aoTocar: () => context.abrir(
                 AppRoutes.retiradaConsentimentoNome,
                 pathParameters: rotaDoPaciente,
               ),
@@ -346,7 +347,7 @@ class _DadosEAcoes extends ConsumerWidget {
           AppBotao.primario(
             rotulo: AppStrings.perfilNovaGravacao,
             icone: NomeIcone.gravar,
-            aoTocar: () => context.goNamed(
+            aoTocar: () => context.abrir(
               AppRoutes.capturaNome,
               pathParameters: rotaDoPaciente,
             ),
@@ -355,7 +356,7 @@ class _DadosEAcoes extends ConsumerWidget {
         else ...[
           AppBotao.primario(
             rotulo: AppStrings.perfilRegistrarConsentimento,
-            aoTocar: () => context.goNamed(
+            aoTocar: () => context.abrir(
               AppRoutes.consentimentoNome,
               pathParameters: rotaDoPaciente,
             ),
@@ -375,7 +376,7 @@ class _DadosEAcoes extends ConsumerWidget {
           AppBotao.secundario(
             rotulo: AppStrings.perfilVerEvolucao,
             icone: NomeIcone.avancar,
-            aoTocar: () => context.goNamed(
+            aoTocar: () => context.abrir(
               AppRoutes.evolucaoNome,
               pathParameters: rotaDoPaciente,
             ),
@@ -527,7 +528,7 @@ class _Sessoes extends ConsumerWidget {
             child: AppBotao.secundario(
               rotulo: AppStrings.perfilRevisarGravacoes,
               icone: NomeIcone.avancar,
-              aoTocar: () => context.pushNamed(
+              aoTocar: () => context.abrir(
                 AppRoutes.gravacoesNaoEnviadasNome,
                 pathParameters: {AppRoutes.paramPacienteId: pacienteId},
               ),
@@ -541,7 +542,7 @@ class _Sessoes extends ConsumerWidget {
             child: AppBotao.secundario(
               rotulo: AppStrings.perfilVerFila,
               icone: NomeIcone.avancar,
-              aoTocar: () => context.goNamed(AppRoutes.filaNome),
+              aoTocar: () => context.abrir(AppRoutes.filaNome),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -640,7 +641,7 @@ class _LinhaDaSessao extends StatelessWidget {
       child: Semantics(
         hint: AppStrings.perfilAbrirSessao(data),
         child: AppToque(
-          aoTocar: () => context.goNamed(
+          aoTocar: () => context.abrir(
             AppRoutes.analiseResultadoNome,
             pathParameters: {
               AppRoutes.paramPacienteId: pacienteId,

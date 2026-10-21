@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/navegacao.dart';
 import '../../../../core/network/conexao.dart';
 import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
@@ -61,7 +62,14 @@ class _CriarContaPageState extends ConsumerState<CriarContaPage> {
       inscricao: _inscricao.text,
       aceitouTermos: _aceitouTermos,
     );
-    if (destino != null && mounted) context.goNamed(rotaDe(destino));
+    if (destino == null || !mounted) return;
+    // A conta existe: o formulário não volta. Confirmar o e-mail toma o
+    // lugar dele, e o voltar de lá leva à entrada.
+    if (destino is EntrarNoApp) {
+      context.goNamed(rotaDe(destino));
+    } else {
+      context.substituir(rotaDe(destino));
+    }
   }
 
   @override
@@ -178,7 +186,7 @@ class _CriarContaPageState extends ConsumerState<CriarContaPage> {
             rotulo: AppStrings.criarContaJaTenho,
             aoTocar: ocupado
                 ? null
-                : () => context.goNamed(AppRoutes.loginNome),
+                : () => context.voltarOu(AppRoutes.loginNome),
           ),
         ],
       ),

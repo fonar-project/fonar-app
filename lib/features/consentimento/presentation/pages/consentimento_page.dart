@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/relogio.dart';
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/navegacao.dart';
 import '../../../../app/router/trilhas.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_colors.dart';
@@ -140,12 +141,6 @@ class ConsentimentoPage extends ConsumerWidget {
   }
 }
 
-void _irParaGravacao(BuildContext context, String pacienteId) =>
-    context.goNamed(
-      AppRoutes.capturaNome,
-      pathParameters: {AppRoutes.paramPacienteId: pacienteId},
-    );
-
 /// Área rolável com largura de leitura: o termo em linha de 1200 px não se lê.
 class _Rolagem extends StatelessWidget {
   const _Rolagem({required this.compacta, required this.child});
@@ -219,7 +214,10 @@ class _Registrado extends StatelessWidget {
           botao: (ocupaLargura) => AppBotao.primario(
             rotulo: AppStrings.consentimentoIniciarGravacao,
             icone: NomeIcone.gravar,
-            aoTocar: () => _irParaGravacao(context, paciente.id),
+            aoTocar: () => context.abrir(
+              AppRoutes.capturaNome,
+              pathParameters: {AppRoutes.paramPacienteId: paciente.id},
+            ),
             ocupaLargura: ocupaLargura,
           ),
         ),
@@ -293,7 +291,12 @@ class _FormularioState extends ConsumerState<_Formulario> {
     if (!mounted) return;
 
     if (registrou) {
-      _irParaGravacao(context, _id);
+      // Registrado: o termo não volta. A gravação toma o lugar dele, e o
+      // voltar de lá leva à tela de antes do termo.
+      context.substituir(
+        AppRoutes.capturaNome,
+        pathParameters: {AppRoutes.paramPacienteId: _id},
+      );
       return;
     }
     // O único campo de texto é o do responsável; os outros são toque.

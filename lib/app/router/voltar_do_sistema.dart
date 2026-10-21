@@ -4,15 +4,15 @@ import 'package:go_router/go_router.dart';
 /// O voltar do sistema — o botão de voltar do Android e o gesto de voltar —
 /// numa tela que não tem outra embaixo dela na pilha (US60).
 ///
-/// O app navega pelo `go`, que monta a pilha pela hierarquia das rotas: as
-/// telas de tarefa ficam em cima da tela de onde se chega a elas, e o voltar
-/// do sistema as desempilha, como o voltar da própria tela. Mas as abas
-/// (Fila, Histórico, Conta) e a criação de conta abrem sozinhas na pilha, e
-/// o voltar do Android fechava o app no meio do uso.
+/// A ida comum empilha (`abrir`, em `navegacao.dart`), e o voltar do sistema
+/// desempilha, como o voltar da própria tela: volta para a tela de onde se
+/// veio. Mas há telas que ficam sozinhas na pilha — abertas pelo `go`, que
+/// recomeça a pilha (depois de entrar, ao rever o guia, pelo endereço na
+/// web) —, e nelas o voltar do Android fechava o app no meio do uso.
 ///
-/// Aqui o voltar leva a [para], a tela de onde se chega a esta, e só fecha o
-/// app em [naRaiz] — a lista de pacientes, depois de entrar, e a entrada,
-/// antes.
+/// Aqui o voltar leva a [para], a tela de onde normalmente se chega a esta,
+/// e só fecha o app em [naRaiz] — a lista de pacientes, depois de entrar, e
+/// a entrada, antes.
 ///
 /// Também é o que segura o voltar no Android 16 (o app mira a API 36): lá o
 /// sistema só entrega o voltar ao app quando o app diz que tem para onde

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/navegacao.dart';
 import '../../../../app/router/trilhas.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
@@ -105,9 +106,7 @@ class RetiradaConsentimentoPage extends ConsumerWidget {
             children: [
               AppCabecalhoDeTarefa(
                 titulo: AppStrings.retiradaTitulo,
-                aoVoltar: () => context.canPop()
-                    ? context.pop()
-                    : _irParaPaciente(context, pacienteId),
+                aoVoltar: () => _irParaPaciente(context, pacienteId),
                 largura: largura,
                 trilha: [
                   ...Trilhas.doPaciente(
@@ -134,8 +133,10 @@ class RetiradaConsentimentoPage extends ConsumerWidget {
   }
 }
 
+/// Volta ao perfil, de onde se chega à retirada. O formulário sai da pilha:
+/// o voltar do perfil não o reabre.
 void _irParaPaciente(BuildContext context, String pacienteId) =>
-    context.goNamed(
+    context.voltarOu(
       AppRoutes.pacienteDetalheNome,
       pathParameters: {AppRoutes.paramPacienteId: pacienteId},
     );
@@ -174,7 +175,6 @@ class _FormularioState extends ConsumerState<_Formulario> {
     if (!mounted) return;
 
     if (retirou) {
-      // `go`, e não `pop`: voltar do perfil não pode reabrir este formulário.
       _irParaPaciente(context, _id);
       return;
     }
