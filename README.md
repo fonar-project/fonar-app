@@ -84,7 +84,9 @@ funcional** — trocas de tela, de etapa e de estado com transição curta, que
 some com o movimento reduzido do sistema —, com as ações presas no rodapé só
 quando a tela tem altura para isso (US31). Entre as telas, a barra lateral e
 as abas ficam paradas e só o conteúdo troca, abrindo e voltando com a mesma
-entrada curta (US57). Na primeira vez de cada conta em cada aparelho, um
+entrada curta (US57). No celular, nada fica embaixo da barra de status nem
+da dos botões, e o **voltar do Android** volta para a tela anterior — das
+abas, para a lista de pacientes; da lista, fecha o app (US60). Na primeira vez de cada conta em cada aparelho, um
 **guia** mostra a tela inicial, um elemento por vez — a nova avaliação, a
 lista, a fila, a conta, a conexão e a ajuda —, e a **Ajuda** (no canto do
 cabeçalho, no desktop; no topo da lista, no celular) o revê e lista os

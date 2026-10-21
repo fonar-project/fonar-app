@@ -52,6 +52,24 @@ funcionalidade: espectrograma e gráfico de evolução em modo paisagem; escala
 CAPE-V em tela cheia dedicada; preview A4 do laudo substituído por resumo
 mais ação de baixar ou compartilhar.
 
+Margens do sistema (US60): desde o Android 15 o app desenha por baixo da
+barra de status e da barra dos botões. A de cima é de cada tela — o
+cabeçalho (`AppCabecalhoDeSecao`, `AppCabecalhoDeTarefa`) pinta o fundo dela
+e põe o conteúdo abaixo, com `SafeArea`. As dos lados e a de baixo são da
+`AppEstrutura`, para toda tela da moldura: com as abas, quem fica acima da
+barra dos botões é a barra das abas; sem elas, o conteúdo para antes. Tela
+fora da moldura cuida das quatro. A matriz de layout simula as barras de um
+Android e reprova texto que fique embaixo delas sem como rolar para a vista.
+
+O voltar do sistema (US60) faz o que o voltar da tela faz: as telas de
+tarefa desempilham até a de cima; as abas voltam para a lista de pacientes;
+criar conta, confirmar o e-mail e completar o cadastro voltam para a
+entrada; na lista e na entrada, o app fecha. Quem decide é o
+`VoltarDoSistema` (`app/router/voltar_do_sistema.dart`), na moldura e nas
+rotas da entrada — tela nova que abre pelo `go`, sozinha na pilha, entra
+nele. O voltar preditivo do Android 16 fica desligado no manifesto
+(`enableOnBackInvokedCallback="false"`) até ser conferido num aparelho.
+
 ## Captura de áudio — módulo de maior risco do projeto
 Ao implementar captura, obrigatoriamente:
 - Desabilitar ganho automático, supressão de ruído e cancelamento de eco

@@ -278,45 +278,52 @@ Future<void> _desenhar(WidgetTester tester) async {
 void main() {
   final passadas =
       <(String, Size, double, bool, TamanhoDaInterface?, FakeViewPadding?)>[
-    for (final (nome, tamanho) in _larguras)
-      for (final escala in _escalas)
-        (nome, tamanho, escala, false, null, null),
-    // Com as barras do sistema de um Android (US60): nada da tela fica
-    // embaixo delas — ver [_embaixoDasBarras].
-    for (final escala in [1.0, 2.0])
-      (
-        '390x844 Android',
-        const Size(390, 844),
-        escala,
-        false,
-        null,
-        _androidEmPe,
-      ),
-    ('360x640 Android', const Size(360, 640), 1.0, false, null, _androidPequeno),
-    (
-      '844x390 deitado Android',
-      const Size(844, 390),
-      1.0,
-      false,
-      null,
-      _androidDeitado,
-    ),
-    // Uma passada inteira com o sistema pedindo menos movimento: é onde as
-    // animações viram duração zero, e duração zero tem armadilhas próprias
-    // (o `AnimatedSize` quebrava o layout) — ver `AppMovimento`.
-    ('390x844 sem movimento', const Size(390, 844), 1.0, true, null, null),
-    // O tamanho da interface (US48): Full HD no automático é 120%, e o app
-    // vê 1600×900. Também com o texto do sistema em 200% por cima.
-    for (final escala in [1.0, 2.0])
-      (
-        '1920x1080 interface 120%',
-        const Size(1920, 1080),
-        escala,
-        false,
-        TamanhoDaInterface.automatico,
-        null,
-      ),
-  ];
+        for (final (nome, tamanho) in _larguras)
+          for (final escala in _escalas)
+            (nome, tamanho, escala, false, null, null),
+        // Com as barras do sistema de um Android (US60): nada da tela fica
+        // embaixo delas — ver [_embaixoDasBarras].
+        for (final escala in [1.0, 2.0])
+          (
+            '390x844 Android',
+            const Size(390, 844),
+            escala,
+            false,
+            null,
+            _androidEmPe,
+          ),
+        (
+          '360x640 Android',
+          const Size(360, 640),
+          1.0,
+          false,
+          null,
+          _androidPequeno,
+        ),
+        (
+          '844x390 deitado Android',
+          const Size(844, 390),
+          1.0,
+          false,
+          null,
+          _androidDeitado,
+        ),
+        // Uma passada inteira com o sistema pedindo menos movimento: é onde as
+        // animações viram duração zero, e duração zero tem armadilhas próprias
+        // (o `AnimatedSize` quebrava o layout) — ver `AppMovimento`.
+        ('390x844 sem movimento', const Size(390, 844), 1.0, true, null, null),
+        // O tamanho da interface (US48): Full HD no automático é 120%, e o app
+        // vê 1600×900. Também com o texto do sistema em 200% por cima.
+        for (final escala in [1.0, 2.0])
+          (
+            '1920x1080 interface 120%',
+            const Size(1920, 1080),
+            escala,
+            false,
+            TamanhoDaInterface.automatico,
+            null,
+          ),
+      ];
   for (final (nomeDaLargura, tamanho, escala, semMovimento, interface, barras)
       in passadas) {
     testWidgets('$nomeDaLargura @ ${(escala * 100).round()}%', (tester) async {
