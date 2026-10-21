@@ -231,13 +231,7 @@ class AppEstrutura extends StatelessWidget {
               Expanded(
                 // O `Builder` lê as margens já dentro do Scaffold, que tira
                 // o teclado do corpo.
-                child: Builder(
-                  builder: (context) => MediaQuery.removePadding(
-                    context: context,
-                    removeBottom: navegacaoInferior,
-                    child: SafeArea(top: false, child: child),
-                  ),
-                ),
+                child: child,
               ),
               if (navegacaoInferior) _BarraInferior(ativo: destino),
             ],
