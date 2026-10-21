@@ -61,14 +61,32 @@ barra dos botões é a barra das abas; sem elas, o conteúdo para antes. Tela
 fora da moldura cuida das quatro. A matriz de layout simula as barras de um
 Android e reprova texto que fique embaixo delas sem como rolar para a vista.
 
-O voltar do sistema (US60) faz o que o voltar da tela faz: as telas de
-tarefa desempilham até a de cima; as abas voltam para a lista de pacientes;
-criar conta, confirmar o e-mail e completar o cadastro voltam para a
-entrada; na lista e na entrada, o app fecha. Quem decide é o
-`VoltarDoSistema` (`app/router/voltar_do_sistema.dart`), na moldura e nas
-rotas da entrada — tela nova que abre pelo `go`, sozinha na pilha, entra
-nele. O voltar preditivo do Android 16 fica desligado no manifesto
+## Navegação — o voltar volta uma tela (US60)
+O voltar — o da tela e o do Android — leva SEMPRE à tela de onde se veio,
+uma de cada vez. Por isso tela nenhuma navega com `goNamed`/`pushNamed`
+direto: tudo passa pelos verbos de `app/router/navegacao.dart`.
+- `abrir` — a ida comum, que empilha.
+- `substituir` — o fim de uma tarefa (o cadastro salvo, o consentimento
+  registrado, a gravação enviada): a próxima tela toma o lugar do formulário
+  concluído, que não volta.
+- `voltarOu` — o voltar da tela, e o "salvar" que devolve à tela de baixo.
+- `irAoDestino` — abas e barra lateral. Entre as listas (pacientes,
+  histórico, fila, conta), empilha. Saindo de uma tarefa (o cadastro da Nova
+  avaliação; no desktop, qualquer tela), recomeça a pilha: o formulário
+  alterado pergunta antes (US21), e a gravação não segue escondida embaixo.
+
+O `go` só RECOMEÇA a pilha, quando o que estava nela deixou de valer: entrar
+e sair da conta, o paciente eliminado, a rota que não existe, a trilha do
+desktop. A tela que fica sozinha na pilha tem o `VoltarDoSistema`
+(`app/router/voltar_do_sistema.dart`, na moldura e nas rotas da entrada): o
+voltar leva à lista de pacientes ou à entrada, e só nelas o app fecha. O
+voltar preditivo do Android 16 fica desligado no manifesto
 (`enableOnBackInvokedCallback="false"`) até ser conferido num aparelho.
+
+Nos testes, onde se está é `roteador.state.uri`, que vê a tela empilhada; o
+`routerDelegate.currentConfiguration.uri` não vê. O voltar do Android se
+simula com a mensagem `popRoute` no canal `flutter/navigation`
+(`test/app/voltar_do_sistema_test.dart`).
 
 ## Captura de áudio — módulo de maior risco do projeto
 Ao implementar captura, obrigatoriamente:
@@ -143,6 +161,10 @@ Token Service (README). O login de EXEMPLO só existe no modo de exemplo
   que conduz o primeiro acesso: e-mail por verificar → formulário → entra.
   O credenciamento (pendente ou credenciado) é da equipe, não bloqueia nada,
   e o app só o mostra. `features/cadastro/`.
+- "Esqueci a senha" (US58) é uma tela própria
+  (`auth/presentation/pages/recuperar_senha_page.dart`), empilhada sobre a
+  entrada, com o e-mail de lá em memória (`extra`) — nunca no endereço, que
+  na web fica no histórico do navegador.
 - "Manter conectado neste aparelho" (US59) é a caixa da entrada: marcada,
   a próxima abertura do app já abre a sessão (`abrirSessaoMantida`, no
   `main.dart`, antes da primeira tela). Quem abre é a credencial do cofre,
@@ -303,12 +325,13 @@ Todo dado exibido em desenvolvimento é placeholder e deve ser identificável
 como tal.
 
 ## Estado atual
-O fluxo da avaliação existe de ponta a ponta no aparelho (US00 a US34 — lista
+O fluxo da avaliação existe de ponta a ponta no aparelho (US00 a US60 — lista
 e resumo no README): cadastro, consentimento e retirada, aferição, gravação,
 fila, resultado, CAPE-V, evolução, laudo em PDF, com os dados num banco local
 (Drift, `lib/core/banco/`).
 
-O login é o Firebase Authentication de verdade (US32). O envio para a análise
+**Tudo de verdade, menos o modo de exemplo.** O login é o Firebase
+Authentication de verdade (US32). O envio para a análise
 é a API de verdade (US33): paciente, consentimentos e sessão sobem para o
 Firestore pela API REST (`lib/features/sincronizacao/`), e cada gravação vai
 para a API com o id da amostra; o id da análise é o id da sessão. A CAPE-V
@@ -322,12 +345,13 @@ classificação enquanto não houver faixa VALIDADA — as faixas provisórias d
 API não classificam no app. O CPPS vem da API, da vogal; o AVQI v03.01 também,
 da sessão (`resultado_da_sessao`, o script oficial rodado no servidor). O
 espectrograma é o PNG da API, buscado com o token (`ImagemDaApi`). Ainda é
-PLACEHOLDER, e
-identificado como tal, só o modo de exemplo (`AppConfig.exemplo`): o login
+PLACEHOLDER, e identificado como tal, só o modo de exemplo
+(`AppConfig.exemplo`): o login
 que aceita qualquer e-mail e senha, e os resultados e os pacientes "de
 Exemplo", que aparecem por cima do banco sem serem gravados nele.
 
-O caminho de volta também existe (US40, `sincronizacao/data/descida_firestore.dart`):
+**O caminho de volta** também existe (US40,
+`sincronizacao/data/descida_firestore.dart`):
 os pacientes da conta e o livro de consentimentos de cada um descem na
 abertura, quando a conexão volta e quando alguém entra; CAPE-V e laudos,
 quando o perfil do paciente abre; a gravação feita em outro aparelho se ouve
@@ -336,7 +360,7 @@ subiu. Cada paciente é de uma conta (`Pacientes.profissionalId`): num
 aparelho compartilhado, quem entra só vê os seus, e a fila só mostra os
 envios dela.
 
-As anotações do paciente (US51, ADR-019 da API, `lib/features/anotacoes/`)
+**As anotações do paciente** (US51, ADR-019 da API, `lib/features/anotacoes/`)
 são prontuário: cada versão é uma linha (e um documento no Firestore) que
 nunca muda de texto — editar acrescenta outra, que diz qual substitui —, e
 nada se apaga a não ser na eliminação do paciente. Não dependem do
@@ -346,14 +370,14 @@ paciente nem no laudo, e sem verde, amarelo ou vermelho. Sobem pela
 `SincronizacaoEmSegundoPlano` (com o cadastro do paciente antes) e descem
 quando o perfil abre, como CAPE-V e laudos.
 
-O app sai para baixar pelo GitHub Releases (US41: Windows, macOS e APK do
+**Distribuição.** O app sai para baixar pelo GitHub Releases (US41: Windows, macOS e APK do
 Android, sem assinatura de código) e, para o iPhone, como versão web no
 GitHub Pages (US42), pelo `release.yml`, a cada tag `v*`. Na web, o banco
 local é o SQLite em WebAssembly e os WAV moram nele (`audios_do_navegador`);
 tudo o que só o navegador sabe responder passa por `core/navegador/`, com
 importação condicional — nenhum outro arquivo importa `package:web`.
 
-O guia da primeira vez (US50, `lib/features/guia/`) abre na lista de
+**O guia da primeira vez** (US50, `lib/features/guia/`) abre na lista de
 pacientes, uma vez por conta em cada aparelho (`Preferencias`,
 `guia.inicio.v1.<uid>`, sem servidor), e a Ajuda o revê. Gravação,
 resultado, CAPE-V e laudo têm cada um uma dica de primeira vez
@@ -364,14 +388,14 @@ declara onde estiver. Nenhum abre no modo paciente, e os testes os mantêm
 fechados (`test/flutter_test_config.dart`); os do guia os ligam pelo
 provider.
 
-O que falta e de quem depende está em `PENDENCIAS.md` — ao resolver um item,
+**O que falta** e de quem depende está em `PENDENCIAS.md` — ao resolver um item,
 apague a linha de lá e o `TODO` do código, no mesmo commit.
 
-A credencial do Firebase fica no cofre do sistema (`TokenStorageSeguro`, via
+**A credencial do Firebase** fica no cofre do sistema (`TokenStorageSeguro`, via
 `CofreDeCredencial`), e o backup automático do Android está desligado de
 propósito — não reativar.
 
-Dados em repouso (US44): no aparelho, o banco local é CIFRADO — SQLite3
+**Dados em repouso** (US44): no aparelho, o banco local é CIFRADO — SQLite3
 Multiple Ciphers, escolhido pelo `hooks` do `pubspec.yaml`, com a chave
 aleatória no mesmo cofre (`core/banco/chave_do_banco.dart`). O WAV não é
 cifrado, mas só existe até subir: o envio que chega ao servidor o apaga do
