@@ -6,6 +6,7 @@ import '../data/repositorio_pacientes_local.dart';
 import '../domain/duplicidade.dart';
 import '../domain/novo_paciente.dart';
 import '../domain/paciente.dart';
+import '../../sincronizacao/presentation/subida_dos_pacientes_controlador.dart';
 
 /// Os campos do formulário, para dizer qual deles o profissional mexeu.
 enum CampoDoCadastro { nome, nascimento, sexo, queixa }
@@ -144,7 +145,11 @@ class CadastroPacienteControlador extends Notifier<EstadoCadastro> {
 
     // A lista precisa mostrar o paciente novo quando o profissional voltar a
     // ela — inclusive se a tela tiver sido fechada no meio do salvamento.
-    if (salvo != null) container.invalidate(pacientesProvider);
+    if (salvo != null) {
+      container.invalidate(pacientesProvider);
+      // E sobe já, para aparecer nos outros aparelhos da conta (US40).
+      pedirSubidaDosPacientes(container);
+    }
 
     if (!ref.mounted) return null;
     state = fim;

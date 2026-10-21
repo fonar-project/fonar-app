@@ -380,12 +380,42 @@ abstract final class AppStrings {
 
   /// Diz o que fazer nas duas plataformas, sem perguntar qual é: o texto é o
   /// mesmo em qualquer aparelho, e quem está num lê a sua parte.
+  ///
+  /// Aparece depois da conferência com a voz: nem a voz chegou.
   static const afericaoMudoTexto =
-      'A gravação fica bloqueada até o microfone captar som. No Windows, abra '
-      'Configurações > Privacidade e segurança > Microfone e ative o acesso '
-      'ao microfone, inclusive para aplicativos da área de trabalho. No '
-      'Android, confira a permissão de microfone do FONAR. Depois, meça de '
-      'novo.';
+      'Nem a voz chegou ao microfone, e a gravação fica bloqueada até ele '
+      'captar som. Se houver mais de um microfone, escolha outro nesta tela. '
+      'No Windows, abra Configurações > Privacidade e segurança > Microfone '
+      'e ative o acesso ao microfone, inclusive para aplicativos da área de '
+      'trabalho. No Android, confira a permissão de microfone do FONAR. '
+      'Depois, meça de novo.';
+
+  /// A sala deu silêncio digital — sala silenciosa de verdade com um
+  /// microfone que zera o sinal, ou microfone que não capta. Só a voz
+  /// separa os dois (`AfericaoDeRuido.concluirComAVoz`).
+  static const afericaoSilencio = 'Não chegou som nenhum';
+  static const afericaoSilencioTexto =
+      'Pode ser a sala em silêncio total ou o microfone sem captar. Toque em '
+      '"Conferir com a voz" e diga algumas palavras perto do microfone.';
+  static const afericaoConferirComAVoz = 'Conferir com a voz';
+  static const afericaoSalaSilenciosa = 'Sala silenciosa e microfone captando';
+  static const afericaoSalaSilenciosaTexto =
+      'O ruído da sala ficou abaixo do que o microfone mede, e a voz chegou.';
+
+  // Teste de homologação de 18/10/2026: sem escolher o microfone, o FONAR
+  // gravava do padrão do sistema — no Windows com DroidCam, um virtual mudo.
+  static const microfoneRotulo = 'Microfone';
+  static const microfonePadrao = 'Padrão do sistema';
+  static const microfoneApoio =
+      'Trocar o microfone mede o ruído da sala de novo.';
+  static String microfoneAusente(String nome) =>
+      'O microfone escolhido ($nome) não está conectado. O FONAR está usando '
+      'o padrão do sistema.';
+  static const microfoneEmbutido = 'Microfone do aparelho';
+  static const microfoneFoneComFio = 'Fone com fio';
+  static const microfoneUsb = 'Microfone USB';
+  static const microfoneEntradaDeLinha = 'Entrada de linha';
+  static const microfoneSemNome = 'Microfone';
   static const afericaoRuidoAlto = 'Ruído ambiente acima do limite';
   static String afericaoRuidoAltoTexto(String nivel, String limite) =>
       'Nível típico da sala: $nivel (limite: $limite). Feche portas e '
@@ -458,6 +488,9 @@ abstract final class AppStrings {
   static const instrucaoRuidoOk = 'Ambiente adequado para gravar.';
   static const instrucaoRuidoAlto = 'A sala está ruidosa.';
   static const instrucaoRuidoMudo = 'O microfone não está captando som.';
+  static const instrucaoRuidoSilencio = 'Não chegou som nenhum.';
+  static const instrucaoRuidoConferindoVoz =
+      'Diga algumas palavras perto do microfone.';
   static const instrucaoRuidoSemMicrofone =
       'Não foi possível usar o microfone.';
 

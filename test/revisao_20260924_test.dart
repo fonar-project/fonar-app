@@ -63,6 +63,9 @@ class Arquivos implements ArquivosDeAmostra {
   @override
   Future<void> apagar(String caminho) async => apagados.add(caminho);
   @override
+  Future<Uint8List?> lerTudo(String caminho) async => null;
+
+  @override
   Future<({Uint8List inicio, int tamanho})?> ler(String caminho) async => null;
   @override
   Future<String> novoCaminho(String id, TarefaDeGravacao t) async =>
@@ -71,6 +74,9 @@ class Arquivos implements ArquivosDeAmostra {
 
 class DiscoComFalha extends Arquivos {
   final conteudo = <String, Uint8List>{};
+  @override
+  Future<Uint8List?> lerTudo(String caminho) async => conteudo[caminho];
+
   @override
   Future<({Uint8List inicio, int tamanho})?> ler(String caminho) async {
     final bytes = conteudo[caminho];
@@ -92,8 +98,11 @@ class GravadorFalso implements Gravador {
   @override
   Future<bool> pedirPermissao() async => true;
   @override
-  Future<Stream<double>> iniciar(String caminho, Duration intervalo) async =>
-      niveis.stream;
+  Future<Stream<double>> iniciar(
+    String caminho,
+    Duration intervalo, {
+    String? microfone,
+  }) async => niveis.stream;
   @override
   Future<void> parar() async {}
   @override

@@ -47,8 +47,10 @@ O caminho de uma avaliação, na ordem em que o profissional passa por ele:
    bloqueio é do roteador, não um aviso. O paciente pode retirar o
    consentimento depois (US15), e aí a gravação volta a bloquear e os envios
    dele param.
-4. **Afere o ruído da sala** (US04) com o medidor de nível ao vivo. Silêncio
-   absoluto é tratado como microfone mudo, nunca como sala silenciosa.
+4. **Afere o ruído da sala** (US04) com o medidor de nível ao vivo, no
+   **microfone escolhido** quando o aparelho tem mais de um. Silêncio absoluto
+   nunca é tomado por sala silenciosa: a gravação só libera depois de a voz
+   provar, numa conferência curta, que o microfone capta.
 5. **Grava as tarefas** (US05) — vogal sustentada e fala encadeada —, com cada
    WAV conferido depois de gravado. Dá para **ouvir** cada gravação (US13).
    Voltar à gravação no mesmo dia **retoma a sessão** (US16). A gravação é
@@ -127,8 +129,9 @@ Multiple Ciphers, com a chave no cofre do sistema), e o banco de antes da
 atualização é cifrado na primeira abertura; o WAV sai do aparelho assim que
 chega ao servidor, e ouvir de novo vem da API.
 
-Com **mais de um aparelho** (US40), o que um registra aparece no outro: os
-pacientes da conta e os consentimentos descem do Firebase na abertura, quando
+Com **mais de um aparelho** (US40), o que um registra aparece no outro: o
+paciente e os consentimentos sobem logo depois de cadastrados ou registrados
+— sem esperar a primeira gravação —, e descem do Firebase na abertura, quando
 a conexão volta e quando alguém entra; a CAPE-V e os laudos, quando o perfil
 do paciente abre; e a gravação feita em outro aparelho se ouve pela API. Uma
 retirada de consentimento feita num aparelho passa a bloquear a gravação no
@@ -809,7 +812,10 @@ O risco está documentado, com o que precisa ser feito, em
 [`lib/core/permissions/microphone_permission.dart`](lib/core/permissions/microphone_permission.dart).
 **Leia esse arquivo antes de tocar no módulo de captura.** Em resumo: a aferição
 de ruído ambiente tem que tratar silêncio absoluto como falha, não como sala
-silenciosa, e bloquear a gravação avisando o usuário.
+silenciosa, e bloquear a gravação avisando o usuário — até a voz provar que o
+microfone capta. E o microfone padrão pode ser o errado (no teste de
+homologação, o virtual do DroidCam, que entrega silêncio): por isso o
+profissional escolhe o microfone na etapa do ruído.
 
 A declaração formal (`<DeviceCapability Name="microphone" />`) só existiria em
 pacote MSIX, e o FONAR é distribuído em zip (US41, ver

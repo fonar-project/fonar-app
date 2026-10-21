@@ -76,6 +76,22 @@ captura pode falhar EM SILÊNCIO — WAV válido, duração certa, amplitude zer
 sem erro. O módulo de captura precisa detectar amplitude zerada na aferição
 de ruído e tratar silêncio absoluto como falha, nunca como sala silenciosa.
 
+Teste de homologação de 18/10/2026 — três coisas que não se desfazem:
+- Silêncio digital também é o que entrega, numa sala silenciosa de verdade,
+  o microfone que zera o sinal sem som. Ele bloqueia e pede a CONFERÊNCIA COM
+  A VOZ (`AfericaoDeRuido.concluirComAVoz`): a voz que chega prova o
+  microfone e libera; nada chegar confirma o mudo. Silêncio nunca libera
+  sozinho. O piso do silêncio (`LimitesDeNivel.pisoDigital`, −120 dBFS) é
+  aritmética, não calibração: o menor pico de 16 bits dá −90,3 dBFS.
+- A conferência de silêncio de cada gravação olha o ARQUIVO INTEIRO
+  (`ArquivosDeAmostra.lerTudo`): o começo de uma gravação é justamente onde
+  o paciente ainda não falou.
+- O profissional escolhe o microfone (`features/captura/domain/microfone.dart`),
+  em todas as plataformas: o padrão do sistema pode ser o errado (no Windows,
+  o `record` abre o padrão de comunicação; no teste, o virtual do DroidCam).
+  A escolha é do aparelho, aparece depois da primeira aferição e trocar mede
+  de novo. Bluetooth fica fora da lista, como o `manageBluetooth: false`.
+
 ## Faixas de referência — pendência clínica aberta
 Os valores de corte que aparecem no protótipo (AVQI < 2,95, CPPS > 14 dB,
 jitter < 1,04%, f0 180–250 Hz, shimmer) **ainda não foram validados por
@@ -308,6 +324,14 @@ PLACEHOLDER, e
 identificado como tal, só o modo de exemplo (`AppConfig.exemplo`): o login
 que aceita qualquer e-mail e senha, e os resultados e os pacientes "de
 Exemplo", que aparecem por cima do banco sem serem gravados nele.
+
+O paciente e o livro de consentimentos sobem SEM esperar o primeiro envio
+(US40, `SubidaDosPacientesControlador`): logo depois de cadastrar, corrigir,
+registrar ou retirar, e nas ocasiões de toda sincronização em segundo plano.
+O que está por subir se sabe sem perguntar ao servidor: o cadastro, por
+`Pacientes.alteradoEm`; o livro, por `Pacientes.livroNoFirebase`. Até
+19/10/2026 o paciente sem gravação não aparecia na versão web nem em outro
+aparelho (teste de homologação).
 
 O caminho de volta também existe (US40, `sincronizacao/data/descida_firestore.dart`):
 os pacientes da conta e o livro de consentimentos de cada um descem na

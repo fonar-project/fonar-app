@@ -42,7 +42,11 @@ class FonteDeNivelRecord implements FonteDeNivel {
   /// Existe porque o aviso do `record_web` não basta: propriedade que o
   /// navegador não relata volta como foi PEDIDA, desligada — e não relatar
   /// não é evidência de nada. Ver `naoConfirmadosDesligados`.
-  final Future<Set<ProcessamentoAutomatico>> Function()? conferirNavegador;
+  ///
+  /// Recebe o microfone escolhido: a conferência abre a MESMA faixa que a
+  /// captura vai abrir, senão confere o processamento de outro microfone.
+  final Future<Set<ProcessamentoAutomatico>> Function(String? microfone)?
+  conferirNavegador;
 
   AudioRecorder? _gravador;
   StreamSubscription<List<int>>? _bytes;
@@ -64,19 +68,22 @@ class FonteDeNivelRecord implements FonteDeNivel {
   }
 
   @override
-  Future<Stream<double>> abrir(Duration intervalo) async {
+  Future<Stream<double>> abrir(Duration intervalo, {String? microfone}) async {
     final gravador = _gravador ??= AudioRecorder();
     _ajuste = null;
     _doNavegador = const {};
     if (conferirNavegador case final conferir?) {
-      _doNavegador = await conferir();
+      _doNavegador = await conferir(microfone);
     }
     await gravador.setOnConfigChanged(
       (usada) => _ajuste = ConfiguracaoDeCaptura.ajusteDe(usada),
     );
 
     final audio = await gravador.startStream(
-      ConfiguracaoDeCaptura.para(ConfiguracaoDeCaptura.formatoDaAfericao),
+      ConfiguracaoDeCaptura.para(
+        ConfiguracaoDeCaptura.formatoDaAfericao,
+        microfone: microfone,
+      ),
     );
     // Consumir o fluxo é obrigatório — sem ouvinte, os trechos se acumulam
     // na memória. O conteúdo é descartado.
@@ -102,10 +109,13 @@ class FonteDeNivelRecord implements FonteDeNivel {
 
 /// A conferência do navegador (US42): o que ele relata da faixa de áudio
 /// aberta com o pedido da captura, julgado por `naoConfirmadosDesligados`.
-Future<Set<ProcessamentoAutomatico>> processamentoDoNavegador() async {
+Future<Set<ProcessamentoAutomatico>> processamentoDoNavegador(
+  String? microfone,
+) async {
   final relatado = await processamentoRelatadoPeloNavegador(
     taxaDeAmostragem: ConfiguracaoDeCaptura.taxaDeAmostragem,
     canais: ConfiguracaoDeCaptura.canais,
+    microfone: microfone,
   );
   return naoConfirmadosDesligados(
     ganho: relatado.ganho,

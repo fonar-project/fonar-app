@@ -11,6 +11,7 @@ import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_area_com_acoes.dart';
 import '../../../../design_system/widgets/app_botao.dart';
+import '../../../../design_system/widgets/app_escolha_unica.dart';
 import '../../../../design_system/widgets/app_fundo.dart';
 import '../../../../design_system/widgets/app_icone.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
@@ -25,10 +26,12 @@ import '../../data/configuracao_de_captura.dart';
 import '../../domain/afericao_de_ruido.dart';
 import '../../domain/amostra.dart';
 import '../../domain/ajuste_de_configuracao.dart';
+import '../../domain/microfone.dart';
 import '../../domain/processamento_automatico.dart';
 import '../../domain/verificacao_da_amostra.dart';
 import '../afericao_controlador.dart';
 import '../gravacao_controlador.dart';
+import '../microfone_controlador.dart';
 import 'medidor_de_nivel.dart';
 
 /// A gravação guiada, uma etapa por vez, como no protótipo: o ruído da sala e
@@ -380,6 +383,18 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
 
   _Palco _palcoDoRuido(EstadoDaAfericao afericao, EstadoDaGravacao gravacao) {
     void medir() => ref.read(afericaoControladorProvider.notifier).medir();
+    void conferirComAVoz() =>
+        ref.read(afericaoControladorProvider.notifier).conferirComAVoz();
+    // A escolha do microfone aparece depois da primeira aferição — que já
+    // pediu a permissão, sem a qual o navegador não dá os nomes. Trocar mede
+    // de novo; com o microfone ocupado ou uma gravação em andamento, espera.
+    Widget escolha({required bool livre}) => _EscolhaDoMicrofone(
+      aoEscolher: livre && !gravacao.ocupado
+          ? (m) => ref
+                .read(afericaoControladorProvider.notifier)
+                .trocarMicrofone(m)
+          : null,
+    );
     final cabeca = _Cabeca(
       rotulo: AppStrings.etapaDe(
         1,
@@ -389,9 +404,13 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
       instrucao: switch (afericao) {
         AfericaoNaoIniciada() => AppStrings.instrucaoRuidoPronto,
         AfericaoMedindo() => AppStrings.instrucaoRuidoMedindo,
+        AfericaoConferindoVoz() => AppStrings.instrucaoRuidoConferindoVoz,
         AfericaoSemPermissao() ||
         AfericaoFalhou() => AppStrings.instrucaoRuidoSemMicrofone,
         AfericaoConcluida(:final resultado) => switch (resultado.conclusao) {
+          ConclusaoDaAfericao.microfoneMudo
+              when resultado.voz == ConferenciaComAVoz.naoFeita =>
+            AppStrings.instrucaoRuidoSilencio,
           ConclusaoDaAfericao.microfoneMudo => AppStrings.instrucaoRuidoMudo,
           ConclusaoDaAfericao.ruidoAlto => AppStrings.instrucaoRuidoAlto,
           ConclusaoDaAfericao.semRestricao => AppStrings.instrucaoRuidoOk,
@@ -439,6 +458,31 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
         ],
         acoes: const [],
       ),
+      AfericaoConferindoVoz(:final nivel, :final progresso) => _Palco(
+        corpo: [
+          cabeca,
+          const SizedBox(height: AppSpacing.lg),
+          _Limitado(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                MedidorDeNivel(dbfs: nivel),
+                const SizedBox(height: AppSpacing.md),
+                ClipRRect(
+                  borderRadius: AppRadius.bordaPilula,
+                  child: LinearProgressIndicator(
+                    value: progresso,
+                    minHeight: 4,
+                    color: context.cores.acento,
+                    backgroundColor: context.cores.borda,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        acoes: const [],
+      ),
       AfericaoSemPermissao() => _Palco(
         corpo: [
           cabeca,
@@ -467,6 +511,7 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
                     titulo: AppStrings.afericaoFalhou,
                     texto: AppStrings.afericaoFalhouTexto,
                   ),
+                  escolha(livre: microfoneLiberado),
                   if (demorouParaLiberar) ...[
                     const SizedBox(height: AppSpacing.md),
                     const _MicrofoneDemorando(),
@@ -489,6 +534,7 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
         :final microfoneLiberado,
         :final demorouParaLiberar,
         :final liberaGravacao,
+        :final podeConferirComAVoz,
         :final processamentoLigado,
         :final bancoSoNaMemoria,
       ) =>
@@ -501,6 +547,7 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _Conclusao(resultado: resultado),
+                  escolha(livre: microfoneLiberado),
                   if (ajuste != null &&
                       !ajuste.confere(
                         taxaPedida: ConfiguracaoDeCaptura.taxaDeAmostragem,
@@ -544,13 +591,27 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
                 AppStrings.capturaContinuar,
                 () => _irPara(_proximaPendente(gravacao)),
               ),
+            // Silêncio digital: só a voz diz se é a sala ou o microfone.
+            if (resultado.conclusao == ConclusaoDaAfericao.microfoneMudo)
+              _Acao(
+                rotulo: AppStrings.afericaoConferirComAVoz,
+                aoTocar: podeConferirComAVoz && !gravacao.ocupado
+                    ? conferirComAVoz
+                    : null,
+                motivo: gravacao.ocupado
+                    ? AppStrings.afericaoEsperaGravacao
+                    : AppStrings.afericaoLiberandoMicrofone,
+                primaria: true,
+              ),
             _Acao(
               rotulo: AppStrings.afericaoMedirDeNovo,
               aoTocar: gravacao.ocupado || !microfoneLiberado ? null : medir,
               motivo: gravacao.ocupado
                   ? AppStrings.afericaoEsperaGravacao
                   : AppStrings.afericaoLiberandoMicrofone,
-              primaria: !liberaGravacao,
+              primaria:
+                  !liberaGravacao &&
+                  resultado.conclusao != ConclusaoDaAfericao.microfoneMudo,
             ),
           ],
         ),
@@ -1369,11 +1430,25 @@ class _Conclusao extends StatelessWidget {
     return Semantics(
       liveRegion: true,
       child: switch (resultado.conclusao) {
+        ConclusaoDaAfericao.microfoneMudo
+            when resultado.voz == ConferenciaComAVoz.naoFeita =>
+          const AppSituacao(
+            icone: NomeIcone.alerta,
+            titulo: AppStrings.afericaoSilencio,
+            texto: AppStrings.afericaoSilencioTexto,
+          ),
         ConclusaoDaAfericao.microfoneMudo => const AppSituacao(
           icone: NomeIcone.negacao,
           titulo: AppStrings.afericaoMudo,
           texto: AppStrings.afericaoMudoTexto,
         ),
+        ConclusaoDaAfericao.semRestricao
+            when resultado.voz == ConferenciaComAVoz.captou =>
+          const AppSituacao(
+            icone: NomeIcone.confirmacao,
+            titulo: AppStrings.afericaoSalaSilenciosa,
+            texto: AppStrings.afericaoSalaSilenciosaTexto,
+          ),
         ConclusaoDaAfericao.ruidoAlto => AppSituacao(
           icone: NomeIcone.alerta,
           titulo: AppStrings.afericaoRuidoAlto,
@@ -1388,6 +1463,52 @@ class _Conclusao extends StatelessWidget {
           texto: AppStrings.afericaoSemRestricaoTexto(nivel),
         ),
       },
+    );
+  }
+}
+
+/// A escolha do microfone, com o padrão do sistema como primeira opção.
+///
+/// Só aparece quando há o que escolher (`EscolhaDoMicrofone.temEscolha`):
+/// com um microfone só, a pergunta é ruído. Se o escolhido antes não está
+/// ligado, diz — gravar de outro microfone sem avisar é o que a escolha
+/// veio evitar.
+class _EscolhaDoMicrofone extends ConsumerWidget {
+  const _EscolhaDoMicrofone({required this.aoEscolher});
+
+  /// Nulo deixa só para leitura: medindo, liberando o microfone, gravando.
+  final ValueChanged<Microfone?>? aoEscolher;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final escolha = ref.watch(microfoneControladorProvider).value;
+    if (escolha == null || !escolha.temEscolha) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (escolha.ausente case final ausente?) ...[
+            AppSituacao(
+              icone: NomeIcone.alerta,
+              titulo: AppStrings.microfoneAusente(ausente.nome),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+          AppEscolhaUnica<Microfone?>(
+            rotulo: AppStrings.microfoneRotulo,
+            opcoes: [
+              const AppOpcao(valor: null, rotulo: AppStrings.microfonePadrao),
+              for (final m in escolha.disponiveis)
+                AppOpcao(valor: m, rotulo: m.nome),
+            ],
+            selecionado: escolha.escolhido,
+            aoEscolher: aoEscolher,
+            apoio: AppStrings.microfoneApoio,
+          ),
+        ],
+      ),
     );
   }
 }

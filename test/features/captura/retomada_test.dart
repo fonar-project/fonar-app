@@ -53,7 +53,11 @@ class _Gravador implements Gravador {
   Future<bool> pedirPermissao() async => true;
 
   @override
-  Future<Stream<double>> iniciar(String caminho, Duration intervalo) async {
+  Future<Stream<double>> iniciar(
+    String caminho,
+    Duration intervalo, {
+    String? microfone,
+  }) async {
     inicios++;
     return niveis.stream;
   }
@@ -73,6 +77,10 @@ class _Disco implements ArquivosDeAmostra {
   @override
   Future<String> novoCaminho(String pacienteId, TarefaDeGravacao t) async =>
       '/amostras/$pacienteId/nova-${t.name}.wav';
+
+  @override
+  Future<Uint8List?> lerTudo(String caminho) async =>
+      existentes.contains(caminho) ? Uint8List(44) : null;
 
   @override
   Future<({Uint8List inicio, int tamanho})?> ler(String caminho) async =>

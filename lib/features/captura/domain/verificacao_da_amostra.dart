@@ -92,19 +92,18 @@ abstract final class VerificacaoDaAmostra {
   static const taxaMinimaDaAnalise = 8000;
   static const taxaMaximaDaAnalise = 192000;
 
-  /// Bytes de áudio que a janela precisa ter para o silêncio ser julgado.
+  /// Bytes de áudio que o arquivo precisa ter para o silêncio ser julgado.
   ///
   /// Cerca de 6 ms em 44,1 kHz, 16 bits, mono. Abaixo disto não se distingue
   /// "o driver está escrevendo zeros" de "o primeiro buffer da captura ainda
   /// não chegou".
   static const bytesMinimosParaJulgarSilencio = 512;
 
-  /// O trecho de áudio já lido do arquivo está todo em zero absoluto?
+  /// O áudio do arquivo está todo em zero absoluto?
   ///
   /// **Isto é comparação de byte com zero, não análise acústica.** Não há
   /// FFT, filtro, envelope nem medida: é um laço de `byte == 0` sobre os
-  /// bytes que já estavam em memória para a leitura do cabeçalho, e a
-  /// resposta é um booleano. Nada daqui vai para o laudo. A regra do
+  /// bytes do arquivo, e a resposta é um booleano. Nada daqui vai para o laudo. A regra do
   /// CLAUDE.md continua valendo inteira — toda medida acústica (f0, jitter,
   /// shimmer, HNR, CPPS, AVQI) é do servidor, e esta função não é o começo de
   /// um caminho para trazer nenhuma delas para o cliente. Se algum dia for
@@ -118,10 +117,13 @@ abstract final class VerificacaoDaAmostra {
   /// `core/permissions/microphone_permission.dart`: WAV válido, duração
   /// certa, amplitude zero, sem erro nenhum.
   ///
-  /// [janela] é o começo do arquivo — os mesmos bytes que serviram ao
-  /// cabeçalho, não o arquivo inteiro. Julga só o que está ali; se a janela
-  /// não alcançar o áudio, ou alcançar pouco, responde `false`, porque não
-  /// viu o bastante para acusar.
+  /// [janela] é o arquivo INTEIRO. Até 19/10/2026 era só o começo — os
+  /// bytes que serviam ao cabeçalho, cerca de 46 ms de som —, e o começo de
+  /// uma gravação é justamente onde ainda não há voz: o paciente fala depois
+  /// do toque em gravar. Num microfone que zera o sinal enquanto não há som,
+  /// a contagem de 1 a 20 era descartada toda vez (teste de homologação).
+  /// Se a janela não alcançar o áudio, ou alcançar pouco, responde `false`,
+  /// porque não viu o bastante para acusar.
   static bool audioTodoEmZero(Uint8List janela, CabecalhoWav cabecalho) {
     final inicio = cabecalho.inicioDoAudio;
     // Não passar do fim do bloco `data`: o que vem depois pode ser metadado
@@ -137,7 +139,7 @@ abstract final class VerificacaoDaAmostra {
   /// Confere o que saiu contra o que foi pedido.
   ///
   /// [cabecalho] é o lido do arquivo gravado (nulo se ilegível);
-  /// [inicioDoArquivo], a mesma janela de bytes de onde ele saiu (nula se o
+  /// [arquivo], os bytes do arquivo inteiro, de onde ele saiu (nulos se o
   /// arquivo não pôde ser lido); [tamanhoDoArquivo], o tamanho real em bytes;
   /// [leituras], o que o medidor leu durante a gravação; [ajuste], o que o
   /// aparelho avisou ter mudado (nulo se não mudou nada, ou se não avisou).
@@ -153,7 +155,7 @@ abstract final class VerificacaoDaAmostra {
   /// local — e a comparação de bytes com zero de [audioTodoEmZero].
   static List<ProblemaNaAmostra> verificar({
     required CabecalhoWav? cabecalho,
-    required Uint8List? inicioDoArquivo,
+    required Uint8List? arquivo,
     required int tamanhoDoArquivo,
     required List<double> leituras,
     required int taxaPedida,
@@ -185,8 +187,7 @@ abstract final class VerificacaoDaAmostra {
     // falha em que só uma acusa, e é justamente ela que preocupa.
     final mudo =
         microfoneMudo(leituras) ||
-        (inicioDoArquivo != null &&
-            audioTodoEmZero(inicioDoArquivo, cabecalho));
+        (arquivo != null && audioTodoEmZero(arquivo, cabecalho));
     final problemas = <ProblemaNaAmostra>[
       if (!cabecalho.ehPcm) ProblemaNaAmostra.naoEPcm,
       if (cabecalho.bitsPorAmostra != bitsPedidos)

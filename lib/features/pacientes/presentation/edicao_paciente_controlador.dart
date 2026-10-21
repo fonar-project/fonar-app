@@ -6,6 +6,7 @@ import '../data/repositorio_pacientes_local.dart';
 import '../domain/novo_paciente.dart';
 import '../domain/paciente.dart';
 import 'cadastro_paciente_controlador.dart';
+import '../../sincronizacao/presentation/subida_dos_pacientes_controlador.dart';
 
 /// Correção dos dados de UM paciente já cadastrado.
 ///
@@ -77,7 +78,10 @@ class EdicaoPacienteControlador extends Notifier<EstadoCadastro> {
       fim = const EstadoCadastro(erroGeral: AppStrings.erroDesconhecido);
     }
 
-    if (salvo != null) container.invalidate(pacientesProvider);
+    if (salvo != null) {
+      container.invalidate(pacientesProvider);
+      pedirSubidaDosPacientes(container);
+    }
 
     if (!ref.mounted) return null;
     state = fim;

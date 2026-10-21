@@ -63,6 +63,9 @@ class _Arquivos implements ArquivosDeAmostra {
   Future<void> apagar(String caminho) async {}
 
   @override
+  Future<Uint8List?> lerTudo(String caminho) async => null;
+
+  @override
   Future<({Uint8List inicio, int tamanho})?> ler(String caminho) async => null;
 
   @override

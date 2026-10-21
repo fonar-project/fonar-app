@@ -111,7 +111,7 @@ class BancoLocal extends _$BancoLocal {
   /// `drift_schemas/` guarda o formato de cada versão já distribuída; é com
   /// ele que se testa que o banco de quem atualiza o app chega inteiro.
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -162,6 +162,11 @@ class BancoLocal extends _$BancoLocal {
       if (de < 8) {
         // US51: as anotações do paciente.
         await m.createTable(anotacoesDoPaciente);
+      }
+      if (de < 9) {
+        // US40: quanto do livro de consentimentos já subiu. Sem saber, zero:
+        // a primeira subida confere cada livro com o do Firebase e acerta.
+        await m.addColumn(pacientes, pacientes.livroNoFirebase);
       }
     },
     // O SQLite vem com chave estrangeira DESLIGADA; sem isto, nada impediria

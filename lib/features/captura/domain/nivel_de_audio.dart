@@ -15,7 +15,8 @@ library;
 /// equipamento", nada mais. Não diz nada sobre a voz do paciente.
 enum ZonaDeNivel {
   /// Silêncio digital, ou leitura impossível. Microfone mudo, desligado ou
-  /// bloqueado pelo sistema — nunca uma sala silenciosa.
+  /// bloqueado pelo sistema — ou um microfone que zera o sinal quando não há
+  /// som (ver `AfericaoDeRuido` e a conferência com a voz).
   semSinal,
   baixo,
   adequado,
@@ -33,9 +34,19 @@ enum ZonaDeNivel {
 /// empiricamente — com o microfone e os aparelhos reais — e combinados com
 /// quem mantém a API de análise. Não são faixa de referência clínica.
 abstract final class LimitesDeNivel {
-  /// Abaixo disto é silêncio digital. Um microfone de verdade, ligado, numa
-  /// sala real, nunca chega aqui: o ruído do próprio circuito fica acima.
-  static const pisoDigital = -90.0;
+  /// Daqui para baixo é silêncio digital: amostras todas em zero.
+  ///
+  /// Não é limiar de calibração, é aritmética. O menor pico diferente de
+  /// zero que um áudio de 16 bits registra — uma unidade em 32767 — dá
+  /// 20·log10(1/32767) ≈ −90,3 dBFS; trecho todo em zero chega como −160
+  /// (o valor que o `record` usa para "nada", no Android, no macOS e no
+  /// navegador) ou como menos infinito (Windows). O piso fica bem abaixo
+  /// do primeiro e bem acima do segundo.
+  ///
+  /// Até 19/10/2026 era −90, MEIA unidade acima do menor pico possível: o
+  /// trecho de sala silenciosa com pico de 1 virava "sem sinal", e uma sala
+  /// quieta de verdade era lida como microfone mudo (teste de homologação).
+  static const pisoDigital = -120.0;
 
   static const baixoAbaixoDe = -40.0;
   static const altoAPartirDe = -12.0;

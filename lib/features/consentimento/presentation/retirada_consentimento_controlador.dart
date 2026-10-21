@@ -5,6 +5,7 @@ import '../../../l10n/app_strings.dart';
 import '../../fila/presentation/fila_controlador.dart';
 import '../data/repositorio_consentimento_local.dart';
 import '../domain/consentimento.dart';
+import '../../sincronizacao/presentation/subida_dos_pacientes_controlador.dart';
 
 /// Os campos do formulário de retirada.
 enum CampoDaRetirada { quemPediu, nomeDoResponsavel }
@@ -99,6 +100,9 @@ class RetiradaConsentimentoControlador extends Notifier<EstadoDaRetirada> {
       container
         ..invalidate(consentimentoProvider(pacienteId))
         ..invalidate(retiradaEmVigorProvider(pacienteId));
+      // E chega já aos outros aparelhos da conta, onde passa a bloquear a
+      // gravação (US40).
+      pedirSubidaDosPacientes(container);
       // A retirada vale já: o que estava na fila não sobe mais.
       await container
           .read(filaControladorProvider.notifier)

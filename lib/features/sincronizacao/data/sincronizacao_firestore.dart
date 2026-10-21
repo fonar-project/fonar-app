@@ -10,6 +10,8 @@ import '../../consentimento/domain/consentimento.dart';
 import '../../fila/domain/item_da_fila.dart';
 import '../../pacientes/domain/novo_paciente.dart';
 import '../domain/sincronizacao.dart';
+import '../domain/sincronizavel.dart';
+import 'descida_firestore.dart' show correcaoPorSubir;
 
 final sincronizacaoProvider = Provider<Sincronizacao>(
   (ref) => SincronizacaoFirestore(
@@ -30,7 +32,8 @@ abstract final class LimitesDoFirestore {
 }
 
 /// Sobe do banco local para o Firestore o paciente, o livro de
-/// consentimentos e a sessão de um envio.
+/// consentimentos e a sessão de um envio — e, sem envio nenhum, o cadastro
+/// e o livro de cada paciente da conta ([sincronizar]).
 ///
 /// O banco local continua sendo de onde o app lê; o Firestore recebe uma
 /// cópia, na árvore da conta que está na sessão
@@ -44,7 +47,7 @@ abstract final class LimitesDoFirestore {
 /// sequência daqui; só o resto sobe. Se não for — outro aparelho escreveu um
 /// livro diferente para o mesmo paciente —, nada é gravado e o envio é
 /// recusado com o motivo, para alguém olhar.
-class SincronizacaoFirestore implements Sincronizacao {
+class SincronizacaoFirestore implements Sincronizacao, Sincronizavel {
   SincronizacaoFirestore(this._firestore, this._banco, {required this.uid});
 
   final FirestoreRest _firestore;
@@ -61,6 +64,84 @@ class SincronizacaoFirestore implements Sincronizacao {
     await _paciente(base, item.pacienteId, conta);
     await _consentimentos(base, item.pacienteId);
     await _sessao(base, item);
+  }
+
+  /// Sobe o cadastro e o livro de consentimentos de cada paciente da conta
+  /// que tem o que subir — cadastrado ou corrigido aqui, ou com registro no
+  /// livro que o Firebase ainda não tem. Devolve quantos pacientes subiram.
+  ///
+  /// Até 19/10/2026, o paciente só subia junto do primeiro envio para a
+  /// análise (ou da primeira anotação): cadastrado num aparelho e sem
+  /// gravação, ele não aparecia na versão web nem em outro aparelho da mesma
+  /// conta (teste de homologação). E uma retirada de consentimento só
+  /// chegava aos outros aparelhos com o envio seguinte — que, retirado o
+  /// consentimento, não vinha.
+  ///
+  /// Um paciente que falha (cadastro incompleto de antes da US40, livro
+  /// divergente do de outro aparelho) não impede os outros; a primeira falha
+  /// é lançada no fim. Lança só `AppException`.
+  @override
+  Future<int> sincronizar() async {
+    final conta = uid();
+    if (conta == null) throw const NaoAutorizado();
+    final List<LinhaDoPaciente> linhas;
+    final Map<String, int> livros;
+    try {
+      linhas = await (_banco.select(
+        _banco.pacientes,
+      )..where((p) => p.profissionalId.equals(conta))).get();
+      livros = await _registrosNoLivro();
+    } catch (erro) {
+      throw FalhaDesconhecida(causa: erro);
+    }
+    var subiram = 0;
+    AppException? primeiraFalha;
+    for (final linha in linhas) {
+      final cadastroPorSubir = correcaoPorSubir(linha);
+      final livroPorSubir = (livros[linha.id] ?? 0) > linha.livroNoFirebase;
+      if (!cadastroPorSubir && !livroPorSubir) continue;
+      final base = 'profissionais/$conta/pacientes/${linha.id}';
+      try {
+        // O cadastro antes: o livro mora embaixo dele.
+        await _paciente(base, linha.id, conta);
+        await _consentimentos(base, linha.id);
+        subiram++;
+      } on AppException catch (falha) {
+        primeiraFalha ??= falha;
+      } catch (erro) {
+        primeiraFalha ??= FalhaDesconhecida(causa: erro);
+      }
+    }
+    if (primeiraFalha != null) throw primeiraFalha;
+    return subiram;
+  }
+
+  /// Quantos registros tem o livro de consentimentos de cada paciente: as
+  /// concessões e, de cada uma, a retirada — a mesma conta de
+  /// [livroDeConsentimentoLocal], numa consulta só para todos.
+  Future<Map<String, int>> _registrosNoLivro({String? pacienteId}) async {
+    final filtro = pacienteId == null ? '' : 'WHERE paciente_id = ?';
+    final variaveis = [?pacienteId].map(Variable.withString).toList();
+    final linhas = await _banco
+        .customSelect(
+          'SELECT paciente_id, SUM(n) AS n FROM ('
+          'SELECT paciente_id, COUNT(*) AS n FROM consentimentos '
+          'GROUP BY paciente_id '
+          'UNION ALL '
+          'SELECT r.paciente_id AS paciente_id, '
+          'COUNT(DISTINCT r.consentimento_id) AS n '
+          'FROM retiradas_de_consentimento r '
+          'JOIN consentimentos c ON c.id = r.consentimento_id '
+          'AND c.paciente_id = r.paciente_id '
+          'GROUP BY r.paciente_id'
+          ') $filtro GROUP BY paciente_id',
+          variables: variaveis,
+          readsFrom: {_banco.consentimentos, _banco.retiradasDeConsentimento},
+        )
+        .get();
+    return {
+      for (final l in linhas) l.read<String>('paciente_id'): l.read<int>('n'),
+    };
   }
 
   /// Garante no Firebase só o cadastro do paciente, sem consentimentos nem
@@ -149,6 +230,11 @@ class SincronizacaoFirestore implements Sincronizacao {
   }
 
   Future<void> _consentimentos(String base, String pacienteId) async {
+    // Contado ANTES de ler o livro: um registro feito durante a subida fica
+    // além da marca, e sobe na próxima vez. A conta é a de
+    // [_registrosNoLivro], com que a subida em segundo plano compara.
+    final noLivro =
+        (await _registrosNoLivro(pacienteId: pacienteId))[pacienteId] ?? 0;
     final locais = await livroDeConsentimentoLocal(_banco, pacienteId);
     final colecao = '$base/consentimentos';
     final remotos = await _firestore.listar(colecao);
@@ -186,6 +272,11 @@ class SincronizacaoFirestore implements Sincronizacao {
         horaDoServidor: ['registrado_em'],
       );
     }
+    // Todo o livro daqui está lá: a subida em segundo plano não precisa
+    // mais conferir este paciente até haver registro novo.
+    await (_banco.update(_banco.pacientes)
+          ..where((p) => p.id.equals(pacienteId)))
+        .write(PacientesCompanion(livroNoFirebase: Value(noLivro)));
   }
 
   Future<void> _sessao(String base, ItemDaFila item) async {

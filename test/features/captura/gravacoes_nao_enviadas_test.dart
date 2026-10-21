@@ -70,6 +70,10 @@ class _Disco implements ArquivosDeAmostra {
       '/x.wav';
 
   @override
+  Future<Uint8List?> lerTudo(String caminho) async =>
+      apagados.contains(caminho) ? null : Uint8List(44);
+
+  @override
   Future<({Uint8List inicio, int tamanho})?> ler(String caminho) async =>
       apagados.contains(caminho) ? null : (inicio: Uint8List(44), tamanho: 44);
 

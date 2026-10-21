@@ -102,6 +102,18 @@ class $PacientesTable extends Pacientes
         type: DriftSqlType.dateTime,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _livroNoFirebaseMeta = const VerificationMeta(
+    'livroNoFirebase',
+  );
+  @override
+  late final GeneratedColumn<int> livroNoFirebase = GeneratedColumn<int>(
+    'livro_no_firebase',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -113,6 +125,7 @@ class $PacientesTable extends Pacientes
     profissionalId,
     alteradoEm,
     sincronizadoEm,
+    livroNoFirebase,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -197,6 +210,15 @@ class $PacientesTable extends Pacientes
         ),
       );
     }
+    if (data.containsKey('livro_no_firebase')) {
+      context.handle(
+        _livroNoFirebaseMeta,
+        livroNoFirebase.isAcceptableOrUnknown(
+          data['livro_no_firebase']!,
+          _livroNoFirebaseMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -242,6 +264,10 @@ class $PacientesTable extends Pacientes
         DriftSqlType.dateTime,
         data['${effectivePrefix}sincronizado_em'],
       ),
+      livroNoFirebase: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}livro_no_firebase'],
+      )!,
     );
   }
 
@@ -272,8 +298,16 @@ class LinhaDoPaciente extends DataClass implements Insertable<LinhaDoPaciente> {
   final DateTime? alteradoEm;
 
   /// Quando o aparelho e o Firebase tinham, pela última vez, os mesmos dados
-  /// deste paciente — na subida (envio) ou na descida.
+  /// deste paciente — na subida ou na descida.
   final DateTime? sincronizadoEm;
+
+  /// Quantos registros do livro de consentimentos daqui — concessões e
+  /// retiradas, na ordem de `livroDeConsentimentoLocal` — já estão no
+  /// Firebase. Menor que o livro: há registro por subir.
+  ///
+  /// É o que deixa a subida em segundo plano saber, sem perguntar ao
+  /// servidor paciente a paciente, de quem há consentimento novo.
+  final int livroNoFirebase;
   const LinhaDoPaciente({
     required this.id,
     required this.nome,
@@ -284,6 +318,7 @@ class LinhaDoPaciente extends DataClass implements Insertable<LinhaDoPaciente> {
     this.profissionalId,
     this.alteradoEm,
     this.sincronizadoEm,
+    required this.livroNoFirebase,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -307,6 +342,7 @@ class LinhaDoPaciente extends DataClass implements Insertable<LinhaDoPaciente> {
     if (!nullToAbsent || sincronizadoEm != null) {
       map['sincronizado_em'] = Variable<DateTime>(sincronizadoEm);
     }
+    map['livro_no_firebase'] = Variable<int>(livroNoFirebase);
     return map;
   }
 
@@ -329,6 +365,7 @@ class LinhaDoPaciente extends DataClass implements Insertable<LinhaDoPaciente> {
       sincronizadoEm: sincronizadoEm == null && nullToAbsent
           ? const Value.absent()
           : Value(sincronizadoEm),
+      livroNoFirebase: Value(livroNoFirebase),
     );
   }
 
@@ -349,6 +386,7 @@ class LinhaDoPaciente extends DataClass implements Insertable<LinhaDoPaciente> {
       profissionalId: serializer.fromJson<String?>(json['profissionalId']),
       alteradoEm: serializer.fromJson<DateTime?>(json['alteradoEm']),
       sincronizadoEm: serializer.fromJson<DateTime?>(json['sincronizadoEm']),
+      livroNoFirebase: serializer.fromJson<int>(json['livroNoFirebase']),
     );
   }
   @override
@@ -364,6 +402,7 @@ class LinhaDoPaciente extends DataClass implements Insertable<LinhaDoPaciente> {
       'profissionalId': serializer.toJson<String?>(profissionalId),
       'alteradoEm': serializer.toJson<DateTime?>(alteradoEm),
       'sincronizadoEm': serializer.toJson<DateTime?>(sincronizadoEm),
+      'livroNoFirebase': serializer.toJson<int>(livroNoFirebase),
     };
   }
 
@@ -377,6 +416,7 @@ class LinhaDoPaciente extends DataClass implements Insertable<LinhaDoPaciente> {
     Value<String?> profissionalId = const Value.absent(),
     Value<DateTime?> alteradoEm = const Value.absent(),
     Value<DateTime?> sincronizadoEm = const Value.absent(),
+    int? livroNoFirebase,
   }) => LinhaDoPaciente(
     id: id ?? this.id,
     nome: nome ?? this.nome,
@@ -393,6 +433,7 @@ class LinhaDoPaciente extends DataClass implements Insertable<LinhaDoPaciente> {
     sincronizadoEm: sincronizadoEm.present
         ? sincronizadoEm.value
         : this.sincronizadoEm,
+    livroNoFirebase: livroNoFirebase ?? this.livroNoFirebase,
   );
   LinhaDoPaciente copyWithCompanion(PacientesCompanion data) {
     return LinhaDoPaciente(
@@ -415,6 +456,9 @@ class LinhaDoPaciente extends DataClass implements Insertable<LinhaDoPaciente> {
       sincronizadoEm: data.sincronizadoEm.present
           ? data.sincronizadoEm.value
           : this.sincronizadoEm,
+      livroNoFirebase: data.livroNoFirebase.present
+          ? data.livroNoFirebase.value
+          : this.livroNoFirebase,
     );
   }
 
@@ -429,7 +473,8 @@ class LinhaDoPaciente extends DataClass implements Insertable<LinhaDoPaciente> {
           ..write('cadastradoEm: $cadastradoEm, ')
           ..write('profissionalId: $profissionalId, ')
           ..write('alteradoEm: $alteradoEm, ')
-          ..write('sincronizadoEm: $sincronizadoEm')
+          ..write('sincronizadoEm: $sincronizadoEm, ')
+          ..write('livroNoFirebase: $livroNoFirebase')
           ..write(')'))
         .toString();
   }
@@ -445,6 +490,7 @@ class LinhaDoPaciente extends DataClass implements Insertable<LinhaDoPaciente> {
     profissionalId,
     alteradoEm,
     sincronizadoEm,
+    livroNoFirebase,
   );
   @override
   bool operator ==(Object other) =>
@@ -458,7 +504,8 @@ class LinhaDoPaciente extends DataClass implements Insertable<LinhaDoPaciente> {
           other.cadastradoEm == this.cadastradoEm &&
           other.profissionalId == this.profissionalId &&
           other.alteradoEm == this.alteradoEm &&
-          other.sincronizadoEm == this.sincronizadoEm);
+          other.sincronizadoEm == this.sincronizadoEm &&
+          other.livroNoFirebase == this.livroNoFirebase);
 }
 
 class PacientesCompanion extends UpdateCompanion<LinhaDoPaciente> {
@@ -471,6 +518,7 @@ class PacientesCompanion extends UpdateCompanion<LinhaDoPaciente> {
   final Value<String?> profissionalId;
   final Value<DateTime?> alteradoEm;
   final Value<DateTime?> sincronizadoEm;
+  final Value<int> livroNoFirebase;
   final Value<int> rowid;
   const PacientesCompanion({
     this.id = const Value.absent(),
@@ -482,6 +530,7 @@ class PacientesCompanion extends UpdateCompanion<LinhaDoPaciente> {
     this.profissionalId = const Value.absent(),
     this.alteradoEm = const Value.absent(),
     this.sincronizadoEm = const Value.absent(),
+    this.livroNoFirebase = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   PacientesCompanion.insert({
@@ -494,6 +543,7 @@ class PacientesCompanion extends UpdateCompanion<LinhaDoPaciente> {
     this.profissionalId = const Value.absent(),
     this.alteradoEm = const Value.absent(),
     this.sincronizadoEm = const Value.absent(),
+    this.livroNoFirebase = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        nome = Value(nome),
@@ -509,6 +559,7 @@ class PacientesCompanion extends UpdateCompanion<LinhaDoPaciente> {
     Expression<String>? profissionalId,
     Expression<DateTime>? alteradoEm,
     Expression<DateTime>? sincronizadoEm,
+    Expression<int>? livroNoFirebase,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -521,6 +572,7 @@ class PacientesCompanion extends UpdateCompanion<LinhaDoPaciente> {
       if (profissionalId != null) 'profissional_id': profissionalId,
       if (alteradoEm != null) 'alterado_em': alteradoEm,
       if (sincronizadoEm != null) 'sincronizado_em': sincronizadoEm,
+      if (livroNoFirebase != null) 'livro_no_firebase': livroNoFirebase,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -535,6 +587,7 @@ class PacientesCompanion extends UpdateCompanion<LinhaDoPaciente> {
     Value<String?>? profissionalId,
     Value<DateTime?>? alteradoEm,
     Value<DateTime?>? sincronizadoEm,
+    Value<int>? livroNoFirebase,
     Value<int>? rowid,
   }) {
     return PacientesCompanion(
@@ -547,6 +600,7 @@ class PacientesCompanion extends UpdateCompanion<LinhaDoPaciente> {
       profissionalId: profissionalId ?? this.profissionalId,
       alteradoEm: alteradoEm ?? this.alteradoEm,
       sincronizadoEm: sincronizadoEm ?? this.sincronizadoEm,
+      livroNoFirebase: livroNoFirebase ?? this.livroNoFirebase,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -581,6 +635,9 @@ class PacientesCompanion extends UpdateCompanion<LinhaDoPaciente> {
     if (sincronizadoEm.present) {
       map['sincronizado_em'] = Variable<DateTime>(sincronizadoEm.value);
     }
+    if (livroNoFirebase.present) {
+      map['livro_no_firebase'] = Variable<int>(livroNoFirebase.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -599,6 +656,7 @@ class PacientesCompanion extends UpdateCompanion<LinhaDoPaciente> {
           ..write('profissionalId: $profissionalId, ')
           ..write('alteradoEm: $alteradoEm, ')
           ..write('sincronizadoEm: $sincronizadoEm, ')
+          ..write('livroNoFirebase: $livroNoFirebase, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -5508,6 +5566,7 @@ typedef $$PacientesTableCreateCompanionBuilder = PacientesCompanion Function({
   Value<String?> profissionalId,
   Value<DateTime?> alteradoEm,
   Value<DateTime?> sincronizadoEm,
+  Value<int> livroNoFirebase,
   Value<int> rowid,
 });
 typedef $$PacientesTableUpdateCompanionBuilder = PacientesCompanion Function({
@@ -5520,6 +5579,7 @@ typedef $$PacientesTableUpdateCompanionBuilder = PacientesCompanion Function({
   Value<String?> profissionalId,
   Value<DateTime?> alteradoEm,
   Value<DateTime?> sincronizadoEm,
+  Value<int> livroNoFirebase,
   Value<int> rowid,
 });
 
@@ -5574,6 +5634,11 @@ class $$PacientesTableFilterComposer
 
   ColumnFilters<DateTime> get sincronizadoEm => $composableBuilder(
     column: $table.sincronizadoEm,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get livroNoFirebase => $composableBuilder(
+    column: $table.livroNoFirebase,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -5631,6 +5696,11 @@ class $$PacientesTableOrderingComposer
     column: $table.sincronizadoEm,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get livroNoFirebase => $composableBuilder(
+    column: $table.livroNoFirebase,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$PacientesTableAnnotationComposer
@@ -5678,6 +5748,11 @@ class $$PacientesTableAnnotationComposer
     column: $table.sincronizadoEm,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get livroNoFirebase => $composableBuilder(
+    column: $table.livroNoFirebase,
+    builder: (column) => column,
+  );
 }
 
 class $$PacientesTableTableManager
@@ -5720,6 +5795,7 @@ class $$PacientesTableTableManager
                 Value<String?> profissionalId = const Value.absent(),
                 Value<DateTime?> alteradoEm = const Value.absent(),
                 Value<DateTime?> sincronizadoEm = const Value.absent(),
+                Value<int> livroNoFirebase = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PacientesCompanion(
                 id: id,
@@ -5731,6 +5807,7 @@ class $$PacientesTableTableManager
                 profissionalId: profissionalId,
                 alteradoEm: alteradoEm,
                 sincronizadoEm: sincronizadoEm,
+                livroNoFirebase: livroNoFirebase,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -5744,6 +5821,7 @@ class $$PacientesTableTableManager
                 Value<String?> profissionalId = const Value.absent(),
                 Value<DateTime?> alteradoEm = const Value.absent(),
                 Value<DateTime?> sincronizadoEm = const Value.absent(),
+                Value<int> livroNoFirebase = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PacientesCompanion.insert(
                 id: id,
@@ -5755,6 +5833,7 @@ class $$PacientesTableTableManager
                 profissionalId: profissionalId,
                 alteradoEm: alteradoEm,
                 sincronizadoEm: sincronizadoEm,
+                livroNoFirebase: livroNoFirebase,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
