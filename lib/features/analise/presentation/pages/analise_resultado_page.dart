@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/navegacao.dart';
 import '../../../../app/router/trilhas.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
@@ -359,16 +360,14 @@ class _Acoes {
         ? AppStrings.capeVEditar
         : AppStrings.capeVRegistrar,
     icone: NomeIcone.avancar,
-    aoTocar: () =>
-        context.goNamed(AppRoutes.capeVNome, pathParameters: _params),
+    aoTocar: () => context.abrir(AppRoutes.capeVNome, pathParameters: _params),
   );
 
   AppBotao _laudo(BuildContext context, {required bool primario}) => AppBotao(
     variante: primario ? VarianteBotao.primario : VarianteBotao.secundario,
     rotulo: AppStrings.resultadoPrepararLaudo,
     icone: NomeIcone.avancar,
-    aoTocar: () =>
-        context.goNamed(AppRoutes.laudoNome, pathParameters: _params),
+    aoTocar: () => context.abrir(AppRoutes.laudoNome, pathParameters: _params),
   );
 
   Widget principal({required bool ocupaLargura}) => Builder(
@@ -390,7 +389,7 @@ class _Acoes {
         AppBotao.secundario(
           rotulo: AppStrings.resultadoVerEvolucao,
           icone: NomeIcone.avancar,
-          aoTocar: () => context.pushNamed(
+          aoTocar: () => context.abrir(
             AppRoutes.evolucaoNome,
             pathParameters: {AppRoutes.paramPacienteId: pacienteId},
           ),
@@ -814,7 +813,7 @@ class _Espectrograma extends ConsumerWidget {
           rotulo: AppStrings.resultadoEspectrogramaTelaCheia,
           icone: NomeIcone.avancar,
           // `push`: voltar da tela cheia traz de volta a este ponto.
-          aoTocar: () => context.pushNamed(
+          aoTocar: () => context.abrir(
             AppRoutes.espectrogramaNome,
             pathParameters: {
               AppRoutes.paramPacienteId: pacienteId,

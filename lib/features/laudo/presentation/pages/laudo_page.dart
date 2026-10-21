@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/navegacao.dart';
 import '../../../../app/router/trilhas.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../design_system/breakpoints.dart';
@@ -771,7 +772,7 @@ class _ItemDaConferencia extends StatelessWidget {
       (ItemDaConferencia.consentimento, SituacaoDoItem.pendente) =>
         AppBotao.secundario(
           rotulo: AppStrings.laudoIrParaConsentimento,
-          aoTocar: () => context.pushNamed(
+          aoTocar: () => context.abrir(
             AppRoutes.consentimentoNome,
             pathParameters: {AppRoutes.paramPacienteId: pacienteId},
           ),
@@ -779,11 +780,11 @@ class _ItemDaConferencia extends StatelessWidget {
       (ItemDaConferencia.assinatura, SituacaoDoItem.pendente) =>
         AppBotao.secundario(
           rotulo: AppStrings.laudoIrParaConta,
-          aoTocar: () => context.pushNamed(AppRoutes.contaNome),
+          aoTocar: () => context.abrir(AppRoutes.contaNome),
         ),
       (ItemDaConferencia.capeV, SituacaoDoItem.aviso) => AppBotao.secundario(
         rotulo: AppStrings.laudoIrParaCapeV,
-        aoTocar: () => context.pushNamed(
+        aoTocar: () => context.abrir(
           AppRoutes.capeVNome,
           pathParameters: {
             AppRoutes.paramPacienteId: pacienteId,

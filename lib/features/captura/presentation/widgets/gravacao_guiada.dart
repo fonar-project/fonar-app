@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/navegacao.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_movimento.dart';
@@ -847,8 +847,10 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
   Future<void> _enviar() async {
     final nome = ref.read(pacienteProvider(_id)).value?.nome ?? '';
     final pos = await _gravacao.enviarParaAnalise(nomeDoPaciente: nome);
-    // Na fila, o trabalho desta tela acabou: quem acompanha é a fila.
-    if (pos && mounted) context.goNamed(AppRoutes.filaNome);
+    // Na fila, o trabalho desta tela acabou: quem acompanha é a fila, que
+    // toma o lugar dela — o voltar de lá leva ao perfil, e não a uma
+    // gravação já enviada.
+    if (pos && mounted) context.substituir(AppRoutes.filaNome);
   }
 }
 

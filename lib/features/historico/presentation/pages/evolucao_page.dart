@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/navegacao.dart';
 import '../../../../app/router/trilhas.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
@@ -437,7 +438,7 @@ class _MostrarAoPaciente extends StatelessWidget {
   Widget build(BuildContext context) => AppBotao.secundario(
     rotulo: AppStrings.evolucaoMostrarAoPaciente,
     icone: NomeIcone.virarParaPaciente,
-    aoTocar: () => context.goNamed(
+    aoTocar: () => context.abrir(
       AppRoutes.modoPacienteNome,
       pathParameters: {AppRoutes.paramPacienteId: pacienteId},
     ),
@@ -621,7 +622,7 @@ class _LinhaDaSessao extends StatelessWidget {
           // `push`, não `go`: o resultado não fica embaixo da evolução na
           // árvore de rotas, e o voltar dele precisa trazer o profissional
           // de volta para cá.
-          aoTocar: () => context.pushNamed(
+          aoTocar: () => context.abrir(
             AppRoutes.analiseResultadoNome,
             pathParameters: {
               AppRoutes.paramPacienteId: pacienteId,

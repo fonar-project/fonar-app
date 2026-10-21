@@ -110,8 +110,7 @@ Future<GoRouter> _abrir(
   return roteador;
 }
 
-String _caminho(GoRouter r) =>
-    r.routerDelegate.currentConfiguration.uri.toString();
+String _caminho(GoRouter r) => r.state.uri.toString();
 
 Future<void> _tocar(WidgetTester tester, String texto) async {
   final alvo = find.text(texto);

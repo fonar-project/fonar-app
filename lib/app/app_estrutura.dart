@@ -17,6 +17,8 @@ import '../features/guia/domain/passo_do_guia.dart';
 import '../features/guia/presentation/alvos_do_guia.dart';
 import '../l10n/app_strings.dart';
 import 'router/app_routes.dart';
+import 'router/navegacao.dart';
+import 'router/voltar_do_sistema.dart';
 
 /// Destinos da navegação principal.
 enum DestinoPrincipal {
@@ -141,13 +143,21 @@ Widget molduraDoRoteador(
   GoRouterState state,
   Widget filho,
 ) {
+  final nome = state.topRoute?.name;
   final navegacao =
-      navegacaoDasRotas[state.topRoute?.name] ??
+      navegacaoDasRotas[nome] ??
       (destino: DestinoPrincipal.pacientes, abas: false);
-  return AppEstrutura(
-    destino: navegacao.destino,
-    navegacaoInferior: navegacao.abas,
-    child: filho,
+  // O voltar do Android (US60): com tela embaixo, desempilha — volta para a
+  // tela de onde se veio. Sozinha na pilha, a tela volta para a lista de
+  // pacientes; e na lista o app fecha.
+  return VoltarDoSistema(
+    para: AppRoutes.pacientesNome,
+    naRaiz: nome == AppRoutes.pacientesNome,
+    child: AppEstrutura(
+      destino: navegacao.destino,
+      navegacaoInferior: navegacao.abas,
+      child: filho,
+    ),
   );
 }
 
@@ -207,11 +217,29 @@ class AppEstrutura extends StatelessWidget {
         // A mesma estrutura com e sem abas: só a barra entra e sai. O
         // conteúdo (o navegador das telas, na moldura do roteador) fica no
         // mesmo lugar da árvore e não é remontado.
+        //
+        // As margens do sistema (US60): desde o Android 15 o app desenha por
+        // baixo das barras do sistema. A de cima é de cada tela — o
+        // cabeçalho pinta o fundo dela e põe o conteúdo abaixo. As dos lados
+        // (a barra dos três botões, com o celular deitado) e a de baixo são
+        // daqui, para toda tela: com as abas, quem fica em cima da barra
+        // dos botões é a barra das abas; sem elas, é o conteúdo que para
+        // antes dela.
         return Scaffold(
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(child: child),
+              Expanded(
+                // O `Builder` lê as margens já dentro do Scaffold, que tira
+                // o teclado do corpo.
+                child: Builder(
+                  builder: (context) => MediaQuery.removePadding(
+                    context: context,
+                    removeBottom: navegacaoInferior,
+                    child: SafeArea(top: false, child: child),
+                  ),
+                ),
+              ),
               if (navegacaoInferior) _BarraInferior(ativo: destino),
             ],
           ),
@@ -361,7 +389,7 @@ class _ItemLateral extends StatelessWidget {
   Widget build(BuildContext context) {
     final creme = context.cores.sobrePrimaria;
     return AppToque(
-      aoTocar: () => context.goNamed(destino.rota),
+      aoTocar: () => context.irAoDestino(destino),
       selecionado: ativo,
       // Azul some sobre o roxo; o anel aqui é creme.
       corDoFoco: creme,
@@ -442,7 +470,7 @@ class _ItemInferior extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppToque(
-      aoTocar: () => context.goNamed(destino.rota),
+      aoTocar: () => context.irAoDestino(destino),
       selecionado: ativo,
       conteudo: (context) => AnimatedContainer(
         duration: AppMovimento.duracao(context, AppMovimento.rapida),

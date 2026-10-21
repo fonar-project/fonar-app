@@ -51,8 +51,7 @@ class _Cena {
   final Paciente ana;
   final Paciente bia;
 
-  String get caminho =>
-      roteador.routerDelegate.currentConfiguration.uri.toString();
+  String get caminho => roteador.state.uri.toString();
   Future<int> get cadastrados async =>
       (await pacientes.listar()).where((p) => !p.exemplo).length;
 }

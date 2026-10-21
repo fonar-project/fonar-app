@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/navegacao.dart';
 import '../../../../core/network/conexao.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
@@ -58,7 +59,7 @@ class FilaPage extends ConsumerWidget {
               texto: AppStrings.filaVaziaTexto,
               acao: AppBotao.secundario(
                 rotulo: AppStrings.filaIrParaPacientes,
-                aoTocar: () => context.goNamed(AppRoutes.pacientesNome),
+                aoTocar: () => context.abrir(AppRoutes.pacientesNome),
               ),
             ),
             AsyncData(:final value) => _Lista(
@@ -243,7 +244,7 @@ class _CartaoDoEnvio extends ConsumerWidget {
         AppBotao.secundario(
           rotulo: AppStrings.filaVerResultado,
           icone: NomeIcone.avancar,
-          aoTocar: () => context.goNamed(
+          aoTocar: () => context.abrir(
             AppRoutes.analiseResultadoNome,
             pathParameters: {
               AppRoutes.paramPacienteId: item.pacienteId,

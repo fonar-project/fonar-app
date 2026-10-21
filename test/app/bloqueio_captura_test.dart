@@ -87,8 +87,7 @@ Future<GoRouter> _irParaGravacao(
   return roteador;
 }
 
-String _caminho(GoRouter r) =>
-    r.routerDelegate.currentConfiguration.uri.toString();
+String _caminho(GoRouter r) => r.state.uri.toString();
 
 void main() {
   // Regra de LGPD do CLAUDE.md: a captura fica bloqueada enquanto não houver

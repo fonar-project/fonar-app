@@ -50,8 +50,7 @@ class _Montagem {
   final RepositorioConsentimentoPlaceholder consentimentos;
   final RepositorioFilaEmMemoria fila;
 
-  String get caminho =>
-      roteador.routerDelegate.currentConfiguration.uri.toString();
+  String get caminho => roteador.state.uri.toString();
 }
 
 /// O app com o ROTEADOR DE VERDADE, aberto na rota [inicio] do paciente p1.
@@ -120,8 +119,20 @@ Future<_Montagem> _abrir(
       child: MaterialApp.router(theme: AppTheme.claro, routerConfig: roteador),
     ),
   );
-  roteador.goNamed(inicio, pathParameters: {AppRoutes.paramPacienteId: 'p1'});
+  // Como o app chega a cada tela: o perfil, e a retirada aberta por cima
+  // dele (US60).
+  roteador.goNamed(
+    AppRoutes.pacienteDetalheNome,
+    pathParameters: {AppRoutes.paramPacienteId: 'p1'},
+  );
   await tester.pumpAndSettle();
+  if (inicio != AppRoutes.pacienteDetalheNome) {
+    roteador.pushNamed(
+      inicio,
+      pathParameters: {AppRoutes.paramPacienteId: 'p1'},
+    );
+    await tester.pumpAndSettle();
+  }
   return _Montagem(roteador, consentimentos, fila);
 }
 

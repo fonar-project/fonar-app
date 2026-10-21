@@ -2,44 +2,39 @@
 
 <img src="marca/fonar-assinatura.svg" alt="FONAR" width="260">
 
+Aplicativo do FONAR, plataforma de avaliação vocal clínica para
+fonoaudiólogos, usada durante a consulta, com o paciente ao lado. TCC de
+Engenharia de Software, PUC-Campinas.
+
+**Um código só para Android, Windows, macOS (US41) e o navegador (US42, a
+versão do iPhone)**, com exatamente as mesmas funções em todos.
+
 > [!IMPORTANT]
 > **`flutter run` abre o FONAR de verdade**, sem nenhum `--dart-define`: o
-> login e o "Criar conta" no **Firebase Authentication** do projeto
-> `fonar-763db`, e o cadastro, a análise e os resultados na **API** do Cloud
-> Run (ver [Apontar para a API](#apontar-para-a-api)). O AVQI v03.01 também
-> vem da API, calculado pela sessão (vogal + fala encadeada). Para olhar as
-> telas sem rede,
-> há o **modo de exemplo** (`--dart-define=FONAR_EXEMPLO=true`), com login,
+> login e o "Criar conta" no Firebase Authentication do projeto `fonar-763db`,
+> e o cadastro, a análise e os resultados na API do Cloud Run (ver
+> [Apontar para a API](#apontar-para-a-api)). Para olhar as telas sem rede, há
+> o **modo de exemplo** (`--dart-define=FONAR_EXEMPLO=true`), com login,
 > pacientes e resultados de exemplo, avisados na tela. O que falta, e de quem
 > depende, está em [`PENDENCIAS.md`](PENDENCIAS.md).
 
-Aplicativo do FONAR, plataforma de avaliação vocal clínica para
-fonoaudiólogos. O uso previsto é durante a consulta, com o paciente presente.
-
-TCC de Engenharia de Software, PUC-Campinas.
-
-**Codebase único para Android, Windows, macOS (US41) e o navegador (US42, a
-versão do iPhone).** Não há funcionalidade exclusiva de plataforma: todas
-rodam exatamente o mesmo conjunto de recursos.
+**Sumário:** [O que o app faz](#o-que-o-app-faz) ·
+[Regras inegociáveis](#as-duas-regras-arquiteturais-inegociáveis) ·
+[Pré-requisitos](#pré-requisitos) · [Setup](#setup) ·
+[Distribuição](#distribuição) · [Estrutura](#estrutura-de-pastas) ·
+[Navegação](#navegação-como-uma-tela-leva-a-outra) ·
+[Git](#convenções-de-git) · [Armadilhas](#armadilhas-conhecidas)
 
 ---
 
-## O que o app faz hoje
+## O que o app faz
 
-O caminho de uma avaliação, na ordem em que o profissional passa por ele:
+### O caminho de uma avaliação
+
+Na ordem em que o profissional passa por ele:
 
 1. **Entra** (US00) com e-mail e senha conferidos pelo Firebase (US32) e vê
-   **os pacientes** (US01), com busca que não liga para acento. Esqueceu a
-   senha? Uma tela só para isso (US58) pede o e-mail — já preenchido com o
-   da entrada — e o Firebase manda o link de redefinição. **Manter
-   conectado neste aparelho** (US59), marcado na entrada, faz o app abrir
-   direto na conta até a pessoa sair. Sem conexão, entra no modo
-   offline com a conta da última entrada, se houver pacientes no aparelho.
-   Ainda não tem conta? **Cria pelo app** (US34): e-mail, senha e a inscrição
-   no Crefono; confirma o e-mail e já usa, enquanto a equipe confere a
-   inscrição. No desktop, o formulário da entrada cresce com a janela e rola
-   pela borda dela, e um botão parado pelo mesmo motivo de outro não repete
-   o motivo — o leitor de tela o anuncia em cada um (US49).
+   **os pacientes** (US01), com busca que não liga para acento.
 2. **Cadastra o paciente** (US02) — ou corrige os dados depois (US20). Salvar
    avisa se já existe alguém com o mesmo nome e nascimento, e sair com o
    formulário preenchido pergunta antes (US21).
@@ -51,94 +46,103 @@ O caminho de uma avaliação, na ordem em que o profissional passa por ele:
    **microfone escolhido** quando o aparelho tem mais de um. Silêncio absoluto
    nunca é tomado por sala silenciosa: a gravação só libera depois de a voz
    provar, numa conferência curta, que o microfone capta.
-5. **Grava as tarefas** (US05) — vogal sustentada e fala encadeada —, com cada
-   WAV conferido depois de gravado. Dá para **ouvir** cada gravação (US13).
-   Voltar à gravação no mesmo dia **retoma a sessão** (US16). A gravação é
-   **guiada, uma etapa por vez** (US26): instrução grande para o paciente,
-   revisão das amostras antes de enviar e, no desktop, Espaço e R como atalhos.
+5. **Grava as tarefas** (US05) — vogal sustentada e fala encadeada —, uma
+   etapa por vez (US26): instrução grande para o paciente, cada WAV conferido
+   depois de gravado, revisão antes de enviar e, no desktop, Espaço e R como
+   atalhos. Dá para **ouvir** cada gravação (US13), e voltar no mesmo dia
+   **retoma a sessão** (US16).
 6. **Manda para a análise** pela **fila** (US06), que funciona sem conexão e
    sobe quando a rede voltar. Sessões que ficaram paradas no aparelho aparecem
    no perfil para enviar ou descartar (US19).
-7. **Vê o resultado** (US07): as medidas, classificadas só se houver faixa de
-   referência validada — hoje nenhuma há, e o app diz isso. O **espectrograma**
-   abre em tela cheia, deitado no celular (US17), e a pinça amplia sem a
-   página rolar junto (US55). AVQI e CPPS vêm em
-   destaque, as demais medidas menores, e o próximo passo — CAPE-V ou laudo —
-   fica num rodapé fixo (US27).
+7. **Vê o resultado** (US07): AVQI e CPPS em destaque, as demais medidas
+   menores, classificadas só se houver faixa de referência validada — hoje
+   nenhuma há, e o app diz isso. O AVQI v03.01 vem da API, calculado sobre a
+   vogal e a fala encadeada da sessão. O **espectrograma** abre em tela
+   cheia, deitado no celular (US17), com pinça que amplia sem a página rolar
+   junto (US55). O próximo passo — CAPE-V ou laudo — fica num rodapé fixo
+   (US27).
 8. **Registra a CAPE-V** (US08) numa régua de 100 mm, ouvindo a amostra — no
-   celular, cada escala abre em tela cheia, para marcar deitado (US28), e a
-   avaliação sobe para o Firebase quando há rede (US37) —, vê a
-   **evolução** entre sessões (US09) — com um modo para mostrar ao paciente — e
-   gera o **laudo em PDF** (US10) — no desktop, ao lado da pré-visualização
-   A4, que só é refeita quando o documento muda, sem piscar (US53).
+   celular, cada escala em tela cheia, para marcar deitado (US28) —, e a
+   avaliação sobe para o Firebase quando há rede (US37). Vê a **evolução**
+   entre sessões (US09), com um modo para mostrar ao paciente, e gera o
+   **laudo em PDF** (US10), ao lado da pré-visualização A4 no desktop, que só
+   é refeita quando o documento muda (US53).
 
-Em volta disso: o **perfil do paciente** (US12) reúne dados, consentimento,
-sessões, laudos e fila; o **histórico** (US23) lista as avaliações de todos os
-pacientes, por mês, para achar uma pelo quando; a **conta** (US11) tem os dados do profissional e o
-sair; tudo fica num **banco local** (US14); o token vai para o **cofre do
-sistema** (US18). O bloqueio por inatividade (US24) saiu na US59: quem quer o
-aparelho fechado bloqueia o computador ou o celular, como faz com o resto.
-O app tem **tema escuro**,
-que segue o sistema ou a escolha feita na conta (US30); no computador, a
-**interface cresce com a janela** — 120% num monitor Full HD —, com o ajuste
-"Tamanho da interface" na conta (US48); e **movimento
-funcional** — trocas de tela, de etapa e de estado com transição curta, que
-some com o movimento reduzido do sistema —, com as ações presas no rodapé só
-quando a tela tem altura para isso (US31). Entre as telas, a barra lateral e
-as abas ficam paradas e só o conteúdo troca, abrindo e voltando com a mesma
-entrada curta (US57). Na primeira vez de cada conta em cada aparelho, um
-**guia** mostra a tela inicial, um elemento por vez — a nova avaliação, a
-lista, a fila, a conta, a conexão e a ajuda —, e a **Ajuda** (no canto do
-cabeçalho, no desktop; no topo da lista, no celular) o revê e lista os
-atalhos de teclado (US50). Gravação, resultado, CAPE-V e laudo também têm,
-cada um, uma dica de primeira vez — a da gravação, só antes de começar.
+### Em volta do caminho
 
-A **autenticação** (US32) é o Firebase Authentication pela API REST, o mesmo
-código no Android e no Windows. A sessão é da conta: o roteador manda para a
-entrada quem não entrou, cada envio da fila leva o id de quem gravou e só sobe
-na sessão dessa pessoa, o nome e o registro que vão no laudo são guardados por
-conta, e sair apaga a credencial do aparelho. Quando o Firebase não renova
-mais a sessão (senha trocada, conta desativada), a fila mostra "Entrar de
-novo", e o envio sobe sozinho depois da entrada. A senha se troca na própria
-conta (US45): o app confere a atual, troca no Firebase e guarda a credencial
-nova — e a nova passa a valer também sem conexão.
+- **Perfil do paciente** (US12): dados, consentimento, sessões, laudos e fila
+  num lugar só, e as **anotações** (US51) — o registro do atendimento, com a
+  data, sem rede inclusive, editáveis sem apagar (a edição é uma versão nova,
+  e as de antes ficam à vista). Uma anotação pode deixar um **lembrete para a
+  próxima consulta**, discreto num dia seguinte, no topo do perfil e no início
+  da gravação, com o texto só ao tocar em "Mostrar" — o paciente às vezes vê a
+  tela. As anotações não dependem do consentimento, que cobre a voz.
+- **Histórico** (US23): as avaliações de todos os pacientes, por mês, para
+  achar uma pelo quando.
+- **Guia da primeira vez e Ajuda** (US50): na primeira vez de cada conta em
+  cada aparelho, o guia mostra a tela inicial, um elemento por vez; a Ajuda o
+  revê e lista os atalhos de teclado. Gravação, resultado, CAPE-V e laudo têm
+  cada um uma dica de primeira vez.
+- **Aparência**: tema escuro, do sistema ou escolhido na Conta (US30); no
+  computador, a **interface cresce com a janela** — 120% num monitor Full HD
+  —, com o ajuste "Tamanho da interface" (US48), e a entrada cresce e rola
+  pela borda da janela (US49); **movimento funcional**, com transições curtas
+  que somem no movimento reduzido do sistema, e as ações presas no rodapé só
+  quando a tela tem altura para isso (US31).
+- **Navegação**: a barra lateral e as abas ficam paradas, e só o conteúdo
+  troca (US57). O **voltar** — o da tela e o do Android — leva sempre à tela
+  de onde se veio, uma por vez, e na lista de pacientes fecha o app; no
+  celular, nada fica embaixo da barra de status nem da dos botões (US60). Ver
+  [Navegação](#navegação-como-uma-tela-leva-a-outra).
 
-As **decisões jurídicas** (US43) seguem o lado conservador: sem conexão, a
-entrada confere a senha com um verificador guardado no cofre na última
-entrada com rede (PBKDF2, nunca a senha) — a exceção, por decisão da equipe,
-é o "Manter conectado" (US59), que abre a sessão guardada sem pedir senha
-nenhuma, e nunca guarda a senha; paciente menor de 18 anos
-só é autorizado pelo responsável legal; a gravação feita sob um consentimento
-retirado não sobe mais, nem com um consentimento novo; e o perfil tem
-**eliminar os dados do paciente**, a pedido dele (LGPD, art. 18), que apaga
-tudo aqui e no servidor. O termo de consentimento e os termos de uso estão
-escritos sobre a LGPD, com revisão jurídica recomendada (`PENDENCIAS.md`).
+### Conta e acesso
 
-O perfil tem **anotações** (US51), o registro do atendimento: escritas com a
-data, sem rede inclusive, e editáveis sem apagar — a edição é uma versão nova,
-e as de antes ficam à vista. Não dependem do consentimento, que cobre a voz:
-anota-se sem ele e depois de retirado. Uma anotação pode deixar um **lembrete
-para a próxima consulta**, que aparece discreto num dia seguinte, no topo do
-perfil e no início da gravação, com o texto só ao tocar em "Mostrar" — o
-paciente às vezes vê a tela —, e como selo "Lembrete" na lista. Sobem para o
-Firebase e descem em outro aparelho (ADR-019 da API); só saem com a eliminação
-do paciente.
+- **Firebase Authentication pela API REST** (US32), o mesmo código em todas as
+  plataformas. A sessão é da conta: cada envio da fila leva o id de quem
+  gravou e só sobe na sessão dessa pessoa, o nome e o registro que vão no
+  laudo são guardados por conta, e sair apaga a credencial do aparelho.
+  Quando o Firebase não renova mais a sessão (senha trocada, conta
+  desativada), a fila mostra "Entrar de novo", e o envio sobe sozinho depois
+  da entrada.
+- **Criar conta pelo app** (US34): e-mail, senha e a inscrição no Crefono;
+  confirma o e-mail e já usa, enquanto a equipe confere a inscrição — ver
+  [Criar conta e o primeiro acesso](#criar-conta-e-o-primeiro-acesso-us34).
+- **Esqueci a senha** (US58): uma tela só para isso, com o e-mail da entrada
+  já preenchido; o Firebase manda o link de redefinição. A **troca de senha**
+  é na Conta (US45): o app confere a atual, troca no Firebase e guarda a
+  credencial nova, que passa a valer também sem conexão.
+- **Manter conectado neste aparelho** (US59): marcado na entrada, o app abre
+  direto na conta até a pessoa sair. Não há bloqueio por inatividade (a US24
+  saiu na US59): quem quer o aparelho fechado bloqueia o computador ou o
+  celular, como faz com o resto.
+- **Sem conexão**, entra no modo offline com a conta da última entrada, se
+  houver pacientes no aparelho — com a senha, conferida por um verificador
+  guardado no cofre na última entrada com rede (PBKDF2, nunca a senha).
 
-Os **dados em repouso** (US44): no aparelho, o banco local é cifrado (SQLite3
-Multiple Ciphers, com a chave no cofre do sistema), e o banco de antes da
-atualização é cifrado na primeira abertura; o WAV sai do aparelho assim que
-chega ao servidor, e ouvir de novo vem da API.
+### Dados e privacidade
 
-Com **mais de um aparelho** (US40), o que um registra aparece no outro: o
-paciente e os consentimentos sobem logo depois de cadastrados ou registrados
-— sem esperar a primeira gravação —, e descem do Firebase na abertura, quando
-a conexão volta e quando alguém entra; a CAPE-V e os laudos, quando o perfil
-do paciente abre; e a gravação feita em outro aparelho se ouve pela API. Uma
-retirada de consentimento feita num aparelho passa a bloquear a gravação no
-outro. A descida só acrescenta ou atualiza o que não foi mudado aqui — nunca
-apaga, e nunca passa por cima de uma correção que ainda não subiu. Num
-**aparelho compartilhado**, cada paciente é de uma conta: quem entra vê só os
-seus, e a fila só os envios dela.
+- **Decisões jurídicas** (US43), pelo lado conservador: paciente menor de 18
+  anos só é autorizado pelo responsável legal; a gravação feita sob um
+  consentimento retirado não sobe mais, nem com um consentimento novo; e o
+  perfil tem **eliminar os dados do paciente**, a pedido dele (LGPD, art.
+  18), que apaga tudo aqui e no servidor. A exceção à senha em toda entrada,
+  por decisão da equipe, é o "Manter conectado". O termo de consentimento e
+  os termos de uso estão escritos sobre a LGPD, com revisão jurídica
+  recomendada (`PENDENCIAS.md`).
+- **Dados em repouso** (US44): no aparelho, o banco local é cifrado (SQLite3
+  Multiple Ciphers, com a chave no cofre do sistema), e o banco de antes da
+  atualização é cifrado na primeira abertura; o WAV sai do aparelho assim que
+  chega ao servidor, e ouvir de novo vem da API.
+- **Mais de um aparelho** (US40): o paciente e os consentimentos sobem logo
+  depois de cadastrados ou registrados — sem esperar a primeira gravação —,
+  e descem do Firebase na abertura, quando a conexão volta e quando alguém
+  entra; a CAPE-V, os laudos e as anotações, quando o perfil do paciente
+  abre; a gravação feita em outro aparelho se ouve pela API. Uma retirada de
+  consentimento num aparelho bloqueia a gravação no outro. A descida só
+  acrescenta ou atualiza o que não foi mudado aqui — nunca apaga, e nunca
+  passa por cima de uma correção que ainda não subiu. Num **aparelho
+  compartilhado**, cada paciente é de uma conta: quem entra vê só os seus, e
+  a fila só os envios dela.
 
 A numeração das US03 a US10 foi deduzida das telas do protótipo — confira com
 o backlog antes de citar no texto do TCC (ver `PENDENCIAS.md`).
@@ -344,6 +348,11 @@ cinco jobs. Nenhum publica artefato — quem publica é o `release.yml`, por tag
 | Código do banco | `dart run build_runner build`, e `lib/core/banco` precisa ficar igual |
 | Ícones pré-compilados | `dart run tool/compilar_icones.dart`, e a árvore precisa ficar limpa |
 
+Toda falha vira anotação no PR, no arquivo e na linha
+([`tool/ci_anotacoes.py`](tool/ci_anotacoes.py)): o diff do formato, o aviso
+da análise e, de cada teste que falha, o que o `flutter_test` imprimiu — o
+esperado e o encontrado —, sem precisar abrir o log.
+
 O último passo existe para cobrir o buraco que o
 `test/design_system/app_icone_test.dart` não cobre. Aquele teste compara nomes
 de arquivo, então enxerga `.vec` faltando e `.vec` órfão — mas não enxerga
@@ -432,8 +441,9 @@ aceitam (`lib/features/cape_v/data/cape_v_no_firestore.dart`). Sobe só a da
 sessão que a conta na sessão mandou para a análise, porque é na árvore dela
 que a sessão existe. Tenta ao abrir o app, quando a rede volta, quando alguém
 entra e logo depois de cada registro; registrar de novo substitui a de lá,
-a não ser que a de lá seja mais nova. Nada desce: o que outro aparelho
-registrou não aparece aqui.
+a não ser que a de lá seja mais nova. A registrada em outro aparelho desce
+quando o perfil do paciente abre (US40,
+`lib/features/sincronizacao/data/descida_firestore.dart`).
 
 O **laudo emitido** não muda nem some (US38, ADR-018 da API). Cada emissão
 é um documento com número próprio — os oito primeiros caracteres de um
@@ -552,15 +562,16 @@ page aponta para o último release — o link não muda a cada versão:
 |---|---|---|
 | Windows 10 e 11 | `FONAR-Windows.zip` | a pasta do `flutter build windows --release`; descompacta e abre `fonar_app.exe` |
 | macOS | `FONAR-macOS.zip` | o `FONAR.app`, empacotado com `ditto` |
-| Android | `FONAR-Android.apk` | o APK de release, só de 64 bits (arm64), instalado direto (US54) |
+| Android | `FONAR-Android.apk` | o APK de release, só de 64 bits (arm64), instalado direto (US54). A landing leva à página da versão, onde se toca no APK: baixado por um link direto, ele caía numa janela à parte do navegador do celular e parava em 100% |
 | Android de entrada | `FONAR-Android-32bits.apk` | o mesmo APK para celular com sistema de 32 bits (os Android Go, por exemplo); a landing o indica quando o celular diz que o app não é compatível |
 | iPhone e iPad | — | a versão web, em <https://fonar-project.github.io/fonar-app/>, adicionada à Tela de Início pelo Safari (US42) |
 
-**Publicar uma versão:** na `main` atualizada, `git tag v1.0.0` e
-`git push origin v1.0.0`. O [`release.yml`](.github/workflows/release.yml)
+**Publicar uma versão:** na `main` atualizada, `git tag vX.Y.Z` e
+`git push origin vX.Y.Z` — o número sobe na correção (`Z`) ou na
+funcionalidade nova (`Y`). O [`release.yml`](.github/workflows/release.yml)
 compila as três plataformas, cada uma na sua máquina, publica o release com
 as instruções de primeira abertura e põe a versão web no GitHub Pages. A
-versão do app é a da tag.
+versão do app é a da tag, e a landing passa a baixar a nova sozinha.
 
 ### A versão web (iPhone e iPad)
 
@@ -682,14 +693,16 @@ Visual Studio.
 
 ```
 lib/
-├── main.dart              ProviderScope na raiz + FonarApp
+├── main.dart              o container do Riverpod, a sessão mantida (US59)
+│                          e o FonarApp
 ├── app/
 │   ├── app.dart           MaterialApp.router, tema, sem lógica
 │   ├── app_estrutura.dart navegação principal (barra no celular, lateral
 │   │                      no desktop), montada pelo ShellRoute do roteador
 │   ├── licencas.dart      licença da fonte, para "Licenças de software"
-│   └── router/            rotas, o bloqueio de consentimento e a pergunta
-│                          antes de sair de formulário alterado
+│   └── router/            rotas; a navegação (abrir, substituir, voltar) e o
+│                          voltar do Android; o bloqueio de consentimento e
+│                          a pergunta antes de sair de formulário alterado
 ├── core/                  infraestrutura, sem regra de negócio
 │   ├── banco/             o banco local (Drift): tabelas, migração, ids
 │   ├── auth/              Firebase Auth pela API REST, credencial e token
@@ -711,6 +724,7 @@ lib/
 │   └── app_strings.dart   TODO texto de interface, em pt-BR
 └── features/              uma pasta por funcionalidade
     ├── auth/              entrada, sessão por conta (e a mantida) e perfil
+    ├── cadastro/          criar conta e o primeiro acesso (US34)
     ├── pacientes/         lista, cadastro, perfil e correção dos dados
     ├── consentimento/     registro e retirada
     ├── captura/           aferição, gravação, retomada e sessões paradas
@@ -722,7 +736,8 @@ lib/
     ├── laudo/             conferência, PDF, compartilhar e imprimir
     ├── anotacoes/         anotações do paciente e o lembrete da consulta
     ├── guia/              o guia da primeira vez e a Ajuda
-    └── conta/             dados do profissional e sair
+    ├── sincronizacao/     o que sobe para o Firestore e o que desce (US33, US40)
+    └── conta/             dados do profissional, senha, aparência e sair
 
 test/
 ├── apoio/                 banco em memória e repositórios falsos
@@ -772,6 +787,41 @@ sugerir o contrário.
 
 ---
 
+## Navegação: como uma tela leva a outra
+
+A regra é a do voltar: **o voltar — o da tela e o do Android — leva sempre à
+tela de onde se veio, uma de cada vez** (US60). Por isso as telas não navegam
+pelo `go` do go_router, que monta a pilha pela hierarquia das rotas (quem
+abria a avaliação pelo Histórico, e dela a CAPE-V, voltava da CAPE-V para a
+avaliação e dali para o perfil do paciente, que nunca esteve no caminho).
+Navegam pelos verbos de
+[`lib/app/router/navegacao.dart`](lib/app/router/navegacao.dart):
+
+| Verbo | Quando | O voltar de lá |
+|---|---|---|
+| `context.abrir(...)` | a ida comum: tocar num item, num botão | a tela de onde se veio |
+| `context.substituir(...)` | o fim de uma tarefa: o cadastro salvo, o consentimento registrado, a gravação enviada | a tela de antes da tarefa — o formulário concluído não volta |
+| `context.voltarOu(...)` | o voltar da tela, e o "salvar" que devolve à tela de baixo | a tela de baixo; aberta pelo endereço (na web), a de onde normalmente se chega |
+| `context.irAoDestino(...)` | as abas e a barra lateral | entre as listas, a aba anterior; saindo de uma tarefa, a pilha recomeça, e o formulário alterado pergunta antes |
+
+O `go` fica para **recomeçar** a pilha, quando o que estava nela deixou de
+valer: entrar e sair da conta, o paciente eliminado, a rota que não existe, a
+trilha do desktop.
+
+A tela que fica sozinha na pilha (aberta pelo `go`) tem o
+[`VoltarDoSistema`](lib/app/router/voltar_do_sistema.dart): o voltar do
+Android leva à lista de pacientes — ou, antes de entrar, à entrada —, e só na
+lista e na entrada fecha o app. O `test/app/voltar_do_sistema_test.dart`
+confere tudo isso mandando o voltar como o Android manda (`popRoute`).
+
+O voltar preditivo do Android 16 está **desligado** no manifesto
+(`enableOnBackInvokedCallback="false"`): com o app mirando a API 36, o sistema
+só entregava o voltar quando o Flutter avisava que tinha para onde voltar, e
+o app fechava no meio do uso. Religar só depois de conferir num Android 16 de
+verdade (`PENDENCIAS.md`).
+
+---
+
 ## Convenções de git
 
 **Branch:** `nome/USxx-featureImplementada`
@@ -789,6 +839,11 @@ fix(US07): corrige envio duplicado ao perder conexao
 
 A feature branch sai da `main`. Enquanto os PRs anteriores não entram, cada
 US sai da branch da US anterior, e os PRs se empilham na mesma ordem.
+
+**Sem atribuição de IA** em nada que vai para o repositório — mensagem de
+commit, descrição de PR, comentário: nada de `Co-Authored-By: Claude`,
+"Generated with Claude Code" ou link de sessão. O autor do commit é sempre a
+pessoa que pediu a alteração.
 
 ---
 

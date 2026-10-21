@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/navegacao.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/network/conexao.dart';
 import '../../../../design_system/breakpoints.dart';
@@ -584,7 +585,7 @@ class _NesteAparelho extends ConsumerWidget {
                 child: AppBotao.secundario(
                   rotulo: AppStrings.contaVerFila,
                   icone: NomeIcone.avancar,
-                  aoTocar: () => context.goNamed(AppRoutes.filaNome),
+                  aoTocar: () => context.abrir(AppRoutes.filaNome),
                 ),
               ),
             ],

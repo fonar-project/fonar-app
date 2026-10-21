@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/navegacao.dart';
 import '../../../../core/network/conexao.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/widgets/app_botao.dart';
@@ -50,8 +51,13 @@ class _Formulario extends ConsumerWidget {
 
     Future<void> confirmar() async {
       final destino = await controlador.confirmar();
-      if (destino != null && context.mounted) {
+      if (destino == null || !context.mounted) return;
+      // Confirmado: entra, e a pilha recomeça; ou o cadastro toma o lugar
+      // desta tela, que não tem mais o que fazer.
+      if (destino is EntrarNoApp) {
         context.goNamed(rotaDe(destino));
+      } else {
+        context.substituir(rotaDe(destino));
       }
     }
 

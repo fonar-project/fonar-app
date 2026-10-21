@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/router/navegacao.dart';
 import '../../../../design_system/breakpoints.dart';
 import '../../../../design_system/tokens/app_cores.dart';
 import '../../../../design_system/tokens/app_radius.dart';
@@ -84,7 +84,7 @@ class HistoricoPage extends ConsumerWidget {
                 acao: AppBotao.secundario(
                   rotulo: AppStrings.navNovaAvaliacao,
                   icone: NomeIcone.adicionar,
-                  aoTocar: () => context.goNamed(AppRoutes.novaAvaliacaoNome),
+                  aoTocar: () => context.abrir(AppRoutes.novaAvaliacaoNome),
                 ),
               ),
             ),
@@ -311,7 +311,7 @@ class _Linha extends StatelessWidget {
       label: AppStrings.historicoAbrir(entrada.paciente.nome, quando),
       child: AppToque(
         raio: AppRadius.bordaMedia,
-        aoTocar: () => context.pushNamed(
+        aoTocar: () => context.abrir(
           AppRoutes.analiseResultadoNome,
           pathParameters: {
             AppRoutes.paramPacienteId: entrada.paciente.id,
