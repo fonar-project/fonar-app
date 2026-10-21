@@ -34,7 +34,15 @@
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize"
+            android:enableOnBackInvokedCallback="false">
+            <!-- enableOnBackInvokedCallback="false" (US60): o app mira a API 36,
+                 e no Android 16 o voltar preditivo vem ligado. Nele, o sistema
+                 só entrega o voltar ao app quando o Flutter avisa que tem para
+                 onde voltar; quando o aviso falhava, o voltar fechava o app no
+                 meio do uso. Desligado, todo voltar chega ao app, e o roteador
+                 decide (lib/app/router/voltar_do_sistema.dart). Religar só
+                 depois de conferir o voltar num Android 16 de verdade. -->
             <!-- Specifies an Android theme to apply to this Activity as soon as
                  the Android process has started. This theme is visible to the user
                  while the Flutter UI initializes. After that, this theme continues

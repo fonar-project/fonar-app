@@ -31,6 +31,7 @@ import '../app_estrutura.dart';
 import 'app_routes.dart';
 import 'erro_de_rota_page.dart';
 import 'saida_protegida.dart';
+import 'voltar_do_sistema.dart';
 
 /// Roteador do app.
 ///
@@ -79,17 +80,28 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         name: AppRoutes.criarContaNome,
         path: AppRoutes.criarContaCaminho,
-        builder: (context, state) => const CriarContaPage(),
+        // Aberta pelo `go`, sozinha na pilha: o voltar do Android (US60)
+        // leva à entrada, em vez de fechar o app. O mesmo nas duas de baixo.
+        builder: (context, state) => const VoltarDoSistema(
+          para: AppRoutes.loginNome,
+          child: CriarContaPage(),
+        ),
       ),
       GoRoute(
         name: AppRoutes.verificarEmailNome,
         path: AppRoutes.verificarEmailCaminho,
-        builder: (context, state) => const VerificarEmailPage(),
+        builder: (context, state) => const VoltarDoSistema(
+          para: AppRoutes.loginNome,
+          child: VerificarEmailPage(),
+        ),
       ),
       GoRoute(
         name: AppRoutes.completarCadastroNome,
         path: AppRoutes.completarCadastroCaminho,
-        builder: (context, state) => const CompletarCadastroPage(),
+        builder: (context, state) => const VoltarDoSistema(
+          para: AppRoutes.loginNome,
+          child: CompletarCadastroPage(),
+        ),
       ),
       GoRoute(
         name: AppRoutes.recuperarSenhaNome,
