@@ -33,8 +33,16 @@ class Pacientes extends Table {
   DateTimeColumn get alteradoEm => dateTime().nullable()();
 
   /// Quando o aparelho e o Firebase tinham, pela última vez, os mesmos dados
-  /// deste paciente — na subida (envio) ou na descida.
+  /// deste paciente — na subida ou na descida.
   DateTimeColumn get sincronizadoEm => dateTime().nullable()();
+
+  /// Quantos registros do livro de consentimentos daqui — concessões e
+  /// retiradas, na ordem de `livroDeConsentimentoLocal` — já estão no
+  /// Firebase. Menor que o livro: há registro por subir.
+  ///
+  /// É o que deixa a subida em segundo plano saber, sem perguntar ao
+  /// servidor paciente a paciente, de quem há consentimento novo.
+  IntColumn get livroNoFirebase => integer().withDefault(const Constant(0))();
 
   @override
   Set<Column<Object>> get primaryKey => {id};

@@ -8,6 +8,8 @@ import '../data/fonte_de_nivel_record.dart';
 import '../domain/ajuste_de_configuracao.dart';
 import '../domain/afericao_de_ruido.dart';
 import '../domain/fonte_de_nivel.dart';
+import '../domain/microfone.dart';
+import 'microfone_controlador.dart';
 
 /// Em que ponto está a aferição de ruído ambiente.
 sealed class EstadoDaAfericao {
@@ -41,6 +43,18 @@ final class AfericaoMedindo extends EstadoDaAfericao {
   final double? nivel;
 
   /// De 0 a 1.
+  final double progresso;
+}
+
+/// Escutando a voz de quem está perto do microfone, depois de a sala ter
+/// dado silêncio digital — ver [AfericaoDeRuido.concluirComAVoz].
+final class AfericaoConferindoVoz extends EstadoDaAfericao {
+  const AfericaoConferindoVoz({this.nivel, this.progresso = 0});
+
+  /// Última leitura, em dBFS. Nula até a primeira chegar.
+  final double? nivel;
+
+  /// De 0 a 1, do tempo máximo da conferência.
   final double progresso;
 }
 
@@ -86,6 +100,12 @@ final class AfericaoConcluida extends EstadoDaAfericao {
       resultado.conclusao != ConclusaoDaAfericao.microfoneMudo &&
       !processamentoLigado &&
       !bancoSoNaMemoria;
+
+  /// Cabe conferir o microfone com a voz: a sala deu silêncio digital, e o
+  /// microfone da aferição já fechou.
+  bool get podeConferirComAVoz =>
+      microfoneLiberado &&
+      resultado.conclusao == ConclusaoDaAfericao.microfoneMudo;
 }
 
 /// Conduz a aferição: permissão, microfone aberto por
@@ -110,11 +130,61 @@ class AfericaoControlador extends Notifier<EstadoDaAfericao> {
     return const AfericaoNaoIniciada();
   }
 
+  bool get _ocupado =>
+      state is AfericaoMedindo ||
+      state is AfericaoConferindoVoz ||
+      _fechando != null;
+
   Future<void> medir() async {
     // Toque duplo abriria o microfone duas vezes; e com o anterior ainda
     // fechando, os dois disputariam o aparelho.
-    if (state is AfericaoMedindo || _fechando != null) return;
+    if (_ocupado) return;
     state = const AfericaoMedindo();
+    await _colher(
+      duracao: AfericaoDeRuido.duracao,
+      progresso: (nivel, progresso) =>
+          AfericaoMedindo(nivel: nivel, progresso: progresso),
+      concluir: AfericaoDeRuido.concluir,
+    );
+  }
+
+  /// Escuta a voz de quem está perto do microfone, depois de a sala ter
+  /// dado silêncio digital.
+  ///
+  /// Silêncio digital é o que entrega o microfone bloqueado — e também, numa
+  /// sala silenciosa de verdade, o microfone que zera o sinal quando não há
+  /// som (teste de homologação de 18/10/2026: sala quieta lida como
+  /// microfone mudo). Só som separa os dois. A voz que chega prova que o
+  /// microfone capta; nada chegar confirma que não capta. A regra é a da
+  /// gravação ([AfericaoDeRuido.vozChegou]), e cada gravação continua
+  /// conferida depois, no arquivo.
+  ///
+  /// Termina assim que a voz chega, ou em
+  /// [AfericaoDeRuido.duracaoDaConferencia].
+  Future<void> conferirComAVoz() async {
+    final atual = state;
+    if (_ocupado || atual is! AfericaoConcluida || !atual.podeConferirComAVoz) {
+      return;
+    }
+    state = const AfericaoConferindoVoz();
+    await _colher(
+      duracao: AfericaoDeRuido.duracaoDaConferencia,
+      progresso: (nivel, progresso) =>
+          AfericaoConferindoVoz(nivel: nivel, progresso: progresso),
+      concluir: AfericaoDeRuido.concluirComAVoz,
+      basta: AfericaoDeRuido.vozChegou,
+    );
+  }
+
+  /// Abre o microfone, colhe as leituras por até [duracao] — ou até [basta]
+  /// responder que sim —, conclui e fecha.
+  Future<void> _colher({
+    required Duration duracao,
+    required EstadoDaAfericao Function(double nivel, double progresso)
+    progresso,
+    required ResultadoDaAfericao Function(List<double> leituras) concluir,
+    bool Function(List<double> leituras)? basta,
+  }) async {
     // Nada toca enquanto se mede o silêncio da sala.
     if (ref.exists(reproducaoControladorProvider)) {
       await ref.read(reproducaoControladorProvider.notifier).parar();
@@ -136,26 +206,38 @@ class AfericaoControlador extends Notifier<EstadoDaAfericao> {
 
     final leituras = <double>[];
     final esperadas =
-        AfericaoDeRuido.duracao.inMilliseconds /
-        AfericaoDeRuido.intervalo.inMilliseconds;
+        duracao.inMilliseconds / AfericaoDeRuido.intervalo.inMilliseconds;
     var falhou = false;
     StreamSubscription<double>? inscricao;
+    // Termina no tempo, ou antes, quando [basta] diz que já se sabe.
+    final terminou = Completer<void>();
+    Timer? prazo;
 
     try {
-      final niveis = await _fonte.abrir(AfericaoDeRuido.intervalo);
+      final microfone = await microfoneParaCapturar(ref);
+      if (!ref.mounted) return;
+      final niveis = await _fonte.abrir(
+        AfericaoDeRuido.intervalo,
+        microfone: microfone,
+      );
       inscricao = niveis.listen((nivel) {
         leituras.add(nivel);
         if (ref.mounted) {
-          state = AfericaoMedindo(
-            nivel: nivel,
-            progresso: (leituras.length / esperadas).clamp(0, 1),
-          );
+          state = progresso(nivel, (leituras.length / esperadas).clamp(0, 1));
+        }
+        if (basta != null && basta(leituras) && !terminou.isCompleted) {
+          terminou.complete();
         }
       }, onError: (Object _) => falhou = true);
-      await Future<void>.delayed(AfericaoDeRuido.duracao);
+      // O tempo conta do microfone aberto, como sempre contou.
+      prazo = Timer(duracao, () {
+        if (!terminou.isCompleted) terminou.complete();
+      });
+      await terminou.future;
     } catch (_) {
       falhou = true;
     }
+    prazo?.cancel();
 
     // O cancelamento NÃO é esperado. Em teste, esperar o `cancel` de uma
     // inscrição deixou a aferição presa em "Medindo…" para sempre; no app
@@ -163,7 +245,7 @@ class AfericaoControlador extends Notifier<EstadoDaAfericao> {
     // estão colhidas — o resultado não pode depender de o fluxo fechar.
     unawaited(inscricao?.cancel());
     final ajuste = _fonte.ajuste;
-    final resultado = falhou ? null : AfericaoDeRuido.concluir(leituras);
+    final resultado = falhou ? null : concluir(leituras);
 
     EstadoDaAfericao estado({required bool liberado, bool demorou = false}) =>
         resultado == null
@@ -195,6 +277,20 @@ class AfericaoControlador extends Notifier<EstadoDaAfericao> {
     );
     _fechando = null;
     if (ref.mounted) state = estado(liberado: true);
+    // Um microfone recém-ligado aparece na escolha; no navegador, os nomes
+    // só vêm depois da permissão, que a aferição acabou de pedir.
+    if (ref.mounted && ref.exists(microfoneControladorProvider)) {
+      ref.read(microfoneControladorProvider.notifier).atualizar();
+    }
+  }
+
+  /// Troca o microfone e mede a sala de novo com ele: a aferição anterior
+  /// foi de outro microfone, e não vale para este.
+  Future<void> trocarMicrofone(Microfone? microfone) async {
+    if (_ocupado) return;
+    await ref.read(microfoneControladorProvider.notifier).escolher(microfone);
+    if (!ref.mounted) return;
+    await medir();
   }
 
   /// Fecha o microfone. Falhar aqui é limpeza que não deu certo — não muda o

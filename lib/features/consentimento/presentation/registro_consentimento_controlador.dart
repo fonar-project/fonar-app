@@ -5,6 +5,7 @@ import '../../../core/relogio.dart';
 import '../../../l10n/app_strings.dart';
 import '../data/repositorio_consentimento_local.dart';
 import '../domain/consentimento.dart';
+import '../../sincronizacao/presentation/subida_dos_pacientes_controlador.dart';
 
 /// Os campos do formulário, para dizer qual deles o profissional mexeu.
 enum CampoDoConsentimento { quemAutoriza, nomeDoResponsavel, concordancia }
@@ -121,6 +122,7 @@ class RegistroConsentimentoControlador extends Notifier<EstadoRegistro> {
       container
         ..invalidate(consentimentoProvider(pacienteId))
         ..invalidate(retiradaEmVigorProvider(pacienteId));
+      pedirSubidaDosPacientes(container);
     }
 
     if (!ref.mounted) return false;

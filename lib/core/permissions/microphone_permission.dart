@@ -47,8 +47,11 @@
 ///    mínima entre elas — leitura parada no mesmo valor é microfone entregando
 ///    número fixo, não sala silenciosa.
 /// 2. **Trata silêncio absoluto como FALHA, nunca como sala silenciosa.** Na
-///    aferição, por (1). Na gravação, duas vezes: pelas leituras e pelos
-///    BYTES do arquivo que saiu
+///    aferição, por (1) — e só a voz libera: numa sala silenciosa de
+///    verdade, o microfone que zera o sinal sem som também entrega silêncio
+///    digital, e a conferência com a voz (`AfericaoDeRuido.concluirComAVoz`)
+///    prova que ele capta. Na gravação, duas vezes: pelas leituras e pelos
+///    BYTES do arquivo INTEIRO que saiu
 ///    (`VerificacaoDaAmostra.audioTodoEmZero`) — comparação de byte com zero,
 ///    não análise acústica. A segunda existe porque a primeira vem do plugin:
 ///    se ele informar amplitude plausível enquanto escreve zeros no disco, só
@@ -57,7 +60,12 @@
 ///    caminho das configurações de privacidade: `l10n/app_strings.dart`
 ///    (`afericaoMudo`, `problemaSemSinal`) e a tela de gravação. A gravação
 ///    não abre sem aferição liberada.
-/// 4. **Confere o que de fato saiu, e não a configuração pedida.** Taxa e
+/// 4. **Deixa escolher o microfone** (`features/captura/domain/microfone.dart`).
+///    Sem escolha, o `record_windows` abre o microfone padrão de
+///    comunicação — que, no teste de homologação de 18/10/2026, era o
+///    virtual do DroidCam, mudo. A aferição acusava com razão, e não havia o
+///    que fazer dentro do app.
+/// 5. **Confere o que de fato saiu, e não a configuração pedida.** Taxa e
 ///    canais: pelo `setOnConfigChanged` nas DUAS capturas
 ///    (`FonteDeNivel.ajuste` e `Gravador.ajuste`) e pelo cabeçalho do WAV.
 ///    Formato e profundidade de bits: só pelo cabeçalho, porque o `record`
@@ -69,8 +77,9 @@
 ///
 /// ## O que continua em aberto
 ///
-/// - O LIMIAR de silêncio e as zonas do medidor são valores de partida, não
-///   definidos empiricamente (`LimitesDeNivel`, `AfericaoDeRuido`).
+/// - As zonas do medidor e o limite de ruído são valores de partida, não
+///   definidos empiricamente (`LimitesDeNivel`, `AfericaoDeRuido`). O piso do
+///   silêncio digital não: é o menor pico possível em 16 bits.
 /// - Nada disso foi exercitado com microfone de verdade: o ambiente em que o
 ///   código foi escrito não tem um. Em especial, não se sabe se o
 ///   `setOnConfigChanged` dispara, nem qual valor chega com o microfone

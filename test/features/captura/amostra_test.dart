@@ -18,7 +18,7 @@ List<ProblemaNaAmostra> _verificar(
   AjusteDeConfiguracao? ajuste,
 }) => VerificacaoDaAmostra.verificar(
   cabecalho: lerCabecalhoWav(arquivo),
-  inicioDoArquivo: arquivo,
+  arquivo: arquivo,
   tamanhoDoArquivo: tamanho ?? arquivo.length,
   leituras: leituras ?? _voz,
   taxaPedida: 44100,
@@ -79,7 +79,7 @@ void main() {
     test('arquivo ilegível invalida', () {
       final p = VerificacaoDaAmostra.verificar(
         cabecalho: null,
-        inicioDoArquivo: null,
+        arquivo: null,
         tamanhoDoArquivo: 0,
         leituras: _voz,
         taxaPedida: 44100,
@@ -257,16 +257,32 @@ void main() {
       expect(VerificacaoDaAmostra.audioTodoEmZero(janela, cabecalho), isFalse);
     });
 
-    test('a janela de 4 KB do gravador é o bastante para acusar', () {
+    test('o arquivo inteiro em zero acusa', () {
       final arquivo = wavDeTeste(
         duracao: const Duration(seconds: 3),
         audioZerado: true,
       );
       final cabecalho = lerCabecalhoWav(arquivo)!;
-      // O mesmo tamanho que `ArquivosDeAmostraLocais` lê do disco.
-      final janela = Uint8List.sublistView(arquivo, 0, 4096);
 
-      expect(VerificacaoDaAmostra.audioTodoEmZero(janela, cabecalho), isTrue);
+      expect(VerificacaoDaAmostra.audioTodoEmZero(arquivo, cabecalho), isTrue);
+    });
+
+    // Teste de homologação de 18/10/2026: a conferência olhava só os
+    // primeiros 4 KB (~46 ms), e a contagem de 1 a 20 — que começa depois do
+    // toque em gravar — era descartada toda vez num microfone que zera o
+    // sinal enquanto não há voz.
+    test('silêncio só no começo, com a voz depois, não é microfone mudo', () {
+      final arquivo = wavDeTeste(
+        duracao: const Duration(seconds: 3),
+        audioZerado: true,
+      );
+      final cabecalho = lerCabecalhoWav(arquivo)!;
+      // Os 2 primeiros segundos em zero; a voz chega depois.
+      final doisSegundos = 44100 * 2 * 2;
+      arquivo[cabecalho.inicioDoAudio + doisSegundos + 10] = 7;
+
+      expect(VerificacaoDaAmostra.audioTodoEmZero(arquivo, cabecalho), isFalse);
+      expect(_verificar(arquivo), isNot(contains(ProblemaNaAmostra.semSinal)));
     });
   });
 }

@@ -68,8 +68,16 @@ abstract final class ConfiguracaoDeCaptura {
         },
       );
 
-  static RecordConfig para(AudioEncoder formato) => RecordConfig(
+  /// [microfone]: o identificador do escolhido (`Microfone.id`); nulo, o
+  /// padrão do sistema. No Windows, sem ele o `record_windows` abre o
+  /// microfone padrão de COMUNICAÇÃO, que pode não ser o que o profissional
+  /// vê como padrão — foi o caso do DroidCam no teste de homologação.
+  static RecordConfig para(
+    AudioEncoder formato, {
+    String? microfone,
+  }) => RecordConfig(
     encoder: formato,
+    device: microfone == null ? null : InputDevice(id: microfone, label: ''),
     sampleRate: taxaDeAmostragem,
     numChannels: canais,
     autoGain: false,

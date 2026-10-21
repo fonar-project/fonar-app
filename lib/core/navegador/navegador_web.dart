@@ -29,7 +29,8 @@ Future<Uint8List> lerEnderecoTemporario(String endereco) async {
 }
 
 /// Abre o microfone com o mesmo pedido da captura — os três processamentos
-/// desligados, a taxa e os canais do projeto —, lê o que o navegador diz ter
+/// desligados, a taxa e os canais do projeto, e o [microfone] escolhido —,
+/// lê o que o navegador diz ter
 /// aplicado à faixa (`getSettings()`) e fecha.
 ///
 /// É a evidência que a regra de captura pede: não o que foi pedido, mas o
@@ -38,6 +39,7 @@ Future<Uint8List> lerEnderecoTemporario(String endereco) async {
 Future<ProcessamentoRelatado> processamentoRelatadoPeloNavegador({
   required int taxaDeAmostragem,
   required int canais,
+  String? microfone,
 }) async {
   final pedido = web.MediaStreamConstraints(
     audio: {
@@ -47,6 +49,8 @@ Future<ProcessamentoRelatado> processamentoRelatadoPeloNavegador({
       'sampleRate': taxaDeAmostragem,
       'sampleSize': 16,
       'channelCount': canais,
+      // O mesmo pedido do `record_web` com o microfone escolhido.
+      'deviceId': ?(microfone == null ? null : {'exact': microfone}),
     }.jsify()!,
   );
   final fluxo = await web.window.navigator.mediaDevices

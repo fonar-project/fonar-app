@@ -61,7 +61,9 @@ class ArquivosDeAmostraNoNavegador implements ArquivosDeAmostra {
     );
   }
 
-  /// O WAV inteiro, para o envio e para ouvir. Nulo se não existe.
+  /// O WAV inteiro, para a conferência, o envio e para ouvir. Nulo se não
+  /// existe.
+  @override
   Future<Uint8List?> lerTudo(String caminho) async {
     final linha = await (_banco.select(
       _banco.audiosDoNavegador,

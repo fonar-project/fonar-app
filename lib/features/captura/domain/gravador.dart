@@ -12,7 +12,14 @@ abstract interface class Gravador {
 
   /// Começa a gravar em [caminho] e emite o nível, em dBFS, a cada
   /// [intervalo] — para o medidor e para a conferência de sinal.
-  Future<Stream<double>> iniciar(String caminho, Duration intervalo);
+  ///
+  /// [microfone] é o identificador do escolhido (`Microfone.id`); nulo, o
+  /// padrão do sistema.
+  Future<Stream<double>> iniciar(
+    String caminho,
+    Duration intervalo, {
+    String? microfone,
+  });
 
   /// Para e finaliza o arquivo.
   Future<void> parar();
@@ -42,6 +49,16 @@ abstract interface class ArquivosDeAmostra {
   /// Os primeiros bytes do arquivo — o bastante para o cabeçalho — e o
   /// tamanho total. `null` se o arquivo não existir.
   Future<({Uint8List inicio, int tamanho})?> ler(String caminho);
+
+  /// O arquivo inteiro, para a conferência de quem acabou de gravar. `null`
+  /// se o arquivo não existir.
+  ///
+  /// A conferência de silêncio olha TODO o áudio: até 19/10/2026 olhava só
+  /// os bytes do cabeçalho — cerca de 46 ms de som —, e quem começava a
+  /// falar depois de tocar em gravar (a contagem de 1 a 20, sempre) tinha a
+  /// gravação descartada como "o microfone não captou som" num aparelho
+  /// que zera o sinal enquanto não há voz (teste de homologação).
+  Future<Uint8List?> lerTudo(String caminho);
 
   Future<void> apagar(String caminho);
 }

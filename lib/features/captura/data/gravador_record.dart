@@ -159,7 +159,11 @@ class GravadorRecord implements Gravador {
   Future<bool> pedirPermissao() => _aberto.hasPermission();
 
   @override
-  Future<Stream<double>> iniciar(String caminho, Duration intervalo) async {
+  Future<Stream<double>> iniciar(
+    String caminho,
+    Duration intervalo, {
+    String? microfone,
+  }) async {
     final gravador = _aberto;
     _caminho = caminho;
     // Registrado ANTES do `start`, senão o aviso do aparelho chega quando
@@ -170,7 +174,10 @@ class GravadorRecord implements Gravador {
       (usada) => _ajuste = ConfiguracaoDeCaptura.ajusteDe(usada),
     );
     await gravador.start(
-      ConfiguracaoDeCaptura.para(ConfiguracaoDeCaptura.formatoDaGravacao),
+      ConfiguracaoDeCaptura.para(
+        ConfiguracaoDeCaptura.formatoDaGravacao,
+        microfone: microfone,
+      ),
       path: caminho,
     );
     // Encerrado durante o `start`: o `encerrar` já cancelou e liberou este
@@ -257,6 +264,13 @@ class ArquivosDeAmostraLocais implements ArquivosDeAmostra {
     } finally {
       await leitor.close();
     }
+  }
+
+  @override
+  Future<Uint8List?> lerTudo(String caminho) async {
+    final arquivo = File(caminho);
+    if (!await arquivo.exists()) return null;
+    return arquivo.readAsBytes();
   }
 
   @override
