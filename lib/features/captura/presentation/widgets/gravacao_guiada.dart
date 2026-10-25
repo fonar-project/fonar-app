@@ -14,6 +14,7 @@ import '../../../../design_system/widgets/app_botao.dart';
 import '../../../../design_system/widgets/app_escolha_unica.dart';
 import '../../../../design_system/widgets/app_fundo.dart';
 import '../../../../design_system/widgets/app_icone.dart';
+import '../../../../design_system/widgets/app_menu_suspenso.dart';
 import '../../../../design_system/widgets/app_situacao.dart';
 import '../../../../design_system/widgets/app_toque.dart';
 import '../../../../l10n/app_strings.dart';
@@ -385,16 +386,22 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
     void medir() => ref.read(afericaoControladorProvider.notifier).medir();
     void conferirComAVoz() =>
         ref.read(afericaoControladorProvider.notifier).conferirComAVoz();
-    // A escolha do microfone aparece depois da primeira aferição — que já
-    // pediu a permissão, sem a qual o navegador não dá os nomes. Trocar mede
-    // de novo; com o microfone ocupado ou uma gravação em andamento, espera.
-    Widget escolha({required bool livre}) => _EscolhaDoMicrofone(
-      aoEscolher: livre && !gravacao.ocupado
-          ? (m) => ref
-                .read(afericaoControladorProvider.notifier)
-                .trocarMicrofone(m)
-          : null,
-    );
+    // A escolha do microfone aparece desde antes da primeira aferição, para
+    // o profissional medir já com o certo. Antes de medir, só escolhe; depois,
+    // trocar mede de novo, porque a aferição foi de outro microfone. Medindo,
+    // com o microfone ocupado ou uma gravação em andamento, fica só à vista.
+    Widget escolha({required bool livre, bool medirDeNovo = true}) =>
+        _EscolhaDoMicrofone(
+          aoEscolher: livre && !gravacao.ocupado
+              ? (m) => medirDeNovo
+                    ? ref
+                          .read(afericaoControladorProvider.notifier)
+                          .trocarMicrofone(m)
+                    : ref
+                          .read(microfoneControladorProvider.notifier)
+                          .escolher(m)
+              : null,
+        );
     final cabeca = _Cabeca(
       rotulo: AppStrings.etapaDe(
         1,
@@ -424,6 +431,7 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
           cabeca,
           const SizedBox(height: AppSpacing.md),
           const _Apoio(AppStrings.afericaoExplicacao),
+          _Limitado(child: escolha(livre: true, medirDeNovo: false)),
         ],
         acoes: [
           _Acao.primaria(
@@ -452,6 +460,7 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
                     backgroundColor: context.cores.borda,
                   ),
                 ),
+                escolha(livre: false),
               ],
             ),
           ),
@@ -477,6 +486,7 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
                     backgroundColor: context.cores.borda,
                   ),
                 ),
+                escolha(livre: false),
               ],
             ),
           ),
@@ -1469,12 +1479,15 @@ class _Conclusao extends StatelessWidget {
   }
 }
 
-/// A escolha do microfone, com o padrão do sistema como primeira opção.
+/// A escolha do microfone, num menu suspenso, com o padrão do sistema como
+/// primeira opção.
 ///
-/// Só aparece quando há o que escolher (`EscolhaDoMicrofone.temEscolha`):
-/// com um microfone só, a pergunta é ruído. Se o escolhido antes não está
-/// ligado, diz — gravar de outro microfone sem avisar é o que a escolha
-/// veio evitar.
+/// Menu, e não as pílulas da `AppEscolhaUnica`: quantos microfones há, e com
+/// que nome, só o aparelho sabe. Aparece sempre que o sistema lista algum
+/// (`EscolhaDoMicrofone.temEscolha`) — mesmo com um só, o profissional vê de
+/// qual microfone a sala está sendo medida. Se o escolhido antes não está
+/// ligado, diz — gravar de outro microfone sem avisar é o que a escolha veio
+/// evitar.
 class _EscolhaDoMicrofone extends ConsumerWidget {
   const _EscolhaDoMicrofone({required this.aoEscolher});
 
@@ -1498,7 +1511,7 @@ class _EscolhaDoMicrofone extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
           ],
-          AppEscolhaUnica<Microfone?>(
+          AppMenuSuspenso<Microfone?>(
             rotulo: AppStrings.microfoneRotulo,
             opcoes: [
               const AppOpcao(valor: null, rotulo: AppStrings.microfonePadrao),
