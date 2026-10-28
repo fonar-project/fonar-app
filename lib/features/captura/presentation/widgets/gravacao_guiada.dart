@@ -403,9 +403,7 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
                 ? ref
                       .read(afericaoControladorProvider.notifier)
                       .trocarMicrofone(m)
-                : ref
-                      .read(microfoneControladorProvider.notifier)
-                      .escolher(m)
+                : ref.read(microfoneControladorProvider.notifier).escolher(m)
           : null,
     );
     final cabeca = _Cabeca(
