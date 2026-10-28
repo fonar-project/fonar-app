@@ -95,9 +95,16 @@ void main() {
       expect(e.temEscolha, isTrue);
     });
 
-    test('um microfone só e nada guardado: não há o que escolher', () {
+    test('um microfone só: a escolha aparece, para mostrar qual é', () {
       expect(
         resolverEscolha(disponiveis: const [_virtual], salvo: null).temEscolha,
+        isTrue,
+      );
+    });
+
+    test('o sistema não lista nenhum: não há o que mostrar', () {
+      expect(
+        resolverEscolha(disponiveis: const [], salvo: null).temEscolha,
         isFalse,
       );
     });

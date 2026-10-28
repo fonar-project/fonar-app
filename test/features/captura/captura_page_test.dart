@@ -88,6 +88,45 @@ class _DoisMicrofones implements ListaDeMicrofones {
   Future<List<Microfone>> listar() async => const [embutido, virtual];
 }
 
+/// Um microfone só, o embutido.
+class _UmMicrofone implements ListaDeMicrofones {
+  const _UmMicrofone();
+
+  static const embutido = _DoisMicrofones.embutido;
+
+  @override
+  Future<List<Microfone>> listar() async => const [embutido];
+}
+
+/// Microfones que mudam no meio do teste: [ligados] é o que o sistema lista
+/// na próxima leitura.
+class _MicrofonesQueMudam implements ListaDeMicrofones {
+  _MicrofonesQueMudam(this.ligados);
+
+  List<Microfone> ligados;
+
+  @override
+  Future<List<Microfone>> listar() async => ligados;
+}
+
+/// O microfone que o menu mostra escolhido (nulo é o padrão do sistema).
+Microfone? _escolhido(WidgetTester tester) => tester
+    .state<FormFieldState<Microfone?>>(
+      find.byType(DropdownButtonFormField<Microfone?>),
+    )
+    .value;
+
+/// Abre o menu do microfone e toca em [nome].
+Future<void> _escolherNoMenu(WidgetTester tester, String nome) async {
+  final menu = find.byType(DropdownButtonFormField<Microfone?>);
+  await tester.ensureVisible(menu);
+  await tester.tap(menu);
+  await tester.pumpAndSettle();
+  // O item do menu aberto é o último: o campo fechado também tem o nome.
+  await tester.tap(find.text(nome).last);
+  await tester.pump();
+}
+
 Future<_FonteFalsa> _abrir(
   WidgetTester tester, {
   _FonteFalsa? fonte,
@@ -195,12 +234,18 @@ void main() {
     testWidgets('$nome não estoura com o texto do sistema em 200%', (
       tester,
     ) async {
+      // Com o menu do microfone à vista: ele aparece antes, durante e depois
+      // da aferição.
       await _abrir(
         tester,
         tamanho: tamanho,
         escala: 2,
         fonte: _FonteFalsa(niveis: [double.negativeInfinity]),
+        microfones: const _DoisMicrofones(),
       );
+      expect(find.text(AppStrings.microfoneRotulo), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
       await _medir(tester);
 
       expect(tester.takeException(), isNull);
@@ -218,7 +263,12 @@ void main() {
     // curto. Este passa um nível de verdade, para o medidor aparecer com o
     // rótulo longo DENTRO da página, com a margem dela.
     testWidgets('$nome medindo, em 200%, com nível de verdade', (tester) async {
-      await _abrir(tester, tamanho: tamanho, escala: 2);
+      await _abrir(
+        tester,
+        tamanho: tamanho,
+        escala: 2,
+        microfones: const _DoisMicrofones(),
+      );
 
       final botao = find.text(AppStrings.afericaoMedir);
       await tester.ensureVisible(botao);
@@ -228,6 +278,8 @@ void main() {
 
       expect(find.byType(MedidorDeNivel), findsOneWidget);
       expect(find.text(AppStrings.medidorAmbiente), findsOneWidget);
+      // Medindo, o menu fica só à vista, e o apoio diz com qual se mede.
+      expect(find.text(AppStrings.microfoneApoioAntesDeMedir), findsOneWidget);
       expect(tester.takeException(), isNull);
 
       await tester.pump(AfericaoDeRuido.duracao);
@@ -338,52 +390,93 @@ void main() {
     expect(fonte.aberturas, 2);
   });
 
-  testWidgets('a escolha do microfone aparece depois da aferição e mede de '
-      'novo com o escolhido', (tester) async {
+  testWidgets('o menu do microfone aparece antes da aferição, e trocar '
+      'depois de medir mede de novo', (tester) async {
     final fonte = await _abrir(
       tester,
       fonte: _FonteFalsa(niveis: [double.negativeInfinity]),
       microfones: const _DoisMicrofones(),
     );
 
-    // Antes da primeira aferição, nada — no navegador, listar pediria a
-    // permissão antes de o profissional tocar em medir.
-    expect(find.text(AppStrings.microfoneRotulo), findsNothing);
+    // Já antes de medir: o profissional mede com o microfone certo. E o
+    // apoio não promete medir de novo, porque ali escolher só escolhe.
+    expect(find.text(AppStrings.microfoneRotulo), findsOneWidget);
+    expect(_escolhido(tester), isNull);
+    expect(find.text(AppStrings.microfoneApoioAntesDeMedir), findsOneWidget);
+    expect(find.text(AppStrings.microfoneApoio), findsNothing);
+
+    // Escolher antes de medir só escolhe.
+    await _escolherNoMenu(tester, _DoisMicrofones.virtual.nome);
+    expect(fonte.microfonesPedidos, isEmpty);
+    expect(_escolhido(tester), _DoisMicrofones.virtual);
 
     await _medir(tester);
-
+    expect(fonte.microfonesPedidos, [_DoisMicrofones.virtual.id]);
     expect(find.text(AppStrings.microfoneRotulo), findsOneWidget);
-    expect(find.text(AppStrings.microfonePadrao), findsOneWidget);
-    expect(find.text(_DoisMicrofones.virtual.nome), findsOneWidget);
-    expect(fonte.microfonesPedidos, [null]);
+    // Depois de medir, sim: trocar mede de novo.
+    expect(find.text(AppStrings.microfoneApoio), findsOneWidget);
+    expect(find.text(AppStrings.microfoneApoioAntesDeMedir), findsNothing);
 
-    final embutido = find.text(_DoisMicrofones.embutido.nome);
-    await tester.ensureVisible(embutido);
-    await tester.tap(embutido);
-    await tester.pump();
+    // Depois de medir, trocar mede de novo, já com o escolhido.
+    await _escolherNoMenu(tester, _DoisMicrofones.embutido.nome);
     await tester.pump(
       AfericaoDeRuido.duracao + const Duration(milliseconds: 200),
     );
     await tester.pumpAndSettle();
 
-    // Trocar mede de novo, já com o escolhido.
-    expect(fonte.microfonesPedidos, [null, _DoisMicrofones.embutido.id]);
+    expect(fonte.microfonesPedidos, [
+      _DoisMicrofones.virtual.id,
+      _DoisMicrofones.embutido.id,
+    ]);
+    expect(_escolhido(tester), _DoisMicrofones.embutido);
+  });
+
+  testWidgets('escolher no menu não recria o campo: o foco do teclado fica '
+      'nele', (tester) async {
+    await _abrir(tester, microfones: const _DoisMicrofones());
+    final menu = find.byType(DropdownButtonFormField<Microfone?>);
+    final antes = tester.state(menu);
+
+    await _escolherNoMenu(tester, _DoisMicrofones.virtual.nome);
+    // A escolha guardada relê a lista: espera a tela assentar com ela.
+    await tester.pumpAndSettle();
+
+    expect(_escolhido(tester), _DoisMicrofones.virtual);
+    expect(tester.state(menu), same(antes));
+  });
+
+  testWidgets('o microfone desconectado volta o menu ao padrão, com aviso', (
+    tester,
+  ) async {
+    final microfones = _MicrofonesQueMudam(const [
+      _DoisMicrofones.embutido,
+      _DoisMicrofones.virtual,
+    ]);
+    await _abrir(tester, microfones: microfones);
+    await _escolherNoMenu(tester, _DoisMicrofones.virtual.nome);
+    await tester.pumpAndSettle();
+    expect(_escolhido(tester), _DoisMicrofones.virtual);
+
+    // Desligado depois de escolhido: a aferição concluída relê a lista, e o
+    // menu muda por fora — sem ninguém tocar nele.
+    microfones.ligados = const [_DoisMicrofones.embutido];
+    await _medir(tester);
+
     expect(
-      tester
-          .widget<Semantics>(
-            find
-                .ancestor(
-                  of: find.text(_DoisMicrofones.embutido.nome),
-                  matching: find.byWidgetPredicate(
-                    (w) => w is Semantics && w.properties.checked != null,
-                  ),
-                )
-                .first,
-          )
-          .properties
-          .checked,
-      isTrue,
+      find.text(AppStrings.microfoneAusente(_DoisMicrofones.virtual.nome)),
+      findsOneWidget,
     );
+    expect(_escolhido(tester), isNull);
+  });
+
+  testWidgets('com um microfone só, o menu aparece com ele', (tester) async {
+    await _abrir(tester, microfones: const _UmMicrofone());
+
+    expect(find.text(AppStrings.microfoneRotulo), findsOneWidget);
+    await tester.tap(find.byType(DropdownButtonFormField<Microfone?>));
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.microfonePadrao), findsWidgets);
+    expect(find.text(_UmMicrofone.embutido.nome), findsWidgets);
   });
 
   testWidgets('sala barulhenta avisa com o nível e o limite', (tester) async {

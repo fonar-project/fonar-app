@@ -125,8 +125,11 @@ Teste de homologação de 18/10/2026 — três coisas que não se desfazem:
 - O profissional escolhe o microfone (`features/captura/domain/microfone.dart`),
   em todas as plataformas: o padrão do sistema pode ser o errado (no Windows,
   o `record` abre o padrão de comunicação; no teste, o virtual do DroidCam).
-  A escolha é do aparelho, aparece depois da primeira aferição e trocar mede
-  de novo. Bluetooth fica fora da lista, como o `manageBluetooth: false`.
+  A escolha (US61) é do aparelho, num menu suspenso (`AppMenuSuspenso`) que
+  aparece na etapa do ruído desde antes da primeira aferição — no navegador,
+  é ali que a permissão é pedida, porque listar a pede. Depois de medir,
+  trocar mede de novo. Bluetooth fica fora da lista, como o
+  `manageBluetooth: false`.
 
 ## Faixas de referência — pendência clínica aberta
 Os valores de corte que aparecem no protótipo (AVQI < 2,95, CPPS > 14 dB,
@@ -341,7 +344,7 @@ Todo dado exibido em desenvolvimento é placeholder e deve ser identificável
 como tal.
 
 ## Estado atual
-O fluxo da avaliação existe de ponta a ponta no aparelho (US00 a US60 — lista
+O fluxo da avaliação existe de ponta a ponta no aparelho (US00 a US61 — lista
 e resumo no README): cadastro, consentimento e retirada, aferição, gravação,
 fila, resultado, CAPE-V, evolução, laudo em PDF, com os dados num banco local
 (Drift, `lib/core/banco/`).

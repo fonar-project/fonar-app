@@ -9,8 +9,8 @@ import '../domain/microfone.dart';
 /// Carregado na abertura do app (quem acorda é o `FonarApp`), e não na hora
 /// de gravar: a captura lê o valor que já está na memória
 /// ([microfoneParaCapturar]) e nunca espera o banco para abrir o microfone.
-/// Só o banco — listar os microfones fica para quando a escolha aparece,
-/// porque no navegador listar pede a permissão do microfone.
+/// Só o banco — listar os microfones fica para quando a escolha aparece, na
+/// etapa do ruído, porque no navegador listar pede a permissão do microfone.
 class MicrofoneGuardadoControlador extends AsyncNotifier<Microfone?> {
   @override
   Future<Microfone?> build() async {
@@ -50,8 +50,10 @@ final microfoneGuardadoProvider =
 /// ([atualizar]) — cada aferição concluída pede, para um microfone
 /// recém-ligado aparecer.
 ///
-/// No navegador, listar pede a permissão do microfone. Por isso a tela só
-/// mostra a escolha depois da primeira aferição, que já a pediu.
+/// A tela mostra a escolha desde antes da primeira aferição, e é aí que a
+/// lista se lê. No navegador, listar pede a permissão do microfone: o pedido
+/// aparece ao abrir a etapa do ruído, e não só ao tocar em medir — o mesmo
+/// que a aferição pediria logo depois.
 class MicrofoneControlador extends AsyncNotifier<EscolhaDoMicrofone> {
   @override
   Future<EscolhaDoMicrofone> build() async {

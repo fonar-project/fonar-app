@@ -55,8 +55,11 @@ class EscolhaDoMicrofone {
   /// que a escolha veio evitar.
   final Microfone? ausente;
 
-  /// Há o que escolher? Com um microfone só, o padrão é ele.
-  bool get temEscolha => disponiveis.length > 1 || ausente != null;
+  /// A escolha aparece? Sempre que o sistema listar algum microfone — mesmo
+  /// um só, para o profissional ver de qual está gravando — ou quando o
+  /// escolhido antes sumiu. Lista vazia é o sistema que não lista: vale o
+  /// padrão dele, e não há o que mostrar.
+  bool get temEscolha => disponiveis.isNotEmpty || ausente != null;
 }
 
 /// O que vale entre o [salvo] e os [disponiveis] agora.

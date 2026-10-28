@@ -43,7 +43,12 @@ Na ordem em que o profissional passa por ele:
    consentimento depois (US15), e aí a gravação volta a bloquear e os envios
    dele param.
 4. **Afere o ruído da sala** (US04) com o medidor de nível ao vivo, no
-   **microfone escolhido** quando o aparelho tem mais de um. Silêncio absoluto
+   **microfone escolhido** (US61): um menu na própria etapa, à vista desde
+   antes de medir, com o padrão do sistema e os microfones ligados — mesmo
+   que seja um só, para se ver de qual a sala está sendo medida. Escolher
+   antes de medir só escolhe; depois, trocar mede de novo, porque a aferição
+   foi de outro microfone. A escolha é do aparelho, não da conta, e o
+   microfone desconectado volta ao padrão com aviso. Silêncio absoluto
    nunca é tomado por sala silenciosa: a gravação só libera depois de a voz
    provar, numa conferência curta, que o microfone capta.
 5. **Grava as tarefas** (US05) — vogal sustentada e fala encadeada —, uma
@@ -588,7 +593,9 @@ mesmas regras, mesma API.
   confere de novo pelo aviso do `record`. Se algum ficou ligado — ou se o
   cancelamento de eco nem é relatado —, a gravação não abre, e a tela diz o
   que ficou ligado (`naoConfirmadosDesligados`, em
-  `captura/domain/processamento_automatico.dart`). O Safari relata só o
+  `captura/domain/processamento_automatico.dart`). Listar os microfones
+  (US61) também pede a permissão, e por isso o pedido aparece ao abrir a
+  etapa do ruído, e não só ao tocar em medir. O Safari relata só o
   cancelamento de eco, porque nele os três são um processamento só; essa
   premissa está nas conferências de aparelho do `PENDENCIAS.md`.
 - **Os dados.** O banco local é o mesmo SQLite, compilado para WebAssembly
@@ -870,7 +877,7 @@ de ruído ambiente tem que tratar silêncio absoluto como falha, não como sala
 silenciosa, e bloquear a gravação avisando o usuário — até a voz provar que o
 microfone capta. E o microfone padrão pode ser o errado (no teste de
 homologação, o virtual do DroidCam, que entrega silêncio): por isso o
-profissional escolhe o microfone na etapa do ruído.
+profissional escolhe o microfone num menu na etapa do ruído (US61).
 
 A declaração formal (`<DeviceCapability Name="microphone" />`) só existiria em
 pacote MSIX, e o FONAR é distribuído em zip (US41, ver
