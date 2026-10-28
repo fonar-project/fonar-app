@@ -408,6 +408,8 @@ abstract final class AppStrings {
   static const microfonePadrao = 'Padrão do sistema';
   static const microfoneApoio =
       'Trocar o microfone mede o ruído da sala de novo.';
+  static const microfoneApoioAntesDeMedir =
+      'O ruído da sala é medido com este microfone.';
   static String microfoneAusente(String nome) =>
       'O microfone escolhido ($nome) não está conectado. O FONAR está usando '
       'o padrão do sistema.';

@@ -390,18 +390,24 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
     // o profissional medir já com o certo. Antes de medir, só escolhe; depois,
     // trocar mede de novo, porque a aferição foi de outro microfone. Medindo,
     // com o microfone ocupado ou uma gravação em andamento, fica só à vista.
-    Widget escolha({required bool livre, bool medirDeNovo = true}) =>
-        _EscolhaDoMicrofone(
-          aoEscolher: livre && !gravacao.ocupado
-              ? (m) => medirDeNovo
-                    ? ref
-                          .read(afericaoControladorProvider.notifier)
-                          .trocarMicrofone(m)
-                    : ref
-                          .read(microfoneControladorProvider.notifier)
-                          .escolher(m)
-              : null,
-        );
+    // O apoio diz o que vale ali: antes de medir e medindo, que a sala é
+    // medida com aquele microfone; depois, que trocar mede de novo.
+    Widget escolha({
+      required bool livre,
+      bool medirDeNovo = true,
+      String? apoio = AppStrings.microfoneApoio,
+    }) => _EscolhaDoMicrofone(
+      apoio: apoio,
+      aoEscolher: livre && !gravacao.ocupado
+          ? (m) => medirDeNovo
+                ? ref
+                      .read(afericaoControladorProvider.notifier)
+                      .trocarMicrofone(m)
+                : ref
+                      .read(microfoneControladorProvider.notifier)
+                      .escolher(m)
+          : null,
+    );
     final cabeca = _Cabeca(
       rotulo: AppStrings.etapaDe(
         1,
@@ -431,7 +437,13 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
           cabeca,
           const SizedBox(height: AppSpacing.md),
           const _Apoio(AppStrings.afericaoExplicacao),
-          _Limitado(child: escolha(livre: true, medirDeNovo: false)),
+          _Limitado(
+            child: escolha(
+              livre: true,
+              medirDeNovo: false,
+              apoio: AppStrings.microfoneApoioAntesDeMedir,
+            ),
+          ),
         ],
         acoes: [
           _Acao.primaria(
@@ -460,7 +472,10 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
                     backgroundColor: context.cores.borda,
                   ),
                 ),
-                escolha(livre: false),
+                escolha(
+                  livre: false,
+                  apoio: AppStrings.microfoneApoioAntesDeMedir,
+                ),
               ],
             ),
           ),
@@ -486,7 +501,7 @@ class _GravacaoGuiadaState extends ConsumerState<GravacaoGuiada> {
                     backgroundColor: context.cores.borda,
                   ),
                 ),
-                escolha(livre: false),
+                escolha(livre: false, apoio: null),
               ],
             ),
           ),
@@ -1489,10 +1504,15 @@ class _Conclusao extends StatelessWidget {
 /// ligado, diz — gravar de outro microfone sem avisar é o que a escolha veio
 /// evitar.
 class _EscolhaDoMicrofone extends ConsumerWidget {
-  const _EscolhaDoMicrofone({required this.aoEscolher});
+  const _EscolhaDoMicrofone({required this.aoEscolher, required this.apoio});
 
   /// Nulo deixa só para leitura: medindo, liberando o microfone, gravando.
   final ValueChanged<Microfone?>? aoEscolher;
+
+  /// O que vale ali: antes de medir, escolher só escolhe; depois, trocar mede
+  /// de novo. Dizer "mede de novo" onde só se escolhe faria o profissional
+  /// esperar uma medição que não vem.
+  final String? apoio;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1520,7 +1540,7 @@ class _EscolhaDoMicrofone extends ConsumerWidget {
             ],
             selecionado: escolha.escolhido,
             aoEscolher: aoEscolher,
-            apoio: AppStrings.microfoneApoio,
+            apoio: apoio,
           ),
         ],
       ),

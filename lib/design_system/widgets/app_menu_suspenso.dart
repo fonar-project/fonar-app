@@ -70,10 +70,11 @@ class AppMenuSuspenso<T> extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xxs + 2),
               DropdownButtonFormField<T>(
-                // O `initialValue` só é lido na criação: a chave recria o
-                // campo quando a escolha muda por fora (ex.: o microfone
-                // desconectado volta ao padrão).
-                key: ValueKey<Object?>(selecionado),
+                // Sem chave: quando a escolha muda por fora (o microfone
+                // desconectado volta ao padrão), o próprio campo troca o
+                // valor — o `didUpdateWidget` dele lê o `initialValue` novo.
+                // Uma chave recriaria o campo a cada escolha, e quem escolhe
+                // pelo teclado perderia o foco.
                 initialValue: selecionado,
                 isExpanded: true,
                 itemHeight: null,
