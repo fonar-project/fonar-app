@@ -28,6 +28,7 @@ class PerfilProfissional {
     this.nome,
     this.crefonoRegiao,
     this.crefonoNumero,
+    this.comprovanteEnviadoEm,
   });
 
   final String email;
@@ -41,6 +42,10 @@ class PerfilProfissional {
   final String? nome;
   final int? crefonoRegiao;
   final String? crefonoNumero;
+
+  /// Quando o comprovante de inscrição que aguarda a conferência da equipe
+  /// foi enviado (US63, ADR-021 da API); `null` se não há nenhum.
+  final DateTime? comprovanteEnviadoEm;
 
   /// O `cadastro_completo` da API. Falso no cadastro antigo, do convite, sem
   /// nome, inscrição ou aceite dos termos: o app pede o que falta, e o mesmo
@@ -233,4 +238,12 @@ Map<CampoDoRegistro, ProblemaNoRegistro> validarConta({
 /// Não é `AppException`: não é falha para mostrar, é um passo que falta.
 class EmailAindaNaoVerificado implements Exception {
   const EmailAindaNaoVerificado();
+}
+
+/// A API recusou o comprovante de inscrição: formato, tamanho ou situação
+/// do cadastro. A mensagem diz o que fazer.
+class ComprovanteRecusado implements Exception {
+  const ComprovanteRecusado(this.mensagem);
+
+  final String mensagem;
 }
