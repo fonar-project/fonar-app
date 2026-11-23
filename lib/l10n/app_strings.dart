@@ -1473,34 +1473,145 @@ abstract final class AppStrings {
   static const cadastroTermosRotulo =
       'Li e aceito os termos de uso e a política de privacidade do FONAR.';
 
-  /// Os termos de uso e a política de privacidade (US43), em itens, como o
-  /// termo do paciente. Ao mudar qualquer palavra, mude também
-  /// `versaoDosTermos` (`cadastro/domain/cadastro.dart`): a API grava a
-  /// versão aceita, com a data. Revisão jurídica recomendada (PENDENCIAS.md).
+  /// Os termos de uso e a política de privacidade (US43, reescritos em
+  /// linguagem formal na US64), em cláusulas numeradas. Ao mudar qualquer
+  /// palavra, mude também `versaoDosTermos` (`cadastro/domain/cadastro.dart`):
+  /// a API grava a versão aceita, com a data. Revisão jurídica recomendada
+  /// (PENDENCIAS.md).
   static const cadastroTermosTitulo = 'Termos de uso e política de privacidade';
-  static const cadastroTermosItens = [
-    'O FONAR é ferramenta de apoio à decisão clínica e não emite '
-        'diagnóstico. As medidas acústicas vêm do motor do Praat, software '
-        'independente da Universidade de Amsterdam; a interpretação é sua. '
-        'Uma medida só aparece classificada quando há faixa de referência '
-        'validada para ela.',
-    'Os dados dos seus pacientes são de sua responsabilidade (você é o '
-        'controlador, na LGPD): registrar o consentimento antes de gravar, '
-        'atender os pedidos deles e guardar o registro do atendimento como o '
-        'seu conselho exige. O FONAR trata esses dados em seu nome, só para '
-        'o serviço.',
-    'Os seus dados — nome, e-mail e inscrição no Crefono — servem para '
-        'identificar você, para a equipe conferir a inscrição e para assinar '
-        'os laudos.',
-    'Onde ficam: no Google Cloud (Firebase). Cadastros, medidas e laudos no '
-        'Brasil (São Paulo); os arquivos de gravação nos Estados Unidos. '
-        'Tudo trafega cifrado, e cada conta só alcança os próprios '
-        'pacientes.',
-    'A sua senha protege dado de saúde, inclusive sem conexão: guarde-a em '
-        'sigilo e mantenha o aparelho com bloqueio de tela.',
-    'O FONAR é um projeto acadêmico (TCC de Engenharia de Software, '
-        'PUC-Campinas), oferecido sem garantia de disponibilidade contínua. '
-        'Se estes termos mudarem, o aplicativo pede um novo aceite.',
+  static const cadastroTermosIntroducao =
+      'Leia com atenção os termos abaixo antes de concluir o cadastro. O '
+      'aceite é registrado com a data e a versão destes termos e é condição '
+      'para a utilização do FONAR.';
+  static const cadastroTermosClausulas = <({String titulo, String texto})>[
+    (
+      titulo: '1. Objeto',
+      texto:
+          'O FONAR é um sistema de apoio à avaliação vocal clínica destinado '
+          'exclusivamente a fonoaudiólogos regularmente inscritos em Conselho '
+          'Regional de Fonoaudiologia. O sistema permite registrar pacientes '
+          'e o consentimento deles, gravar amostras de voz, obter medidas '
+          'acústicas, registrar a avaliação perceptivo-auditiva (CAPE-V), '
+          'acompanhar a evolução do paciente e emitir laudo de avaliação '
+          'vocal.',
+    ),
+    (
+      titulo: '2. Natureza da ferramenta',
+      texto:
+          'O FONAR é ferramenta de apoio à decisão clínica e não emite '
+          'diagnóstico. As medidas acústicas são calculadas pelo motor do '
+          'Praat, software desenvolvido de forma independente na Universidade '
+          'de Amsterdam, sem vínculo com o FONAR. A interpretação das medidas, '
+          'a conclusão clínica e o conteúdo do laudo são de responsabilidade '
+          'exclusiva do profissional que os assina. Uma medida somente é '
+          'classificada em relação a uma faixa de referência quando existe '
+          'faixa validada para o perfil do paciente; na ausência dela, o valor '
+          'é apresentado sem classificação.',
+    ),
+    (
+      titulo: '3. Cadastro e verificação profissional',
+      texto:
+          'O profissional declara que as informações prestadas no cadastro — '
+          'nome completo, região do Conselho Regional de Fonoaudiologia e '
+          'número de inscrição — são verdadeiras e pertencem a ele. Para '
+          'concluir o credenciamento, o profissional deverá enviar uma imagem '
+          'ou um arquivo PDF da sua carteira de identidade profissional. A '
+          'equipe do FONAR conferirá esse documento e a consulta pública de '
+          'inscritos do respectivo conselho. Enquanto o credenciamento não '
+          'for concluído, a emissão de laudos permanece bloqueada. O '
+          'credenciamento poderá ser revogado a qualquer tempo caso se '
+          'constate informação falsa, inscrição cancelada ou suspensa, ou uso '
+          'em desacordo com estes termos.',
+    ),
+    (
+      titulo: '4. Uso proibido',
+      texto:
+          'É vedado: utilizar o FONAR em nome de outra pessoa ou com dados de '
+          'inscrição de terceiros; emitir laudo sobre avaliação que não tenha '
+          'sido realizada pelo próprio profissional; utilizar laudos ou '
+          'medidas para fins diversos da atenção fonoaudiológica, inclusive '
+          'para produzir documento falso; e compartilhar a senha de acesso. '
+          'A falsidade de informações e o uso de documento falso podem '
+          'configurar crime, nos termos da legislação penal, sem prejuízo das '
+          'sanções éticas aplicáveis pelo conselho de classe.',
+    ),
+    (
+      titulo:
+          '5. Responsabilidades do profissional sobre os dados dos pacientes',
+      texto:
+          'Em relação aos dados dos pacientes, o profissional é o controlador, '
+          'nos termos da Lei Geral de Proteção de Dados Pessoais (Lei nº '
+          '13.709/2018), e o FONAR atua como operador, tratando esses dados '
+          'exclusivamente em nome do profissional e para a prestação do '
+          'serviço. Compete ao profissional: registrar o consentimento do '
+          'paciente, ou de seu responsável legal, antes de qualquer gravação; '
+          'atender às solicitações dos pacientes quanto aos seus dados; e '
+          'manter o registro dos atendimentos conforme as normas do conselho '
+          'profissional. A voz vinculada a um paciente identificado é dado '
+          'pessoal sensível referente à saúde.',
+    ),
+    (
+      titulo: '6. Dados do profissional',
+      texto:
+          'O FONAR trata o nome, o endereço de e-mail, a região e o número de '
+          'inscrição do profissional, a versão e a data de aceite destes '
+          'termos e, temporariamente, a imagem da carteira de identidade '
+          'profissional. Esses dados são utilizados para identificar o '
+          'profissional, conferir a sua inscrição e constar como assinatura '
+          'nos laudos emitidos. A imagem da carteira é acessível somente à '
+          'equipe responsável pela conferência e é excluída definitivamente '
+          'após a conclusão do credenciamento, permanecendo registrada apenas '
+          'a data da conferência. Não são coletados CPF, endereço, telefone '
+          'ou outros dados além dos aqui descritos.',
+    ),
+    (
+      titulo: '7. Armazenamento, transferência e segurança',
+      texto:
+          'Os dados são armazenados na infraestrutura do Google Cloud '
+          '(Firebase). Os cadastros, as medidas e os laudos ficam em '
+          'servidores localizados no Brasil (São Paulo); os arquivos de '
+          'gravação de voz ficam em servidores localizados nos Estados '
+          'Unidos, o que configura transferência internacional de dados. '
+          'Todas as comunicações são cifradas, e cada conta tem acesso '
+          'exclusivamente aos dados dos próprios pacientes.',
+    ),
+    (
+      titulo: '8. Senha e segurança do acesso',
+      texto:
+          'A senha dá acesso a dados de saúde, inclusive quando o aparelho '
+          'está sem conexão. O profissional deve mantê-la em sigilo, não a '
+          'compartilhar e manter o aparelho protegido por bloqueio de tela. A '
+          'opção "Manter conectado neste aparelho" deve ser utilizada somente '
+          'em aparelho de uso pessoal.',
+    ),
+    (
+      titulo: '9. Direitos do titular',
+      texto:
+          'O profissional pode, a qualquer tempo, solicitar a confirmação da '
+          'existência de tratamento, o acesso, a correção, a anonimização ou a '
+          'eliminação dos seus dados, além das demais medidas previstas no '
+          'art. 18 da Lei Geral de Proteção de Dados Pessoais. Nome e '
+          'inscrição podem ser corrigidos diretamente na tela Conta; a '
+          'alteração da região ou do número de inscrição exige nova '
+          'conferência.',
+    ),
+    (
+      titulo: '10. Natureza acadêmica e disponibilidade',
+      texto:
+          'O FONAR é um projeto acadêmico, desenvolvido como Trabalho de '
+          'Conclusão de Curso de Engenharia de Software da Pontifícia '
+          'Universidade Católica de Campinas (PUC-Campinas). O serviço é '
+          'oferecido sem garantia de disponibilidade contínua e pode ser '
+          'interrompido ou encerrado. Recomenda-se que o profissional mantenha '
+          'cópia dos laudos emitidos.',
+    ),
+    (
+      titulo: '11. Alterações destes termos',
+      texto:
+          'Estes termos podem ser alterados. As alterações serão comunicadas '
+          'aos profissionais cadastrados, e a versão aceita por cada '
+          'profissional permanece registrada com a data do aceite.',
+    ),
   ];
   static const registroInformeNome = 'Informe o nome completo.';
   static const cadastroNomeLongo = 'O nome passa de 200 caracteres.';
