@@ -44,7 +44,7 @@ class ProfissionalAtual extends Notifier<Profissional> {
         nome: perfil.nome,
         registro: perfil.registro,
         email: state.email,
-        credenciamento: state.credenciamento,
+        credenciamento: state.credenciamento ?? perfil.credenciamento,
       );
     } catch (erro) {
       // Sem o perfil, a Conta pede de novo; o app não deixa de abrir.
@@ -85,3 +85,16 @@ class ProfissionalAtual extends Notifier<Profissional> {
 
 final profissionalAtualProvider =
     NotifierProvider<ProfissionalAtual, Profissional>(ProfissionalAtual.new);
+
+/// Se a inscrição de quem está na sessão já foi conferida pela equipe — o
+/// que libera a emissão de laudo (US62, ADR-020 da API).
+///
+/// Sem a API (modo de exemplo), não há equipe nem conferência: libera, e o
+/// laudo de exemplo já sai identificado como tal. Com a API, só o
+/// `credenciado` libera; `null` (nunca visto, nem neste aparelho) não.
+final inscricaoConferidaProvider = Provider<bool>(
+  (ref) =>
+      ref.watch(cadastroApiProvider) == null ||
+      ref.watch(profissionalAtualProvider).credenciamento ==
+          Credenciamento.credenciado,
+);

@@ -31,6 +31,7 @@ import 'package:fonar_app/features/laudo/presentation/pages/laudo_page.dart';
 import 'package:fonar_app/features/pacientes/data/repositorio_pacientes_local.dart';
 import 'package:fonar_app/features/pacientes/domain/paciente.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
+import 'package:fonar_app/features/auth/data/profissional_atual.dart';
 import 'package:fonar_app/features/auth/data/sessao.dart';
 import 'package:fonar_app/features/conta/presentation/pages/conta_page.dart';
 import 'package:fonar_app/features/conta/data/repositorio_da_conta_local.dart';
@@ -157,6 +158,7 @@ Future<_Montagem> _abrir(
   String donoDaAnalise = 'p1',
   bool semCadastro = false,
   bool semPerfil = false,
+  bool inscricaoConferida = true,
   _Saida? saida,
   _Gerador? gerador,
   Size tamanho = const Size(390, 2000),
@@ -185,6 +187,7 @@ Future<_Montagem> _abrir(
       repositorioDaContaProvider.overrideWithValue(
         PerfilEmMemoria(vazio: semPerfil),
       ),
+      inscricaoConferidaProvider.overrideWithValue(inscricaoConferida),
       conexaoOnlineProvider.overrideWithValue(true),
       relogioProvider.overrideWithValue(() => DateTime(2026, 7, 2, 11, 5)),
       repositorioAnalisesProvider.overrideWithValue(
@@ -453,6 +456,18 @@ void main() {
     expect(_habilitado(tester, AppStrings.laudoGerar), isFalse);
 
     await _tocar(tester, find.text(AppStrings.laudoIrParaConta));
+    expect(find.byType(ContaPage), findsOneWidget);
+  });
+
+  testWidgets('inscrição não conferida: pendente, sem gerar, com o caminho '
+      'para a situação do cadastro (US62)', (tester) async {
+    await _abrir(tester, inscricaoConferida: false, capeV: _capeV);
+    await _escrever(tester, 'Conclusão.');
+
+    expect(find.text(AppStrings.laudoItemCredenciamentoFalta), findsOneWidget);
+    expect(_habilitado(tester, AppStrings.laudoGerar), isFalse);
+
+    await _tocar(tester, find.text(AppStrings.laudoVerSituacaoDoCadastro));
     expect(find.byType(ContaPage), findsOneWidget);
   });
 

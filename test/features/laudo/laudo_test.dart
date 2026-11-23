@@ -89,6 +89,7 @@ void main() {
         capeV: _capeV,
         conclusao: 'Texto do profissional.',
         temAssinatura: true,
+        inscricaoConferida: true,
       );
       expect(c.itens.values.toSet(), {SituacaoDoItem.ok});
       expect(c.podeGerar, isTrue);
@@ -101,6 +102,7 @@ void main() {
         capeV: _capeV,
         conclusao: '   \n ',
         temAssinatura: true,
+        inscricaoConferida: true,
       );
       expect(c.itens[ItemDaConferencia.conclusao], SituacaoDoItem.pendente);
       expect(c.podeGerar, isFalse);
@@ -114,6 +116,7 @@ void main() {
           capeV: _capeV,
           conclusao: 'x',
           temAssinatura: true,
+          inscricaoConferida: true,
         ).podeGerar,
         isFalse,
       );
@@ -124,6 +127,7 @@ void main() {
           capeV: _capeV,
           conclusao: 'x',
           temAssinatura: true,
+          inscricaoConferida: true,
         ).podeGerar,
         isFalse,
       );
@@ -136,8 +140,25 @@ void main() {
         capeV: _capeV,
         conclusao: 'x',
         temAssinatura: false,
+        inscricaoConferida: true,
       );
       expect(c.itens[ItemDaConferencia.assinatura], SituacaoDoItem.pendente);
+      expect(c.podeGerar, isFalse);
+    });
+
+    test('inscrição ainda não conferida pela equipe: não gera (US62)', () {
+      final c = conferirLaudo(
+        temConsentimento: true,
+        resultado: _resultado(),
+        capeV: _capeV,
+        conclusao: 'x',
+        temAssinatura: true,
+        inscricaoConferida: false,
+      );
+      expect(
+        c.itens[ItemDaConferencia.credenciamento],
+        SituacaoDoItem.pendente,
+      );
       expect(c.podeGerar, isFalse);
     });
 
@@ -148,6 +169,7 @@ void main() {
         capeV: null,
         conclusao: 'x',
         temAssinatura: true,
+        inscricaoConferida: true,
       );
       expect(c.itens[ItemDaConferencia.capeV], SituacaoDoItem.aviso);
       expect(

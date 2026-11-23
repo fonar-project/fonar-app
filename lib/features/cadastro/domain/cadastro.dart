@@ -3,8 +3,9 @@
 ///
 /// Quem tem e-mail verificado se cadastra pelo app e já usa o sistema como
 /// [Credenciamento.pendente]. A equipe confere a inscrição na consulta
-/// pública do Crefono e marca [Credenciamento.credenciado]. A situação não
-/// bloqueia nada: o app só a mostra, e quem a muda é a equipe, por fora.
+/// pública do Crefono e marca [Credenciamento.credenciado]. A situação só
+/// bloqueia a emissão de laudo (US62, ADR-020 da API); quem a muda é a
+/// equipe, por fora.
 library;
 
 /// Se a equipe já conferiu a inscrição no Crefono — a `situacao` da API.

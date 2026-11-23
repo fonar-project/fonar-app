@@ -91,6 +91,11 @@ enum ItemDaConferencia {
   /// Nome e registro de quem assina. Desde a US32 vêm do perfil da conta,
   /// que começa vazio: laudo sem quem assina não serve.
   assinatura,
+
+  /// A inscrição no conselho conferida pela equipe (US62, ADR-020 da API).
+  /// Sem ela, qualquer pessoa emitiria laudo em nome de um profissional
+  /// inventado: o cadastro pendente usa o resto do app, mas não emite.
+  credenciamento,
 }
 
 enum SituacaoDoItem {
@@ -119,6 +124,7 @@ ConferenciaDoLaudo conferirLaudo({
   required AvaliacaoCapeV? capeV,
   required String conclusao,
   required bool temAssinatura,
+  required bool inscricaoConferida,
 }) {
   final amostrasComProblema = resultado.qualidade.values.any(
     (q) => !q.adequada,
@@ -144,6 +150,9 @@ ConferenciaDoLaudo conferirLaudo({
         ? SituacaoDoItem.pendente
         : SituacaoDoItem.ok,
     ItemDaConferencia.assinatura: temAssinatura
+        ? SituacaoDoItem.ok
+        : SituacaoDoItem.pendente,
+    ItemDaConferencia.credenciamento: inscricaoConferida
         ? SituacaoDoItem.ok
         : SituacaoDoItem.pendente,
   });
