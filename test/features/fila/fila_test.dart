@@ -698,8 +698,11 @@ void main() {
     test('a mensagem diz o que aconteceu e o que fazer', () {
       const falha = GravacaoNaoEncontrada();
       expect(falha.mensagem, AppStrings.erroGravacaoNaoEncontrada);
-      expect(falha.mensagem, contains('não está mais neste aparelho'));
-      expect(falha.mensagem, contains('Grave a sessão de novo'));
+      expect(
+        falha.mensagem,
+        contains('não está mais disponível neste aparelho'),
+      );
+      expect(falha.mensagem, contains('Grave a sessão novamente'));
       // A mensagem antiga da fila afirmava o contrário do que acontece aqui.
       expect(
         AppStrings.filaRecusadoTexto(falha.mensagem),
