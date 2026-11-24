@@ -19,8 +19,9 @@
 ///   `pdftoppm` o rasteriza em `laudo_de_exemplo.png`, e a print do laudo
 ///   roda de novo, com a página (ver `.github/workflows/prints.yml`).
 ///
-/// Ficam de fora, para tirar à mão: a revisão das gravações (exige gravar de
-/// verdade), a landing page e o FONAR na Tela de Início do iPhone.
+/// A gravação usa um gravador de mentira, que guarda um WAV de teste. Ficam
+/// de fora, para tirar à mão: a landing page e o FONAR na Tela de Início do
+/// iPhone.
 library;
 
 import 'dart:convert';
@@ -45,11 +46,13 @@ import 'package:fonar_app/features/auth/data/sessao.dart';
 import 'package:fonar_app/features/auth/domain/profissional.dart';
 import 'package:fonar_app/features/cadastro/domain/cadastro.dart';
 import 'package:fonar_app/features/captura/data/fonte_de_nivel_record.dart';
+import 'package:fonar_app/features/captura/data/gravador_record.dart';
 import 'package:fonar_app/features/captura/data/microfones_record.dart';
 import 'package:fonar_app/features/captura/domain/afericao_de_ruido.dart';
 import 'package:fonar_app/features/captura/domain/ajuste_de_configuracao.dart';
 import 'package:fonar_app/features/captura/domain/amostra.dart';
 import 'package:fonar_app/features/captura/domain/fonte_de_nivel.dart';
+import 'package:fonar_app/features/captura/domain/gravador.dart';
 import 'package:fonar_app/features/captura/domain/microfone.dart';
 import 'package:fonar_app/features/fila/data/repositorio_fila_local.dart';
 import 'package:fonar_app/features/fila/domain/item_da_fila.dart';
@@ -61,6 +64,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../test/apoio/banco_em_memoria.dart';
 import '../../test/apoio/sessao_de_teste.dart';
+import '../../test/features/captura/wav_de_teste.dart';
 
 const _desktop = Size(1440, 900);
 const _celular = Size(390, 844);
@@ -176,6 +180,73 @@ class _Microfone implements FonteDeNivel {
 
   @override
   Future<void> fechar() async {}
+}
+
+/// O disco de mentira da gravação: os WAV ficam na memória.
+class _Disco implements ArquivosDeAmostra {
+  final _arquivos = <String, Uint8List>{};
+  var _n = 0;
+
+  @override
+  Future<String> novoCaminho(String pacienteId, TarefaDeGravacao tarefa) async {
+    return '/amostras/$pacienteId/${tarefa.name}-${_n++}.wav';
+  }
+
+  @override
+  Future<({Uint8List inicio, int tamanho})?> ler(String caminho) async {
+    final bytes = _arquivos[caminho];
+    return bytes == null ? null : (inicio: bytes, tamanho: bytes.length);
+  }
+
+  @override
+  Future<Uint8List?> lerTudo(String caminho) async => _arquivos[caminho];
+
+  @override
+  Future<void> apagar(String caminho) async {
+    _arquivos.remove(caminho);
+  }
+}
+
+/// O gravador de mentira: ao parar, grava no [_Disco] um WAV de teste, da
+/// duração gravada.
+class _Gravador implements Gravador {
+  _Gravador(this._disco);
+
+  final _Disco _disco;
+  String? _caminho;
+  var _leituras = 0;
+
+  @override
+  AjusteDeConfiguracao? get ajuste => null;
+
+  @override
+  Future<bool> pedirPermissao() async => true;
+
+  @override
+  Future<Stream<double>> iniciar(
+    String caminho,
+    Duration intervalo, {
+    String? microfone,
+  }) async {
+    _caminho = caminho;
+    _leituras = 0;
+    const niveis = [-22.0, -18.0, -20.0, -16.0, -21.0];
+    return Stream.periodic(intervalo, (i) {
+      _leituras++;
+      return niveis[i % niveis.length];
+    });
+  }
+
+  @override
+  Future<void> parar() async {
+    _disco._arquivos[_caminho!] = wavDeTeste(
+      duracao: AfericaoDeRuido.intervalo * _leituras,
+    );
+    _caminho = null;
+  }
+
+  @override
+  Future<void> descartar() async {}
 }
 
 /// Dois microfones ligados, para o menu ter o que mostrar.
@@ -346,6 +417,14 @@ Future<void> _irParaAVogal(WidgetTester tester) async {
   await _assentar(tester);
 }
 
+/// Grava a tarefa da etapa atual por 5 segundos.
+Future<void> _gravar(WidgetTester tester) async {
+  await _tocar(tester, find.text(AppStrings.capturaIniciarGravacao));
+  await tester.pump(const Duration(seconds: 5));
+  await _tocar(tester, find.text(AppStrings.tarefaParar));
+  await _assentar(tester);
+}
+
 /// Um envio da fila, com as duas gravações da sessão.
 ItemDaFila _envio(String id, DateTime quando, SituacaoDoEnvio situacao) {
   final sessao = 'sessao-$id';
@@ -509,6 +588,32 @@ void main() {
   _print('f18-gravacao-da-fala', (tester) async {
     await _irParaAVogal(tester);
     await _tocar(tester, find.text(AppStrings.tarefaFalaCurta).first);
+    await _assentar(tester);
+  });
+
+  // As duas tarefas gravadas, com o gravador de mentira, até a revisão.
+  _print('f19-revisao-das-gravacoes', (tester) async {
+    final disco = _Disco();
+    final (_, roteador) = await _abrir(
+      tester,
+      _desktop,
+      extras: [
+        fonteDeNivelProvider.overrideWithValue(const _Microfone()),
+        listaDeMicrofonesProvider.overrideWithValue(const _Microfones()),
+        gravadorProvider.overrideWithValue(_Gravador(disco)),
+        arquivosDeAmostraProvider.overrideWithValue(disco),
+      ],
+    );
+    await _ir(tester, roteador, AppRoutes.capturaNome, {_p: _paciente});
+    await _medir(tester, AfericaoDeRuido.duracao + const Duration(seconds: 1));
+    await _assentar(tester);
+    await _tocar(tester, find.text(AppStrings.capturaContinuar));
+    await _assentar(tester);
+    await _gravar(tester);
+    await _tocar(tester, find.text(AppStrings.capturaProximaEtapa));
+    await _assentar(tester);
+    await _gravar(tester);
+    await _tocar(tester, find.text(AppStrings.capturaConcluirERevisar));
     await _assentar(tester);
   });
 
