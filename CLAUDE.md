@@ -326,7 +326,7 @@ landing.
   ser removidos antes de commitar
 
 ## Redação — registro técnico e formal (US64)
-Feedback de uma fonoaudióloga que testou o app (23/11/2026): o tom coloquial
+Feedback de uma fonoaudióloga que testou o app (23/10/2026): o tom coloquial
 fazia o FONAR parecer pouco profissional, e alguns textos eram ambíguos.
 Todo texto de `lib/l10n/app_strings.dart` segue estas regras:
 - Registro formal e impessoal, como em material técnico da área da saúde.
