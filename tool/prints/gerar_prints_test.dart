@@ -60,6 +60,8 @@ import 'package:fonar_app/features/fila/domain/item_da_fila.dart';
 import 'package:fonar_app/features/guia/presentation/alvos_do_guia.dart';
 import 'package:fonar_app/features/guia/presentation/widgets/botao_de_ajuda.dart';
 import 'package:fonar_app/features/laudo/presentation/laudo_controlador.dart';
+import 'package:fonar_app/features/reproducao/data/reprodutor_audioplayers.dart';
+import 'package:fonar_app/features/reproducao/domain/reprodutor.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 import 'package:go_router/go_router.dart';
 
@@ -179,6 +181,29 @@ class _Microfone implements FonteDeNivel {
     return Stream.periodic(intervalo, (i) => niveis[i % niveis.length]);
   }
 
+  @override
+  Future<void> fechar() async {}
+}
+
+/// Na VM do teste não há o plugin de áudio: a revisão das gravações mostra
+/// o reprodutor parado, sem tocar.
+class _Reprodutor implements Reprodutor {
+  const _Reprodutor();
+
+  @override
+  Future<Duration?> abrir(String caminho) async => const Duration(seconds: 3);
+  @override
+  Future<void> tocar() async {}
+  @override
+  Future<void> pausar() async {}
+  @override
+  Future<void> irPara(Duration posicao) async {}
+  @override
+  Stream<Duration> get posicoes => const Stream.empty();
+  @override
+  Stream<void> get terminou => const Stream.empty();
+  @override
+  Stream<Object> get falhas => const Stream.empty();
   @override
   Future<void> fechar() async {}
 }
@@ -341,6 +366,7 @@ Future<(ProviderContainer, GoRouter)> _abrir(
       ),
       imagemDoServidorProvider.overrideWithValue((_) => _espectrograma),
       previaDoPdfProvider.overrideWithValue(_previaDeExemplo),
+      reprodutorProvider.overrideWithValue(const _Reprodutor()),
       ...extras,
     ],
   );
