@@ -81,10 +81,7 @@ class _Microfone implements FonteDeNivel {
   Future<bool> pedirPermissao() async => true;
 
   @override
-  Future<Stream<double>> abrir(
-    Duration intervalo, {
-    String? microfone,
-  }) async {
+  Future<Stream<double>> abrir(Duration intervalo, {String? microfone}) async {
     return Stream.periodic(intervalo, (i) => niveis[i % niveis.length]);
   }
 
@@ -107,9 +104,9 @@ class _Microfones implements ListaDeMicrofones {
 /// que o teste usa quando nenhuma foi carregada. Lê o mesmo FontManifest que
 /// o app empacota: os ícones do Material entram junto.
 Future<void> _carregarFontes() async {
-  final manifesto =
-      jsonDecode(await rootBundle.loadString('FontManifest.json'))
-          as List<dynamic>;
+  final manifesto = jsonDecode(
+    await rootBundle.loadString('FontManifest.json'),
+  ) as List<dynamic>;
   for (final familia in manifesto.cast<Map<String, dynamic>>()) {
     final carregador = FontLoader(familia['family'] as String);
     final fontes = (familia['fonts'] as List<dynamic>)
@@ -345,17 +342,15 @@ void main() {
   );
   _print(
     'f11-perfil-do-paciente',
-    (tester) => _tela(tester, _desktop, AppRoutes.pacienteDetalheNome, {
-      _p: _paciente,
-    }),
+    (tester) =>
+        _tela(tester, _desktop, AppRoutes.pacienteDetalheNome, {_p: _paciente}),
   );
 
   // 4.3 Consentimento
   _print(
     'f12-registro-do-consentimento',
-    (tester) => _tela(tester, _desktop, AppRoutes.consentimentoNome, {
-      _p: _paciente,
-    }),
+    (tester) =>
+        _tela(tester, _desktop, AppRoutes.consentimentoNome, {_p: _paciente}),
   );
   _print(
     'f13-retirada-do-consentimento',
@@ -436,15 +431,13 @@ void main() {
   );
   _print(
     'f25-evolucao',
-    (tester) => _tela(tester, _desktop, AppRoutes.evolucaoNome, {
-      _p: _paciente,
-    }),
+    (tester) =>
+        _tela(tester, _desktop, AppRoutes.evolucaoNome, {_p: _paciente}),
   );
   _print(
     'f26-modo-paciente',
-    (tester) => _tela(tester, _desktop, AppRoutes.modoPacienteNome, {
-      _p: _paciente,
-    }),
+    (tester) =>
+        _tela(tester, _desktop, AppRoutes.modoPacienteNome, {_p: _paciente}),
   );
   _print(
     'f27-laudo',
@@ -459,10 +452,7 @@ void main() {
   );
 
   // 4.7 Conta e ajuda
-  _print(
-    'f29-conta',
-    (tester) => _tela(tester, _desktop, AppRoutes.contaNome),
-  );
+  _print('f29-conta', (tester) => _tela(tester, _desktop, AppRoutes.contaNome));
   _print('f30-envio-da-carteira', (tester) async {
     final (container, roteador) = await _abrir(tester, _celular);
     container
