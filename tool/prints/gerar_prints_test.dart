@@ -24,6 +24,7 @@
 /// iPhone.
 library;
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -278,22 +279,42 @@ Future<void> _carregarFontes() async {
   }
 }
 
-/// Deixa a tela desenhar e carregar as imagens, que no teste só decodificam
-/// em tempo real (`runAsync`). `pump` limitado, como na matriz de layout: o
+/// Deixa a tela desenhar. `pump` limitado, como na matriz de layout: o
 /// medidor de nível e a prévia do laudo nunca assentam.
 Future<void> _assentar(WidgetTester tester) async {
-  for (var i = 0; i < 6; i++) {
+  for (var i = 0; i < 10; i++) {
     await tester.pump(const Duration(milliseconds: 120));
   }
+}
+
+/// As imagens que vêm de arquivo, decodificadas antes de a tela abrir.
+///
+/// No teste, a tela roda num tempo de mentira, e a decodificação de uma
+/// imagem só termina em tempo real: esperar pela que a própria tela
+/// começasse travaria o teste. Decodificada antes, em tempo real, a tela a
+/// encontra pronta no cache.
+Future<void> _carregarImagens(WidgetTester tester) async {
   await tester.runAsync(() async {
-    for (final elemento in find.byType(Image).evaluate()) {
-      await precacheImage((elemento.widget as Image).image, elemento);
+    final imagens = <ImageProvider>[
+      _espectrograma,
+      if (_paginaDoLaudo.existsSync()) FileImage(_paginaDoLaudo),
+    ];
+    for (final imagem in imagens) {
+      final pronta = Completer<void>();
+      final fluxo = imagem.resolve(ImageConfiguration.empty);
+      final ouvinte = ImageStreamListener(
+        (_, _) {
+          if (!pronta.isCompleted) pronta.complete();
+        },
+        onError: (erro, _) {
+          if (!pronta.isCompleted) pronta.completeError(erro);
+        },
+      );
+      fluxo.addListener(ouvinte);
+      await pronta.future;
+      fluxo.removeListener(ouvinte);
     }
-    await Future<void>.delayed(const Duration(milliseconds: 300));
   });
-  for (var i = 0; i < 4; i++) {
-    await tester.pump(const Duration(milliseconds: 120));
-  }
 }
 
 /// O app inteiro, pelo roteador de verdade, numa tela de [tamanho] lógico
@@ -326,6 +347,7 @@ Future<(ProviderContainer, GoRouter)> _abrir(
   addTearDown(container.dispose);
   container.read(profissionalAtualProvider.notifier).definir(_profissional);
   if (antes != null) await tester.runAsync(() => antes(container));
+  await _carregarImagens(tester);
 
   await tester.pumpWidget(
     UncontrolledProviderScope(container: container, child: const FonarApp()),
