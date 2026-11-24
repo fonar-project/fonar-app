@@ -576,6 +576,7 @@ void main() {
     await tester.enterText(campos.at(0), 'Maria de Exemplo');
     await tester.enterText(campos.at(1), '12/03/1985');
     await tester.enterText(campos.at(2), 'rouquidão ao final do dia (exemplo)');
+    await _tocar(tester, find.text(AppStrings.cadastroSexoFeminino).first);
     await _tocar(tester, find.text(AppStrings.cadastroSalvar));
     await _assentar(tester);
   });
