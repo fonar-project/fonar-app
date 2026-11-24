@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/banco/banco_local.dart';
 import '../../../core/error/app_exception.dart';
 import '../../auth/domain/profissional.dart';
+import '../../cadastro/domain/cadastro.dart';
 import '../domain/dados_do_profissional.dart';
 
 /// O nome e o registro de cada profissional, no banco local, na tabela de
@@ -33,7 +34,17 @@ class RepositorioDaContaLocal implements RepositorioDaConta {
         'nome': final String nome,
         'registro': final String registro,
       }) {
-        return Profissional(nome: nome, registro: registro);
+        // A situação do credenciamento vai junto (US62), para o laudo do
+        // credenciado sair sem rede. Sem ela — cópia de antes da US62, ou
+        // nunca vista na API —, fica `null`: ninguém conferiu.
+        final situacao = json['credenciamento'];
+        return Profissional(
+          nome: nome,
+          registro: registro,
+          credenciamento: situacao == null
+              ? null
+              : Credenciamento.daApi(situacao),
+        );
       }
     } on FormatException {
       // Ilegível: como se não houvesse — a Conta pede de novo.
@@ -52,6 +63,7 @@ class RepositorioDaContaLocal implements RepositorioDaConta {
               valor: jsonEncode({
                 'nome': profissional.nome,
                 'registro': profissional.registro,
+                'credenciamento': ?profissional.credenciamento?.name,
               }),
             ),
           );

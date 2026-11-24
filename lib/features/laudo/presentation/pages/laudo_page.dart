@@ -229,6 +229,11 @@ class _LaudoState extends ConsumerState<_Laudo> {
   void initState() {
     super.initState();
     _conclusao.addListener(_aoDigitar);
+    // A equipe pode ter conferido a inscrição com o app aberto (US62): a
+    // situação é buscada de novo, e o item da conferência responde sozinho.
+    if (!ref.read(inscricaoConferidaProvider)) {
+      unawaited(ref.read(profissionalAtualProvider.notifier).atualizarDaApi());
+    }
   }
 
   @override
@@ -379,6 +384,7 @@ class _LaudoState extends ConsumerState<_Laudo> {
       capeV: widget.capeV,
       conclusao: _conclusao.text,
       temAssinatura: ref.watch(profissionalAtualProvider).completo,
+      inscricaoConferida: ref.watch(inscricaoConferidaProvider),
     );
     final expandida = widget.largura == LarguraDeTela.expandida;
 
@@ -749,6 +755,10 @@ class _ItemDaConferencia extends StatelessWidget {
         AppStrings.laudoItemAssinatura,
         AppStrings.laudoItemAssinaturaFalta,
       ),
+      ItemDaConferencia.credenciamento => (
+        AppStrings.laudoItemCredenciamento,
+        AppStrings.laudoItemCredenciamentoFalta,
+      ),
     };
     // Sem verde, amarelo ou vermelho: são reservados a status de medida e
     // saturação. A situação vem no ícone e, sobretudo, no texto.
@@ -780,6 +790,11 @@ class _ItemDaConferencia extends StatelessWidget {
       (ItemDaConferencia.assinatura, SituacaoDoItem.pendente) =>
         AppBotao.secundario(
           rotulo: AppStrings.laudoIrParaConta,
+          aoTocar: () => context.abrir(AppRoutes.contaNome),
+        ),
+      (ItemDaConferencia.credenciamento, SituacaoDoItem.pendente) =>
+        AppBotao.secundario(
+          rotulo: AppStrings.laudoVerSituacaoDoCadastro,
           aoTocar: () => context.abrir(AppRoutes.contaNome),
         ),
       (ItemDaConferencia.capeV, SituacaoDoItem.aviso) => AppBotao.secundario(

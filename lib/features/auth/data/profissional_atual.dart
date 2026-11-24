@@ -44,7 +44,7 @@ class ProfissionalAtual extends Notifier<Profissional> {
         nome: perfil.nome,
         registro: perfil.registro,
         email: state.email,
-        credenciamento: state.credenciamento,
+        credenciamento: state.credenciamento ?? perfil.credenciamento,
       );
     } catch (erro) {
       // Sem o perfil, a Conta pede de novo; o app não deixa de abrir.
@@ -77,6 +77,16 @@ class ProfissionalAtual extends Notifier<Profissional> {
     }
   }
 
+  /// Consulta a API de novo (US62). A equipe credencia por fora, com o app
+  /// aberto, e quem acabou de ser credenciado não deve precisar fechar e
+  /// abrir o app para emitir o laudo: a Conta e o laudo chamam aqui ao
+  /// abrir, enquanto a inscrição não está conferida. Sem sessão ou sem a
+  /// API, nada muda.
+  Future<void> atualizarDaApi() async {
+    final uid = ref.read(sessaoProvider)?.uid;
+    if (uid != null) await _carregarDaApi(uid);
+  }
+
   bool _daSessao(String uid) =>
       ref.mounted && ref.read(sessaoProvider)?.uid == uid;
 
@@ -85,3 +95,16 @@ class ProfissionalAtual extends Notifier<Profissional> {
 
 final profissionalAtualProvider =
     NotifierProvider<ProfissionalAtual, Profissional>(ProfissionalAtual.new);
+
+/// Se a inscrição de quem está na sessão já foi conferida pela equipe — o
+/// que libera a emissão de laudo (US62, ADR-020 da API).
+///
+/// Sem a API (modo de exemplo), não há equipe nem conferência: libera, e o
+/// laudo de exemplo já sai identificado como tal. Com a API, só o
+/// `credenciado` libera; `null` (nunca visto, nem neste aparelho) não.
+final inscricaoConferidaProvider = Provider<bool>(
+  (ref) =>
+      ref.watch(cadastroApiProvider) == null ||
+      ref.watch(profissionalAtualProvider).credenciamento ==
+          Credenciamento.credenciado,
+);

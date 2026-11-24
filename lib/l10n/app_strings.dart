@@ -1026,6 +1026,15 @@ abstract final class AppStrings {
   static const laudoItemAssinatura = 'Seu nome e registro';
   static const laudoItemAssinaturaFalta =
       'Vão na assinatura do laudo. Preencha na Conta.';
+  static const laudoItemCredenciamento =
+      'Inscrição no conselho conferida pela equipe';
+  static const laudoItemCredenciamentoFalta =
+      'O laudo somente pode ser emitido depois que a equipe do FONAR conferir '
+      'a sua inscrição no Conselho Regional de Fonoaudiologia. Essa '
+      'conferência impede que laudos sejam emitidos em nome de profissionais '
+      'não habilitados. Enquanto ela não for concluída, as demais funções do '
+      'aplicativo permanecem disponíveis.';
+  static const laudoVerSituacaoDoCadastro = 'Ver a situação do cadastro';
   static const laudoIrParaConta = 'Preencher na Conta';
   static const laudoIrParaConsentimento = 'Registrar consentimento';
   static const laudoIrParaCapeV = 'Registrar CAPE-V';
@@ -1172,8 +1181,10 @@ abstract final class AppStrings {
       'Trocar a região ou o número põe a inscrição em conferência de novo.';
   static const contaCredenciamentoPendenteTitulo = 'Inscrição em conferência';
   static const contaCredenciamentoPendente =
-      'A equipe do FONAR ainda vai conferir sua inscrição na consulta pública '
-      'do Crefono. Enquanto isso, você usa o aplicativo normalmente.';
+      'A equipe do FONAR ainda não conferiu a sua inscrição na consulta '
+      'pública do Conselho Regional de Fonoaudiologia. Até a conclusão dessa '
+      'conferência, todas as funções do aplicativo estão disponíveis, exceto '
+      'a emissão de laudos.';
   static const contaCredenciamentoCredenciado =
       'Inscrição conferida pela equipe do FONAR';
 

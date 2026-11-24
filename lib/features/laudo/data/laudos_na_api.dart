@@ -77,7 +77,11 @@ class LaudosNaApi implements Sincronizavel {
             ? e.error! as AppException
             : FalhaDesconhecida(causa: e);
         // 413, 415, 422 e o 409 de código já usado: recusa pelo conteúdo.
-        if (falha is FalhaDeValidacao) _recusados.add(laudo.id);
+        // 403: cadastro ainda não credenciado (ADR-020 da API) — não muda
+        // nesta abertura; na próxima, se a equipe já conferiu, sobe.
+        if (falha is FalhaDeValidacao || falha is Proibido) {
+          _recusados.add(laudo.id);
+        }
         primeiraFalha ??= falha;
       } on AppException catch (falha) {
         primeiraFalha ??= falha;

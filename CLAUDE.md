@@ -178,8 +178,12 @@ Token Service (README). O login de EXEMPLO só existe no modo de exemplo
 - Criar conta (US34) é do Firebase (`accounts:signUp`, e-mail de
   verificação); o cadastro profissional é da API (`/v1/profissionais/eu`),
   que conduz o primeiro acesso: e-mail por verificar → formulário → entra.
-  O credenciamento (pendente ou credenciado) é da equipe, não bloqueia nada,
-  e o app só o mostra. `features/cadastro/`.
+  O credenciamento (pendente ou credenciado) é da equipe. O pendente usa
+  todo o app, MENOS a emissão de laudo (US62, ADR-020 da API): o item
+  "Inscrição no conselho conferida" da conferência do laudo fica pendente
+  e o botão desabilitado, e a API recusa a cópia com 403. A situação fica
+  na cópia do perfil no aparelho, para o credenciado emitir sem rede;
+  situação desconhecida conta como não conferida. `features/cadastro/`.
 - "Esqueci a senha" (US58) é uma tela própria
   (`auth/presentation/pages/recuperar_senha_page.dart`), empilhada sobre a
   entrada, com o e-mail de lá em memória (`extra`) — nunca no endereço, que
