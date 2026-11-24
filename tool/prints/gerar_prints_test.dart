@@ -10,13 +10,21 @@
 /// `--update-goldens` que grava os arquivos: sem ele, o teste compararia com
 /// imagens que não existem.
 ///
+/// O que o teste não tem, vem de fora, em `tool/prints/`:
+/// - o espectrograma: `espectrograma_de_exemplo.png`, desenhado pelo
+///   `analysis.espectrograma` da API a partir de uma vogal /a/ SINTÉTICA,
+///   feita no Praat — não é voz de ninguém;
+/// - a prévia A4 do laudo, que o plugin `printing` rasteriza por código
+///   nativo: a print do laudo grava o PDF em `build/prints/f27-laudo.pdf`, o
+///   `pdftoppm` o rasteriza em `laudo_de_exemplo.png`, e a print do laudo
+///   roda de novo, com a página (ver `.github/workflows/prints.yml`).
+///
 /// Ficam de fora, para tirar à mão: a revisão das gravações (exige gravar de
-/// verdade), a landing page e o FONAR na Tela de Início do iPhone. A
-/// pré-visualização A4 do laudo é rasterizada pelo plugin `printing`, que não
-/// roda em teste: na print do laudo, a folha fica vazia.
+/// verdade), a landing page e o FONAR na Tela de Início do iPhone.
 library;
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -26,7 +34,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fonar_app/app/app.dart';
 import 'package:fonar_app/app/router/app_router.dart';
 import 'package:fonar_app/app/router/app_routes.dart';
+import 'package:fonar_app/core/config/app_config.dart';
 import 'package:fonar_app/core/network/conexao.dart';
+import 'package:fonar_app/design_system/tokens/app_cores.dart';
+import 'package:fonar_app/features/analise/data/imagem_do_servidor.dart';
+import 'package:fonar_app/features/analise/data/repositorio_analises_placeholder.dart';
+import 'package:fonar_app/features/analise/domain/resultado_da_analise.dart';
 import 'package:fonar_app/features/auth/data/profissional_atual.dart';
 import 'package:fonar_app/features/auth/data/sessao.dart';
 import 'package:fonar_app/features/auth/domain/profissional.dart';
@@ -42,6 +55,7 @@ import 'package:fonar_app/features/fila/data/repositorio_fila_local.dart';
 import 'package:fonar_app/features/fila/domain/item_da_fila.dart';
 import 'package:fonar_app/features/guia/presentation/alvos_do_guia.dart';
 import 'package:fonar_app/features/guia/presentation/widgets/botao_de_ajuda.dart';
+import 'package:fonar_app/features/laudo/presentation/laudo_controlador.dart';
 import 'package:fonar_app/l10n/app_strings.dart';
 import 'package:go_router/go_router.dart';
 
@@ -66,6 +80,81 @@ const _profissional = Profissional(
   email: 'fono@exemplo.com',
   credenciamento: Credenciamento.credenciado,
 );
+
+/// A imagem do espectrograma de qualquer análise: a vogal sintética.
+final _espectrograma = FileImage(
+  File('tool/prints/espectrograma_de_exemplo.png'),
+);
+
+/// As análises de exemplo, com o espectrograma que a API mandaria.
+class _AnalisesComEspectrograma implements RepositorioAnalises {
+  const _AnalisesComEspectrograma();
+
+  static const _base = RepositorioAnalisesPlaceholder();
+
+  ResultadoDaAnalise _com(ResultadoDaAnalise r) => ResultadoDaAnalise(
+    id: r.id,
+    pacienteId: r.pacienteId,
+    situacao: r.situacao,
+    realizadaEm: r.realizadaEm,
+    medidas: r.medidas,
+    qualidade: r.qualidade,
+    espectrogramaUrl: 'exemplo/${r.id}/espectrograma.png',
+    motivoDaFalha: r.motivoDaFalha,
+    exemplo: r.exemplo,
+    gravacoes: r.gravacoes,
+  );
+
+  @override
+  Future<ResultadoDaAnalise> buscar(String pacienteId, String analiseId) async {
+    return _com(await _base.buscar(pacienteId, analiseId));
+  }
+
+  @override
+  Future<List<ResultadoDaAnalise>> doPaciente(String pacienteId) async {
+    return [for (final r in await _base.doPaciente(pacienteId)) _com(r)];
+  }
+}
+
+/// Guardada pela prévia de exemplo, para a print do laudo gravar o PDF.
+Future<Uint8List> Function()? _gerarDaPrevia;
+
+/// A primeira página do laudo, rasterizada fora do teste.
+final _paginaDoLaudo = File('tool/prints/laudo_de_exemplo.png');
+
+/// No lugar da prévia do `printing`, que rasteriza o PDF por um plugin
+/// nativo que o teste não tem: a mesma folha (ver `previa_do_pdf.dart`), com
+/// a página já rasterizada.
+Widget _previaDeExemplo(Future<Uint8List> Function() gerar) {
+  _gerarDaPrevia = gerar;
+  return Builder(
+    builder: (context) => ColoredBox(
+      color: context.cores.borda,
+      child: ListView(
+        children: [
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 640),
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [BoxShadow(offset: Offset(0, 3), blurRadius: 5)],
+                ),
+                child: AspectRatio(
+                  aspectRatio: 210 / 297,
+                  child: _paginaDoLaudo.existsSync()
+                      ? Image.file(_paginaDoLaudo, fit: BoxFit.cover)
+                      : const SizedBox.shrink(),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
 /// O microfone de mentira: emite [niveis] em ciclo, um por intervalo. O
 /// padrão é o de uma sala silenciosa.
@@ -143,6 +232,7 @@ Future<(ProviderContainer, GoRouter)> _abrir(
   Size tamanho, {
   List<Override> extras = const [],
   bool online = true,
+  Future<void> Function(ProviderContainer container)? antes,
 }) async {
   tester.view.physicalSize = tamanho * 2;
   tester.view.devicePixelRatio = 2;
@@ -154,11 +244,17 @@ Future<(ProviderContainer, GoRouter)> _abrir(
       bancoDeTeste(),
       conexaoOnlineProvider.overrideWithValue(online),
       sessaoProvider.overrideWith(() => Sessao(contaDeTeste)),
+      repositorioAnalisesProvider.overrideWithValue(
+        const _AnalisesComEspectrograma(),
+      ),
+      imagemDoServidorProvider.overrideWithValue((_) => _espectrograma),
+      previaDoPdfProvider.overrideWithValue(_previaDeExemplo),
       ...extras,
     ],
   );
   addTearDown(container.dispose);
   container.read(profissionalAtualProvider.notifier).definir(_profissional);
+  if (antes != null) await tester.runAsync(() => antes(container));
 
   await tester.pumpWidget(
     UncontrolledProviderScope(container: container, child: const FonarApp()),
@@ -178,8 +274,23 @@ Future<void> _ir(
   await _assentar(tester);
 }
 
-/// Uma tela da entrada, que só existe sem sessão.
-Future<void> _entrada(WidgetTester tester, Size tamanho, String nome) async {
+/// Uma tela da entrada, que só existe sem sessão. Com [semModoDeExemplo], a
+/// tela sai como no app publicado, sem o aviso do login de exemplo — nela
+/// não aparece dado nenhum.
+Future<void> _entrada(
+  WidgetTester tester,
+  Size tamanho,
+  String nome, {
+  bool semModoDeExemplo = false,
+}) async {
+  if (semModoDeExemplo) {
+    // ignore: invalid_use_of_visible_for_testing_member
+    AppConfig.mudarModoDeExemplo(ligado: false);
+    addTearDown(
+      // ignore: invalid_use_of_visible_for_testing_member
+      () => AppConfig.mudarModoDeExemplo(ligado: true),
+    );
+  }
   final (container, roteador) = await _abrir(tester, tamanho);
   container.read(sessaoProvider.notifier).encerrar();
   await _ir(tester, roteador, nome);
@@ -282,6 +393,8 @@ void _print(String nome, Future<void> Function(WidgetTester tester) corpo) {
     try {
       await corpo(tester);
       await _salvar(nome);
+      // O que ficou andando (a aferição, por exemplo) termina antes do fim.
+      await tester.pump(const Duration(seconds: 10));
     } finally {
       FlutterError.onError = original;
     }
@@ -303,7 +416,12 @@ void main() {
   // 4.1 Acesso e primeiro acesso
   _print(
     'f03-entrada',
-    (tester) => _entrada(tester, _desktop, AppRoutes.loginNome),
+    (tester) => _entrada(
+      tester,
+      _desktop,
+      AppRoutes.loginNome,
+      semModoDeExemplo: true,
+    ),
   );
   _print(
     'f04-criar-conta',
@@ -319,7 +437,12 @@ void main() {
   );
   _print(
     'f07-recuperar-senha',
-    (tester) => _entrada(tester, _celular, AppRoutes.recuperarSenhaNome),
+    (tester) => _entrada(
+      tester,
+      _celular,
+      AppRoutes.recuperarSenhaNome,
+      semModoDeExemplo: true,
+    ),
   );
 
   // 4.2 Pacientes
@@ -347,11 +470,18 @@ void main() {
   );
 
   // 4.3 Consentimento
-  _print(
-    'f12-registro-do-consentimento',
-    (tester) =>
-        _tela(tester, _desktop, AppRoutes.consentimentoNome, {_p: _paciente}),
-  );
+  // O paciente de exemplo já tem consentimento: cadastra outro, e o "Salvar
+  // e continuar" leva ao termo, como no app.
+  _print('f12-registro-do-consentimento', (tester) async {
+    final (_, roteador) = await _abrir(tester, _desktop);
+    await _ir(tester, roteador, AppRoutes.novaAvaliacaoNome);
+    final campos = find.byType(EditableText);
+    await tester.enterText(campos.at(0), 'Maria de Exemplo');
+    await tester.enterText(campos.at(1), '12/03/1985');
+    await tester.enterText(campos.at(2), 'rouquidão ao final do dia (exemplo)');
+    await _tocar(tester, find.text(AppStrings.cadastroSalvar));
+    await _assentar(tester);
+  });
   _print(
     'f13-retirada-do-consentimento',
     (tester) => _tela(tester, _celular, AppRoutes.retiradaConsentimentoNome, {
@@ -383,20 +513,26 @@ void main() {
   });
 
   // 4.5 Fila e resultado
+  // Os envios entram no banco antes de o app abrir: a fila é lida na
+  // abertura. Sem conexão, o primeiro espera por ela.
   _print('f20-fila-de-envio', (tester) async {
-    final (container, roteador) = await _abrir(tester, _desktop, online: false);
-    final fila = container.read(repositorioFilaProvider);
     final agora = DateTime.now();
-    await tester.runAsync(() async {
-      await fila.adicionar(_envio('envio-1', agora, SituacaoDoEnvio.naFila));
-      await fila.adicionar(
-        _envio(
-          'envio-2',
-          agora.subtract(const Duration(hours: 2)),
-          SituacaoDoEnvio.enviado,
-        ),
-      );
-    });
+    final (_, roteador) = await _abrir(
+      tester,
+      _desktop,
+      online: false,
+      antes: (container) async {
+        final fila = container.read(repositorioFilaProvider);
+        await fila.adicionar(_envio('envio-1', agora, SituacaoDoEnvio.naFila));
+        await fila.adicionar(
+          _envio(
+            'envio-2',
+            agora.subtract(const Duration(hours: 2)),
+            SituacaoDoEnvio.enviado,
+          ),
+        );
+      },
+    );
     await _ir(tester, roteador, AppRoutes.filaNome);
   });
   _print(
@@ -422,13 +558,15 @@ void main() {
       _a: _analise,
     }),
   );
-  _print(
-    'f24-cape-v-no-celular',
-    (tester) => _tela(tester, _celular, AppRoutes.capeVNome, {
+  // No celular, cada escala abre em tela cheia.
+  _print('f24-cape-v-no-celular', (tester) async {
+    await _tela(tester, _celular, AppRoutes.capeVNome, {
       _p: _paciente,
       _a: _analise,
-    }),
-  );
+    });
+    await _tocar(tester, find.textContaining(AppStrings.capeVAbrirEscala).first);
+    await _assentar(tester);
+  });
   _print(
     'f25-evolucao',
     (tester) =>
@@ -439,13 +577,28 @@ void main() {
     (tester) =>
         _tela(tester, _desktop, AppRoutes.modoPacienteNome, {_p: _paciente}),
   );
-  _print(
-    'f27-laudo',
-    (tester) => _tela(tester, _desktop, AppRoutes.laudoNome, {
+  // Com a conclusão escrita, para a conferência sair completa e a folha ter
+  // o que mostrar. O PDF vai para build/prints, para virar a página da
+  // prévia (ver o cabeçalho).
+  _print('f27-laudo', (tester) async {
+    await _tela(tester, _desktop, AppRoutes.laudoNome, {
       _p: _paciente,
       _a: _analise,
-    }),
-  );
+    });
+    await tester.enterText(
+      find.byType(EditableText).first,
+      'Texto de exemplo: a conclusão é redigida pelo profissional que assina '
+      'o laudo.',
+    );
+    await _assentar(tester);
+    final gerar = _gerarDaPrevia;
+    if (gerar == null) return;
+    final pdf = await tester.runAsync(gerar);
+    if (pdf == null) return;
+    File('build/prints/f27-laudo.pdf')
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(pdf);
+  });
   _print(
     'f28-historico',
     (tester) => _tela(tester, _desktop, AppRoutes.historicoNome),
@@ -473,6 +626,8 @@ void main() {
     final (_, roteador) = await _abrir(tester, _desktop);
     await _ir(tester, roteador, AppRoutes.pacientesNome);
     await _tocar(tester, find.byType(BotaoDeAjuda).first);
+    await _assentar(tester);
+    await _tocar(tester, find.text(AppStrings.ajudaAtalhos).last);
     await _assentar(tester);
   });
 }
