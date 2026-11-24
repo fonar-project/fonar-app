@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -197,6 +199,17 @@ class _SeusDadosState extends ConsumerState<_SeusDados> {
   );
   final _focoNome = FocusNode();
   final _focoRegistro = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    // Quem abre a Conta vê a situação do cadastro como está agora: a equipe
+    // credencia por fora, com o app aberto (US62).
+    final situacao = ref.read(profissionalAtualProvider).credenciamento;
+    if (situacao != Credenciamento.credenciado) {
+      unawaited(ref.read(profissionalAtualProvider.notifier).atualizarDaApi());
+    }
+  }
 
   @override
   void dispose() {

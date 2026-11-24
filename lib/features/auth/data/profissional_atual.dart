@@ -78,6 +78,16 @@ class ProfissionalAtual extends Notifier<Profissional> {
     }
   }
 
+  /// Consulta a API de novo (US62). A equipe credencia por fora, com o app
+  /// aberto, e quem acabou de ser credenciado não deve precisar fechar e
+  /// abrir o app para emitir o laudo: a Conta e o laudo chamam aqui ao
+  /// abrir, enquanto a inscrição não está conferida. Sem sessão ou sem a
+  /// API, nada muda.
+  Future<void> atualizarDaApi() async {
+    final uid = ref.read(sessaoProvider)?.uid;
+    if (uid != null) await _carregarDaApi(uid);
+  }
+
   bool _daSessao(String uid) =>
       ref.mounted && ref.read(sessaoProvider)?.uid == uid;
 
