@@ -229,6 +229,11 @@ class _LaudoState extends ConsumerState<_Laudo> {
   void initState() {
     super.initState();
     _conclusao.addListener(_aoDigitar);
+    // A equipe pode ter conferido a inscrição com o app aberto (US62): a
+    // situação é buscada de novo, e o item da conferência responde sozinho.
+    if (!ref.read(inscricaoConferidaProvider)) {
+      unawaited(ref.read(profissionalAtualProvider.notifier).atualizarDaApi());
+    }
   }
 
   @override
