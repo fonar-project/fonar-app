@@ -1,0 +1,69 @@
+# Temporário, só no ramo de rascunho `prints/...`: gera as prints da
+# documentação (tool/prints) no CI — o ambiente em nuvem onde a
+# documentação é escrita não baixa o Flutter — e as publica no próprio ramo,
+# num commit do bot. Não vai para a `main`.
+name: Prints da documentação
+
+on:
+  push:
+    branches: ['prints/**']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prints:
+    name: Gerar as prints
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup do Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.2
+          channel: stable
+          cache: true
+
+      - name: Dependências
+        run: flutter pub get
+
+      - name: Formatação do gerador
+        run: dart format tool/prints
+
+      - name: Análise do gerador
+        run: flutter analyze tool/prints || true
+
+      - name: Prints
+        run: flutter test --update-goldens tool/prints/gerar_prints_test.dart || true
+
+      # A prévia A4 do laudo: o PDF que a print gravou vira a página, e a
+      # print do laudo roda de novo com ela.
+      - name: Página do laudo
+        run: |
+          if [ -f build/prints/f27-laudo.pdf ]; then
+            command -v pdftoppm || (sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils)
+            pdftoppm -png -r 150 -f 1 -l 1 -singlefile build/prints/f27-laudo.pdf tool/prints/laudo_de_exemplo
+            pdftoppm -png -r 110 build/prints/f27-laudo.pdf build/prints/f27-laudo-pagina
+            flutter test --update-goldens --plain-name f27-laudo tool/prints/gerar_prints_test.dart || true
+          fi
+
+      - name: Publicar no ramo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tool/prints
+          git add -f build/prints
+          if git diff --cached --quiet; then
+            echo "Nada novo."
+          else
+            git diff --cached --stat
+            git commit -q -m "chore: prints geradas a partir de $GITHUB_SHA"
+            git push origin "HEAD:$GITHUB_REF_NAME"
+          fi
