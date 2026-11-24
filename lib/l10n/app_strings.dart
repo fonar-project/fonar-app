@@ -1651,11 +1651,13 @@ abstract final class AppStrings {
       titulo: '7. Armazenamento, transferência e segurança',
       texto:
           'Os dados são armazenados na infraestrutura do Google Cloud '
-          '(Firebase). Os cadastros, as medidas e os laudos ficam em '
-          'servidores localizados no Brasil (São Paulo); os arquivos de '
-          'gravação de voz ficam em servidores localizados nos Estados '
-          'Unidos, o que configura transferência internacional de dados. '
-          'Todas as comunicações são cifradas, e cada conta tem acesso '
+          '(Firebase). Os cadastros, as medidas e os registros dos laudos '
+          'ficam em servidores localizados no Brasil (São Paulo). Os '
+          'arquivos — as gravações de voz, os documentos em PDF dos laudos '
+          'emitidos e a imagem da carteira de identidade profissional enviada '
+          'para o credenciamento — ficam em servidores localizados nos '
+          'Estados Unidos, o que configura transferência internacional de '
+          'dados. Todas as comunicações são cifradas, e cada conta tem acesso '
           'exclusivamente aos dados dos próprios pacientes.',
     ),
     (
