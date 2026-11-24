@@ -473,6 +473,10 @@ void main() {
     await _abrir(tester, microfones: const _UmMicrofone());
 
     expect(find.text(AppStrings.microfoneRotulo), findsOneWidget);
+    await tester.ensureVisible(
+      find.byType(DropdownButtonFormField<Microfone?>),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byType(DropdownButtonFormField<Microfone?>));
     await tester.pumpAndSettle();
     expect(find.text(AppStrings.microfonePadrao), findsWidgets);

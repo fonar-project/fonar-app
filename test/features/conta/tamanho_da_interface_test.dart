@@ -107,7 +107,7 @@ void main() {
       final (c, _) = await abrir(tester);
 
       expect(larguraVista(tester), closeTo(1600, 0.01));
-      expect(find.textContaining('agora: 120%'), findsOneWidget);
+      expect(find.textContaining('nesta janela: 120%'), findsOneWidget);
       await fechar(tester, c);
     });
 
@@ -143,7 +143,7 @@ void main() {
       );
 
       expect(larguraVista(tester), 390);
-      expect(find.textContaining('agora: 100%'), findsOneWidget);
+      expect(find.textContaining('nesta janela: 100%'), findsOneWidget);
       await fechar(tester, c);
     });
   });

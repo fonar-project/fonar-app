@@ -325,6 +325,27 @@ landing.
 - Ícone exportado do Claude Design vem com ~8KB de metadados C2PA que DEVEM
   ser removidos antes de commitar
 
+## Redação — registro técnico e formal (US64)
+Feedback de uma fonoaudióloga que testou o app (23/11/2026): o tom coloquial
+fazia o FONAR parecer pouco profissional, e alguns textos eram ambíguos.
+Todo texto de `lib/l10n/app_strings.dart` segue estas regras:
+- Registro formal e impessoal, como em material técnico da área da saúde.
+  Nada de "Boa!", "Ok, vi", "dá para", "sobe", "de novo" (use "novamente"),
+  "Algo não saiu como esperado"
+- Frases completas, que digam quem faz o quê: "a gravação permanece
+  bloqueada", "o envio é retomado automaticamente quando a conexão é
+  restabelecida". Prefira explicar por extenso a economizar palavras
+- Erros dizem o que aconteceu e o que fazer, nessa ordem
+- Nomes oficiais: "Conselho Regional de Fonoaudiologia (CRFa)", não
+  "Crefono"; "equipe do FONAR", não "suporte" (não há canal de suporte)
+- Texto mostrado ao paciente (instruções da gravação, termo de
+  consentimento, modo paciente) é formal, mas em linguagem acessível
+- Em tela pequena com texto a 200%, texto que fica ACIMA de um elemento
+  interativo deve ser curto: a matriz de layout e os testes de gesto
+  reprovam o que empurra o elemento para fora da vista
+- Mudou o termo de consentimento? Mude `versaoAtualDoTermo`. Mudou os
+  termos de uso? Mude `versaoDosTermos`
+
 ## Convenções
 - `lib/features/<funcionalidade>/` dividido em data, domain e presentation
 - Widgets sem lógica de negócio

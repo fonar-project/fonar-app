@@ -15,7 +15,7 @@ import 'consentimentos_de_exemplo.dart';
 /// Mudou o texto, muda a versão, no mesmo commit — é ela que diz, em cada
 /// registro, com qual texto a pessoa concordou. Os registros antigos
 /// continuam com a versão deles.
-const versaoAtualDoTermo = '2026-10-14';
+const versaoAtualDoTermo = '2026-11-23';
 
 final repositorioConsentimentoProvider = Provider<RepositorioConsentimento>(
   (ref) => RepositorioConsentimentoLocal(

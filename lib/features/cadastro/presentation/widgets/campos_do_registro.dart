@@ -102,12 +102,22 @@ class CamposDoRegistro extends StatelessWidget {
         const SizedBox(height: AppSpacing.lg),
         Text(AppStrings.cadastroTermosTitulo, style: textos.titleSmall),
         const SizedBox(height: AppSpacing.xs),
-        for (final item in AppStrings.cadastroTermosItens) ...[
+        Text(AppStrings.cadastroTermosIntroducao, style: textos.bodySmall),
+        const SizedBox(height: AppSpacing.sm),
+        // Em cláusulas numeradas, cada uma com o título à parte (US64): é o
+        // documento que o profissional aceita, e precisa poder ser lido e
+        // citado por item.
+        for (final clausula in AppStrings.cadastroTermosClausulas) ...[
           Text(
-            '• $item',
-            style: textos.bodySmall?.copyWith(color: context.cores.secundario),
+            clausula.titulo,
+            style: textos.labelLarge?.copyWith(color: context.cores.texto),
           ),
           const SizedBox(height: AppSpacing.xxs),
+          Text(
+            clausula.texto,
+            style: textos.bodySmall?.copyWith(color: context.cores.secundario),
+          ),
+          const SizedBox(height: AppSpacing.sm),
         ],
         const SizedBox(height: AppSpacing.sm),
         AppCaixaDeMarcacao(
