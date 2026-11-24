@@ -517,12 +517,8 @@ void main() {
   // 4.1 Acesso e primeiro acesso
   _print(
     'f03-entrada',
-    (tester) => _entrada(
-      tester,
-      _desktop,
-      AppRoutes.loginNome,
-      semModoDeExemplo: true,
-    ),
+    (tester) =>
+        _entrada(tester, _desktop, AppRoutes.loginNome, semModoDeExemplo: true),
   );
   _print(
     'f04-criar-conta',
@@ -691,7 +687,10 @@ void main() {
       _p: _paciente,
       _a: _analise,
     });
-    await _tocar(tester, find.textContaining(AppStrings.capeVAbrirEscala).first);
+    await _tocar(
+      tester,
+      find.textContaining(AppStrings.capeVAbrirEscala).first,
+    );
     await _assentar(tester);
   });
   _print(
