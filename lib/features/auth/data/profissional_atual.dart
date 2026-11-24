@@ -67,6 +67,7 @@ class ProfissionalAtual extends Notifier<Profissional> {
           registro: perfil.registro ?? state.registro,
           email: state.email,
           credenciamento: perfil.credenciamento,
+          comprovanteEnviadoEm: perfil.comprovanteEnviadoEm,
         );
         state = profissional;
         await ref.read(repositorioDaContaProvider).salvar(uid, profissional);

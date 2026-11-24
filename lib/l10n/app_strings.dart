@@ -1185,6 +1185,44 @@ abstract final class AppStrings {
       'pública do Conselho Regional de Fonoaudiologia. Até a conclusão dessa '
       'conferência, todas as funções do aplicativo estão disponíveis, exceto '
       'a emissão de laudos.';
+  // Comprovante de inscrição (US63, ADR-021 da API).
+  static const comprovanteTitulo = 'Comprovante de inscrição no conselho';
+  static const comprovanteExplicacao =
+      'Para concluir o credenciamento, envie uma fotografia legível ou um '
+      'arquivo PDF da sua carteira de identidade profissional, emitida pelo '
+      'Conselho Regional de Fonoaudiologia. A carteira deve mostrar a sua '
+      'fotografia, o seu nome completo e o número de inscrição. A equipe do '
+      'FONAR compara esses dados com os informados no cadastro e com a '
+      'consulta pública do conselho. Formatos aceitos: JPEG, PNG ou PDF, com '
+      'até 10 MB.';
+  static const comprovantePrivacidade =
+      'O arquivo é acessível somente à equipe responsável pela conferência e '
+      'é excluído definitivamente assim que o credenciamento é concluído. '
+      'Permanece registrada apenas a data da conferência.';
+  static const comprovanteNaoEnviado =
+      'Nenhum comprovante foi enviado até o momento.';
+  static String comprovanteEnviadoEm(String data) =>
+      'Comprovante enviado em $data. A conferência pela equipe está em '
+      'andamento. Caso o arquivo esteja ilegível ou incorreto, envie um novo '
+      'arquivo, que substituirá o anterior.';
+  static const comprovanteEnviar = 'Enviar carteira profissional';
+  static const comprovanteSubstituir = 'Enviar outro arquivo';
+  static const comprovanteEnviando = 'Enviando o comprovante…';
+  static const comprovanteEnviadoComSucesso =
+      'Comprovante enviado. A equipe do FONAR fará a conferência.';
+  static const comprovanteErroFormato =
+      'O arquivo não foi aceito. Envie uma imagem JPEG ou PNG, ou um arquivo '
+      'PDF, da carteira de identidade profissional.';
+  static const comprovanteErroTamanho =
+      'O arquivo excede o limite de 10 MB. Envie uma imagem de menor '
+      'resolução ou um PDF menor.';
+  static const comprovanteErroJaCredenciado =
+      'A sua inscrição já foi conferida. Não é necessário enviar comprovante.';
+  static const comprovanteErroCadastroIncompleto =
+      'Complete o cadastro profissional antes de enviar o comprovante.';
+  static const comprovanteErroSeletor =
+      'Não foi possível abrir a seleção de arquivos neste aparelho.';
+
   static const contaCredenciamentoCredenciado =
       'Inscrição conferida pela equipe do FONAR';
 

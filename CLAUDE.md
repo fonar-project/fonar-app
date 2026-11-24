@@ -183,7 +183,11 @@ Token Service (README). O login de EXEMPLO só existe no modo de exemplo
   "Inscrição no conselho conferida" da conferência do laudo fica pendente
   e o botão desabilitado, e a API recusa a cópia com 403. A situação fica
   na cópia do perfil no aparelho, para o credenciado emitir sem rede;
-  situação desconhecida conta como não conferida. `features/cadastro/`.
+  situação desconhecida conta como não conferida. Enquanto pendente, a
+  Conta pede o comprovante de inscrição (US63, ADR-021 da API): a foto ou o
+  PDF da carteira profissional do conselho, escolhido pelo `file_selector`
+  e enviado por `PUT /v1/profissionais/eu/comprovante`. O app não guarda o
+  arquivo; a API o apaga ao credenciar. `features/cadastro/`.
 - "Esqueci a senha" (US58) é uma tela própria
   (`auth/presentation/pages/recuperar_senha_page.dart`), empilhada sobre a
   entrada, com o e-mail de lá em memória (`extra`) — nunca no endereço, que

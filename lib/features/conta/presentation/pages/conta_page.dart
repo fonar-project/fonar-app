@@ -26,6 +26,7 @@ import '../../../analise/data/catalogo_de_referencias_vazio.dart';
 import '../../../auth/data/profissional_atual.dart';
 import '../../../auth/data/sessao.dart';
 import '../../../cadastro/domain/cadastro.dart';
+import '../../../cadastro/presentation/comprovante_controlador.dart';
 import '../../../guia/presentation/widgets/botao_de_ajuda.dart';
 import '../../data/preferencia_de_tamanho_local.dart';
 import '../../data/preferencia_de_tema_local.dart';
@@ -317,6 +318,10 @@ class _SeusDadosState extends ConsumerState<_SeusDados> {
         if (profissional.credenciamento case final credenciamento?) ...[
           const SizedBox(height: AppSpacing.md),
           _Credenciamento(credenciamento),
+          if (credenciamento == Credenciamento.pendente) ...[
+            const SizedBox(height: AppSpacing.md),
+            _Comprovante(enviadoEm: profissional.comprovanteEnviadoEm),
+          ],
         ],
         const SizedBox(height: AppSpacing.lg),
         Align(
@@ -375,6 +380,73 @@ class _Credenciamento extends StatelessWidget {
       titulo: AppStrings.contaCredenciamentoCredenciado,
     ),
   };
+}
+
+/// O envio do comprovante de inscrição, enquanto a inscrição está em
+/// conferência (US63, ADR-021 da API): o que enviar, para que serve, o que
+/// acontece com o arquivo, e o botão.
+class _Comprovante extends ConsumerWidget {
+  const _Comprovante({required this.enviadoEm});
+
+  final DateTime? enviadoEm;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final textos = Theme.of(context).textTheme;
+    final secundario = textos.bodySmall?.copyWith(
+      color: context.cores.secundario,
+    );
+    final estado = ref.watch(comprovanteControladorProvider);
+    final enviadoEm = this.enviadoEm;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(AppStrings.comprovanteTitulo, style: textos.titleSmall),
+        const SizedBox(height: AppSpacing.xs),
+        Text(AppStrings.comprovanteExplicacao, style: textos.bodyMedium),
+        const SizedBox(height: AppSpacing.xs),
+        Text(AppStrings.comprovantePrivacidade, style: secundario),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          enviadoEm == null
+              ? AppStrings.comprovanteNaoEnviado
+              : AppStrings.comprovanteEnviadoEm(AppStrings.data(enviadoEm)),
+          style: textos.bodyMedium,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        AppBotao.secundario(
+          rotulo: estado.enviando
+              ? AppStrings.comprovanteEnviando
+              : enviadoEm == null
+              ? AppStrings.comprovanteEnviar
+              : AppStrings.comprovanteSubstituir,
+          aoTocar: estado.enviando
+              ? null
+              : () => ref
+                    .read(comprovanteControladorProvider.notifier)
+                    .escolherEEnviar(),
+          motivoDesabilitado: AppStrings.comprovanteEnviando,
+        ),
+        if (estado.enviado) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Semantics(
+            liveRegion: true,
+            child: const AppSituacao(
+              icone: NomeIcone.confirmacao,
+              titulo: AppStrings.comprovanteEnviadoComSucesso,
+            ),
+          ),
+        ],
+        if (estado.erro case final erro?) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Semantics(
+            liveRegion: true,
+            child: AppSituacao(icone: NomeIcone.alerta, titulo: erro),
+          ),
+        ],
+      ],
+    );
+  }
 }
 
 // ---------------------------------------------------------------- senha --

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,6 +7,7 @@ import '../../../core/config/app_config.dart';
 import '../../../core/error/app_exception.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/network/interceptors/error_interceptor.dart';
+import '../../../l10n/app_strings.dart';
 import '../domain/cadastro.dart';
 
 /// O cadastro do profissional na API: `/v1/profissionais/eu` (o
@@ -16,6 +19,7 @@ import '../domain/cadastro.dart';
 ///     POST  cria o cadastro, ou completa o antigo (só com e-mail verificado);
 ///           201 criado, 200 se já existia completo — repetir é seguro
 ///     PATCH troca nome, região ou número
+///     PUT   /comprovante: a carteira profissional do conselho (US63)
 ///
 /// O e-mail vem do token: o app nunca o manda no corpo. A API recusa campo
 /// que não conhece, então o corpo leva só o que ela pede.
@@ -83,6 +87,35 @@ class CadastroApi {
     }
   }
 
+  /// Envia o comprovante de inscrição: a imagem ou o PDF da carteira de
+  /// identidade profissional emitida pelo conselho (US63, ADR-021 da API).
+  /// Substitui o enviado antes. Lança [ComprovanteRecusado] quando a API
+  /// recusa o arquivo ou o momento do envio.
+  Future<PerfilProfissional> enviarComprovante(
+    Uint8List dados,
+    String nomeDoArquivo,
+  ) async {
+    try {
+      final resposta = await _dio.put<Object?>(
+        '$_caminho/comprovante',
+        data: FormData.fromMap({
+          'arquivo': MultipartFile.fromBytes(dados, filename: nomeDoArquivo),
+        }),
+      );
+      return perfilDaApi(resposta.data);
+    } on DioException catch (e) {
+      final mensagem = switch (codigoDaApi(e)) {
+        'formato_nao_suportado' => AppStrings.comprovanteErroFormato,
+        'arquivo_grande_demais' => AppStrings.comprovanteErroTamanho,
+        'ja_credenciado' => AppStrings.comprovanteErroJaCredenciado,
+        'cadastro_incompleto' => AppStrings.comprovanteErroCadastroIncompleto,
+        _ => null,
+      };
+      if (mensagem != null) throw ComprovanteRecusado(mensagem);
+      throw _falha(e);
+    }
+  }
+
   static AppException _falha(DioException e) {
     final falha = e.error;
     return falha is AppException ? falha : FalhaDesconhecida(causa: e);
@@ -112,6 +145,10 @@ PerfilProfissional perfilDaApi(Object? corpo) {
     nome: nome is String ? nome : null,
     crefonoRegiao: regiao is int ? regiao : null,
     crefonoNumero: numero is String ? numero : null,
+    comprovanteEnviadoEm: switch (corpo['comprovante_enviado_em']) {
+      final String data => DateTime.tryParse(data)?.toLocal(),
+      _ => null,
+    },
   );
 }
 

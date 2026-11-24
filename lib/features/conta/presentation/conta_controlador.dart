@@ -97,6 +97,7 @@ class ContaControlador extends Notifier<EstadoDaConta> {
               registro: perfil.registro ?? profissional.registro,
               email: profissional.email,
               credenciamento: perfil.credenciamento,
+              comprovanteEnviadoEm: perfil.comprovanteEnviadoEm,
             );
           }
           await ref.read(repositorioDaContaProvider).salvar(uid, profissional);
